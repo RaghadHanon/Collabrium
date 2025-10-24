@@ -1,0 +1,39 @@
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Domain.Entities;
+
+public class ApplicationUser : IdentityUser
+{
+    public required string TenantId { get; set; }
+    public string FullName { get; set; } = null!;
+    public string? Department { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+    public int YearsOfExperience { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? LastLoginAt { get; set; }
+    public DateOnly DateOfBirth { get; set; }
+
+    public int Age
+    {
+        get
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var age = today.Year - DateOfBirth.Year;
+
+            if (DateOfBirth > today.AddYears(-age))
+            {
+                age--;
+            }
+
+            return age;
+        }
+    }
+
+    // Navigation
+    public Tenant Tenant { get; set; } = null!;
+
+    public ICollection<Team> Teams { get; set; } = new List<Team>();
+    public ICollection<Project> Projects { get; set; } = new List<Project>();
+    public ICollection<WorkItem> AssignedWorkItems { get; set; } = new List<WorkItem>();
+    public ICollection<WorkItem> CreatedWorkItems { get; set; } = new List<WorkItem>();
+}

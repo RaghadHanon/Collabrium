@@ -3,14 +3,15 @@
 public enum UserRole
 {
     SuperAdmin,
+    GlopalAdmin,
     CEO,
     HR,
     ProductManager,
     TeamLead,
     DevOps,
-    BackendDeveloper,
-    FrontendDeveloper,
-    FullStackDeveloper,
+    BackendDev,
+    FrontendDev,
+    FullStackDev,
     QA,
     BusinessAnalyst,
     Designer

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -46,5 +47,14 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
                .WithOne(c => c.WorkItem)
                .HasForeignKey(c => c.WorkItemId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+             .HasDiscriminator<WorkItemType>("WorkItemType")
+             .HasValue<WorkItem>(WorkItemType.WorkItem) // base type (default)
+             .HasValue<Epic>(WorkItemType.Epic)
+             .HasValue<UserStory>(WorkItemType.UserStory)
+             .HasValue<Bug>(WorkItemType.Bug)
+             .HasValue<TestCase>(WorkItemType.TestCase)
+             .HasValue<Domain.Entities.Task>(WorkItemType.Task);
     }
 }

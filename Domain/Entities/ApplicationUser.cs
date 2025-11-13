@@ -7,7 +7,6 @@ public class ApplicationUser : IdentityUser
     public required string TenantId { get; set; }
     public string FullName { get; set; } = null!;
     public string? Department { get; set; }
-    public string? ProfilePictureUrl { get; set; }
     public int YearsOfExperience { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
@@ -31,7 +30,7 @@ public class ApplicationUser : IdentityUser
 
     // Navigation
     public Tenant Tenant { get; set; } = null!;
-
+    public ICollection<Image> ProfileImages { get; set; } = new List<Image>();
     public ICollection<Team> Teams { get; set; } = new List<Team>();
     public ICollection<Project> Projects { get; set; } = new List<Project>();
     public ICollection<WorkItem> AssignedWorkItems { get; set; } = new List<WorkItem>();

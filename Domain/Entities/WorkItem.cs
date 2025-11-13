@@ -6,6 +6,7 @@ public class WorkItem : Entity
 {
     public string Title { get; set; } = null!;
     public string? AcceptanceCriteria { get; set; }
+    public string? Description { get; set; }
     public int EffortPoints { get; set; }
     public WorkItemType Type { get; set; }
     public WorkItemStatus Status { get; set; }

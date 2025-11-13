@@ -10,7 +10,12 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
-    public DbSet<WorkItem> workItems => Set<WorkItem>();
+    public DbSet<WorkItem> WorkItems => Set<WorkItem>();
+    public DbSet<Domain.Entities.Task> Tasks => Set<Domain.Entities.Task>();
+    public DbSet<TestCase> TestCases => Set<TestCase>();
+    public DbSet<Epic> Epics => Set<Epic>();
+    public DbSet<UserStory> UserStores => Set<UserStory>();
+    public DbSet<Bug> Bugs => Set<Bug>();
     public DbSet<WorkItemRelation> workItemRelations => Set<WorkItemRelation>();
     public DbSet<Comment> Comments => Set<Comment>();
 

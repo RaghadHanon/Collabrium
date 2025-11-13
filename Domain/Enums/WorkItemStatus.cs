@@ -2,7 +2,11 @@
 
 public enum WorkItemStatus
 {
-    ToDo,
+    Backlog,
+    ReadyForDev,
     InProgress,
+    InReview,
+    InTesting,
+    ReadyForRelease,
     Done
 }

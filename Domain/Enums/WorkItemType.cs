@@ -2,6 +2,7 @@
 
 public enum WorkItemType
 {
+    WorkItem,
     Epic,
     UserStory,
     Task,

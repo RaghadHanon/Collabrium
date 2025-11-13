@@ -96,9 +96,6 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ProfilePictureUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -164,6 +161,33 @@ namespace Infrastructure.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Image", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Image");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -316,6 +340,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("EffortPoints")
                         .HasColumnType("int");
 
@@ -352,6 +379,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("WorkItemType")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToUserId");
@@ -362,7 +392,11 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SprintId");
 
-                    b.ToTable("workItems");
+                    b.ToTable("WorkItems");
+
+                    b.HasDiscriminator<int>("WorkItemType").HasValue(0);
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Domain.Entities.WorkItemRelation", b =>
@@ -526,6 +560,82 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Bug", b =>
+                {
+                    b.HasBaseType("Domain.Entities.WorkItem");
+
+                    b.Property<string>("ActualResult")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExpectedResult")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StepsToReproduce")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("WorkItems", t =>
+                        {
+                            t.Property("ActualResult")
+                                .HasColumnName("Bug_ActualResult");
+
+                            t.Property("ExpectedResult")
+                                .HasColumnName("Bug_ExpectedResult");
+                        });
+
+                    b.HasDiscriminator().HasValue(4);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Epic", b =>
+                {
+                    b.HasBaseType("Domain.Entities.WorkItem");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Task", b =>
+                {
+                    b.HasBaseType("Domain.Entities.WorkItem");
+
+                    b.HasDiscriminator().HasValue(3);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TestCase", b =>
+                {
+                    b.HasBaseType("Domain.Entities.WorkItem");
+
+                    b.Property<string>("ActualResult")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExpectedResult")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Preconditions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Steps")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TestEnvironment")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue(5);
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserStory", b =>
+                {
+                    b.HasBaseType("Domain.Entities.WorkItem");
+
+                    b.Property<int>("StoryPoints")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue(2);
+                });
+
             modelBuilder.Entity("ApplicationUserTeam", b =>
                 {
                     b.HasOne("Domain.Entities.ApplicationUser", null)
@@ -569,6 +679,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("WorkItem");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Image", b =>
+                {
+                    b.HasOne("Domain.Entities.ApplicationUser", "ApplicationUser")
+                        .WithMany("ProfileImages")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -728,6 +849,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("AssignedWorkItems");
 
                     b.Navigation("CreatedWorkItems");
+
+                    b.Navigation("ProfileImages");
 
                     b.Navigation("Projects");
                 });

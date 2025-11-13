@@ -5,7 +5,7 @@ public enum WorkItemType
     WorkItem,
     Epic,
     UserStory,
-    Task,
+    TaskItem,
     Bug,
     TestCase
 }

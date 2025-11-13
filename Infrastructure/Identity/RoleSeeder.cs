@@ -20,7 +20,8 @@ public class RoleSeeder
             "FullStackDeveloper",
             "QA",
             "BusinessAnalyst",
-            "Designer"
+            "Designer",
+            "IT"
         };
         foreach (var role in roles)
         {
@@ -31,3 +32,4 @@ public class RoleSeeder
         }
     }
 }
+

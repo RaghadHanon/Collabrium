@@ -11,11 +11,11 @@ public class WorkItemRelationConfiguration : IEntityTypeConfiguration<WorkItemRe
         builder.HasOne(r => r.OutgoingWorkItem)
                .WithMany(w => w.OutgoingRelations)
                .HasForeignKey(r => r.OutgoingWorkItemId)
-               .OnDelete(DeleteBehavior.Restrict); 
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(r => r.IncomingWorkItem)
                .WithMany(w => w.IncomingRelations)
                .HasForeignKey(r => r.IncomingWorkItemId)
-               .OnDelete(DeleteBehavior.Restrict); 
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }

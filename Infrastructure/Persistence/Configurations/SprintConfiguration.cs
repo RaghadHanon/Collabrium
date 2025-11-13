@@ -20,6 +20,6 @@ public class SprintConfiguration : IEntityTypeConfiguration<Sprint>
         builder.HasMany(s => s.WorkItems)
                .WithOne(w => w.Sprint)
                .HasForeignKey(w => w.SprintId)
-               .OnDelete(DeleteBehavior.NoAction); 
+               .OnDelete(DeleteBehavior.NoAction);
     }
 }

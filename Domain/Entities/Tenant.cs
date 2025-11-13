@@ -4,6 +4,7 @@ public class Tenant : Entity
 {
     public string Name { get; set; } = null!;
     public string Domain { get; set; } = null!;
+    public string? Description { get; set; }
     public bool IsActive { get; set; }
 
     // Navigation

@@ -21,7 +21,7 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.HasOne(w => w.Sprint)
                .WithMany(s => s.WorkItems)
                .HasForeignKey(w => w.SprintId)
-               .OnDelete(DeleteBehavior.NoAction); 
+               .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasOne(w => w.AssignedToUser)
                .WithMany(u => u.AssignedWorkItems)
@@ -55,6 +55,6 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
              .HasValue<UserStory>(WorkItemType.UserStory)
              .HasValue<Bug>(WorkItemType.Bug)
              .HasValue<TestCase>(WorkItemType.TestCase)
-             .HasValue<Domain.Entities.Task>(WorkItemType.Task);
+             .HasValue<Domain.Entities.TaskItem>(WorkItemType.TaskItem);
     }
 }

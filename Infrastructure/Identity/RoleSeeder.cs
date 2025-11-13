@@ -15,14 +15,15 @@ public class RoleSeeder
             "ProductManager",
             "TeamLead",
             "DevOps",
-            "BackendDeveloper",
-            "FrontendDeveloper",
-            "FullStackDeveloper",
+            "BackendDev",
+            "FrontendDev",
+            "FullStackDev",
             "QA",
             "BusinessAnalyst",
             "Designer",
-            "IT"
+            "OrganizationIT"
         };
+
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))

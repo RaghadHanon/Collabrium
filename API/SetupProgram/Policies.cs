@@ -11,10 +11,11 @@ public static class Policies
     public const string ProductManager = "IsProductManager";
     public const string TeamLead = "IsTeamLead";
     public const string DevOps = "IsDevOps";
-    public const string BackendDeveloper = "IsBackendDeveloper";
-    public const string FrontendDeveloper = "IsFrontendDeveloper";
-    public const string FullStackDeveloper = "IsFullStackDeveloper";
+    public const string BackendDev = "IsBackendDev";
+    public const string FrontendDev = "IsFrontendDev";
+    public const string FullStackDev = "IsFullStackDev";
     public const string QA = "IsQA";
     public const string BusinessAnalyst = "IsBusinessAnalyst";
     public const string Designer = "IsDesigner";
+    public const string OrganizationIT = "IsOrganizationIT";
 }

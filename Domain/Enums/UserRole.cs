@@ -3,7 +3,6 @@
 public enum UserRole
 {
     SuperAdmin,
-    GlopalAdmin,
     CEO,
     HR,
     ProductManager,
@@ -14,5 +13,6 @@ public enum UserRole
     FullStackDev,
     QA,
     BusinessAnalyst,
-    Designer
+    Designer,
+    OrganizationIT
 }

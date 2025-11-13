@@ -1,5 +1,6 @@
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Seeders;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.SetupProgram;
@@ -22,6 +23,7 @@ public static class ApplicationBuilderExtensions
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseMiddleware<TenantMiddleware>();
         app.MapControllers();
 
         return app;
@@ -41,9 +43,10 @@ public static class ApplicationBuilderExtensions
             await dbContext.Database.MigrateAsync();
 
             logger.LogInformation("Database migrated successfully.");
-            logger.LogInformation("Seeding roles...");
+            logger.LogInformation("Seeding...");
 
             await RoleSeeder.SeedRoles(services);
+            await GlobalTenantSeeder.SeedGlobalTenantAsync(services);
 
             logger.LogInformation("Database seeding completed.");
         }

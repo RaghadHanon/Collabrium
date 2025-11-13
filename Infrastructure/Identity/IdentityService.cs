@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Infrastructure.Identity;
 
-public class IdentityService
+public class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;

@@ -55,8 +55,8 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
 
-                    b.Property<string>("Department")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("Department")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -109,9 +109,6 @@ namespace Infrastructure.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("YearsOfExperience")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -297,6 +294,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Domain")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -315,6 +315,10 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Domain")
                         .IsUnique()
                         .HasDatabaseName("IX_Tenant_Domain");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenant_Name");
 
                     b.ToTable("Tenants");
                 });
@@ -593,7 +597,7 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(1);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Task", b =>
+            modelBuilder.Entity("Domain.Entities.TaskItem", b =>
                 {
                     b.HasBaseType("Domain.Entities.WorkItem");
 

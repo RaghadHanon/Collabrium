@@ -18,6 +18,10 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.HasIndex(t => t.Name)
+            .IsUnique()
+            .HasDatabaseName("IX_Tenant_Name");
+
         builder.HasIndex(t => t.Domain)
             .IsUnique()
             .HasDatabaseName("IX_Tenant_Domain");

@@ -1,15 +1,14 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum Department
 {
-    public enum Department
-    {
-        SoftwareDevelopment,
-        QualityAssurance,
-        ITSupport,
-        HumanResources,
-        ProductManagement,
-        Design,
-        ResearchAndDevelopment,
-        DevOps,
-        Administration
-    }
+    SoftwareDevelopment,
+    QualityAssurance,
+    ITSupport,
+    HumanResources,
+    ProductManagement,
+    Design,
+    ResearchAndDevelopment,
+    DevOps,
+    Administration
 }

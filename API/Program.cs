@@ -1,4 +1,6 @@
 using API.SetupProgram;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace API;
 

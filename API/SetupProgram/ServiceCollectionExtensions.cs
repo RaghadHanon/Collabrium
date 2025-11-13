@@ -1,4 +1,5 @@
 using API.Middlewares;
+using Application;
 using Domain.Enums;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -31,6 +32,7 @@ public static class ServiceCollectionExtensions
 
         // App + Infrastructure
         services.AddInfrastructureServices(config);
+        services.AddApplicationServices(config);
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
         // Global error handling
@@ -40,15 +42,15 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization(options =>
         {
             options.AddPolicy(Policies.SuperAdmin, p => p.RequireRole(nameof(UserRole.SuperAdmin)));
-            options.AddPolicy(Policies.SuperAdmin, p => p.RequireRole(nameof(UserRole.GlopalAdmin)));
+            options.AddPolicy(Policies.OrganizationIT, p => p.RequireRole(nameof(UserRole.OrganizationIT)));
             options.AddPolicy(Policies.CEO, p => p.RequireRole(nameof(UserRole.CEO)));
             options.AddPolicy(Policies.HR, p => p.RequireRole(nameof(UserRole.HR)));
             options.AddPolicy(Policies.ProductManager, p => p.RequireRole(nameof(UserRole.ProductManager)));
             options.AddPolicy(Policies.TeamLead, p => p.RequireRole(nameof(UserRole.TeamLead)));
             options.AddPolicy(Policies.DevOps, p => p.RequireRole(nameof(UserRole.DevOps)));
-            options.AddPolicy(Policies.BackendDeveloper, p => p.RequireRole(nameof(UserRole.BackendDev)));
-            options.AddPolicy(Policies.FrontendDeveloper, p => p.RequireRole(nameof(UserRole.FrontendDev)));
-            options.AddPolicy(Policies.FullStackDeveloper, p => p.RequireRole(nameof(UserRole.FullStackDev)));
+            options.AddPolicy(Policies.BackendDev, p => p.RequireRole(nameof(UserRole.BackendDev)));
+            options.AddPolicy(Policies.FrontendDev, p => p.RequireRole(nameof(UserRole.FrontendDev)));
+            options.AddPolicy(Policies.FullStackDev, p => p.RequireRole(nameof(UserRole.FullStackDev)));
             options.AddPolicy(Policies.QA, p => p.RequireRole(nameof(UserRole.QA)));
             options.AddPolicy(Policies.BusinessAnalyst, p => p.RequireRole(nameof(UserRole.BusinessAnalyst)));
             options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer)));
@@ -65,7 +67,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSignalR();
-
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 

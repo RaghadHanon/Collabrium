@@ -7,7 +7,7 @@ public class ApplicationUser : IdentityUser
 {
     public required string TenantId { get; set; }
     public string FullName { get; set; } = null!;
-    public Department Department { get; set; }
+    public Department? Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public DateOnly DateOfBirth { get; set; }

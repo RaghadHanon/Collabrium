@@ -1,9 +1,14 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Emails;
 using Domain.Entities;
+using Infrastructure.Email;
+using Infrastructure.Email.Templates;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Repositories;
 using Infrastructure.Security;
 using Infrastructure.Settings;
+using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -29,12 +34,33 @@ public static class DependencyInjection
         );
         AddIdentity(services, configuration);
         AddRepositories(services);
+        AddEmailServices(services, configuration);
+
+        services.AddScoped<ITenantContext, TenantContext>();
 
         return services;
     }
 
+    private static void AddEmailServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));
+        services.AddSingleton<IEmailService, SendGridEmailService>();
+        services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
+        var templateTypes = typeof(EmailTemplateFactory)
+            .Assembly
+            .GetTypes()
+            .Where(t => typeof(IEmailTemplate).IsAssignableFrom(t)
+                        && !t.IsInterface && !t.IsAbstract);
+
+        foreach (var type in templateTypes)
+        {
+            services.AddScoped(typeof(IEmailTemplate), type);
+        }
+    }
+
     private static void AddRepositories(IServiceCollection services)
     {
+        services.AddScoped<ITenantRepository, TenantRepository>();
     }
 
     private static void AddIdentity(IServiceCollection services, IConfiguration configuration)
@@ -110,6 +136,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<RoleSeeder>();
+        services.AddScoped<IIdentityService, IdentityService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.Configure<IdentitySettings>(configuration.GetSection("IdentitySettings"));

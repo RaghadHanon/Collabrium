@@ -10,6 +10,7 @@ using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         AddIdentity(services, configuration);
         AddRepositories(services);
         AddEmailServices(services, configuration);
+        AddAuthorizationHandlers(services);
 
         services.AddScoped<ITenantContext, TenantContext>();
 
@@ -61,6 +63,12 @@ public static class DependencyInjection
     private static void AddRepositories(IServiceCollection services)
     {
         services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<IUsersRepository, UsersRepository>();
+    }
+
+    private static void AddAuthorizationHandlers(IServiceCollection services)
+    {
+        services.AddScoped<IAuthorizationHandler, IsPasswordChangedHandler>();
     }
 
     private static void AddIdentity(IServiceCollection services, IConfiguration configuration)

@@ -10,8 +10,8 @@ public class ApplicationUser : IdentityUser
     public Department? Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
+    public bool MustChangePassword { get; set; } = false;
     public DateOnly DateOfBirth { get; set; }
-
     public int Age
     {
         get

@@ -7,6 +7,6 @@ public class IdentityMappingProfile : Profile
 {
     public IdentityMappingProfile()
     {
-        CreateMap<ApplicationUser, AppUserDto>();
+        CreateMap<ApplicationUser, UserDto>();
     }
 }

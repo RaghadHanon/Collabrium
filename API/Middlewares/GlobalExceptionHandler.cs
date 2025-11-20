@@ -95,6 +95,8 @@ public class GlobalExceptionHandler(
     {
         return exception switch
         {
+            MustChangePasswordException =>
+            (StatusCodes.Status403Forbidden, "Password Change Required", exception.Message),
             BadRequestException => (StatusCodes.Status400BadRequest, "Bad Request", exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
             UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Unauthorized", exception.Message),

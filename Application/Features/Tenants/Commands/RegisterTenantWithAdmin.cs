@@ -11,7 +11,7 @@ namespace Application.Features.Tenants.Commands;
 
 public class RegisterTenantWithAdmin
 {
-    public class Command : IRequest<Result<AppUserDto>>
+    public class Command : IRequest<Result<UserDto>>
     {
         public required string TenantName { get; set; }
         public required string Domain { get; set; }
@@ -29,20 +29,20 @@ public class RegisterTenantWithAdmin
         ITenantRepository tenantRepository,
         IIdentityService identityService,
         IMapper mapper
-    ) : IRequestHandler<Command, Result<AppUserDto>>
+    ) : IRequestHandler<Command, Result<UserDto>>
     {
-        public async Task<Result<AppUserDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<UserDto>> Handle(Command request, CancellationToken cancellationToken)
         {
             var isTenantDomainUnique = await tenantRepository.IsTenantDomainUniqueAsync(request.Domain, cancellationToken);
             if (!isTenantDomainUnique)
             {
-                return Result<AppUserDto>.Failure("A tenant with this domain already exists.", HttpStatusCode.BadRequest);
+                return Result<UserDto>.Failure("A tenant with this domain already exists.", HttpStatusCode.BadRequest);
             }
 
             var isTenantNameUnique = await tenantRepository.IsTenantNameUniqueAsync(request.TenantName, cancellationToken);
             if (!isTenantNameUnique)
             {
-                return Result<AppUserDto>.Failure("A tenant with this name already exists.", HttpStatusCode.BadRequest);
+                return Result<UserDto>.Failure("A tenant with this name already exists.", HttpStatusCode.BadRequest);
             }
 
             var tenant = mapper.Map<Tenant>(request);
@@ -61,12 +61,13 @@ public class RegisterTenantWithAdmin
                 request.PhoneNumber
             );
 
+            user.MustChangePassword = true;
             tenant.Users.Add(user);
             await tenantRepository.SaveChangesAsync(cancellationToken);
 
-            var dto = mapper.Map<AppUserDto>(user);
+            var dto = mapper.Map<UserDto>(user);
 
-            return Result<AppUserDto>.Success(dto, HttpStatusCode.Created);
+            return Result<UserDto>.Success(dto, HttpStatusCode.Created);
         }
     }
 }

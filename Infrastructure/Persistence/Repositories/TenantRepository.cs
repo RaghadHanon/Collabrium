@@ -17,9 +17,9 @@ public class TenantRepository : ITenantRepository
         await _dbContext.Tenants.AddAsync(tenant, cancellationToken);
     }
 
-    public async Task<Tenant?> GetByIdAsync(object tenantId)
+    public async Task<Tenant?> GetByIdAsync(string tenantId)
     {
-        return await _dbContext.Tenants.FirstOrDefaultAsync(t => t.Id == (string) tenantId);
+        return await _dbContext.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
     }
 
     public async Task<Tenant?> GetTenantByIdAsync(string id, CancellationToken cancellationToken = default)

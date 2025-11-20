@@ -2,7 +2,7 @@
 using Domain.Enums;
 
 namespace Application.Features.Identity.DTOs;
-public class AppUserDto
+public class UserDto
 {
     public required string Id { get; set; }
     public required TenantDto Tenant { get; set; }

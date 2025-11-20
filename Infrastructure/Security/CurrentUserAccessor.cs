@@ -16,6 +16,7 @@ public class CurrentUserAccessor(IHttpContextAccessor httpContextAccessor
         return string.IsNullOrEmpty(userId)
             ? null
             : await dbContext.Users
+             .Include(u => u.Tenant)
              .FirstOrDefaultAsync(x => x.Id == userId);
     }
 

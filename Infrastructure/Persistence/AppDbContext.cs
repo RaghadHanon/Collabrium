@@ -11,13 +11,14 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<WorkItem> WorkItems => Set<WorkItem>();
-    public DbSet<Domain.Entities.TaskItem> Tasks => Set<Domain.Entities.TaskItem>();
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<TestCase> TestCases => Set<TestCase>();
     public DbSet<Epic> Epics => Set<Epic>();
     public DbSet<UserStory> UserStores => Set<UserStory>();
     public DbSet<Bug> Bugs => Set<Bug>();
     public DbSet<WorkItemRelation> workItemRelations => Set<WorkItemRelation>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Image> Images => Set<Image>(); 
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

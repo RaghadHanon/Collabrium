@@ -18,4 +18,5 @@ public static class Policies
     public const string BusinessAnalyst = "IsBusinessAnalyst";
     public const string Designer = "IsDesigner";
     public const string OrganizationIT = "IsOrganizationIT";
+    public const string PasswordChanged = "IsPasswordChanged";
 }

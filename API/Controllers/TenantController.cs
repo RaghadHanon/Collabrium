@@ -35,7 +35,7 @@ public class TenantController : ApiBaseController
     /// <response code="400">If the request data is invalid.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
     [HttpPost("register-tenant")]
-    public async Task<ActionResult<AppUserDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
+    public async Task<ActionResult<UserDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
     {
         var command = Mapper.Map<RegisterTenantWithAdmin.Command>(request);
 

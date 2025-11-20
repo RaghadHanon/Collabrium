@@ -213,6 +213,7 @@ public class IdentityService : IIdentityService
         if (user == null)
             throw new BadRequestException("User not found.");
 
+        user.MustChangePassword = false;
         var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
         var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
 
@@ -229,6 +230,7 @@ public class IdentityService : IIdentityService
         if (user == null)
             throw new BadRequestException("User not found.");
 
+        user.MustChangePassword = false;
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
 
         if (!result.Succeeded)

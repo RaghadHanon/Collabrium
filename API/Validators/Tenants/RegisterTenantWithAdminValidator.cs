@@ -5,7 +5,7 @@ using FluentValidation;
 namespace API.Validators.Tenants;
 
 /// <summary>
-/// Validator for OrganizationIT registration, inherits all rules from RegisterAppUserValidator.
+/// Validator for IT registration, inherits all rules from RegisterAppUserValidator.
 /// </summary>
 public class RegisterTenantWithAdminValidator : RegisterAppUserValidator<RegisterTenantWithAdminRequest>
 {

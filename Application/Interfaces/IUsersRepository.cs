@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+﻿using Application.Common;
+using Application.Features.Identity.DTOs;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace Application.Interfaces;
@@ -14,4 +16,8 @@ public interface IUsersRepository
     Task<bool> IsEmailUniqueAsync(string email);
     Task<bool> IsUserNameUniqueAsync(string username);
     Task<IdentityResult> UpdateUserAsync(ApplicationUser user);
+
+    Task<PagedList<ApplicationUser, DateTime?>> GetUsersAsync(
+         UsersSearchAndFilterParametersDto parameters,
+         CancellationToken cancellationToken = default);
 }

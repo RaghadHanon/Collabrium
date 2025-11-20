@@ -132,6 +132,7 @@ public class IdentityService : IIdentityService
         {
             FullName = fullName,
             Email = email,
+            Department = department,
             TenantId = tenantId,
             UserName = email,
             DateOfBirth = dateOfBirth,

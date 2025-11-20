@@ -313,6 +313,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("TenantAdminId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("profileImageURL")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Domain")

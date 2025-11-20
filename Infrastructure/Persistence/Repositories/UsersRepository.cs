@@ -1,4 +1,6 @@
-﻿using Application.Interfaces;
+﻿using Application.Common;
+using Application.Features.Identity.DTOs;
+using Application.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -71,5 +73,75 @@ public class UsersRepository : IUsersRepository
     public async Task<bool> IsUserNameUniqueAsync(string username)
     {
         return await _userManager.FindByNameAsync(username) == null;
+    }
+
+
+    public async Task<PagedList<ApplicationUser, DateTime?>> GetUsersAsync(
+         UsersSearchAndFilterParametersDto parameters,
+         CancellationToken cancellationToken = default)
+    {
+        var query = _userManager.Users
+            .Include(c => c.Tenant)
+            .AsNoTracking()
+            .AsQueryable();
+
+        query = ApplyFilters(query, parameters);
+        return await ApplyPagination(parameters, query, cancellationToken);
+    }
+
+    private static async Task<PagedList<ApplicationUser, DateTime?>> ApplyPagination(
+        UsersSearchAndFilterParametersDto parameters, IQueryable<ApplicationUser> query,
+        CancellationToken cancellationToken)
+    {
+        if (parameters.Cursor.HasValue)
+            query = query.Where(c => c.CreatedAt >= parameters.Cursor.Value);
+
+        var items = await query
+            .Take(parameters.PageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > parameters.PageSize)
+        {
+            nextCursor = items.Last().CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<ApplicationUser, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
+    private static IQueryable<ApplicationUser> ApplyFilters(
+        IQueryable<ApplicationUser> query,
+        UsersSearchAndFilterParametersDto parameters)
+    {
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
+            query = query.Where(c => c.TenantId == parameters.TenantId);
+
+        if (parameters.Department.HasValue)
+            query = query.Where(c => c.Department == parameters.Department.Value);
+
+        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
+            query = query.Where(c => c.FullName.Contains(parameters.NameContains));
+
+        if (parameters.DateOfBirth.HasValue)
+            query = query.Where(c => c.DateOfBirth >= parameters.DateOfBirth.Value);
+
+        if (parameters.LastLoginAfter.HasValue)
+            query = query.Where(c => c.LastLoginAt >= parameters.LastLoginAfter.Value);
+
+        if (parameters.CreatedAfter.HasValue)
+            query = query.Where(c => c.CreatedAt >= parameters.CreatedAfter.Value);
+
+        if (parameters.CreatedBefore.HasValue)
+            query = query.Where(c => c.CreatedAt <= parameters.CreatedBefore.Value);
+
+        if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
+            query = query.Where(c => c.PhoneNumber == parameters.PhoneNumber);
+
+        return query;
     }
 }

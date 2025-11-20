@@ -4,6 +4,7 @@ using Domain.Entities;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.Identity;
+using Infrastructure.Images;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Security;
@@ -38,6 +39,9 @@ public static class DependencyInjection
         AddEmailServices(services, configuration);
         AddAuthorizationHandlers(services);
 
+        services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+
+        services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ITenantContext, TenantContext>();
 
         return services;

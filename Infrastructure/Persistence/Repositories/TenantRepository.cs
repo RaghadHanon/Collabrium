@@ -28,6 +28,7 @@ public class TenantRepository : ITenantRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
     }
+
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Tenants

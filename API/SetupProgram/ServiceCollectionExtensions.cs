@@ -42,7 +42,8 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization(options =>
         {
             options.AddPolicy(Policies.SuperAdmin, p => p.RequireRole(nameof(UserRole.SuperAdmin)));
-            options.AddPolicy(Policies.OrganizationIT, p => p.RequireRole(nameof(UserRole.OrganizationIT)));
+            options.AddPolicy(Policies.TenantAdmin, p => p.RequireRole(nameof(UserRole.TenantAdmin)));
+            options.AddPolicy(Policies.IT, p => p.RequireRole(nameof(UserRole.IT)));
             options.AddPolicy(Policies.CEO, p => p.RequireRole(nameof(UserRole.CEO)));
             options.AddPolicy(Policies.HR, p => p.RequireRole(nameof(UserRole.HR)));
             options.AddPolicy(Policies.ProductManager, p => p.RequireRole(nameof(UserRole.ProductManager)));

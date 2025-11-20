@@ -11,5 +11,6 @@ public class TenantMappingProfile : Profile
         CreateMap<RegisterTenantWithAdmin.Command, Tenant>()
             .ForMember(d => d.Name, opt => opt.MapFrom(s => s.TenantName));
         CreateMap<Tenant, TenantDto>();
+        CreateMap<Tenant, TenantWithAdminDto>();
     }
 }

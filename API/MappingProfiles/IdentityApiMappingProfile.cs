@@ -18,6 +18,7 @@ public class IdentityApiMappingProfile : Profile
     {
         CreateMap<RegisterSuperAdminRequest, RegisterAppUser.Command>();
         CreateMap<RegisterAppUserRequest, RegisterAppUser.Command>();
+        CreateMap<RegisterEmployeeRequest, RegisterAppUser.Command>();
         CreateMap<SendPasswordResetEmailRequest, SendPasswordResetEmail.Command>();
         CreateMap<ReSendConfirmationEmailRequest, ReSendConfirmationEmail.Command>();
         CreateMap<ResetPasswordRequest, ResetPassword.Command>();

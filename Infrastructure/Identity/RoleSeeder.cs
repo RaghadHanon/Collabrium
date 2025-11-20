@@ -10,6 +10,7 @@ public class RoleSeeder
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var roles = new[] {
             "SuperAdmin",
+            "TenantAdmin",
             "CEO",
             "HR",
             "ProductManager",
@@ -21,7 +22,7 @@ public class RoleSeeder
             "QA",
             "BusinessAnalyst",
             "Designer",
-            "OrganizationIT"
+            "IT",
         };
 
         foreach (var role in roles)

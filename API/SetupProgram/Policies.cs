@@ -17,6 +17,7 @@ public static class Policies
     public const string QA = "IsQA";
     public const string BusinessAnalyst = "IsBusinessAnalyst";
     public const string Designer = "IsDesigner";
-    public const string OrganizationIT = "IsOrganizationIT";
+    public const string IT = "IsIT";
+    public const string TenantAdmin = "TenantAdmin";
     public const string PasswordChanged = "IsPasswordChanged";
 }

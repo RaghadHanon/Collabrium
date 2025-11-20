@@ -3,6 +3,7 @@
 public enum UserRole
 {
     SuperAdmin,
+    TenantAdmin,
     CEO,
     HR,
     ProductManager,
@@ -14,5 +15,5 @@ public enum UserRole
     QA,
     BusinessAnalyst,
     Designer,
-    OrganizationIT
+    IT,
 }

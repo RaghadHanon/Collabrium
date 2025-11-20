@@ -10,7 +10,7 @@ namespace Application.Features.Identity.Commands;
 
 public class RegisterAppUser
 {
-    public class Command : IRequest<Result<UserDto>>
+    public class Command : IRequest<Result<UserWithTenantDto>>
     {
         public required string FullName { get; set; }
         public Department Department { get; set; }
@@ -22,9 +22,9 @@ public class RegisterAppUser
     }
 
     public class Handler(IIdentityService identityService, ITenantContext tenantContext
-        , IMapper mapper) : IRequestHandler<Command, Result<UserDto>>
+        , IMapper mapper) : IRequestHandler<Command, Result<UserWithTenantDto>>
     {
-        public async Task<Result<UserDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<UserWithTenantDto>> Handle(Command request, CancellationToken cancellationToken)
         {
             var user = await identityService.RegisterUserAsync(
                 request.FullName,
@@ -38,9 +38,9 @@ public class RegisterAppUser
             );
 
             user.MustChangePassword = (request.UserRole != UserRole.SuperAdmin);
-            var registeredSpecialistDto = mapper.Map<UserDto>(user);
+            var registeredSpecialistDto = mapper.Map<UserWithTenantDto>(user);
 
-            return Result<UserDto>.Success(registeredSpecialistDto, HttpStatusCode.Created);
+            return Result<UserWithTenantDto>.Success(registeredSpecialistDto, HttpStatusCode.Created);
         }
     }
 }

@@ -5,13 +5,14 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using System.Net;
 
 namespace Application.Features.Tenants.Commands;
 
 public class RegisterTenantWithAdmin
 {
-    public class Command : IRequest<Result<UserDto>>
+    public class Command : IRequest<Result<UserWithTenantDto>>
     {
         public required string TenantName { get; set; }
         public required string Domain { get; set; }
@@ -29,20 +30,20 @@ public class RegisterTenantWithAdmin
         ITenantRepository tenantRepository,
         IIdentityService identityService,
         IMapper mapper
-    ) : IRequestHandler<Command, Result<UserDto>>
+    ) : IRequestHandler<Command, Result<UserWithTenantDto>>
     {
-        public async Task<Result<UserDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<UserWithTenantDto>> Handle(Command request, CancellationToken cancellationToken)
         {
             var isTenantDomainUnique = await tenantRepository.IsTenantDomainUniqueAsync(request.Domain, cancellationToken);
             if (!isTenantDomainUnique)
             {
-                return Result<UserDto>.Failure("A tenant with this domain already exists.", HttpStatusCode.BadRequest);
+                return Result<UserWithTenantDto>.Failure("A tenant with this domain already exists.", HttpStatusCode.BadRequest);
             }
 
             var isTenantNameUnique = await tenantRepository.IsTenantNameUniqueAsync(request.TenantName, cancellationToken);
             if (!isTenantNameUnique)
             {
-                return Result<UserDto>.Failure("A tenant with this name already exists.", HttpStatusCode.BadRequest);
+                return Result<UserWithTenantDto>.Failure("A tenant with this name already exists.", HttpStatusCode.BadRequest);
             }
 
             var tenant = mapper.Map<Tenant>(request);
@@ -55,19 +56,20 @@ public class RegisterTenantWithAdmin
                 Department.ITSupport, 
                 request.Password,
                 request.DateOfBirth,
-                UserRole.OrganizationIT,
+                UserRole.TenantAdmin,
                 tenant.Id,
                 request.Email,
                 request.PhoneNumber
             );
 
+            tenant.TenantAdminId = user.Id;
             user.MustChangePassword = true;
             tenant.Users.Add(user);
             await tenantRepository.SaveChangesAsync(cancellationToken);
 
-            var dto = mapper.Map<UserDto>(user);
+            var dto = mapper.Map<UserWithTenantDto>(user);
 
-            return Result<UserDto>.Success(dto, HttpStatusCode.Created);
+            return Result<UserWithTenantDto>.Success(dto, HttpStatusCode.Created);
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Net;
 namespace Application.Features.Identity.Queries;
 public class GetUser
 {
-    public class Query : IRequest<Result<UserDto>>
+    public class Query : IRequest<Result<UserWithTenantDto>>
     {
         public string? UserId { get; set; }
     }
@@ -18,9 +18,9 @@ public class GetUser
     public class Handler(
         ICurrentUserAccessor currentUserAccessor,
         IUsersRepository usersRepository,
-        IMapper mapper): IRequestHandler<Query, Result<UserDto>>
+        IMapper mapper): IRequestHandler<Query, Result<UserWithTenantDto>>
     {
-        public async Task<Result<UserDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<Result<UserWithTenantDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             ApplicationUser? user = null;
             if(request.UserId != null)
@@ -29,11 +29,11 @@ public class GetUser
                 user = await currentUserAccessor.GetUserAsync();
 
             if (user == null)
-                return Result<UserDto>.Failure("User not found", HttpStatusCode.NotFound);
+                return Result<UserWithTenantDto>.Failure("User not found", HttpStatusCode.NotFound);
 
-            var userDto = mapper.Map<UserDto>(user);
+            var userDto = mapper.Map<UserWithTenantDto>(user);
 
-            return Result<UserDto>.Success(userDto, HttpStatusCode.OK);
+            return Result<UserWithTenantDto>.Success(userDto, HttpStatusCode.OK);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using API.Contracts.Tenants;
+﻿using API.Common.Attributes;
+using API.Contracts.Tenants;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Identity.DTOs;
@@ -40,6 +41,7 @@ public class TenantController : ApiBaseController
     /// <response code="400">If the request data is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a SuperAdmin.</response>
+    [IgnoreTenantContext]
     [Authorize(Policy = Policies.SuperAdmin)]
     [HttpPost("register-tenant")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
@@ -88,6 +90,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user has not changed their initial password.</response>
     /// <response code="404">If the tenant with the specified ID was not found.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
+    [IgnoreTenantContext]
     [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("{id}")]
     public async Task<ActionResult<TenantDto>> GetTenant(string id)
@@ -170,6 +173,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not a Super Admin.</response>
     /// <response code="404">If the tenant with the specified ID does not exist.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
+    [IgnoreTenantContext]
     [HttpGet("{id}/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetAllChildren(string id, [FromQuery] GetTenantUsersRequest request)
     {

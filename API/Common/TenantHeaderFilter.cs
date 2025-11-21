@@ -1,4 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using API.Common.Attributes;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace API.Common;
@@ -14,21 +15,26 @@ public class TenantHeaderFilter : IOperationFilter
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
         var endpointMetadata = context.ApiDescription.ActionDescriptor.EndpointMetadata;
-        if (operation.Parameters == null)
-        {
-            operation.Parameters = new List<OpenApiParameter>();
-        }
+        var hasIgnoreAttribute = endpointMetadata.Any(m => m is IgnoreTenantContextAttribute);
 
-        operation.Parameters.Add(new OpenApiParameter
+        if (!hasIgnoreAttribute)
         {
-            Name = "X-Tenant-Id",
-            In = ParameterLocation.Header,
-            Description = "The unique identifier of the tenant.",
-            Required = true,
-            Schema = new OpenApiSchema
+            if (operation.Parameters == null)
             {
-                Type = "string"
+                operation.Parameters = new List<OpenApiParameter>();
             }
-        });
+
+            operation.Parameters.Add(new OpenApiParameter
+            {
+                Name = "X-Tenant-Id",
+                In = ParameterLocation.Header,
+                Description = "The unique identifier of the tenant.",
+                Required = true,
+                Schema = new OpenApiSchema
+                {
+                    Type = "string"
+                }
+            });
+        }
     }
 }

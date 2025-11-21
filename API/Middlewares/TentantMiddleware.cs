@@ -1,4 +1,5 @@
-﻿using Application.Common.Exceptions;
+﻿using API.Common.Attributes;
+using Application.Common.Exceptions;
 using Application.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -22,9 +23,17 @@ public class TenantMiddleware
 
     public async Task InvokeAsync(HttpContext context, ITenantContext tenantContext, ITenantRepository tenantRepository, UserManager<ApplicationUser> userManager)
     {
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)
+        {
+            await _next(context);
+            return;
+        }
+
+        var user = await userManager.GetUserAsync(context.User);
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var user = await userManager.GetUserAsync(context.User);
+           
             if (user != null && await userManager.IsInRoleAsync(user, "SuperAdmin"))
             {
                 var globalTenant = await tenantRepository.GetByDomainAsync("global.platform");
@@ -45,6 +54,9 @@ public class TenantMiddleware
             var tenant = await tenantRepository.GetByIdAsync(tenantId);
             if (tenant == null)
                 throw new UnauthorizedAccessException("The tenant does not exist.");
+
+            if (user != null && user.TenantId != tenant.Id)
+                throw new UnauthorizedAccessException("User does not belong to the specified tenant.");
 
             if (!tenant.IsActive)
                 throw new UnauthorizedAccessException("The tenant is not active.");

@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enums;
@@ -32,12 +32,13 @@ public class RegisterAppUser
                 request.Password,
                 request.DateOfBirth,
                 request.UserRole,
-                tenantContext.TenantId!,
+                request.UserRole != UserRole.SuperAdmin ? tenantContext.TenantId!:
+                 (await tenantContext.GetGlobalTenant())!.Id,
                 request.Email,
                 request.PhoneNumber
             );
 
-            user.MustChangePassword = (request.UserRole != UserRole.SuperAdmin);
+            user.MustChangePassword = request.UserRole != UserRole.SuperAdmin;
             var registeredSpecialistDto = mapper.Map<UserWithTenantDto>(user);
 
             return Result<UserWithTenantDto>.Success(registeredSpecialistDto, HttpStatusCode.Created);

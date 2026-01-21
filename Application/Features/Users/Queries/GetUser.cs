@@ -1,11 +1,11 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.Identity.Queries;
+namespace Application.Features.Users.Queries;
 public class GetUser
 {
     public class Query : IRequest<Result<UserWithTenantDto>>

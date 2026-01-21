@@ -6,5 +6,8 @@ public class TenantDto
     public string Domain { get; set; } = null!;
     public string? Description { get; set; }
     public bool IsActive { get; set; }
-    public string? profileImageURL { get; set; }
+    public string? ProfileImageURL { get; set; }
+    public string? Country { get; set; }
+    public string? WebsiteURL { get; set; }
+    public required TenantContactInfoDto TenantContactInfo { get; set; }
 }

@@ -46,15 +46,14 @@ public static class ServiceCollectionExtensions
             options.AddPolicy(Policies.IT, p => p.RequireRole(nameof(UserRole.IT)));
             options.AddPolicy(Policies.CEO, p => p.RequireRole(nameof(UserRole.CEO)));
             options.AddPolicy(Policies.HR, p => p.RequireRole(nameof(UserRole.HR)));
-            options.AddPolicy(Policies.ProductManager, p => p.RequireRole(nameof(UserRole.ProductManager)));
+            options.AddPolicy(Policies.ProductOwner, p => p.RequireRole(nameof(UserRole.ProductOwner)));
             options.AddPolicy(Policies.TeamLead, p => p.RequireRole(nameof(UserRole.TeamLead)));
-            options.AddPolicy(Policies.DevOps, p => p.RequireRole(nameof(UserRole.DevOps)));
             options.AddPolicy(Policies.BackendDev, p => p.RequireRole(nameof(UserRole.BackendDev)));
             options.AddPolicy(Policies.FrontendDev, p => p.RequireRole(nameof(UserRole.FrontendDev)));
             options.AddPolicy(Policies.FullStackDev, p => p.RequireRole(nameof(UserRole.FullStackDev)));
             options.AddPolicy(Policies.QA, p => p.RequireRole(nameof(UserRole.QA)));
             options.AddPolicy(Policies.BusinessAnalyst, p => p.RequireRole(nameof(UserRole.BusinessAnalyst)));
-            options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer))); 
+            options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer)));
             options.AddPolicy(Policies.PasswordChanged, policy =>
                     policy.Requirements.Add(new IsPasswordChangedRequirement()));
         });

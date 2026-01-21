@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Images;
+
 public class PhotoService : IPhotoService
 {
     private readonly ICloudinary _cloudinary;

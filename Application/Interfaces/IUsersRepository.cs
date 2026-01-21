@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
@@ -11,13 +11,12 @@ public interface IUsersRepository
     Task<ApplicationUser?> GetByEmailAsync(string email);
     Task<ApplicationUser?> GetByIdAsync(string userId);
     Task<ApplicationUser?> GetByUserNameAsync(string username);
-    Task<List<Image>> GetUserProfileImagesAsync(string userId);
     Task<List<ApplicationUser>> GetUsersByTenantAsync(string tenantId);
     Task<bool> IsEmailUniqueAsync(string email);
     Task<bool> IsUserNameUniqueAsync(string username);
     Task<IdentityResult> UpdateUserAsync(ApplicationUser user);
-
     Task<PagedList<ApplicationUser, DateTime?>> GetUsersAsync(
          UsersSearchAndFilterParametersDto parameters,
          CancellationToken cancellationToken = default);
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

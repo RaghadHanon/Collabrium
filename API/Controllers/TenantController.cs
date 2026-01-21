@@ -2,10 +2,10 @@
 using API.Contracts.Tenants;
 using API.SetupProgram;
 using Application.Common;
-using Application.Features.Identity.DTOs;
 using Application.Features.Tenants.Commands;
 using Application.Features.Tenants.DTOs;
 using Application.Features.Tenants.Queries;
+using Application.Features.Users.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,7 +43,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not a SuperAdmin.</response>
     [IgnoreTenantContext]
     [Authorize(Policy = Policies.SuperAdmin)]
-    [HttpPost("register-tenant")]
+    [HttpPost("tenant-with-admin-registration")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
     {
         var command = Mapper.Map<RegisterTenantWithAdmin.Command>(request);
@@ -52,12 +52,55 @@ public class TenantController : ApiBaseController
     }
 
     /// <summary>
+    /// Updates the details of the currently authenticated tenant, including optional file uploads.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint accepts data via `multipart/form-data`.
+    /// 
+    /// Sample request:
+    /// 
+    ///     PUT /api/tenants/my-tenant
+    ///     Content-Type: multipart/form-data
+    ///     
+    ///     Form Data:
+    ///     key: "name", value: "TechFusion Ltd", type: Text
+    ///     key: "domain", value: "techfusion.com", type: Text
+    ///     key: "description", value: "Software development company", type: Text
+    ///     key: "country", value: "Palestine", type: Text
+    ///     key: "file", value: [Select image file], type: File
+    ///     key: "websiteURL", value: "https://techfusion.com", type: Text
+    ///     key: "email", value: "contact@techfusion.com", type: Text
+    ///     key: "phoneNumber", value: "0597612345", type: Text
+    ///     key: "linkedIn", value: "https://linkedin.com/company/techfusion", type: Text
+    ///     key: "facebook", value: "https://facebook.com/techfusion", type: Text
+    ///     key: "instagram", value: "https://instagram.com/techfusion", type: Text
+    ///     key: "youTube", value: "https://youtube.com/techfusion", type: Text
+    /// 
+    /// Only the fields provided will be updated; fields left empty will remain unchanged.
+    /// </remarks>
+    /// <param name="request">The tenant data to update, including optional file uploads.</param>
+    /// <returns>The updated tenant details along with associated user information.</returns>
+    /// <response code="200">Tenant updated successfully, returning the updated tenant data.</response>
+    /// <response code="400">If the request data is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not a TenantAdmin.</response>
+    /// <response code="404">If the tenant could not be found.</response>
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [HttpPut("my-tenant")]
+    public async Task<ActionResult<UserWithTenantDto>> UpdateTenant([FromForm] UpdateTenantRequest request)
+    {
+        var command = Mapper.Map<UpdateTenant.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
     /// Retrieves the tenant details associated with the currently logged-in user.
     /// </summary>
     /// <remarks>
     /// Sample request:
     /// 
-    ///     GET /api/tenants/me
+    ///     GET /api/tenants/my-tenant
     /// 
     /// </remarks>
     /// <returns>The details of the current user's tenant.</returns>
@@ -124,9 +167,9 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not authorized (must be a Tenant Admin).</response>
     [Authorize(Policy = Policies.TenantAdmin)]
     [HttpPost("profile-image")]
-    public async Task<ActionResult> UploadProfileImage([FromForm] UploadProfileImageRequest request)
+    public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
     {
-        var command = Mapper.Map<UploadTenantProfileImage.Command>(request);
+        var command = Mapper.Map<UploadTenantProfilePhoto.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -147,7 +190,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not a Tenant Admin.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
     [HttpGet("my-tenant/users")]
-    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetAllChildren([FromQuery] GetTenantUsersRequest request)
+    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetMyTenantUsers([FromQuery] GetTenantUsersRequest request)
     {
         var query = Mapper.Map<GetTenantUsers.Query>(request);
 
@@ -175,10 +218,37 @@ public class TenantController : ApiBaseController
     [Authorize(Policy = Policies.SuperAdmin)]
     [IgnoreTenantContext]
     [HttpGet("{id}/users")]
-    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetAllChildren(string id, [FromQuery] GetTenantUsersRequest request)
+    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetTenantUsers(string id, [FromQuery] GetTenantUsersRequest request)
     {
         var query = Mapper.Map<GetTenantUsers.Query>(request);
         query.TenantId = id;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves a paginated list of tenants based on the specified filtering criteria.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is restricted to Super Admins for administrative oversight.  
+    /// Tenant context is ignored when processing this request.
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/tenants?NameContains=example&Country=US&PageSize=10
+    ///
+    /// </remarks>
+    /// <param name="request">The pagination and filtering parameters for tenants.</param>
+    /// <returns>A paged list of tenants matching the specified filters.</returns>
+    /// <response code="200">Returns the list of tenants successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not a Super Admin.</response>
+    [Authorize(Policy = Policies.SuperAdmin)]
+    [IgnoreTenantContext]
+    [HttpGet]
+    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetTenants([FromQuery] GetTenantsRequest request)
+    {
+        var query = Mapper.Map<GetTenants.Query>(request);
 
         return HandleResult(await Mediator.Send(query));
     }

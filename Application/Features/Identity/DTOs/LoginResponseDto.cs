@@ -14,4 +14,8 @@ public class LoginResponseDto
     /// Unique identifier of the authenticated user
     /// </summary>
     public required string Id { get; set; }
+    /// <summary>
+    /// Unique identifier of the tenant that the user belongs to 
+    /// </summary>
+    public required string TenantId { get; set; }
 }

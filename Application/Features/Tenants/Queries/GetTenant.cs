@@ -1,9 +1,7 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
 using Application.Features.Tenants.DTOs;
 using Application.Interfaces;
 using AutoMapper;
-using Domain.Entities;
 using MediatR;
 using System.Net;
 
@@ -21,12 +19,7 @@ public class GetTenant
     {
         public async Task<Result<TenantWithAdminDto>> Handle(Query request, CancellationToken cancellationToken)
         {
-            Tenant? tenant = null;
-            if (request.TenantId == null)
-                tenant = tenantContext.CurrentTenant;
-            else
-                tenant = await tenantRepository.GetTenantByIdAsync(request.TenantId!);
-
+            var tenant = request.TenantId == null ? tenantContext.CurrentTenant : await tenantRepository.GetTenantByIdAsync(request.TenantId!);
             if (tenant == null)
             {
                 return Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);

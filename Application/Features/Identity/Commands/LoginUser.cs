@@ -20,7 +20,7 @@ public class LoginUser
         public async Task<Result<LoginResponseDto>> Handle(Command request
             , CancellationToken cancellationToken)
         {
-            var (token, id) = await identityService
+            var (token, id, tenantId) = await identityService
                 .AuthenticateAsync(request.Email, request.Password);
 
             var user = await identityService.GetUserAsync(request.Email);
@@ -34,7 +34,8 @@ public class LoginUser
             return Result<LoginResponseDto>.Success(new LoginResponseDto
             {
                 Token = token,
-                Id = id
+                Id = id,
+                TenantId = tenantId
             }, HttpStatusCode.OK);
         }
     }

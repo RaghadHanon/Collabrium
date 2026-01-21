@@ -4,7 +4,7 @@ using Domain.Enums;
 namespace Application.Interfaces;
 public interface IIdentityService
 {
-    Task<(string Token, string Id)> AuthenticateAsync(string email, string password);
+    Task<(string Token, string Id, string TenantId)> AuthenticateAsync(string email, string password);
     Task ChangePasswordAsync(string userId, string currentPassword, string newPassword);
     Task<IList<string>> GetRolesAsync(ApplicationUser user);
     Task<ApplicationUser?> GetUserAsync(string email);

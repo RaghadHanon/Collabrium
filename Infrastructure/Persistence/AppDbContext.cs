@@ -18,7 +18,10 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<Bug> Bugs => Set<Bug>();
     public DbSet<WorkItemRelation> workItemRelations => Set<WorkItemRelation>();
     public DbSet<Comment> Comments => Set<Comment>();
-    public DbSet<Image> Images => Set<Image>(); 
+    public DbSet<TenantImage> TenantImages => Set<TenantImage>();
+    public DbSet<UserImage> UserImages => Set<UserImage>();
+    public DbSet<TenantContactInfo> TenantContactInfos => Set<TenantContactInfo>();
+    public DbSet<UserContactInfo> UserContactInfos => Set<UserContactInfo>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

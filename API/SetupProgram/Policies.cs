@@ -8,9 +8,8 @@ public static class Policies
     public const string SuperAdmin = "IsSuperAdmin";
     public const string CEO = "IsCEO";
     public const string HR = "IsHR";
-    public const string ProductManager = "IsProductManager";
+    public const string ProductOwner = "IsProductOwner";
     public const string TeamLead = "IsTeamLead";
-    public const string DevOps = "IsDevOps";
     public const string BackendDev = "IsBackendDev";
     public const string FrontendDev = "IsFrontendDev";
     public const string FullStackDev = "IsFullStackDev";

@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace Application.Features.Identity.DTOs;
+namespace Application.Features.Users.DTOs;
 public class UserDto
 {
     public required string Id { get; set; }
@@ -12,4 +12,6 @@ public class UserDto
     public DateTime? LastLoginAt { get; set; }
     public DateOnly DateOfBirth { get; set; }
     public int Age { get; set; }
+    public string? ProfileImageUrl { get; set; }
+    public required UserContactInfoDto UserContactInfo { get; set; }
 }

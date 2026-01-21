@@ -2,6 +2,7 @@
 using API.Contracts.Tenants;
 using Application.Features.Identity.Commands;
 using Application.Features.Tenants.Commands;
+using Application.Features.Users.Commands;
 using AutoMapper;
 
 namespace API.MappingProfiles;
@@ -25,5 +26,7 @@ public class IdentityApiMappingProfile : Profile
         CreateMap<ChangePasswordRequest, ChangePassword.Command>();
         CreateMap<ConfirmEmailRequest, ConfirmEmail.Command>();
         CreateMap<LoginRequest, LoginUser.Command>();
+        CreateMap<UpdateUserProfileRequest, UpdateUserProfile.Command>();
+        CreateMap<UploadFileRequest, UploadUserProfilePhoto.Command>();
     }
 }

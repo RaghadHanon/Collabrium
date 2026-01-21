@@ -1,11 +1,10 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using System.Net;
 
 namespace Application.Features.Tenants.Commands;
@@ -53,7 +52,7 @@ public class RegisterTenantWithAdmin
 
             var user = await identityService.RegisterUserAsync(
                 request.FullName,
-                Department.ITSupport, 
+                Department.ITSupport,
                 request.Password,
                 request.DateOfBirth,
                 UserRole.TenantAdmin,
@@ -62,6 +61,10 @@ public class RegisterTenantWithAdmin
                 request.PhoneNumber
             );
 
+            tenant.TenantContactInfo = new TenantContactInfo
+            {
+                TenantId = tenant.Id,
+            };
             tenant.TenantAdminId = user.Id;
             user.MustChangePassword = true;
             tenant.Users.Add(user);

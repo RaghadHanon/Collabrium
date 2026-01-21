@@ -17,6 +17,8 @@ public class CurrentUserAccessor(IHttpContextAccessor httpContextAccessor
             ? null
             : await dbContext.Users
              .Include(u => u.Tenant)
+             .Include(u => u.UserContactInfo)
+             .Include(u => u.ProfileImage)
              .FirstOrDefaultAsync(x => x.Id == userId);
     }
 

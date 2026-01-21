@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -23,14 +23,9 @@ public class UsersRepository : IUsersRepository
     {
         return await _userManager.Users
             .Include(u => u.Tenant)
+            .Include(u => u.UserContactInfo)
+            .Include(u => u.ProfileImage)
             .FirstOrDefaultAsync(u => u.Id == userId);
-    }
-
-    public async Task<List<Image>> GetUserProfileImagesAsync(string userId)
-    {
-        return await _dbContext.Images
-            .Where(img => img.ApplicationUserId == userId)
-            .ToListAsync();
     }
 
     public async Task<ApplicationUser?> GetByEmailAsync(string email)
@@ -46,6 +41,9 @@ public class UsersRepository : IUsersRepository
     public async Task<List<ApplicationUser>> GetUsersByTenantAsync(string tenantId)
     {
         return await _userManager.Users
+            .Include(u => u.Tenant)
+            .Include(u => u.UserContactInfo)
+            .Include(u => u.ProfileImage)
             .Where(u => u.TenantId == tenantId)
             .ToListAsync();
     }
@@ -75,13 +73,14 @@ public class UsersRepository : IUsersRepository
         return await _userManager.FindByNameAsync(username) == null;
     }
 
-
     public async Task<PagedList<ApplicationUser, DateTime?>> GetUsersAsync(
          UsersSearchAndFilterParametersDto parameters,
          CancellationToken cancellationToken = default)
     {
         var query = _userManager.Users
-            .Include(c => c.Tenant)
+            .Include(u => u.Tenant)
+            .Include(u => u.UserContactInfo)
+            .Include(u => u.ProfileImage)
             .AsNoTracking()
             .AsQueryable();
 
@@ -143,5 +142,10 @@ public class UsersRepository : IUsersRepository
             query = query.Where(c => c.PhoneNumber == parameters.PhoneNumber);
 
         return query;
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

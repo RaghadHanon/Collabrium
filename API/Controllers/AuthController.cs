@@ -3,6 +3,7 @@ using API.Contracts.Identity;
 using API.SetupProgram;
 using Application.Features.Identity.Commands;
 using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +37,7 @@ public class AuthController : ApiBaseController
     /// <returns>The newly created super admin object.</returns>
     /// <response code="201">Returns the newly created user and a Location header pointing to it.</response>
     /// <response code="400">If the request data is invalid.</response>
-    ///[Authorize(Policy = Policies.SuperAdmin)]
+    [Authorize(Policy = Policies.SuperAdmin)]
     [IgnoreTenantContext]
     [HttpPost("super-admin-registration")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterSuperAdmin(RegisterSuperAdminRequest registerSuperAdminRequest)
@@ -71,7 +72,7 @@ public class AuthController : ApiBaseController
     /// <response code="201">Returns the newly created user and a Location header pointing to it.</response>
     /// <response code="400">If the request data is invalid.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
-    [HttpPost("register-tenant-employee")]
+    [HttpPost("tenant-employee-registration")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantEmployee(RegisterEmployeeRequest registerEmployeeRequest)
     {
         var command = Mapper.Map<RegisterAppUser.Command>(registerEmployeeRequest);

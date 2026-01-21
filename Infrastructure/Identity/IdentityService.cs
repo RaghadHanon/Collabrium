@@ -18,10 +18,10 @@ public class IdentityService : IIdentityService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly AppDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly IdentitySettings _identitySettings;
     private readonly IEmailTemplateFactory _emailTemplateFactory;
+    private readonly AppDbContext _dbContext;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
@@ -35,29 +35,53 @@ public class IdentityService : IIdentityService
         _userManager = userManager;
         _roleManager = roleManager;
         _jwtTokenGenerator = jwtTokenGenerator;
-        _dbContext = dbContext;
         _emailService = emailService;
         _identitySettings = identityOptions.Value;
-        _emailTemplateFactory = emailTemplateFactory;
+        _emailTemplateFactory = emailTemplateFactory; 
+        _dbContext = dbContext;
+
     }
 
     public async Task<ApplicationUser> RegisterUserAsync(
-        string fullName,
-        Department department,
-        string password,
-        DateOnly dateOfBirth,
-        UserRole role,
-        string tenantId,
-        string? email = null,
-        string? phoneNumber = null)
+    string fullName,
+    Department department,
+    string password,
+    DateOnly dateOfBirth,
+    UserRole role,
+    string tenantId,
+    string? email = null,
+    string? phoneNumber = null)
     {
-        var user = CreateApplicationUser(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-        await CreateUserAsync(user, password);
-        await AssignRoleAsync(user, role);
-        await SendConfirmationEmail(user);
+        try
+        {
+            var user = CreateApplicationUser(
+                fullName,
+                department,
+                dateOfBirth,
+                tenantId,
+                email,
+                phoneNumber);
 
-        return user;
+            user.UserContactInfo = new UserContactInfo
+            {
+                UserId = user.Id
+            };
+
+            await CreateUserAsync(user, password);
+            await AssignRoleAsync(user, role);
+            await SendConfirmationEmail(user);
+
+            await transaction.CommitAsync();
+
+            return user;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw; 
+        }
     }
 
     private async Task CreateUserAsync(ApplicationUser user, string password)
@@ -140,7 +164,7 @@ public class IdentityService : IIdentityService
         };
     }
 
-    public async Task<(string Token, string Id)> AuthenticateAsync(string email, string password)
+    public async Task<(string Token, string Id, string TenantId)> AuthenticateAsync(string email, string password)
     {
         var user = await ValidateCredentialsAsync(email, password);
         var roles = await GetRolesAsync(user);
@@ -148,8 +172,9 @@ public class IdentityService : IIdentityService
         var token = _jwtTokenGenerator.GenerateToken(user, roles)
                     ?? throw new TokenGenerationFailedException("Token generation failed");
         var entityId = user.Id;
+        var tenantId = user.TenantId;
 
-        return (token, entityId);
+        return (token, entityId, tenantId);
     }
 
     private async Task<ApplicationUser> ValidateCredentialsAsync(string email, string password)

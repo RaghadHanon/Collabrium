@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251113165835_MakeDepartmentNullable")]
-    partial class MakeDepartmentNullable
+    [Migration("20260121190351_Update Images For users and tenants")]
+    partial class UpdateImagesForusersandtenants
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -82,6 +82,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -103,7 +106,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TenantId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -161,33 +163,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Image", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("Image");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -294,6 +269,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -313,6 +291,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("TenantAdminId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WebsiteURL")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Domain")
@@ -324,6 +308,135 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("IX_Tenant_Name");
 
                     b.ToTable("Tenants");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TenantContactInfo", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Facebook")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Instagram")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkedIn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TenantId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("YouTube")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasFilter("[TenantId] IS NOT NULL");
+
+                    b.ToTable("TenantContactInfos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TenantImage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("TenantImages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserContactInfo", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Facebook")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Github")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Instagram")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkedIn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("YouTube")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
+
+                    b.ToTable("UserContactInfos");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserImage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique();
+
+                    b.ToTable("UserImages");
                 });
 
             modelBuilder.Entity("Domain.Entities.WorkItem", b =>
@@ -663,8 +776,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Tenant", "Tenant")
                         .WithMany("Users")
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Tenant");
                 });
@@ -686,17 +798,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("WorkItem");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Image", b =>
-                {
-                    b.HasOne("Domain.Entities.ApplicationUser", "ApplicationUser")
-                        .WithMany("ProfileImages")
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -746,6 +847,40 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TenantContactInfo", b =>
+                {
+                    b.HasOne("Domain.Entities.Tenant", null)
+                        .WithOne("TenantContactInfo")
+                        .HasForeignKey("Domain.Entities.TenantContactInfo", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TenantImage", b =>
+                {
+                    b.HasOne("Domain.Entities.Tenant", null)
+                        .WithOne("ProfileImage")
+                        .HasForeignKey("Domain.Entities.TenantImage", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserContactInfo", b =>
+                {
+                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                        .WithOne("UserContactInfo")
+                        .HasForeignKey("Domain.Entities.UserContactInfo", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserImage", b =>
+                {
+                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                        .WithOne("ProfileImage")
+                        .HasForeignKey("Domain.Entities.UserImage", "ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Entities.WorkItem", b =>
@@ -857,9 +992,11 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedWorkItems");
 
-                    b.Navigation("ProfileImages");
+                    b.Navigation("ProfileImage");
 
                     b.Navigation("Projects");
+
+                    b.Navigation("UserContactInfo");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -881,9 +1018,13 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Tenant", b =>
                 {
+                    b.Navigation("ProfileImage");
+
                     b.Navigation("Projects");
 
                     b.Navigation("Teams");
+
+                    b.Navigation("TenantContactInfo");
 
                     b.Navigation("Users");
                 });

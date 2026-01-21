@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Identity.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enums;
@@ -24,12 +24,12 @@ public class GetTenantUsers
     }
 
     public class Handler(IUsersRepository usersRepository, IMapper mapper
-        , ITenantContext tenantContext): IRequestHandler<Query, Result<PagedList<UserDto, DateTime?>>>
+        , ITenantContext tenantContext) : IRequestHandler<Query, Result<PagedList<UserDto, DateTime?>>>
     {
         public async Task<Result<PagedList<UserDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var queryParams = mapper.Map<UsersSearchAndFilterParametersDto>(request);
-            if(queryParams.TenantId is null)
+            if (queryParams.TenantId is null)
                 queryParams.TenantId = tenantContext.TenantId;
 
             var pagedUsers = await usersRepository.GetUsersAsync(queryParams, cancellationToken);
@@ -45,5 +45,4 @@ public class GetTenantUsers
             );
         }
     }
-
 }

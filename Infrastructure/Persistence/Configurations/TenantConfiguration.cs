@@ -40,5 +40,15 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .WithOne(p => p.Tenant)
             .HasForeignKey(p => p.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(t => t.TenantContactInfo)
+            .WithOne()
+            .HasForeignKey<TenantContactInfo>(ci => ci.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(u => u.ProfileImage)
+            .WithOne()
+            .HasForeignKey<TenantImage>(i => i.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

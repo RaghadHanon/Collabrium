@@ -27,10 +27,20 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(u => u.ProfileImage)
+            .WithOne()
+            .HasForeignKey<UserImage>(i => i.ApplicationUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(u => u.AssignedWorkItems)
             .WithOne(w => w.AssignedToUser)
             .HasForeignKey(w => w.AssignedToUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(t => t.UserContactInfo)
+            .WithOne()
+            .HasForeignKey<UserContactInfo>(ci => ci.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(u => u.UserName)
             .IsUnique()

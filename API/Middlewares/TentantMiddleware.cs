@@ -21,7 +21,8 @@ public class TenantMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, ITenantContext tenantContext, ITenantRepository tenantRepository, UserManager<ApplicationUser> userManager)
+    public async Task InvokeAsync(HttpContext context, ITenantContext tenantContext,
+        ITenantRepository tenantRepository, UserManager<ApplicationUser> userManager)
     {
         var endpoint = context.GetEndpoint();
         if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)
@@ -33,10 +34,11 @@ public class TenantMiddleware
         var user = await userManager.GetUserAsync(context.User);
         if (context.User.Identity?.IsAuthenticated == true)
         {
-           
+
             if (user != null && await userManager.IsInRoleAsync(user, "SuperAdmin"))
             {
-                var globalTenant = await tenantRepository.GetByDomainAsync("global.platform");
+                var globalTenant = await tenantRepository
+                    .GetByDomainAsync("global.platform");
                 tenantContext.TenantId = globalTenant!.Id;
                 tenantContext.CurrentTenant = globalTenant;
 

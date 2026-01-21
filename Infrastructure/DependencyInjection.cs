@@ -49,8 +49,8 @@ public static class DependencyInjection
 
     private static void AddEmailServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<SendGridSettings>(configuration.GetSection("SendGridSettings"));
-        services.AddSingleton<IEmailService, SendGridEmailService>();
+        services.Configure<SmtpSettings>(configuration.GetSection("SmtpSettings"));
+        services.AddSingleton<IEmailService, SmtpEmailService>();
         services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
         var templateTypes = typeof(EmailTemplateFactory)
             .Assembly

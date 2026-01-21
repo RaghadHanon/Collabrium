@@ -10,7 +10,9 @@ public class TenantsMappingProfile : Profile
     public TenantsMappingProfile()
     {
         CreateMap<RegisterTenantWithAdminRequest, RegisterTenantWithAdmin.Command>();
-        CreateMap<UploadProfileImageRequest, UploadTenantProfileImage.Command>();
+        CreateMap<UploadFileRequest, UploadTenantProfilePhoto.Command>();
         CreateMap<GetTenantUsersRequest, GetTenantUsers.Query>();
+        CreateMap<GetTenantsRequest, GetTenants.Query>();
+        CreateMap<UpdateTenantRequest, UpdateTenant.Command>();
     }
 }

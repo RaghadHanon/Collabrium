@@ -15,7 +15,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.20" />
-		<PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.46.0" />
 	</ItemGroup>
 	
   <ItemGroup>

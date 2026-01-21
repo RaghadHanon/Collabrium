@@ -5,7 +5,7 @@ namespace Domain.Entities;
 
 public class ApplicationUser : IdentityUser
 {
-    public required string TenantId { get; set; }
+    public string? TenantId { get; set; }
     public string FullName { get; set; } = null!;
     public Department? Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -30,7 +30,8 @@ public class ApplicationUser : IdentityUser
 
     // Navigation
     public Tenant Tenant { get; set; } = null!;
-    public ICollection<Image> ProfileImages { get; set; } = new List<Image>();
+    public UserContactInfo? UserContactInfo { get; set; }
+    public UserImage? ProfileImage { get; set; }
     public ICollection<Team> Teams { get; set; } = new List<Team>();
     public ICollection<Project> Projects { get; set; } = new List<Project>();
     public ICollection<WorkItem> AssignedWorkItems { get; set; } = new List<WorkItem>();

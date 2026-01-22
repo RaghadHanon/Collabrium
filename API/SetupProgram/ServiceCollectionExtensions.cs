@@ -56,6 +56,25 @@ public static class ServiceCollectionExtensions
             options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer)));
             options.AddPolicy(Policies.PasswordChanged, policy =>
                     policy.Requirements.Add(new IsPasswordChangedRequirement()));
+            options.AddPolicy(Policies.ProductTeamManager, p =>
+                     p.RequireRole(
+                         nameof(UserRole.ProductOwner),
+                         nameof(UserRole.TeamLead),
+                         nameof(UserRole.BusinessAnalyst)
+                     ));
+            options.AddPolicy(Policies.ProductTeamMember, p =>
+                    p.RequireRole(
+                        nameof(UserRole.BackendDev),
+                        nameof(UserRole.QA),
+                        nameof(UserRole.FrontendDev)
+                    ));
+            options.AddPolicy(Policies.ProductTeamManagerOrTenantAdmin, p =>
+                    p.RequireRole(
+                        nameof(UserRole.ProductOwner),
+                        nameof(UserRole.TeamLead),
+                        nameof(UserRole.BusinessAnalyst),
+                        nameof(UserRole.TenantAdmin)
+                    ));
         });
 
         services.AddCors(options =>

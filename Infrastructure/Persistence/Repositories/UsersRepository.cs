@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Users.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -142,6 +142,30 @@ public class UsersRepository : IUsersRepository
             query = query.Where(c => c.PhoneNumber == parameters.PhoneNumber);
 
         return query;
+    }
+
+    public async Task<List<ApplicationUser>> GetByIdsAsync(
+    IEnumerable<string> userIds,
+    CancellationToken cancellationToken = default)
+    {
+        if (userIds is null)
+            return new List<ApplicationUser>();
+
+        var ids = userIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (ids.Count == 0)
+            return new List<ApplicationUser>();
+
+        return await _userManager.Users
+            .Include(u => u.Tenant)
+            .Include(u => u.UserContactInfo)
+            .Include(u => u.ProfileImage)
+            .Where(u => ids.Contains(u.Id))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

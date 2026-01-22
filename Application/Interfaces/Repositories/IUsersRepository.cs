@@ -3,7 +3,7 @@ using Application.Features.Users.DTOs;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
-namespace Application.Interfaces;
+namespace Application.Interfaces.Repositories;
 public interface IUsersRepository
 {
     Task<IdentityResult> CreateUserAsync(ApplicationUser user, string password);
@@ -18,5 +18,8 @@ public interface IUsersRepository
     Task<PagedList<ApplicationUser, DateTime?>> GetUsersAsync(
          UsersSearchAndFilterParametersDto parameters,
          CancellationToken cancellationToken = default);
+    Task<List<ApplicationUser>> GetByIdsAsync(
+        IEnumerable<string> userIds,
+        CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

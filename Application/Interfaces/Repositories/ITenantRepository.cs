@@ -2,7 +2,7 @@
 using Application.Features.Tenants.DTOs;
 using Domain.Entities;
 
-namespace Application.Interfaces;
+namespace Application.Interfaces.Repositories;
 public interface ITenantRepository
 {
     Task AddTenantAsync(Tenant tenant, CancellationToken cancellationToken = default);

@@ -19,4 +19,7 @@ public static class Policies
     public const string IT = "IsIT";
     public const string TenantAdmin = "TenantAdmin";
     public const string PasswordChanged = "IsPasswordChanged";
+    public const string ProductTeamManagerOrTenantAdmin = "ProductTeamManagerOrTenantAdmin";
+    public const string ProductTeamManager = "ProductTeamManager";
+    public const string ProductTeamMember = "ProductTeamMember";
 }

@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;

@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Emails;
+using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
@@ -68,6 +69,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IUsersRepository, UsersRepository>();
+        services.AddScoped<ITeamsRepository, TeamsRepository>();
     }
 
     private static void AddAuthorizationHandlers(IServiceCollection services)

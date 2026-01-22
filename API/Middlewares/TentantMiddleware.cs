@@ -1,6 +1,7 @@
 ﻿using API.Common.Attributes;
 using Application.Common.Exceptions;
 using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 

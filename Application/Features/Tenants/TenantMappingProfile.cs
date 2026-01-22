@@ -1,7 +1,6 @@
 ﻿using Application.Features.Tenants.Commands;
 using Application.Features.Tenants.DTOs;
 using Application.Features.Tenants.Queries;
-using Application.Features.Users.DTOs;
 using AutoMapper;
 using Domain.Entities;
 

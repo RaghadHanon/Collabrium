@@ -37,7 +37,7 @@ public class IdentityService : IIdentityService
         _jwtTokenGenerator = jwtTokenGenerator;
         _emailService = emailService;
         _identitySettings = identityOptions.Value;
-        _emailTemplateFactory = emailTemplateFactory; 
+        _emailTemplateFactory = emailTemplateFactory;
         _dbContext = dbContext;
 
     }
@@ -80,7 +80,7 @@ public class IdentityService : IIdentityService
         catch
         {
             await transaction.RollbackAsync();
-            throw; 
+            throw;
         }
     }
 

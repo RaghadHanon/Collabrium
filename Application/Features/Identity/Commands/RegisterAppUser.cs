@@ -32,7 +32,7 @@ public class RegisterAppUser
                 request.Password,
                 request.DateOfBirth,
                 request.UserRole,
-                request.UserRole != UserRole.SuperAdmin ? tenantContext.TenantId!:
+                request.UserRole != UserRole.SuperAdmin ? tenantContext.TenantId! :
                  (await tenantContext.GetGlobalTenant())!.Id,
                 request.Email,
                 request.PhoneNumber

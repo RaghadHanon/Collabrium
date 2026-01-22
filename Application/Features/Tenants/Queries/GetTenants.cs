@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Tenants.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using AutoMapper;
 using MediatR;
 using System.Net;

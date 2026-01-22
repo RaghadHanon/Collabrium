@@ -24,7 +24,16 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
             .HasForeignKey(p => p.TeamId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(t => t.TeamLead)
+            .WithMany() // user can lead multiple teams
+            .HasForeignKey(t => t.TeamLeadId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(t => t.Members)
             .WithMany(u => u.Teams);
+
+        builder.HasIndex(u => u.Name)
+            .IsUnique()
+            .HasDatabaseName("IX_Team_Name");
     }
 }

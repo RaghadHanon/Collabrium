@@ -11,9 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-[Authorize]
 [Route("api/tenants")]
-public class TenantController : ApiBaseController
+public class TenantsController : ApiBaseController
 {
     /// <summary>
     /// Registers a new tenant and its IT admin (tenant-level global admin).

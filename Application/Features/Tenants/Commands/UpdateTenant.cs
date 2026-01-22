@@ -1,6 +1,6 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Entities;
 using MediatR;

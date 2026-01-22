@@ -13,7 +13,9 @@ public class UsersMappingProfile : Profile
         CreateMap<ApplicationUser, UserWithTenantDto>();
 
         CreateMap<ApplicationUser, UserDto>()
-            .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null));
+            .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null))
+            .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null? s.ProfileImage.Url : null));
+        
         CreateMap<ApplicationUser, TenantAdmin>();
         CreateMap<GetTenantUsers.Query, UsersSearchAndFilterParametersDto>();
         CreateMap<UserContactInfo, UserContactInfoDto>();

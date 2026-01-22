@@ -22,7 +22,7 @@ public class AuthController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     POST /api/auth/superAdmin/registration
+    ///     POST /api/auth/super-admin
     ///     {
     ///         "fullName": "Gaby Millers",
     ///         "email": "gaby@test.com",
@@ -39,7 +39,7 @@ public class AuthController : ApiBaseController
     /// <response code="400">If the request data is invalid.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
     [IgnoreTenantContext]
-    [HttpPost("super-admin-registration")]
+    [HttpPost("super-admin")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterSuperAdmin(RegisterSuperAdminRequest registerSuperAdminRequest)
     {
         var command = Mapper.Map<RegisterAppUser.Command>(registerSuperAdminRequest);
@@ -54,7 +54,7 @@ public class AuthController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     POST /api/auth/registration
+    ///     POST /api/auth/tenant-employee
     ///     {
     ///         "fullName": "Dana Holmes",
     ///         "email": "dana@test.com",
@@ -72,7 +72,7 @@ public class AuthController : ApiBaseController
     /// <response code="201">Returns the newly created user and a Location header pointing to it.</response>
     /// <response code="400">If the request data is invalid.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
-    [HttpPost("tenant-employee-registration")]
+    [HttpPost("tenant-employee")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantEmployee(RegisterEmployeeRequest registerEmployeeRequest)
     {
         var command = Mapper.Map<RegisterAppUser.Command>(registerEmployeeRequest);
@@ -112,7 +112,7 @@ public class AuthController : ApiBaseController
     /// <remarks>
     /// Sample request (JSON body):
     ///
-    ///     POST /api/auth/confirm-email
+    ///     POST /api/auth/confirmation-email
     ///     {
     ///         "userId": "12345",
     ///         "token": "encoded-confirmation-token"
@@ -125,7 +125,7 @@ public class AuthController : ApiBaseController
     /// <response code="400">If the token is invalid or the request data is incorrect.</response>
     /// <response code="500">If an internal server error occurs.</response>
     [IgnoreTenantContext]
-    [HttpPost("confirm-email")]
+    [HttpPost("confirmation-email")]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
     {
         var command = Mapper.Map<ConfirmEmail.Command>(confirmEmailRequest);
@@ -154,7 +154,7 @@ public class AuthController : ApiBaseController
     /// <remarks>
     /// Sample request:
     /// 
-    ///     POST /api/auth/send-password-reset
+    ///     POST /api/auth/password-reset-email
     ///     {
     ///         "email": "gaby@test.com"
     ///     }
@@ -165,7 +165,7 @@ public class AuthController : ApiBaseController
     /// <response code="200">If the email was sent successfully.</response>
     /// <response code="400">If the email does not exist.</response>
     [IgnoreTenantContext]
-    [HttpPost("send-password-reset-email")]
+    [HttpPost("password-reset-email")]
     public async Task<IActionResult> SendPasswordResetEmail(SendPasswordResetEmailRequest sendPasswordResetEmailRequest)
     {
         var command = Mapper.Map<SendPasswordResetEmail.Command>(sendPasswordResetEmailRequest);
@@ -179,7 +179,7 @@ public class AuthController : ApiBaseController
     /// <remarks>
     /// Sample request:
     /// 
-    ///     POST /api/auth/reset-password
+    ///     POST /api/auth/password-reset
     ///     {
     ///         "userId": "12345",
     ///         "token": "encoded-reset-token",
@@ -192,7 +192,7 @@ public class AuthController : ApiBaseController
     /// <response code="200">If the password was reset successfully.</response>
     /// <response code="400">If the reset token is invalid or the request data is incorrect.</response>
     [IgnoreTenantContext]
-    [HttpPost("reset-password")]
+    [HttpPost("password-reset")]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequest)
     {
         var command = Mapper.Map<ResetPassword.Command>(resetPasswordRequest);

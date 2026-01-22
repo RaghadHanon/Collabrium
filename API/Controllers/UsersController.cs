@@ -80,7 +80,7 @@ public class UsersController : ApiBaseController
     /// <response code="200">User profile updated successfully, returning the updated user data.</response>
     /// <response code="400">If the request data is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
-    [HttpPut("user-profile")]
+    [HttpPatch("user-profile")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateUserProfile(UpdateUserProfileRequest request)
     {
         var command = Mapper.Map<UpdateUserProfile.Command>(request);

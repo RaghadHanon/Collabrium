@@ -21,7 +21,7 @@ public class TenantController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     POST /api/auth/register-tenant
+    ///     POST /api/auth/tenant-with-admin
     ///     {
     ///         "tenantName": "TechFusion Ltd",
     ///         "domain": "techfusion.com",
@@ -43,7 +43,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not a SuperAdmin.</response>
     [IgnoreTenantContext]
     [Authorize(Policy = Policies.SuperAdmin)]
-    [HttpPost("tenant-with-admin-registration")]
+    [HttpPost("tenant-with-admin")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
     {
         var command = Mapper.Map<RegisterTenantWithAdmin.Command>(request);
@@ -86,7 +86,7 @@ public class TenantController : ApiBaseController
     /// <response code="403">If the user is not a TenantAdmin.</response>
     /// <response code="404">If the tenant could not be found.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
-    [HttpPut("my-tenant")]
+    [HttpPatch("my-tenant")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateTenant([FromForm] UpdateTenantRequest request)
     {
         var command = Mapper.Map<UpdateTenant.Command>(request);
@@ -251,5 +251,59 @@ public class TenantController : ApiBaseController
         var query = Mapper.Map<GetTenants.Query>(request);
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Toggles the active status of a tenant.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is restricted to Super Admins for administrative control.
+    /// It allows enabling or disabling any tenant in the system by its identifier.
+    ///
+    /// Sample request:
+    ///
+    ///     PUT /api/tenants/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-active
+    ///
+    /// </remarks>
+    /// <param name="id">The unique identifier of the tenant whose active status will be toggled.</param>
+    /// <returns>No content if the operation succeeds.</returns>
+    /// <response code="204">The tenant active status was toggled successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not a Super Admin.</response>
+    /// <response code="404">If the tenant with the specified ID does not exist.</response>
+    [Authorize(Policy = Policies.SuperAdmin)]
+    [IgnoreTenantContext]
+    [HttpPatch("{id}/toggle-active")]
+    public async Task<ActionResult> ToggleTenantActiveStatus(string id)
+    {
+        var command = new ToggleActive.Command();
+        command.TenantId = id;
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Toggles the active status of the current tenant.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is restricted to Tenant Admins and affects only the tenant
+    /// associated with the current authenticated context.
+    ///
+    /// Sample request:
+    ///
+    ///     PUT /api/tenants/my-tenant/toggle-active
+    ///
+    /// </remarks>
+    /// <returns>No content if the operation succeeds.</returns>
+    /// <response code="204">The tenant active status was toggled successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not a Tenant Admin.</response>
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [HttpPatch("my-tenant/toggle-active")]
+    public async Task<ActionResult> ToggleMyTenantActiveStatus()
+    {
+        var command = new ToggleActive.Command();
+
+        return HandleResult(await Mediator.Send(command));
     }
 }

@@ -2,6 +2,7 @@
 public class TenantDto
 {
     public required string Id { get; set; }
+    public DateTime CreatedAt { get; set; }
     public string Name { get; set; } = null!;
     public string Domain { get; set; } = null!;
     public string? Description { get; set; }

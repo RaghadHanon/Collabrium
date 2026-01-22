@@ -275,7 +275,7 @@ public class TenantsController : ApiBaseController
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {
-        var command = new ToggleActive.Command();
+        var command = new ToggleTenantsActivation.Command();
         command.TenantId = id;
 
         return HandleResult(await Mediator.Send(command));
@@ -301,7 +301,7 @@ public class TenantsController : ApiBaseController
     [HttpPatch("my-tenant/toggle-active")]
     public async Task<ActionResult> ToggleMyTenantActiveStatus()
     {
-        var command = new ToggleActive.Command();
+        var command = new ToggleTenantsActivation.Command();
 
         return HandleResult(await Mediator.Send(command));
     }

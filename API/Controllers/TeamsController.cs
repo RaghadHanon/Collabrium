@@ -1,9 +1,11 @@
-﻿using API.Contracts.Teams;
+﻿using API.Common.Attributes;
+using API.Contracts.Teams;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Teams.Commands;
 using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
+using Application.Features.Tenants.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -142,5 +144,74 @@ public class TeamsController : ApiBaseController
         var query = Mapper.Map<GetTeams.Query>(request);
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Updates an existing team within the current tenant.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint updates team details such as name, description, department, capacity, and team lead.
+    /// The update is scoped to the current tenant context.
+    ///
+    /// Sample request:
+    ///
+    ///     PUT /api/teams/team
+    ///     Content-Type: application/json
+    ///
+    ///     {
+    ///       "teamLeadId": "11111111-1111-1111-1111-111111111111",
+    ///       "name": "Unity Team - Updated",
+    ///       "description": "Updated team description",
+    ///       "department": "SoftwareDevelopment",
+    ///       "capacity": 10
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="id">The Team to update.</param>
+    /// <param name="request">The update payload.</param>
+    /// <returns>No content if updated successfully.</returns>
+    /// <response code="204">Team updated successfully.</response>
+    /// <response code="400">If validation fails (duplicate name, invalid data, etc.).</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized.</response>
+    /// <response code="404">If tenant, team, or team lead is not found.</response>
+    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [HttpPatch("team/{id}")]
+    public async Task<ActionResult> UpdateTeam(string id, UpdateTeamRequest request)
+    {
+        var command = Mapper.Map<UpdateTeam.Command>(request);
+        command.Id = id;
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Toggles the active status of a team.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is restricted to Product Team Manager Or Tenant Admin for administrative control.
+    /// It allows enabling or disabling any team in the system by its identifier.
+    ///
+    /// Sample request:
+    ///
+    ///     PUT /api/teams/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-active
+    ///
+    /// </remarks>
+    /// <param name="id">The unique identifier of the team whose active status will be toggled.</param>
+    /// <returns>No content if the operation succeeds.</returns>
+    /// <response code="204">The team active status was toggled successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized.</response>
+    /// <response code="404">If the team with the specified ID does not exist.</response>
+    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [HttpPatch("{id}/toggle-active")]
+    public async Task<ActionResult> ToggleTenantActiveStatus(string id)
+    {
+        var command = new ToggleTeamActivation.Command 
+        {
+            TeamId = id 
+        };
+
+        return HandleResult(await Mediator.Send(command));
     }
 }

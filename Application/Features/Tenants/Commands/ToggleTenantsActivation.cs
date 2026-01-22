@@ -5,7 +5,7 @@ using MediatR;
 using System.Net;
 
 namespace Application.Features.Tenants.Commands;
-public class ToggleActive
+public class ToggleTenantsActivation
 {
     public class Command : IRequest<Result<bool>>
     {

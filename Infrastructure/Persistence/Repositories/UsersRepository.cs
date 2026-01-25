@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Users.DTOs;
 using Application.Interfaces.Repositories;
+using AutoMapper;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
@@ -13,11 +14,13 @@ public class UsersRepository : IUsersRepository
 {
     private readonly UserManager<ApplicationUserEntity> _userManager;
     private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public UsersRepository(UserManager<ApplicationUserEntity> userManager, AppDbContext dbContext)
+    public UsersRepository(UserManager<ApplicationUserEntity> userManager, AppDbContext dbContext, IMapper mapper)
     {
         _userManager = userManager;
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     public async Task<User?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
@@ -30,6 +33,14 @@ public class UsersRepository : IUsersRepository
 
         return entity == null ? null : UserMapper.ToDomain(entity);
     }
+
+    public async Task<UserWithTenantDto?> GetUserWithTenantDtoAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        var entity = await GetByIdAsync(tenantId, cancellationToken);
+
+        return entity == null ? null : _mapper.Map<UserWithTenantDto>(entity);
+    }
+
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {

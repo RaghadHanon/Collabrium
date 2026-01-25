@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Tenants.DTOs;
+using Application.Features.Users.DTOs;
 using Domain.Models;
 
 namespace Application.Interfaces.Repositories;
@@ -23,7 +24,7 @@ public interface ITenantRepository
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default);
-
+   
 
     Task<bool> UpdateProfileImageAsync(string tenantId, string url, string publicId, CancellationToken cancellationToken = default);
     Task<bool?> ToggleActivationAsync(string tenantId, CancellationToken cancellationToken = default);

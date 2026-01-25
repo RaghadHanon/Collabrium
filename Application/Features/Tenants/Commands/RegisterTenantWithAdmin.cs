@@ -54,16 +54,12 @@ public class RegisterTenantWithAdmin
                 tenant.Id,
                 request.Email,
                 request.PhoneNumber);
-            admin.RequirePasswordChange();
-            await usersRepository.UpdateAsync(admin, cancellationToken);
-            await usersRepository.SaveChangesAsync(cancellationToken);
 
             tenant.AssignAdmin(admin.Id);
             await tenantRepository.UpdateAsync(tenant, cancellationToken);
             await tenantRepository.SaveChangesAsync(cancellationToken);
 
-            var dto = mapper.Map<UserWithTenantDto>(admin);
-            dto.Tenant = mapper.Map<TenantDto>(tenant);
+            var dto = await usersRepository.GetUserWithTenantDtoAsync(admin.Id, cancellationToken);
 
             return Result<UserWithTenantDto>.Success(dto, HttpStatusCode.Created);
         }

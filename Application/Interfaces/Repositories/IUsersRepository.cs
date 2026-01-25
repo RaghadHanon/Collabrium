@@ -12,6 +12,8 @@ public interface IUsersRepository
     Task<User?> GetByUserNameAsync(string username, CancellationToken cancellationToken = default);
     Task<List<User>> GetUsersByTenantAsync(string tenantId, CancellationToken cancellationToken = default);
 
+    Task<UserWithTenantDto?> GetUserWithTenantDtoAsync(string tenantId, CancellationToken cancellationToken = default);
+
     Task<IdentityResult> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default);
     Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);
 

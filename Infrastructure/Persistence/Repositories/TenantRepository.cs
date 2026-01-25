@@ -1,6 +1,8 @@
 ﻿using Application.Common;
 using Application.Features.Tenants.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces.Repositories;
+using AutoMapper;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +12,12 @@ namespace Infrastructure.Persistence.Repositories;
 public class TenantRepository : ITenantRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public TenantRepository(AppDbContext context)
+    public TenantRepository(AppDbContext context, IMapper mapper)
     {
         _dbContext = context;
+        _mapper = mapper;
     }
 
     public async Task AddTenantAsync(Tenant tenant, CancellationToken cancellationToken = default)

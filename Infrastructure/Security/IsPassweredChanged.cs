@@ -1,7 +1,7 @@
 ﻿using Application.Common.Exceptions;
 using Application.Interfaces;
-using Domain.Entities;
 using Domain.Enums;
+using Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 
@@ -12,11 +12,11 @@ public class IsPasswordChangedHandler
     : AuthorizationHandler<IsPasswordChangedRequirement>
 {
     private readonly ICurrentUserAccessor _currentUser;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<ApplicationUserEntity> _userManager;
 
     public IsPasswordChangedHandler(
         ICurrentUserAccessor currentUser,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUserEntity> userManager)
     {
         _currentUser = currentUser;
         _userManager = userManager;

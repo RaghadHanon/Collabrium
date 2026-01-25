@@ -1,7 +1,21 @@
-﻿namespace Domain.Entities;
+﻿namespace Domain.Models;
 
-public class Image : Entity
+public abstract class Image : Entity
 {
-    public required string Url { get; set; }
-    public required string PublicId { get; set; }
+    public string Url { get; private set; } = null!;
+    public string PublicId { get; private set; } = null!;
+
+    public Image() { }
+
+    public Image(string url, string publicId)
+    {
+        Url = url;
+        PublicId = publicId;
+    }
+
+    public void Update(string url, string publicId)
+    {
+        Url = url;
+        PublicId = publicId;
+    }
 }

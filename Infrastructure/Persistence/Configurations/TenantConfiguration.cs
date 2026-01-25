@@ -1,12 +1,12 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations;
 
-public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
+public class TenantConfiguration : IEntityTypeConfiguration<TenantEntity>
 {
-    public void Configure(EntityTypeBuilder<Tenant> builder)
+    public void Configure(EntityTypeBuilder<TenantEntity> builder)
     {
         builder.HasKey(t => t.Id);
 
@@ -42,13 +42,13 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(t => t.TenantContactInfo)
-            .WithOne()
-            .HasForeignKey<TenantContactInfo>(ci => ci.TenantId)
+            .WithOne(ci => ci.Tenant)
+            .HasForeignKey<TenantContactInfoEntity>(ci => ci.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(u => u.ProfileImage)
-            .WithOne()
-            .HasForeignKey<TenantImage>(i => i.TenantId)
+            .WithOne(i => i.Tenant)
+            .HasForeignKey<TenantImageEntity>(i => i.TenantId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

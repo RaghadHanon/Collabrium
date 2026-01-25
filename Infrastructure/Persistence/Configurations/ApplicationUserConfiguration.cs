@@ -1,12 +1,12 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations;
 
-public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
+public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUserEntity>
 {
-    public void Configure(EntityTypeBuilder<ApplicationUser> builder)
+    public void Configure(EntityTypeBuilder<ApplicationUserEntity> builder)
     {
         builder.HasKey(u => u.Id);
 
@@ -28,8 +28,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(u => u.ProfileImage)
-            .WithOne()
-            .HasForeignKey<UserImage>(i => i.ApplicationUserId)
+            .WithOne(i => i.ApplicationUser)
+            .HasForeignKey<UserImageEntity>(i => i.ApplicationUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.AssignedWorkItems)
@@ -38,8 +38,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(t => t.UserContactInfo)
-            .WithOne()
-            .HasForeignKey<UserContactInfo>(ci => ci.UserId)
+            .WithOne(ci => ci.User)
+            .HasForeignKey<UserContactInfoEntity>(ci => ci.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(u => u.UserName)

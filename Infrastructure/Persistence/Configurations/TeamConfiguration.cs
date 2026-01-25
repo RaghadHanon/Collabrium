@@ -1,12 +1,12 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations;
 
-public class TeamConfiguration : IEntityTypeConfiguration<Team>
+public class TeamConfiguration : IEntityTypeConfiguration<TeamEntity>
 {
-    public void Configure(EntityTypeBuilder<Team> builder)
+    public void Configure(EntityTypeBuilder<TeamEntity> builder)
     {
         builder.HasKey(t => t.Id);
 

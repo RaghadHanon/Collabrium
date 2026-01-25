@@ -1,37 +1,33 @@
 ﻿using Application.Interfaces;
-using Domain.Entities;
+using Domain.Models;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.TenantContexts;
-/// <summary>
-/// Implementation of ITenantContext to manage tenant information in a multi-tenant application.
-/// </summary>
-public class TenantContext(IServiceProvider serviceProvider) : ITenantContext
+
+public class TenantContext : ITenantContext
 {
     private const string GlobalTenantDomain = "global.platform";
-    /// <summary>
-    /// Gets or sets the current tenant's identifier.
-    /// </summary>
-    public string? TenantId { get; set; }
+    private readonly IServiceProvider _serviceProvider;
 
-    /// <summary>
-    /// Gets or sets the current tenant entity.
-    /// </summary>
+    public TenantContext(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    public string? TenantId { get; set; }
     public Tenant? CurrentTenant { get; set; }
 
-    /// <summary>
-    /// Retrieves the global tenant from the database.
-    /// </summary>
-    /// <param name="serviceProvider"></param>
-    /// <returns></returns>
-    public async Task<Tenant?> GetGlobalTenant()
+    public async Task<Tenant?> GetGlobalTenant(CancellationToken cancellationToken = default)
     {
-        using var scope = serviceProvider.CreateScope();
+        using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        return await dbContext.Tenants
-            .FirstOrDefaultAsync(t => t.Domain == GlobalTenantDomain);
+        var tenantEntity = await dbContext.Tenants
+            .FirstOrDefaultAsync(t => t.Domain == GlobalTenantDomain, cancellationToken);
+
+        return tenantEntity == null ? null : TenantMapper.ToDomain(tenantEntity);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
-using Domain.Entities;
+using Domain.Models;
+using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -9,27 +10,33 @@ using System.Text;
 
 namespace Infrastructure.Identity;
 
-public class JwtTokenGenerator(IOptions<JwtSettings> JwtOptions) : IJwtTokenGenerator
+public class JwtTokenGenerator : IJwtTokenGenerator
 {
-    private readonly JwtSettings _jwtSettings = JwtOptions.Value;
+    private readonly JwtSettings _jwtSettings;
 
-    public string GenerateToken(ApplicationUser user, IList<string> roles)
+    public JwtTokenGenerator(IOptions<JwtSettings> jwtOptions)
     {
+        _jwtSettings = jwtOptions.Value;
+    }
+
+    public string GenerateToken(User domainUser, IList<string> roles)
+    {
+        var entityUser = UserMapper.ToEntity(domainUser);
+
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("fullName", user.FullName),
-            new Claim("userName", user.UserName!),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim("age", user.Age.ToString()),
-            new Claim("lastLoginAt", user.LastLoginAt.ToString()!),
+            new(JwtRegisteredClaimNames.Sub, entityUser.Id),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("fullName", entityUser.FullName),
+            new("userName", entityUser.UserName ?? string.Empty),
+            new(JwtRegisteredClaimNames.Email, entityUser.Email ?? string.Empty),
+            new("age", entityUser.Age.ToString()),
+            new("lastLoginAt", entityUser.LastLoginAt?.ToString("O") ?? string.Empty),
+            new("tenantId", entityUser.TenantId ?? string.Empty),
         };
 
         foreach (var role in roles)
-        {
             claims.Add(new Claim(ClaimTypes.Role, role));
-        }
 
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var creds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256Signature);
@@ -42,8 +49,6 @@ public class JwtTokenGenerator(IOptions<JwtSettings> JwtOptions) : IJwtTokenGene
             signingCredentials: creds
         );
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        return tokenHandler.WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

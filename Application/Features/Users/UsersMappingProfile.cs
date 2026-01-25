@@ -3,24 +3,24 @@ using Application.Features.Tenants.Queries;
 using Application.Features.Users.Commands;
 using Application.Features.Users.DTOs;
 using AutoMapper;
-using Domain.Entities;
+using Domain.Models;
 
 namespace Application.Features.Users;
 public class UsersMappingProfile : Profile
 {
     public UsersMappingProfile()
     {
-        CreateMap<ApplicationUser, UserWithTenantDto>();
+        CreateMap<User, UserWithTenantDto>();
 
-        CreateMap<ApplicationUser, UserDto>()
+        CreateMap<User, UserDto>()
             .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null))
-            .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null? s.ProfileImage.Url : null));
-        
-        CreateMap<ApplicationUser, TenantAdmin>();
+            .ForMember(d => d.ProfileImageUrl, opt => opt.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null));
+
+        CreateMap<User, TenantAdmin>();
         CreateMap<GetTenantUsers.Query, UsersSearchAndFilterParametersDto>();
         CreateMap<UserContactInfo, UserContactInfoDto>();
 
-        CreateMap<UpdateUserProfile.Command, ApplicationUser>()
+        CreateMap<UpdateUserProfile.Command, User>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<UpdateUserProfile.Command, UserContactInfo>()

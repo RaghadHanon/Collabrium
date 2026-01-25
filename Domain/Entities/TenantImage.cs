@@ -1,5 +1,6 @@
-﻿namespace Domain.Entities;
-public class TenantImage : Image
+﻿namespace Domain.Models;
+
+public sealed class TenantImage : Image
 {
-    public required string TenantId { get; set; }
+    public TenantImage(string url, string publicId) : base(url, publicId) { }
 }

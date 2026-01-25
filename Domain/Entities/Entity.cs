@@ -1,7 +1,14 @@
-﻿namespace Domain.Entities;
+﻿namespace Domain.Models;
 
-public class Entity
+public abstract class Entity
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Entity() { }
+
+    public Entity(string id)
+    {
+        Id = id;
+    }
+
+    public string Id { get; protected set; } = Guid.NewGuid().ToString();
+    public DateTime CreatedAt { get; protected set; } = DateTime.UtcNow;
 }

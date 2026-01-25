@@ -1,11 +1,11 @@
-﻿using Domain.Entities;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
+public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
 {
-    public void Configure(EntityTypeBuilder<WorkItem> builder)
+    public void Configure(EntityTypeBuilder<WorkItemEntity> builder)
     {
         builder.HasKey(w => w.Id);
 
@@ -50,11 +50,11 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
 
         builder
              .HasDiscriminator<WorkItemType>("WorkItemType")
-             .HasValue<WorkItem>(WorkItemType.WorkItem) // base type (default)
-             .HasValue<Epic>(WorkItemType.Epic)
-             .HasValue<UserStory>(WorkItemType.UserStory)
-             .HasValue<Bug>(WorkItemType.Bug)
-             .HasValue<TestCase>(WorkItemType.TestCase)
-             .HasValue<Domain.Entities.TaskItem>(WorkItemType.TaskItem);
+             .HasValue<WorkItemEntity>(WorkItemType.WorkItem) // base type (default)
+             .HasValue<EpicEntity>(WorkItemType.Epic)
+             .HasValue<UserStoryEntity>(WorkItemType.UserStory)
+             .HasValue<BugEntity>(WorkItemType.Bug)
+             .HasValue<TestCaseEntity>(WorkItemType.TestCase)
+             .HasValue<TaskItemEntity>(WorkItemType.TaskItem);
     }
 }

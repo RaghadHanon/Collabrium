@@ -19,15 +19,12 @@ public class ChangePassword
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
         {
             var currentUserId = currentUserAccessor.GetUserId();
-            if (currentUserId == null)
+            if (string.IsNullOrWhiteSpace(currentUserId))
                 return Result<string>.Failure("You must login first", HttpStatusCode.Unauthorized);
 
-            await identityService.ChangePasswordAsync(currentUserId, request.CurrentPassword, request.NewPassword);
+            await identityService.ChangePasswordAsync(currentUserId, request.CurrentPassword, request.NewPassword, cancellationToken);
 
-            return Result<string>.Success(
-                "Password has been changed successfully!",
-                HttpStatusCode.OK
-            );
+            return Result<string>.Success("Password has been changed successfully!", HttpStatusCode.OK);
         }
     }
 }

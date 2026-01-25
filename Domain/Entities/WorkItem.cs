@@ -1,49 +1,114 @@
 ﻿using Domain.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
-public class WorkItem : Entity
+public abstract class WorkItem : Entity
 {
-    public string Title { get; set; } = null!;
-    public string? AcceptanceCriteria { get; set; }
-    public string? Description { get; set; }
-    public int EffortPoints { get; set; }
-    public WorkItemType Type { get; set; }
-    public WorkItemStatus Status { get; set; }
-    public WorkItemPriority Priority { get; set; }
-    public bool IsBlocked { get; set; }
-    public DateTime? UpdatedDate { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
-    public string? AssignedToUserId { get; set; }
-    public string? AssignedToUserName { get; set; }
-    public string CreatedByUserId { get; set; } = null!;
-    public required string ProjectId { get; set; }
-    public string? SprintId { get; set; }
+    public string Title { get; private set; } = null!;
+    public string? AcceptanceCriteria { get; private set; }
+    public string? Description { get; private set; }
 
-    // Navigation
-    public ApplicationUser? AssignedToUser { get; set; }
+    public int EffortPoints { get; private set; }
+    public WorkItemType Type { get; protected set; }
+    public WorkItemStatus Status { get; private set; }
+    public WorkItemPriority Priority { get; private set; }
 
-    public ApplicationUser CreatedByUser { get; set; } = null!;
-    public Project Project { get; set; } = null!;
-    public Sprint? Sprint { get; set; }
-    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-    public ICollection<WorkItemRelation> OutgoingRelations { get; set; } = new List<WorkItemRelation>();
-    public ICollection<WorkItemRelation> IncomingRelations { get; set; } = new List<WorkItemRelation>();
+    public bool IsBlocked { get; private set; }
+    public DateTime? UpdatedDate { get; private set; }
+    public DateTime? StartDate { get; private set; }
+    public DateTime? EndDate { get; private set; }
 
-    public ICollection<WorkItem> GetChildren()
+    public string? AssignedToUserId { get; private set; }
+    public string? AssignedToUserName { get; private set; }
+
+    public string CreatedByUserId { get; private set; } = null!;
+    public string ProjectId { get; private set; } = null!;
+    public string? SprintId { get; private set; }
+
+    private readonly List<WorkItemRelation> _outgoingRelations = new();
+    private readonly List<WorkItemRelation> _incomingRelations = new();
+
+    public IReadOnlyCollection<WorkItemRelation> OutgoingRelations => _outgoingRelations;
+    public IReadOnlyCollection<WorkItemRelation> IncomingRelations => _incomingRelations;
+
+    public WorkItem() { }
+
+    public WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
     {
-        return OutgoingRelations
-           .Where(r => r.RelationType == WorkItemRelationType.Parent)
-           .Select(r => r.IncomingWorkItem)
-           .ToList();
+        Title = title;
+        CreatedByUserId = createdByUserId;
+        ProjectId = projectId;
+
+        Status = WorkItemStatus.Backlog;
+        Priority = WorkItemPriority.Medium;
+        UpdatedDate = DateTime.UtcNow;
     }
 
-    public WorkItem? GetParent()
+    public void UpdateDetails(string title, string? description, string? acceptanceCriteria, int effortPoints)
     {
-        return IncomingRelations
+        Title = title;
+        Description = description;
+        AcceptanceCriteria = acceptanceCriteria;
+        EffortPoints = effortPoints;
+        Touch();
+    }
+
+    public void ChangeStatus(WorkItemStatus status)
+    {
+        Status = status;
+        Touch();
+    }
+
+    public void SetPriority(WorkItemPriority priority)
+    {
+        Priority = priority;
+        Touch();
+    }
+
+    public void Block() { IsBlocked = true; Touch(); }
+    public void Unblock() { IsBlocked = false; Touch(); }
+
+    public void AssignTo(string userId, string? userName = null)
+    {
+        AssignedToUserId = userId;
+        AssignedToUserName = userName;
+        Touch();
+    }
+
+    public void MoveToSprint(string? sprintId)
+    {
+        SprintId = sprintId;
+        Touch();
+    }
+
+    public IReadOnlyCollection<string> GetChildrenIds()
+    {
+        return _outgoingRelations
             .Where(r => r.RelationType == WorkItemRelationType.Parent)
-            .Select(r => r.OutgoingWorkItem)
+            .Select(r => r.IncomingWorkItemId)
+            .ToList();
+    }
+
+    public string? GetParentId()
+    {
+        return _incomingRelations
+            .Where(r => r.RelationType == WorkItemRelationType.Parent)
+            .Select(r => r.OutgoingWorkItemId)
             .FirstOrDefault();
+    }
+
+    public void AddOutgoingRelation(WorkItemRelation relation)
+    {
+        _outgoingRelations.Add(relation);
+    }
+
+    public void AddIncomingRelation(WorkItemRelation relation)
+    {
+        _incomingRelations.Add(relation);
+    }
+
+    private void Touch()
+    {
+        UpdatedDate = DateTime.UtcNow;
     }
 }

@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace API.Contracts.Teams;
+﻿namespace API.Contracts.Teams;
 
 public class UpdateTeamRequest
 {

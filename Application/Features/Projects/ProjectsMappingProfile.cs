@@ -1,9 +1,9 @@
 ﻿using Application.Features.Projects.DTOs;
 using AutoMapper;
-using Domain.Entities;
+using Domain.Models;
 
 namespace Application.Features.Projects;
-public class ProjectsMappingProfile : Profile    
+public class ProjectsMappingProfile : Profile
 {
     public ProjectsMappingProfile()
     {

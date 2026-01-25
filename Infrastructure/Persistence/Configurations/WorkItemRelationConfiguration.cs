@@ -1,10 +1,10 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class WorkItemRelationConfiguration : IEntityTypeConfiguration<WorkItemRelation>
+public class WorkItemRelationConfiguration : IEntityTypeConfiguration<WorkItemRelationEntity>
 {
-    public void Configure(EntityTypeBuilder<WorkItemRelation> builder)
+    public void Configure(EntityTypeBuilder<WorkItemRelationEntity> builder)
     {
         builder.HasKey(r => r.Id);
 

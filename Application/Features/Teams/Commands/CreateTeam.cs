@@ -2,8 +2,8 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using AutoMapper;
-using Domain.Entities;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -23,7 +23,6 @@ public class CreateTeam
     public class Handler(
         ITeamsRepository teamRepository,
         ITenantContext tenantContext,
-        IMapper mapper,
         IUsersRepository usersRepository
     ) : IRequestHandler<Command, Result<string>>
     {
@@ -31,30 +30,19 @@ public class CreateTeam
         {
             var tenant = tenantContext.CurrentTenant;
             if (tenant is null)
-            {
                 return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
-            }
 
-            var leader = await usersRepository.GetByIdAsync(request.TeamLeadId);
+            var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
             if (leader is null || leader.TenantId != tenant.Id)
-            {
                 return Result<string>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
-            }
 
-            var isNameUnique = await teamRepository
-                .IsTeamNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
-
+            var isNameUnique = await teamRepository.IsTeamNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
             if (!isNameUnique)
-            {
-                return Result<string>.Failure("A team with this name already exists in the tenant.",
-                    HttpStatusCode.BadRequest);
-            }
+                return Result<string>.Failure("A team with this name already exists in the tenant.", HttpStatusCode.BadRequest);
 
-            var team = mapper.Map<Team>(request);
-            team.TenantId = tenant.Id;
-            team.Members.Add(leader);
-            team.IsActive = true;
-            team.UpdatedAt = DateTime.UtcNow;
+            var team = new Team(Guid.NewGuid().ToString(), tenant.Id, request.TeamLeadId, request.Name, request.Department, true);
+
+            team.UpdateDetails(request.Name, request.Description, request.Capacity);
 
             await teamRepository.AddTeamAsync(team, cancellationToken);
             await teamRepository.SaveChangesAsync(cancellationToken);

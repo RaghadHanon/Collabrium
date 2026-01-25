@@ -1,10 +1,9 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 
 namespace Application.Interfaces;
 
 public interface ICurrentUserAccessor
 {
-    Task<ApplicationUser?> GetUserAsync();
-
     string? GetUserId();
+    Task<User?> GetUserAsync(CancellationToken cancellationToken = default);
 }

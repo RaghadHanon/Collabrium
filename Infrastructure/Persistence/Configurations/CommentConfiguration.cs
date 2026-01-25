@@ -1,12 +1,12 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence.Configurations;
 
-public class CommentConfiguration : IEntityTypeConfiguration<Comment>
+public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
 {
-    public void Configure(EntityTypeBuilder<Comment> builder)
+    public void Configure(EntityTypeBuilder<CommentEntity> builder)
     {
         builder.HasKey(c => c.Id);
 

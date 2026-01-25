@@ -44,7 +44,7 @@ public class GetTeams
             }
 
             var queryParams = mapper.Map<TeamsSearchAndFilterParametersDto>(request);
-            queryParams.TenantId = tenant.Id; 
+            queryParams.TenantId = tenant.Id;
             var pagedTeams = await teamsRepository.GetTeamsAsync(queryParams, cancellationToken);
             var teamDtos = pagedTeams.Items.Select(t => mapper.Map<TeamDto>(t)).ToList();
 

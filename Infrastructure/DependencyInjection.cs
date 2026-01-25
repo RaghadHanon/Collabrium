@@ -1,12 +1,12 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Repositories;
-using Domain.Entities;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.Identity;
 using Infrastructure.Images;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Security;
 using Infrastructure.Settings;
@@ -79,7 +79,7 @@ public static class DependencyInjection
 
     private static void AddIdentity(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        services.AddIdentity<ApplicationUserEntity, IdentityRole>(options =>
         {
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;

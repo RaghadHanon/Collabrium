@@ -16,7 +16,7 @@ public class ReSendConfirmationEmail
     {
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
         {
-            await identityService.ReSendConfirmationEmail(request.Email, cancellationToken);
+            await identityService.ResendConfirmationEmailAsync(request.Email, cancellationToken);
 
             return Result<string>.Success("Confirmation email resent successfully!", HttpStatusCode.OK);
         }

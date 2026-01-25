@@ -1,7 +1,11 @@
-﻿namespace Domain.Entities;
-public class UserContactInfo : ContactInfo
+﻿namespace Domain.Models;
+
+public sealed class UserContactInfo : ContactInfo
 {
-    public string? Github { get; set; } = string.Empty;
-    //Navigation property
-    public string? UserId { get; set; }
+    public string? Github { get; private set; } = string.Empty;
+
+    public void UpdateGithub(string? github)
+    {
+        Github = github ?? string.Empty;
+    }
 }

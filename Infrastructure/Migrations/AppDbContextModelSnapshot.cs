@@ -22,7 +22,7 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ApplicationUserTeam", b =>
+            modelBuilder.Entity("ApplicationUserEntityTeamEntity", b =>
                 {
                     b.Property<string>("MembersId")
                         .HasColumnType("nvarchar(450)");
@@ -34,10 +34,10 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TeamsId");
 
-                    b.ToTable("ApplicationUserTeam");
+                    b.ToTable("ApplicationUserEntityTeamEntity");
                 });
 
-            modelBuilder.Entity("Domain.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -132,7 +132,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Comment", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -162,7 +162,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Project", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -201,7 +201,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Sprint", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -234,7 +234,56 @@ namespace Infrastructure.Migrations
                     b.ToTable("Sprints");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Team", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("TeamLeadId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Team_Name");
+
+                    b.HasIndex("TeamLeadId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantContactInfoEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -242,26 +291,37 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                    b.Property<string>("Facebook")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Instagram")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LinkedIn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TenantId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("YouTube")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasFilter("[TenantId] IS NOT NULL");
 
-                    b.ToTable("Teams");
+                    b.ToTable("TenantContactInfos");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Tenant", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -307,45 +367,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Tenants");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TenantContactInfo", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Facebook")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Instagram")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LinkedIn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TenantId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("YouTube")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId")
-                        .IsUnique()
-                        .HasFilter("[TenantId] IS NOT NULL");
-
-                    b.ToTable("TenantContactInfos");
-                });
-
-            modelBuilder.Entity("Domain.Entities.TenantImage", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantImageEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -373,7 +395,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("TenantImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserContactInfo", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserContactInfoEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -408,7 +430,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserContactInfos");
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserImage", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserImageEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -436,7 +458,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.WorkItem", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -516,7 +538,7 @@ namespace Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Domain.Entities.WorkItemRelation", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -677,9 +699,9 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Bug", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.BugEntity", b =>
                 {
-                    b.HasBaseType("Domain.Entities.WorkItem");
+                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.Property<string>("ActualResult")
                         .HasColumnType("nvarchar(max)");
@@ -694,32 +716,32 @@ namespace Infrastructure.Migrations
                     b.ToTable("WorkItems", t =>
                         {
                             t.Property("ActualResult")
-                                .HasColumnName("Bug_ActualResult");
+                                .HasColumnName("BugEntity_ActualResult");
 
                             t.Property("ExpectedResult")
-                                .HasColumnName("Bug_ExpectedResult");
+                                .HasColumnName("BugEntity_ExpectedResult");
                         });
 
                     b.HasDiscriminator().HasValue(4);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Epic", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.EpicEntity", b =>
                 {
-                    b.HasBaseType("Domain.Entities.WorkItem");
+                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.HasDiscriminator().HasValue(1);
                 });
 
-            modelBuilder.Entity("Domain.Entities.TaskItem", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TaskItemEntity", b =>
                 {
-                    b.HasBaseType("Domain.Entities.WorkItem");
+                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.HasDiscriminator().HasValue(3);
                 });
 
-            modelBuilder.Entity("Domain.Entities.TestCase", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TestCaseEntity", b =>
                 {
-                    b.HasBaseType("Domain.Entities.WorkItem");
+                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.Property<string>("ActualResult")
                         .IsRequired()
@@ -743,9 +765,9 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(5);
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserStory", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserStoryEntity", b =>
                 {
-                    b.HasBaseType("Domain.Entities.WorkItem");
+                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.Property<int>("StoryPoints")
                         .HasColumnType("int");
@@ -753,24 +775,24 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(2);
                 });
 
-            modelBuilder.Entity("ApplicationUserTeam", b =>
+            modelBuilder.Entity("ApplicationUserEntityTeamEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("MembersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Team", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", null)
                         .WithMany()
                         .HasForeignKey("TeamsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
                         .WithMany("Users")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -778,15 +800,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Comment", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.WorkItem", "WorkItem")
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("Comments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -797,21 +819,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorkItem");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Project", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
                         .WithMany("Projects")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Team", "Team")
+                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
                         .WithMany("Projects")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
                         .WithMany("Projects")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -824,9 +846,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Sprint", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.Project", "Project")
+                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
                         .WithMany("Sprints")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -835,71 +857,87 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Team", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "TeamLead")
+                        .WithMany()
+                        .HasForeignKey("TeamLeadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
                         .WithMany("Teams")
                         .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TeamLead");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantContactInfoEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithOne("TenantContactInfo")
+                        .HasForeignKey("Infrastructure.Persistence.Entities.TenantContactInfoEntity", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantImageEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithOne("ProfileImage")
+                        .HasForeignKey("Infrastructure.Persistence.Entities.TenantImageEntity", "TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Domain.Entities.TenantContactInfo", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserContactInfoEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.Tenant", null)
-                        .WithOne("TenantContactInfo")
-                        .HasForeignKey("Domain.Entities.TenantContactInfo", "TenantId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("Domain.Entities.TenantImage", b =>
-                {
-                    b.HasOne("Domain.Entities.Tenant", null)
-                        .WithOne("ProfileImage")
-                        .HasForeignKey("Domain.Entities.TenantImage", "TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Domain.Entities.UserContactInfo", b =>
-                {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
                         .WithOne("UserContactInfo")
-                        .HasForeignKey("Domain.Entities.UserContactInfo", "UserId")
+                        .HasForeignKey("Infrastructure.Persistence.Entities.UserContactInfoEntity", "UserId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.UserImage", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserImageEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ApplicationUser")
                         .WithOne("ProfileImage")
-                        .HasForeignKey("Domain.Entities.UserImage", "ApplicationUserId")
+                        .HasForeignKey("Infrastructure.Persistence.Entities.UserImageEntity", "ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("Domain.Entities.WorkItem", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", "AssignedToUser")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedToUser")
                         .WithMany("AssignedWorkItems")
                         .HasForeignKey("AssignedToUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Domain.Entities.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
                         .WithMany("CreatedWorkItems")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Project", "Project")
+                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
                         .WithMany("WorkItems")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Sprint", "Sprint")
+                    b.HasOne("Infrastructure.Persistence.Entities.SprintEntity", "Sprint")
                         .WithMany("WorkItems")
                         .HasForeignKey("SprintId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -913,15 +951,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Sprint");
                 });
 
-            modelBuilder.Entity("Domain.Entities.WorkItemRelation", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.WorkItem", "IncomingWorkItem")
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "IncomingWorkItem")
                         .WithMany("IncomingRelations")
                         .HasForeignKey("IncomingWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.WorkItem", "OutgoingWorkItem")
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "OutgoingWorkItem")
                         .WithMany("OutgoingRelations")
                         .HasForeignKey("OutgoingWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -943,7 +981,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -952,7 +990,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -967,7 +1005,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -976,14 +1014,14 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Domain.Entities.ApplicationUser", null)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.Navigation("AssignedWorkItems");
 
@@ -996,24 +1034,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("UserContactInfo");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Project", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
                     b.Navigation("Sprints");
 
                     b.Navigation("WorkItems");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Sprint", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.Navigation("WorkItems");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Team", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
                 {
                     b.Navigation("Projects");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Tenant", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
                 {
                     b.Navigation("ProfileImage");
 
@@ -1026,7 +1064,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Domain.Entities.WorkItem", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
                 {
                     b.Navigation("Comments");
 

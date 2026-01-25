@@ -2,7 +2,7 @@
 using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
 using AutoMapper;
-using Domain.Entities;
+using Domain.Models;
 
 namespace Application.Features.Teams;
 public class TeamsMappingProfile : Profile
@@ -14,13 +14,9 @@ public class TeamsMappingProfile : Profile
             .ForAllMembers(opt =>
                 opt.Condition((src, dest, srcMember) => srcMember != null));
 
-        CreateMap<Team, TeamDto>()
-            .ForMember(d => d.TeamLeadName, opt => opt.MapFrom(s => s.TeamLead.FullName))
-            .ForMember(d => d.Count, opt => opt.MapFrom(s => s.Members.Count()));
+        CreateMap<Team, TeamDto>();
 
-        CreateMap<Team, TeamFullInfoDto>()
-            .ForMember(d => d.TeamLeadName, opt => opt.MapFrom(s => s.TeamLead.FullName))
-            .ForMember(d => d.Count, opt => opt.MapFrom(s => s.Members.Count()));
+        CreateMap<Team, TeamFullInfoDto>();
 
         CreateMap<GetTeams.Query, TeamsSearchAndFilterParametersDto>();
     }

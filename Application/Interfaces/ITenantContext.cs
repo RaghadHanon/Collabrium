@@ -1,9 +1,10 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 
 namespace Application.Interfaces;
+
 public interface ITenantContext
 {
-    Tenant? CurrentTenant { get; set; }
     string? TenantId { get; set; }
-    Task<Tenant?> GetGlobalTenant();
+    Tenant? CurrentTenant { get; set; }
+    Task<Tenant?> GetGlobalTenant(CancellationToken cancellationToken = default);
 }

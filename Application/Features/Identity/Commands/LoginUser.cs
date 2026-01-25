@@ -17,19 +17,9 @@ public class LoginUser
     public class Handler(IIdentityService identityService)
         : IRequestHandler<Command, Result<LoginResponseDto>>
     {
-        public async Task<Result<LoginResponseDto>> Handle(Command request
-            , CancellationToken cancellationToken)
+        public async Task<Result<LoginResponseDto>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var (token, id, tenantId) = await identityService
-                .AuthenticateAsync(request.Email, request.Password);
-
-            var user = await identityService.GetUserAsync(request.Email);
-
-            if (!await identityService.IsEmailConfirmedAsync(user!, cancellationToken))
-                return Result<LoginResponseDto>.Failure("You must confirm your email before logging in.", HttpStatusCode.Unauthorized);
-
-            user!.LastLoginAt = DateTime.UtcNow;
-            await identityService.UpdateUserAsync(user);
+            var (token, id, tenantId) = await identityService.LoginAsync(request.Email, request.Password, cancellationToken);
 
             return Result<LoginResponseDto>.Success(new LoginResponseDto
             {

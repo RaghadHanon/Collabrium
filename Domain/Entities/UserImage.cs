@@ -1,5 +1,6 @@
-﻿namespace Domain.Entities;
-public class UserImage : Image
+﻿namespace Domain.Models;
+
+public sealed class UserImage : Image
 {
-    public required string ApplicationUserId { get; set; }
+    public UserImage(string url, string publicId) : base(url, publicId) { }
 }

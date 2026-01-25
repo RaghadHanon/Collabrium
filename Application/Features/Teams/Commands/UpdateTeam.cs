@@ -23,7 +23,6 @@ public class UpdateTeam
     public class Handler(
         ITeamsRepository teamRepository,
         ITenantContext tenantContext,
-        IMapper mapper,
         IUsersRepository usersRepository
         ) : IRequestHandler<Command, Result<Unit>>
     {
@@ -31,44 +30,38 @@ public class UpdateTeam
         {
             var tenant = tenantContext.CurrentTenant;
             if (tenant is null)
-            {
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
-            }
+
+            var existing = await teamRepository.GetByIdAsync(tenant.Id, request.Id, cancellationToken);
+            if (existing is null)
+                return Result<Unit>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
+
+            if (!existing.IsActive)
+                return Result<Unit>.Failure("Cannot update an inactive team.", HttpStatusCode.BadRequest);
 
             if (request.TeamLeadId != null)
             {
-                var leader = await usersRepository.GetByIdAsync(request.TeamLeadId);
+                var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
                 if (leader is null || leader.TenantId != tenant.Id)
-                {
                     return Result<Unit>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
-                }
+
+                existing.ChangeLead(request.TeamLeadId);
             }
 
             if (request.Name != null)
             {
-                var isNameUnique = await teamRepository
-                    .IsTeamNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
+                var isNameUnique = await teamRepository.IsTeamNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
                 if (!isNameUnique)
-                {
-                    return Result<Unit>.Failure("A team with this name already exists in the tenant.",
-                        HttpStatusCode.BadRequest);
-                }
+                    return Result<Unit>.Failure("A team with this name already exists in the tenant.", HttpStatusCode.BadRequest);
             }
 
-            var existingTeam = await teamRepository
-                .GetByIdAsync(tenant.Id, request.Id, cancellationToken);
-            if (existingTeam is null || existingTeam.TenantId != tenant.Id)
-            {
-                return Result<Unit>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
-            }
+            var newName = request.Name ?? existing.Name;
+            var newDescription = request.Description ?? existing.Description;
+            var newCapacity = request.Capacity ?? existing.Capacity;
 
-            if(existingTeam.IsActive == false)
-            {
-                return Result<Unit>.Failure("Cannot update an inactive team.", HttpStatusCode.BadRequest);
-            }
+            existing.UpdateDetails(newName, newDescription, newCapacity);
 
-            mapper.Map(request, existingTeam);
-            existingTeam.UpdatedAt = DateTime.UtcNow;
+            await teamRepository.UpdateTeamAsync(existing, cancellationToken);
             await teamRepository.SaveChangesAsync(cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

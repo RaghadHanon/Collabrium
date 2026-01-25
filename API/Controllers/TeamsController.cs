@@ -1,11 +1,9 @@
-﻿using API.Common.Attributes;
-using API.Contracts.Teams;
+﻿using API.Contracts.Teams;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Teams.Commands;
 using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
-using Application.Features.Tenants.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -207,9 +205,9 @@ public class TeamsController : ApiBaseController
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {
-        var command = new ToggleTeamActivation.Command 
+        var command = new ToggleTeamActivation.Command
         {
-            TeamId = id 
+            TeamId = id
         };
 
         return HandleResult(await Mediator.Send(command));

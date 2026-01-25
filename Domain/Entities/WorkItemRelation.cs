@@ -1,15 +1,19 @@
 ﻿using Domain.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
-public class WorkItemRelation : Entity
+public sealed class WorkItemRelation : Entity
 {
-    public required string OutgoingWorkItemId { get; set; }
-    public required string IncomingWorkItemId { get; set; }
-    public WorkItemRelationType RelationType { get; set; }
+    public string OutgoingWorkItemId { get; private set; } = null!;
+    public string IncomingWorkItemId { get; private set; } = null!;
+    public WorkItemRelationType RelationType { get; private set; }
 
-    // Navigation
-    public WorkItem OutgoingWorkItem { get; set; } = null!;
+    public WorkItemRelation() { }
 
-    public WorkItem IncomingWorkItem { get; set; } = null!;
+    public WorkItemRelation(string id, string outgoingId, string incomingId, WorkItemRelationType type) : base(id)
+    {
+        OutgoingWorkItemId = outgoingId;
+        IncomingWorkItemId = incomingId;
+        RelationType = type;
+    }
 }

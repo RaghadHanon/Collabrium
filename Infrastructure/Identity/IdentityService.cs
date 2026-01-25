@@ -1,10 +1,12 @@
 ﻿using Application.Common.Exceptions;
 using Application.Interfaces;
 using Application.Interfaces.Emails;
-using Domain.Entities;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Email;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,7 +17,7 @@ namespace Infrastructure.Identity;
 
 public class IdentityService : IIdentityService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<ApplicationUserEntity> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IEmailService _emailService;
@@ -24,7 +26,7 @@ public class IdentityService : IIdentityService
     private readonly AppDbContext _dbContext;
 
     public IdentityService(
-        UserManager<ApplicationUser> userManager,
+        UserManager<ApplicationUserEntity> userManager,
         RoleManager<IdentityRole> roleManager,
         IJwtTokenGenerator jwtTokenGenerator,
         AppDbContext dbContext,
@@ -39,100 +41,87 @@ public class IdentityService : IIdentityService
         _identitySettings = identityOptions.Value;
         _emailTemplateFactory = emailTemplateFactory;
         _dbContext = dbContext;
-
     }
 
-    public async Task<ApplicationUser> RegisterUserAsync(
-    string fullName,
-    Department department,
-    string password,
-    DateOnly dateOfBirth,
-    UserRole role,
-    string tenantId,
-    string? email = null,
-    string? phoneNumber = null)
+    public async Task<User> RegisterUserAsync(
+        string fullName,
+        Department department,
+        string password,
+        DateOnly dateOfBirth,
+        UserRole role,
+        string tenantId,
+        string email,
+        string phoneNumber,
+        CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var user = CreateApplicationUser(
-                fullName,
-                department,
-                dateOfBirth,
-                tenantId,
-                email,
-                phoneNumber);
+            var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
 
-            user.UserContactInfo = new UserContactInfo
+            userEntity.UserContactInfo = new UserContactInfoEntity
             {
-                UserId = user.Id
+                UserId = userEntity.Id
             };
 
-            await CreateUserAsync(user, password);
-            await AssignRoleAsync(user, role);
-            await SendConfirmationEmail(user);
+            userEntity.MustChangePassword = role != UserRole.SuperAdmin;
 
-            await transaction.CommitAsync();
+            await CreateUserAsync(userEntity, password);
+            await AssignRoleAsync(userEntity, role);
 
-            return user;
+            await SendConfirmationEmailAsync(userEntity, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return UserMapper.ToDomain(userEntity);
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             throw;
         }
     }
 
-    private async Task CreateUserAsync(ApplicationUser user, string password)
+    public async Task<(string Token, string Id, string TenantId)> LoginAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _userManager.CreateAsync(user, password);
-        if (result.Succeeded) return;
+        var user = await ValidateCredentialsAsync(email, password);
 
-        var errors = string.Join(" ", result.Errors.Select(e => e.Description));
-        throw new BadRequestException($"User creation failed: {errors}");
+        var isConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+        if (!isConfirmed)
+            throw new UnauthenticatedException("You must confirm your email before logging in.");
+
+        var roles = await GetRolesAsync(user);
+
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        var token = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(user), roles);
+        return string.IsNullOrWhiteSpace(token)
+            ? throw new TokenGenerationFailedException("Token generation failed.")
+            : ((string Token, string Id, string TenantId)) (token, user.Id, user.TenantId ?? string.Empty);
     }
 
-    private async Task AssignRoleAsync(ApplicationUser user, UserRole role)
+    public async Task ConfirmEmailAsync(string userId, string encodedToken, CancellationToken cancellationToken = default)
     {
-        var roleName = role.ToString();
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException("User not found.");
 
-        if (!await _roleManager.RoleExistsAsync(roleName))
-            throw new BadRequestException($"Role '{roleName}' does not exist.");
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedToken));
+        var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
 
-        var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
         {
             var errors = string.Join(" ", result.Errors.Select(e => e.Description));
-            throw new BadRequestException($"Failed to assign role '{roleName}': {errors}");
+            throw new BadRequestException($"Email confirmation failed: {errors}");
         }
     }
 
-    public async Task SendConfirmationEmail(ApplicationUser user, CancellationToken cancellationToken = default)
-    {
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-        var confirmationUrl = $"{_identitySettings.ConfirmationUrlBase}?userId={user.Id}&token={encodedToken}";
-
-        var template = _emailTemplateFactory.GetTemplate("Confirmation");
-
-        var data = new Dictionary<string, string>
-        {
-            ["FullName"] = user.FullName,
-            ["Url"] = confirmationUrl
-        };
-
-        var message = new EmailMessageBuilder()
-            .To(user.Email!)
-            .Subject(template.GetSubject())
-            .PlainTextBody(template.GetPlainTextBody(data))
-            .HtmlBody(template.GetHtmlBody(data))
-            .Build();
-
-        await _emailService.SendAsync(message, cancellationToken);
-    }
-
-    public async Task ReSendConfirmationEmail(string email, CancellationToken cancellationToken = default)
+    public async Task ResendConfirmationEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
@@ -141,75 +130,38 @@ public class IdentityService : IIdentityService
         if (await _userManager.IsEmailConfirmedAsync(user))
             throw new BadRequestException("Email is already confirmed.");
 
-        await SendConfirmationEmail(user, cancellationToken);
+        await SendConfirmationEmailAsync(user, cancellationToken);
     }
 
-    private ApplicationUser CreateApplicationUser(
-        string fullName,
-        Department department,
-        DateOnly dateOfBirth,
-        string tenantId,
-        string? email = null,
-        string? phoneNumber = null)
+    public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
     {
-        return new ApplicationUser
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BadRequestException("User not found.");
+
+        user.MustChangePassword = false;
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
         {
-            FullName = fullName,
-            Email = email,
-            Department = department,
-            TenantId = tenantId,
-            UserName = email,
-            DateOfBirth = dateOfBirth,
-            PhoneNumber = phoneNumber
-        };
-    }
+            var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+            throw new BadRequestException($"Password change failed: {errors}");
+        }
 
-    public async Task<(string Token, string Id, string TenantId)> AuthenticateAsync(string email, string password)
-    {
-        var user = await ValidateCredentialsAsync(email, password);
-        var roles = await GetRolesAsync(user);
-
-        var token = _jwtTokenGenerator.GenerateToken(user, roles)
-                    ?? throw new TokenGenerationFailedException("Token generation failed");
-        var entityId = user.Id;
-        var tenantId = user.TenantId;
-
-        return (token, entityId, tenantId);
-    }
-
-    private async Task<ApplicationUser> ValidateCredentialsAsync(string email, string password)
-    {
-        var user = await GetUserAsync(email);
-        var validPassword = await _userManager.CheckPasswordAsync(user!, password);
-
-        return !validPassword ? throw new UnauthenticatedException("Invalid password.") : user!;
-    }
-
-    public async Task<IList<string>> GetRolesAsync(ApplicationUser user)
-    {
-        var roles = await _userManager.GetRolesAsync(user);
-
-        return roles.Count == 0 ? throw new NoRolesException($"User '{user.Email}' has no roles assigned.") : roles;
-    }
-
-    public async Task<ApplicationUser?> GetUserAsync(string email)
-    {
-        return email != null
-            ? await _userManager.FindByEmailAsync(email)
-                ?? throw new UnauthenticatedException("Invalid email.")
-            : throw new BadRequestException("Email must be provided.");
-    }
-
-    public async Task UpdateUserAsync(ApplicationUser user)
-    {
         await _userManager.UpdateAsync(user);
     }
 
     public async Task SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(email))
+            throw new BadRequestException("Email must be provided.");
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
             throw new BadRequestException("User not found.");
+
+        if (string.IsNullOrWhiteSpace(user.Email))
+            throw new BadRequestException("User email is missing.");
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
@@ -224,7 +176,7 @@ public class IdentityService : IIdentityService
         };
 
         var message = new EmailMessageBuilder()
-            .To(user.Email!)
+            .To(user.Email)
             .Subject(template.GetSubject())
             .PlainTextBody(template.GetPlainTextBody(data))
             .HtmlBody(template.GetHtmlBody(data))
@@ -233,14 +185,25 @@ public class IdentityService : IIdentityService
         await _emailService.SendAsync(message, cancellationToken);
     }
 
-    public async Task ResetPasswordAsync(string userId, string token, string newPassword)
+    public async Task ResetPasswordAsync(
+        string userId,
+        string encodedToken,
+        string newPassword,
+        CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new BadRequestException("UserId must be provided.");
+
+        if (string.IsNullOrWhiteSpace(encodedToken))
+            throw new BadRequestException("Token must be provided.");
+
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             throw new BadRequestException("User not found.");
 
         user.MustChangePassword = false;
-        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+
+        var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedToken));
         var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
 
         if (!result.Succeeded)
@@ -248,26 +211,97 @@ public class IdentityService : IIdentityService
             var errors = string.Join(" ", result.Errors.Select(e => e.Description));
             throw new BadRequestException($"Password reset failed: {errors}");
         }
+
+        await _userManager.UpdateAsync(user);
     }
 
-    public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+    private async Task<ApplicationUserEntity> ValidateCredentialsAsync(string email, string password)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        if (string.IsNullOrWhiteSpace(email))
+            throw new BadRequestException("Email must be provided.");
+
+        var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
-            throw new BadRequestException("User not found.");
+            throw new UnauthenticatedException("Invalid email.");
 
-        user.MustChangePassword = false;
-        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        var validPassword = await _userManager.CheckPasswordAsync(user, password);
+        return !validPassword ? throw new UnauthenticatedException("Invalid password.") : user;
+    }
 
+    private async Task<IList<string>> GetRolesAsync(ApplicationUserEntity user)
+    {
+        var roles = await _userManager.GetRolesAsync(user);
+        return roles.Count == 0 ? throw new NoRolesException($"User '{user.Email}' has no roles assigned.") : roles;
+    }
+
+    private async Task CreateUserAsync(ApplicationUserEntity user, string password)
+    {
+        var result = await _userManager.CreateAsync(user, password);
+        if (result.Succeeded) return;
+
+        var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+        throw new BadRequestException($"User creation failed: {errors}");
+    }
+
+    private async Task AssignRoleAsync(ApplicationUserEntity user, UserRole role)
+    {
+        var roleName = role.ToString();
+
+        if (!await _roleManager.RoleExistsAsync(roleName))
+            throw new BadRequestException($"Role '{roleName}' does not exist.");
+
+        var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
         {
             var errors = string.Join(" ", result.Errors.Select(e => e.Description));
-            throw new BadRequestException($"Password change failed: {errors}");
+            throw new BadRequestException($"Failed to assign role '{roleName}': {errors}");
         }
     }
 
-    public async Task<bool> IsEmailConfirmedAsync(ApplicationUser user, CancellationToken cancellationToken = default)
+    private async Task SendConfirmationEmailAsync(ApplicationUserEntity user, CancellationToken cancellationToken)
     {
-        return await _userManager.IsEmailConfirmedAsync(user);
+        if (string.IsNullOrWhiteSpace(user.Email))
+            throw new BadRequestException("User email is missing.");
+
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        var confirmationUrl = $"{_identitySettings.ConfirmationUrlBase}?userId={user.Id}&token={encodedToken}";
+
+        var template = _emailTemplateFactory.GetTemplate("Confirmation");
+
+        var data = new Dictionary<string, string>
+        {
+            ["FullName"] = user.FullName,
+            ["Url"] = confirmationUrl
+        };
+
+        var message = new EmailMessageBuilder()
+            .To(user.Email)
+            .Subject(template.GetSubject())
+            .PlainTextBody(template.GetPlainTextBody(data))
+            .HtmlBody(template.GetHtmlBody(data))
+            .Build();
+
+        await _emailService.SendAsync(message, cancellationToken);
+    }
+
+    private static ApplicationUserEntity CreateApplicationUserEntity(
+        string fullName,
+        Department department,
+        DateOnly dateOfBirth,
+        string tenantId,
+        string email,
+        string phoneNumber)
+    {
+        return new ApplicationUserEntity
+        {
+            FullName = fullName,
+            Email = email,
+            Department = department,
+            TenantId = tenantId,
+            UserName = email,
+            DateOfBirth = dateOfBirth,
+            PhoneNumber = phoneNumber
+        };
     }
 }

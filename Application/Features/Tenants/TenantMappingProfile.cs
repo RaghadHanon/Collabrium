@@ -2,7 +2,7 @@
 using Application.Features.Tenants.DTOs;
 using Application.Features.Tenants.Queries;
 using AutoMapper;
-using Domain.Entities;
+using Domain.Models;
 
 public class TenantMappingProfile : Profile
 {

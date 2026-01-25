@@ -1,10 +1,10 @@
-﻿using Domain.Entities;
+﻿using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class SprintConfiguration : IEntityTypeConfiguration<Sprint>
+public class SprintConfiguration : IEntityTypeConfiguration<SprintEntity>
 {
-    public void Configure(EntityTypeBuilder<Sprint> builder)
+    public void Configure(EntityTypeBuilder<SprintEntity> builder)
     {
         builder.HasKey(s => s.Id);
 

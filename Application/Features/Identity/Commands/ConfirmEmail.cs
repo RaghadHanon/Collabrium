@@ -1,10 +1,7 @@
 ﻿using Application.Common;
-using Domain.Entities;
+using Application.Interfaces;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Net;
-using System.Text;
 
 namespace Application.Features.Identity.Commands;
 
@@ -16,25 +13,13 @@ public partial class ConfirmEmail
         public required string Token { get; set; }
     }
 
-    public class Handler(UserManager<ApplicationUser> userManager) : IRequestHandler<Command, Result<string>>
+    public class Handler(IIdentityService identityService) : IRequestHandler<Command, Result<string>>
     {
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var user = await userManager.FindByIdAsync(request.UserId);
-            if (user == null)
-                return Result<string>.Failure("User not found.", HttpStatusCode.BadRequest);
-
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
-
-            var result = await userManager.ConfirmEmailAsync(user, decodedToken);
-
-            if (!result.Succeeded)
-            {
-                var errors = string.Join(" ", result.Errors.Select(e => e.Description));
-                return Result<string>.Failure($"Email confirmation failed: {errors}", HttpStatusCode.BadRequest);
-            }
-
+            await identityService.ConfirmEmailAsync(request.UserId, request.Token, cancellationToken);
             return Result<string>.Success("Email confirmed successfully!", HttpStatusCode.OK);
         }
     }
 }
+

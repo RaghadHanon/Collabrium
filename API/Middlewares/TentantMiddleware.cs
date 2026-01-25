@@ -2,7 +2,7 @@
 using Application.Common.Exceptions;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Entities;
+using Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Identity;
 
 public class TenantMiddleware
@@ -18,7 +18,7 @@ public class TenantMiddleware
         HttpContext context,
         ITenantContext tenantContext,
         ITenantRepository tenantRepository,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUserEntity> userManager)
     {
         var endpoint = context.GetEndpoint();
         if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)

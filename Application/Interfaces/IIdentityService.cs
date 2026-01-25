@@ -1,18 +1,33 @@
-﻿using Domain.Entities;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Domain.Models;
 
 namespace Application.Interfaces;
+
 public interface IIdentityService
 {
-    Task<(string Token, string Id, string TenantId)> AuthenticateAsync(string email, string password);
-    Task ChangePasswordAsync(string userId, string currentPassword, string newPassword);
-    Task<IList<string>> GetRolesAsync(ApplicationUser user);
-    Task<ApplicationUser?> GetUserAsync(string email);
-    Task<bool> IsEmailConfirmedAsync(ApplicationUser user, CancellationToken cancellationToken = default);
-    Task<ApplicationUser> RegisterUserAsync(string fullName, Department department, string password, DateOnly dateOfBirth, UserRole role, string tenantId, string? email = null, string? phoneNumber = null);
-    Task ReSendConfirmationEmail(string email, CancellationToken cancellationToken = default);
-    Task ResetPasswordAsync(string userId, string token, string newPassword);
-    Task SendConfirmationEmail(ApplicationUser user, CancellationToken cancellationToken = default);
+    Task<User> RegisterUserAsync(
+        string fullName,
+        Department department,
+        string password,
+        DateOnly dateOfBirth,
+        UserRole role,
+        string tenantId,
+        string email,
+        string phoneNumber,
+        CancellationToken cancellationToken = default);
+
+    Task<(string Token, string Id, string TenantId)> LoginAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default);
+
+    Task ConfirmEmailAsync(string userId, string encodedToken, CancellationToken cancellationToken = default);
+
+    Task ResendConfirmationEmailAsync(string email, CancellationToken cancellationToken = default);
+
     Task SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default);
-    Task UpdateUserAsync(ApplicationUser user);
+
+    Task ResetPasswordAsync(string userId, string encodedToken, string newPassword, CancellationToken cancellationToken = default);
+
+    Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
 }

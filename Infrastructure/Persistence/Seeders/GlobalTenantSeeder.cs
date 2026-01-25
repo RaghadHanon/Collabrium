@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
-using Domain.Entities;
 using Domain.Enums;
+using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,8 +8,10 @@ namespace Infrastructure.Persistence.Seeders;
 
 public static class GlobalTenantSeeder
 {
+    private const string GlobalTenantId = "CollabriumGlobalTenant";
     private const string GlobalTenantName = "Platform Root Tenant";
     private const string GlobalTenantDomain = "global.platform";
+
     private const string SuperAdminEmail = "superadmin@platform.com";
     private const string SuperAdminPassword = "Pa$$w0rd";
 
@@ -20,27 +22,24 @@ public static class GlobalTenantSeeder
         var identityService = scope.ServiceProvider.GetRequiredService<IIdentityService>();
 
         var globalTenant = await dbContext.Tenants
-            .Include(t => t.Users)
+            .Include(t => t.TenantContactInfo)
             .FirstOrDefaultAsync(t => t.Domain == GlobalTenantDomain);
 
         if (globalTenant == null)
         {
-            globalTenant = new Tenant
+            globalTenant = new TenantEntity
             {
-                Id = "CollabriumGlobalTenant",
+                Id = GlobalTenantId,
                 Name = GlobalTenantName,
                 Domain = GlobalTenantDomain,
                 Description = "Global tenant for SuperAdmin and platform-level services.",
                 IsActive = true,
-                TenantContactInfo = new TenantContactInfo
+                WebsiteURL = null,
+                TenantContactInfo = new TenantContactInfoEntity
                 {
-                    TenantId = "CollabriumGlobalTenant",
+                    TenantId = GlobalTenantId,
                     Email = string.Empty,
-                    PhoneNumber = string.Empty,
-                    LinkedIn = string.Empty,
-                    Facebook = string.Empty,
-                    Instagram = string.Empty,
-                    YouTube = string.Empty
+                    PhoneNumber = string.Empty
                 }
             };
 
@@ -49,12 +48,21 @@ public static class GlobalTenantSeeder
         }
 
         var existingSuperAdmin = await dbContext.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == SuperAdminEmail && u.TenantId == globalTenant.Id);
 
         if (existingSuperAdmin != null)
-            return;
+        {
+            if (string.IsNullOrWhiteSpace(globalTenant.TenantAdminId))
+            {
+                globalTenant.TenantAdminId = existingSuperAdmin.Id;
+                await dbContext.SaveChangesAsync();
+            }
 
-        var superAdmin = await identityService.RegisterUserAsync(
+            return;
+        }
+
+        var superAdminDomain = await identityService.RegisterUserAsync(
             fullName: "Super Admin",
             department: Department.Administration,
             password: SuperAdminPassword,
@@ -65,8 +73,7 @@ public static class GlobalTenantSeeder
             phoneNumber: string.Empty
         );
 
-        globalTenant.TenantAdminId = superAdmin.Id;
-        globalTenant.Users.Add(superAdmin);
+        globalTenant.TenantAdminId = superAdminDomain.Id;
         await dbContext.SaveChangesAsync();
     }
 }

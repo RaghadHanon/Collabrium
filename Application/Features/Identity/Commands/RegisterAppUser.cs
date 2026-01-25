@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using AutoMapper;
@@ -26,22 +27,31 @@ public class RegisterAppUser
     {
         public async Task<Result<UserWithTenantDto>> Handle(Command request, CancellationToken cancellationToken)
         {
+            var tenant =
+                request.UserRole != UserRole.SuperAdmin
+                    ? tenantContext.CurrentTenant!
+                    : (await tenantContext.GetGlobalTenant(cancellationToken));
+
+            if(tenant == null) {
+                return Result<UserWithTenantDto>.Failure("Tenant not found."
+                    , HttpStatusCode.BadRequest);
+            }
+
             var user = await identityService.RegisterUserAsync(
                 request.FullName,
                 request.Department,
                 request.Password,
                 request.DateOfBirth,
                 request.UserRole,
-                request.UserRole != UserRole.SuperAdmin ? tenantContext.TenantId! :
-                 (await tenantContext.GetGlobalTenant())!.Id,
+                tenant.Id,
                 request.Email,
-                request.PhoneNumber
-            );
+                request.PhoneNumber,
+                cancellationToken);
 
-            user.MustChangePassword = request.UserRole != UserRole.SuperAdmin;
-            var registeredSpecialistDto = mapper.Map<UserWithTenantDto>(user);
+            var dto = mapper.Map<UserWithTenantDto>(user);
+            dto.Tenant = mapper.Map<TenantDto>(tenant);
 
-            return Result<UserWithTenantDto>.Success(registeredSpecialistDto, HttpStatusCode.Created);
+            return Result<UserWithTenantDto>.Success(dto, HttpStatusCode.Created);
         }
     }
 }

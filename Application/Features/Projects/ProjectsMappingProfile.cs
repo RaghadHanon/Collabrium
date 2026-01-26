@@ -1,6 +1,6 @@
 ﻿using Application.Features.Projects.DTOs;
 using AutoMapper;
-using Domain.Models;
+using Domain.Entities;
 
 namespace Application.Features.Projects;
 public class ProjectsMappingProfile : Profile

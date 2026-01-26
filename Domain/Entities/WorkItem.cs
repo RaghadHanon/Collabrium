@@ -1,6 +1,7 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
-namespace Domain.Models;
+namespace Domain.Entities;
 
 public abstract class WorkItem : Entity
 {
@@ -14,49 +15,122 @@ public abstract class WorkItem : Entity
     public WorkItemPriority Priority { get; private set; }
 
     public bool IsBlocked { get; private set; }
-    public DateTime? UpdatedDate { get; private set; }
     public DateTime? StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
 
     public string? AssignedToUserId { get; private set; }
-    public string? AssignedToUserName { get; private set; }
-
     public string CreatedByUserId { get; private set; } = null!;
     public string ProjectId { get; private set; } = null!;
     public string? SprintId { get; private set; }
 
-    private readonly List<WorkItemRelation> _outgoingRelations = new();
-    private readonly List<WorkItemRelation> _incomingRelations = new();
+    private readonly List<WorkItemRelation> _relations = new();
+    public IReadOnlyCollection<WorkItemRelation> Relations => _relations.AsReadOnly();
 
-    public IReadOnlyCollection<WorkItemRelation> OutgoingRelations => _outgoingRelations;
-    public IReadOnlyCollection<WorkItemRelation> IncomingRelations => _incomingRelations;
+    private readonly List<Comment> _comments = new();
+    public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
 
-    public WorkItem() { }
+    protected WorkItem() { } // EF
 
-    public WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
+    protected WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
     {
-        Title = title;
-        CreatedByUserId = createdByUserId;
-        ProjectId = projectId;
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+        ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
         Status = WorkItemStatus.Backlog;
         Priority = WorkItemPriority.Medium;
-        UpdatedDate = DateTime.UtcNow;
+        Touch();
     }
+
+    protected void RehydrateCommon(
+        DateTime createdAt,
+        DateTime? updatedAt,
+        WorkItemStatus status,
+        WorkItemPriority priority,
+        bool isBlocked,
+        int effortPoints,
+        string? description,
+        string? acceptanceCriteria,
+        string? assignedToUserId,
+        string? sprintId,
+        DateTime? startDate,
+        DateTime? endDate)
+    {
+        SetTimestamps(createdAt, updatedAt);
+
+        Status = status;
+        Priority = priority;
+        IsBlocked = isBlocked;
+
+        EffortPoints = effortPoints;
+        Description = description;
+        AcceptanceCriteria = acceptanceCriteria;
+
+        AssignedToUserId = assignedToUserId;
+        SprintId = sprintId;
+
+        StartDate = startDate;
+        EndDate = endDate;
+    }
+    public void RehydrateAddComment(Comment comment)
+    {
+        _comments.Add(comment);
+    }
+
+    public void RehydrateAddRelation(WorkItemRelation relation)
+    {
+        _relations.Add(relation);
+    }
+
+    public bool IsDone => Status == WorkItemStatus.Done;
 
     public void UpdateDetails(string title, string? description, string? acceptanceCriteria, int effortPoints)
     {
-        Title = title;
-        Description = description;
-        AcceptanceCriteria = acceptanceCriteria;
-        EffortPoints = effortPoints;
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        EffortPoints = Guard.NonNegative(effortPoints, nameof(effortPoints));
+
+        Description = description?.Trim();
+        AcceptanceCriteria = acceptanceCriteria?.Trim();
         Touch();
     }
 
-    public void ChangeStatus(WorkItemStatus status)
+    public void ChangeStatus(WorkItemStatus newStatus)
     {
-        Status = status;
+        Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
+            "Blocked work item cannot be moved to InProgress.");
+
+        Guard.Against(Status == WorkItemStatus.Done && newStatus != WorkItemStatus.Done,
+            "Done work item cannot change status.");
+
+        Guard.Against(!IsValidTransition(Status, newStatus),
+            $"Invalid status transition: {Status} -> {newStatus}");
+
+        Status = newStatus;
+
+        if (newStatus == WorkItemStatus.InProgress && StartDate is null)
+            StartDate = DateTime.UtcNow;
+
+        if (newStatus == WorkItemStatus.Done)
+            EndDate = DateTime.UtcNow;
+
         Touch();
+    }
+
+    private static bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        return from == to
+            ? true
+            : from switch
+            {
+                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
+                WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
+                WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
     }
 
     public void SetPriority(WorkItemPriority priority)
@@ -65,50 +139,69 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    public void Block() { IsBlocked = true; Touch(); }
-    public void Unblock() { IsBlocked = false; Touch(); }
-
-    public void AssignTo(string userId, string? userName = null)
+    public void Block()
     {
-        AssignedToUserId = userId;
-        AssignedToUserName = userName;
+        Guard.Against(IsDone, "Cannot block a completed work item.");
+        IsBlocked = true;
+        Touch();
+    }
+
+    public void Unblock()
+    {
+        IsBlocked = false;
+        Touch();
+    }
+
+    public void AssignTo(string? userId)
+    {
+        AssignedToUserId = userId is null ? null : Guard.NotNullOrWhiteSpace(userId, nameof(userId));
         Touch();
     }
 
     public void MoveToSprint(string? sprintId)
     {
-        SprintId = sprintId;
+        SprintId = sprintId is null ? null : Guard.NotNullOrWhiteSpace(sprintId, nameof(sprintId));
         Touch();
     }
 
-    public IReadOnlyCollection<string> GetChildrenIds()
+    public Comment AddComment(string commentId, string createdByUserId, string content)
     {
-        return _outgoingRelations
-            .Where(r => r.RelationType == WorkItemRelationType.Parent)
-            .Select(r => r.IncomingWorkItemId)
-            .ToList();
+        Guard.Against(string.IsNullOrWhiteSpace(commentId), "Comment id is required.");
+        var comment = new Comment(commentId, createdByUserId, content);
+        _comments.Add(comment);
+        Touch();
+        return comment;
+    }
+
+    public void AddRelation(string targetWorkItemId, WorkItemRelationType type)
+    {
+        targetWorkItemId = Guard.NotNullOrWhiteSpace(targetWorkItemId, nameof(targetWorkItemId));
+        Guard.Against(targetWorkItemId == Id, "WorkItem cannot relate to itself.");
+
+        Guard.Against(_relations.Any(r => r.TargetWorkItemId == targetWorkItemId && r.RelationType == type),
+            "Relation already exists.");
+
+        if (type == WorkItemRelationType.Parent)
+        {
+            Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent),
+                "WorkItem can have only one parent.");
+        }
+
+        _relations.Add(new WorkItemRelation(Guid.NewGuid().ToString(), Id, targetWorkItemId, type));
+        Touch();
     }
 
     public string? GetParentId()
     {
-        return _incomingRelations
-            .Where(r => r.RelationType == WorkItemRelationType.Parent)
-            .Select(r => r.OutgoingWorkItemId)
-            .FirstOrDefault();
+        return _relations.FirstOrDefault(r => r.RelationType == WorkItemRelationType.Parent)?.TargetWorkItemId;
     }
 
-    public void AddOutgoingRelation(WorkItemRelation relation)
+    public IReadOnlyCollection<string> GetChildrenIds()
     {
-        _outgoingRelations.Add(relation);
-    }
-
-    public void AddIncomingRelation(WorkItemRelation relation)
-    {
-        _incomingRelations.Add(relation);
-    }
-
-    private void Touch()
-    {
-        UpdatedDate = DateTime.UtcNow;
+        return _relations
+                .Where(r => r.RelationType == WorkItemRelationType.Child)
+                .Select(r => r.TargetWorkItemId)
+                .Distinct()
+                .ToList();
     }
 }

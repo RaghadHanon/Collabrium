@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
-namespace Domain.Models;
+namespace Domain.Entities;
 
-public class Team : Entity
+public sealed class Team : Entity
 {
     public string TenantId { get; private set; } = null!;
     public string TeamLeadId { get; private set; } = null!;
@@ -11,37 +12,94 @@ public class Team : Entity
     public Department Department { get; private set; }
     public int? Capacity { get; private set; }
     public bool IsActive { get; private set; } = true;
-    public DateTime UpdatedAt { get; private set; }
 
-    public Team() { }
+    private readonly HashSet<string> _memberIds = new();
+    public IReadOnlyCollection<string> MemberIds => _memberIds;
 
-    public Team(string id, string tenantId, string teamLeadId, string name, Department department, bool isActive) : base(id)
+    private Team() { }
+
+    public Team(string id, string tenantId, string teamLeadId, string name, Department department, int? capacity = null, bool isActive = true)
+        : base(id)
     {
-        TenantId = tenantId;
-        TeamLeadId = teamLeadId;
-        Name = name;
+        TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
+        TeamLeadId = Guard.NotNullOrWhiteSpace(teamLeadId, nameof(teamLeadId));
+        Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+        Guard.Against(capacity is < 1, "Capacity must be >= 1 if provided.");
+
         Department = department;
-        UpdatedAt = DateTime.UtcNow;
+        Capacity = capacity;
         IsActive = isActive;
+
+        _memberIds.Add(TeamLeadId);
+        Touch();
+    }
+
+    public static Team Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string tenantId,
+        string teamLeadId,
+        string name,
+        string? description,
+        Department department,
+        int? capacity,
+        bool isActive,
+        IEnumerable<string> memberIds)
+    {
+        var t = new Team(id, tenantId, teamLeadId, name, department, capacity, isActive);
+        t.SetTimestamps(createdAt, updatedAt);
+
+        t.Description = description?.Trim();
+        t.Capacity = capacity;
+        t.IsActive = isActive;
+
+        t._memberIds.Clear();
+        foreach (var m in memberIds.Distinct())
+            t._memberIds.Add(m);
+
+        t._memberIds.Add(teamLeadId); // invariant
+
+        return t;
     }
 
     public void UpdateDetails(string name, string? description, int? capacity)
     {
-        Name = name;
-        Description = description;
+        Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+        Description = description?.Trim();
+        Guard.Against(capacity is < 1, "Capacity must be >= 1 if provided.");
         Capacity = capacity;
-        UpdatedAt = DateTime.UtcNow;
+        Touch();
     }
 
     public void ChangeLead(string newLeadId)
     {
+        newLeadId = Guard.NotNullOrWhiteSpace(newLeadId, nameof(newLeadId));
+        _memberIds.Add(newLeadId);
         TeamLeadId = newLeadId;
-        UpdatedAt = DateTime.UtcNow;
+        Touch();
     }
 
-    public void ToggleActivation()
+    public void AddMember(string userId)
     {
-        IsActive = !IsActive;
-        UpdatedAt = DateTime.UtcNow;
+        Guard.Against(!IsActive, "Cannot add members to an inactive team.");
+        userId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
+
+        if (Capacity is not null)
+            Guard.Against(_memberIds.Count >= Capacity.Value, "Team capacity reached.");
+
+        Guard.Against(!_memberIds.Add(userId), "User is already a team member.");
+        Touch();
     }
+
+    public void RemoveMember(string userId)
+    {
+        userId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
+        Guard.Against(userId == TeamLeadId, "Cannot remove the team lead.");
+        Guard.Against(!_memberIds.Remove(userId), "User is not a team member.");
+        Touch();
+    }
+
+    public void Activate() { IsActive = true; Touch(); }
+    public void Deactivate() { IsActive = false; Touch(); }
 }

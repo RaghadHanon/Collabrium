@@ -1,22 +1,22 @@
-﻿using Application.Interfaces;
-using Domain.Models;
+﻿using Application.Interfaces.Services;
+using Domain.Entities;
 using Infrastructure.Persistence;
-using Infrastructure.Persistence.Mappers;
+using Infrastructure.Persistence.Mapping;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Infrastructure.Security;
 
-public class CurrentUserAccessor : ICurrentUserAccessor
+public sealed class CurrentUserAccessor : ICurrentUserAccessor
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly AppDbContext _dbContext;
 
     public CurrentUserAccessor(IHttpContextAccessor httpContextAccessor, AppDbContext dbContext)
     {
-        _httpContextAccessor = httpContextAccessor;
-        _dbContext = dbContext;
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public string? GetUserId()
@@ -30,12 +30,13 @@ public class CurrentUserAccessor : ICurrentUserAccessor
         if (string.IsNullOrWhiteSpace(userId))
             return null;
 
+        // Owned types لا تحتاج Include
+        // Tenant فقط إذا بدك تتأكد إنه موجود/تحميل بيانات إضافية عنه
         var entity = await _dbContext.Users
+            .AsNoTracking()
             .Include(u => u.Tenant)
-            .Include(u => u.UserContactInfo)
-            .Include(u => u.ProfileImage)
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-        return entity == null ? null : UserMapper.ToDomain(entity);
+        return entity is null ? null : UserMapper.ToDomain(entity);
     }
 }

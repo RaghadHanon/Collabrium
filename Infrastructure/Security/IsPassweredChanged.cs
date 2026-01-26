@@ -1,5 +1,5 @@
 ﻿using Application.Common.Exceptions;
-using Application.Interfaces;
+using Application.Interfaces.Services;
 using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Authorization;

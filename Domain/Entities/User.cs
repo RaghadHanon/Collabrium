@@ -1,10 +1,13 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
+using Domain.ValueObjects;
 
-namespace Domain.Models;
+namespace Domain.Entities;
 
-public class User : Entity
+public sealed class User : Entity
 {
     public string? TenantId { get; private set; }
+
     public string Email { get; private set; } = string.Empty;
     public string UserName { get; private set; } = string.Empty;
 
@@ -26,10 +29,10 @@ public class User : Entity
         }
     }
 
-    public UserContactInfo? ContactInfo { get; private set; }
-    public UserImage? ProfileImage { get; private set; }
+    public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
+    public StoredImage? ProfileImage { get; private set; }
 
-    public User() { }
+    private User() { }
 
     public User(
         string id,
@@ -41,38 +44,87 @@ public class User : Entity
         Department? department = null)
         : base(id)
     {
-        FullName = fullName;
+        FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
+        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "DateOfBirth cannot be in the future.");
+
         DateOfBirth = dateOfBirth;
-        Email = email;
-        UserName = userName;
-        TenantId = tenantId;
+        Email = email?.Trim() ?? "";
+        UserName = userName?.Trim() ?? "";
+        TenantId = tenantId?.Trim();
         Department = department;
+
         MustChangePassword = false;
+    }
+
+    public static User Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string fullName,
+        DateOnly dateOfBirth,
+        string email,
+        string userName,
+        string? tenantId,
+        Department? department,
+        DateTime? lastLoginAt,
+        bool mustChangePassword,
+        ContactDetails contactInfo,
+        StoredImage? profileImage)
+    {
+        var u = new User(id, fullName, dateOfBirth, email, userName, tenantId, department);
+        u.SetTimestamps(createdAt, updatedAt);
+
+        u.LastLoginAt = lastLoginAt;
+        u.MustChangePassword = mustChangePassword;
+        u.ContactInfo = contactInfo ?? ContactDetails.Empty;
+        u.ProfileImage = profileImage;
+
+        return u;
+    }
+
+    public void UpdateIdentity(string fullName, string email, string userName)
+    {
+        FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
+        Email = (email ?? "").Trim();
+        UserName = (userName ?? "").Trim();
+        Touch();
     }
 
     public void RecordLogin()
     {
         LastLoginAt = DateTime.UtcNow;
         MustChangePassword = false;
+        Touch();
     }
 
     public void RequirePasswordChange()
     {
         MustChangePassword = true;
+        Touch();
     }
 
     public void ChangeDepartment(Department? department)
     {
         Department = department;
+        Touch();
     }
 
-    public void SetContactInfo(UserContactInfo? contactInfo)
+    public void ChangeTenant(string? tenantId)
     {
-        ContactInfo = contactInfo;
+        TenantId = tenantId?.Trim();
+        Touch();
     }
 
-    public void SetProfileImage(UserImage? image)
+    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook, string? instagram, string? youTube)
+    {
+        var socials = SocialLinks.Create(linkedIn, facebook, instagram, youTube);
+        ContactInfo = ContactDetails.Create(email, phone, socials);
+        Touch();
+    }
+
+    public void SetProfileImage(StoredImage? image)
     {
         ProfileImage = image;
+        Touch();
     }
 }

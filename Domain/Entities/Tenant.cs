@@ -1,98 +1,99 @@
-﻿namespace Domain.Models;
+﻿using Domain.Common;
+using Domain.ValueObjects;
 
-public class Tenant : Entity
+namespace Domain.Entities;
+
+public sealed class Tenant : Entity
 {
     public string Name { get; private set; } = null!;
     public string Domain { get; private set; } = null!;
+    public bool IsActive { get; private set; }
+
     public string? Description { get; private set; }
     public string? Country { get; private set; }
-    public bool IsActive { get; private set; }
-    public string? TenantAdminId { get; private set; }
     public string? WebsiteUrl { get; private set; }
+    public string? TenantAdminId { get; private set; }
 
-    public TenantContactInfo? ContactInfo { get; private set; }
-    public TenantImage? ProfileImage { get; private set; }
+    public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
+    public StoredImage? ProfileImage { get; private set; }
 
-    public Tenant() { }
+    private Tenant() { } // EF optional
 
     public Tenant(string name, string domain)
     {
-        Name = name;
-        Domain = domain;
+        Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+        Domain = Guard.NotNullOrWhiteSpace(domain, nameof(domain)).ToLowerInvariant();
         IsActive = true;
-        ContactInfo = new TenantContactInfo();
     }
 
-    public Tenant(string id, string name, string domain)
+    public Tenant(string id, string name, string domain) : base(id)
     {
-        Id = id;
-        Name = name;
-        Domain = domain;
+        Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+        Domain = Guard.NotNullOrWhiteSpace(domain, nameof(domain)).ToLowerInvariant();
         IsActive = true;
-        ContactInfo = new TenantContactInfo();
     }
 
-    public static Tenant Create(string name, string domain, string? description)
+    public static Tenant Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string name,
+        string domain,
+        bool isActive,
+        string? description,
+        string? country,
+        string? websiteUrl,
+        string? tenantAdminId,
+        ContactDetails contactInfo,
+        StoredImage? profileImage)
     {
-        if (string.IsNullOrWhiteSpace(name)) 
-            throw new ArgumentException("Tenant name is required.", nameof(name));
-        if (string.IsNullOrWhiteSpace(domain))
-            throw new ArgumentException("Tenant domain is required.", nameof(domain));
+        var t = new Tenant(id, name, domain);
+        t.SetTimestamps(createdAt, updatedAt);
 
-        var tenant = new Tenant(name.Trim(), domain.Trim());
-        if (!string.IsNullOrWhiteSpace(description))
-            tenant.Description = description;
+        t.IsActive = isActive;
+        t.Description = description?.Trim();
+        t.Country = country?.Trim();
+        t.WebsiteUrl = websiteUrl?.Trim();
+        t.TenantAdminId = tenantAdminId?.Trim();
+        t.ContactInfo = contactInfo ?? ContactDetails.Empty;
+        t.ProfileImage = profileImage;
 
-        return tenant;
+        return t;
     }
-
-    public void Deactivate() => IsActive = false;
-    public void Activate() => IsActive = true;
 
     public void UpdateProfile(string? description, string? country, string? websiteUrl)
     {
-        Description = description;
-        Country = country;
-        WebsiteUrl = websiteUrl;
+        Description = description?.Trim();
+        Country = country?.Trim();
+        WebsiteUrl = websiteUrl?.Trim();
+        Touch();
     }
 
-    public void AssignAdmin(string adminUserId)
+    public void AssignAdmin(string adminId)
     {
-        if (string.IsNullOrWhiteSpace(adminUserId))
-            throw new ArgumentException("Admin user id is required.", nameof(adminUserId));
-
-        TenantAdminId = adminUserId;
+        TenantAdminId = Guard.NotNullOrWhiteSpace(adminId, nameof(adminId));
+        Touch();
     }
 
-    public void UpdateContactInfo(string? email, string? phoneNumber, 
-        string? linkedIn, string? facebook, string? instagram, string? youTube)
+    public void Activate() { IsActive = true; Touch(); }
+    public void Deactivate() { IsActive = false; Touch(); }
+
+    public void SetProfileImage(StoredImage image)
     {
-        if (email is null && phoneNumber is null) return;
-
-        var newEmail = email ?? ContactInfo!.Email;
-        var newPhone = phoneNumber ?? ContactInfo!.PhoneNumber;
-        var newLinkedIn = linkedIn ?? ContactInfo!.LinkedIn;
-        var newFacebook = facebook ?? ContactInfo!.Facebook;
-        var newInstagram = instagram ?? ContactInfo!.Instagram;
-        var newYouTube = youTube ?? ContactInfo!.YouTube;
-
-        ContactInfo!.UpdateContact(newEmail, newPhone);
-        ContactInfo!.UpdateSocials(newLinkedIn, newFacebook, newInstagram, newYouTube);
-    }
-
-    public void SetProfileImage(string url, string publicId)
-    {
-        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("Url is required.", nameof(url));
-        if (string.IsNullOrWhiteSpace(publicId)) throw new ArgumentException("PublicId is required.", nameof(publicId));
-
-        ProfileImage = new TenantImage(url, publicId);
+        ProfileImage = image ?? throw new DomainException("Image is required.");
+        Touch();
     }
 
     public void RemoveProfileImage()
     {
         ProfileImage = null;
+        Touch();
     }
 
-    public void SetContactInfo(TenantContactInfo? info) => ContactInfo = info;
-    public void SetProfileImage(TenantImage? image) => ProfileImage = image;
+    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook, string? instagram, string? youTube)
+    {
+        var socials = SocialLinks.Create(linkedIn, facebook, instagram, youTube);
+        ContactInfo = ContactDetails.Create(email, phone, socials);
+        Touch();
+    }
 }

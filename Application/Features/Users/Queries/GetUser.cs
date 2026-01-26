@@ -3,6 +3,7 @@ using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using AutoMapper;
 using MediatR;
 using System.Net;

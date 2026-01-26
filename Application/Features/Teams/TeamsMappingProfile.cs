@@ -2,7 +2,7 @@
 using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
 using AutoMapper;
-using Domain.Models;
+using Domain.Entities;
 
 namespace Application.Features.Teams;
 public class TeamsMappingProfile : Profile

@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces;
-using Domain.Models;
+using Domain.Entities;
 using Infrastructure.Persistence;
-using Infrastructure.Persistence.Mappers;
+using Infrastructure.Persistence.Mapping;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

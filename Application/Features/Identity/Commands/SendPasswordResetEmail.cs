@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Interfaces;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 

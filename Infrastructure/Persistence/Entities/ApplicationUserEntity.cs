@@ -7,10 +7,13 @@ namespace Infrastructure.Persistence.Entities;
 public class ApplicationUserEntity : IdentityUser
 {
     public string? TenantId { get; set; }
+    public TenantEntity? Tenant { get; set; }
+
     public string FullName { get; set; } = null!;
     public Department? Department { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public bool MustChangePassword { get; set; } = false;
 
@@ -28,12 +31,11 @@ public class ApplicationUserEntity : IdentityUser
         }
     }
 
-    // Navigation
-    public TenantEntity Tenant { get; set; } = null!;
-    public UserContactInfoEntity? UserContactInfo { get; set; }
-    public UserImageEntity? ProfileImage { get; set; }
+    public ContactDetailsOwned ContactInfo { get; set; } = new();
+    public StoredImageOwned? ProfileImage { get; set; }
 
-    public ICollection<TeamEntity> Teams { get; set; } = new List<TeamEntity>();
+    public ICollection<TeamMemberEntity> TeamMemberships { get; set; } = new List<TeamMemberEntity>();
+
     public ICollection<ProjectEntity> Projects { get; set; } = new List<ProjectEntity>();
 
     public ICollection<WorkItemEntity> AssignedWorkItems { get; set; } = new List<WorkItemEntity>();

@@ -1,22 +1,30 @@
-﻿namespace Domain.Models;
+﻿using Domain.Common;
+
+namespace Domain.Entities;
 
 public sealed class Comment : Entity
 {
     public string Content { get; private set; } = null!;
     public string CreatedByUserId { get; private set; } = null!;
-    public string WorkItemId { get; private set; } = null!;
 
-    public Comment() { }
+    private Comment() { }
 
-    public Comment(string id, string workItemId, string createdByUserId, string content) : base(id)
+    public Comment(string id, string createdByUserId, string content) : base(id)
     {
-        WorkItemId = workItemId;
-        CreatedByUserId = createdByUserId;
-        Content = content;
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
+    }
+
+    public static Comment Rehydrate(string id, DateTime createdAt, DateTime? updatedAt, string createdByUserId, string content)
+    {
+        var c = new Comment(id, createdByUserId, content);
+        c.SetTimestamps(createdAt, updatedAt);
+        return c;
     }
 
     public void Edit(string content)
     {
-        Content = content;
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
+        Touch();
     }
 }

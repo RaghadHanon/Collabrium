@@ -2,6 +2,7 @@
 using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.Services;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
@@ -32,7 +33,8 @@ public class RegisterAppUser
                     ? tenantContext.CurrentTenant!
                     : (await tenantContext.GetGlobalTenant(cancellationToken));
 
-            if(tenant == null) {
+            if (tenant == null)
+            {
                 return Result<UserWithTenantDto>.Failure("Tenant not found."
                     , HttpStatusCode.BadRequest);
             }

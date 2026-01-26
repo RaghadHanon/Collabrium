@@ -1,5 +1,5 @@
 ﻿using Application.Common.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Services;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Infrastructure.Settings;

@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces.Emails;
-using Domain.Models;
+using Domain.Entities;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using System.Net;

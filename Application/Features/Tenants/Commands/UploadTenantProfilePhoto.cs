@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;

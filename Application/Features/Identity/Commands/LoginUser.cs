@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Identity.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 

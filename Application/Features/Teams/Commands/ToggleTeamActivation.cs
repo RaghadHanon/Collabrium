@@ -27,10 +27,9 @@ public class ToggleTeamActivation
             await teamsRepository.SaveChangesAsync(cancellationToken);
 
             var updated = await teamsRepository.GetByIdAsync(tenant.Id, request.TeamId, cancellationToken);
-            if (updated is null)
-                return Result<bool>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
-
-            return Result<bool>.Success(updated.IsActive, HttpStatusCode.OK);
+            return updated is null
+                ? Result<bool>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound)
+                : Result<bool>.Success(updated.IsActive, HttpStatusCode.OK);
         }
     }
 }

@@ -1,7 +1,5 @@
-﻿using Application.Common.DTOs;
-
-namespace Application.Features.Users.DTOs;
-public class UserContactInfoDto : ContactInfoDto
+﻿namespace Application.Features.Users.DTOs;
+public class UserContactInfoDto 
 {
     public string Github { get; set; } = null!;
 }

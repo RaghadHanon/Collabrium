@@ -19,27 +19,45 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasForeignKey(u => u.TenantId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(u => u.Teams)
-            .WithMany(t => t.Members);
+        builder.OwnsOne(u => u.ContactInfo, ci =>
+        {
+            ci.Property(x => x.Email).HasMaxLength(256);
+            ci.Property(x => x.PhoneNumber).HasMaxLength(50);
+
+            ci.OwnsOne(x => x.Socials, s =>
+            {
+                s.Property(p => p.LinkedIn).HasMaxLength(300);
+                s.Property(p => p.Facebook).HasMaxLength(300);
+                s.Property(p => p.Instagram).HasMaxLength(300);
+                s.Property(p => p.YouTube).HasMaxLength(300);
+            });
+        });
+
+        builder.OwnsOne(u => u.ProfileImage, img =>
+        {
+            img.Property(x => x.Url).HasMaxLength(1000);
+            img.Property(x => x.PublicId).HasMaxLength(300);
+        });
+        builder.Navigation(u => u.ProfileImage).IsRequired(false);
 
         builder.HasMany(u => u.Projects)
             .WithOne(p => p.CreatedByUser)
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(u => u.ProfileImage)
-            .WithOne(i => i.ApplicationUser)
-            .HasForeignKey<UserImageEntity>(i => i.ApplicationUserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasMany(u => u.AssignedWorkItems)
             .WithOne(w => w.AssignedToUser)
             .HasForeignKey(w => w.AssignedToUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(t => t.UserContactInfo)
-            .WithOne(ci => ci.User)
-            .HasForeignKey<UserContactInfoEntity>(ci => ci.UserId)
+        builder.HasMany(u => u.CreatedWorkItems)
+            .WithOne(w => w.CreatedByUser)
+            .HasForeignKey(w => w.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(u => u.TeamMemberships)
+            .WithOne(tm => tm.User)
+            .HasForeignKey(tm => tm.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(u => u.UserName)

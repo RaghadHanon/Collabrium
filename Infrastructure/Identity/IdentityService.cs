@@ -1,12 +1,13 @@
 ﻿using Application.Common.Exceptions;
 using Application.Interfaces;
 using Application.Interfaces.Emails;
+using Application.Interfaces.Services;
+using Domain.Entities;
 using Domain.Enums;
-using Domain.Models;
 using Infrastructure.Email;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mappers;
+using Infrastructure.Persistence.Mapping;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,7 +16,7 @@ using System.Text;
 
 namespace Infrastructure.Identity;
 
-public class IdentityService : IIdentityService
+public sealed class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUserEntity> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
@@ -34,13 +35,13 @@ public class IdentityService : IIdentityService
         IOptions<IdentitySettings> identityOptions,
         IEmailTemplateFactory emailTemplateFactory)
     {
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _jwtTokenGenerator = jwtTokenGenerator;
-        _emailService = emailService;
-        _identitySettings = identityOptions.Value;
-        _emailTemplateFactory = emailTemplateFactory;
-        _dbContext = dbContext;
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+        _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+        _identitySettings = identityOptions?.Value ?? throw new ArgumentNullException(nameof(identityOptions));
+        _emailTemplateFactory = emailTemplateFactory ?? throw new ArgumentNullException(nameof(emailTemplateFactory));
     }
 
     public async Task<User> RegisterUserAsync(
@@ -60,10 +61,8 @@ public class IdentityService : IIdentityService
         {
             var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
 
-            userEntity.UserContactInfo = new UserContactInfoEntity
-            {
-                UserId = userEntity.Id
-            };
+            // ✅ لا يوجد UserContactInfoEntity بعد الآن (Owned)
+            // userEntity.ContactInfo ... لو عندك owned contact details في entity، خليها تتعبى هنا (اختياري)
 
             userEntity.MustChangePassword = role != UserRole.SuperAdmin;
 
@@ -74,6 +73,7 @@ public class IdentityService : IIdentityService
 
             await transaction.CommitAsync(cancellationToken);
 
+            // ✅ رجّع Domain user (بدون توقع navigations محمّلة)
             return UserMapper.ToDomain(userEntity);
         }
         catch
@@ -88,27 +88,34 @@ public class IdentityService : IIdentityService
         string password,
         CancellationToken cancellationToken = default)
     {
-        var user = await ValidateCredentialsAsync(email, password);
+        var userEntity = await ValidateCredentialsAsync(email, password);
 
-        var isConfirmed = await _userManager.IsEmailConfirmedAsync(user);
-        if (!isConfirmed)
+        if (!await _userManager.IsEmailConfirmedAsync(userEntity))
             throw new UnauthenticatedException("You must confirm your email before logging in.");
 
-        var roles = await GetRolesAsync(user);
+        var roles = await GetRolesAsync(userEntity);
 
-        user.LastLoginAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
+        userEntity.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(userEntity);
 
-        var token = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(user), roles);
+        // ✅ token يعتمد على domain user (mappers لازم تكون updated)
+        var token = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(userEntity), roles);
+
         return string.IsNullOrWhiteSpace(token)
             ? throw new TokenGenerationFailedException("Token generation failed.")
-            : ((string Token, string Id, string TenantId)) (token, user.Id, user.TenantId ?? string.Empty);
+            : ((string Token, string Id, string TenantId)) (token, userEntity.Id, userEntity.TenantId ?? string.Empty);
     }
 
     public async Task ConfirmEmailAsync(string userId, string encodedToken, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new BadRequestException("UserId must be provided.");
+
+        if (string.IsNullOrWhiteSpace(encodedToken))
+            throw new BadRequestException("Token must be provided.");
+
+        var user = await _userManager.FindByIdAsync(userId.Trim());
+        if (user is null)
             throw new BadRequestException("User not found.");
 
         var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedToken));
@@ -123,8 +130,11 @@ public class IdentityService : IIdentityService
 
     public async Task ResendConfirmationEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
+        if (string.IsNullOrWhiteSpace(email))
+            throw new BadRequestException("Email must be provided.");
+
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        if (user is null)
             throw new BadRequestException("User not found.");
 
         if (await _userManager.IsEmailConfirmedAsync(user))
@@ -135,8 +145,11 @@ public class IdentityService : IIdentityService
 
     public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new BadRequestException("UserId must be provided.");
+
+        var user = await _userManager.FindByIdAsync(userId.Trim());
+        if (user is null)
             throw new BadRequestException("User not found.");
 
         user.MustChangePassword = false;
@@ -156,8 +169,8 @@ public class IdentityService : IIdentityService
         if (string.IsNullOrWhiteSpace(email))
             throw new BadRequestException("Email must be provided.");
 
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        if (user is null)
             throw new BadRequestException("User not found.");
 
         if (string.IsNullOrWhiteSpace(user.Email))
@@ -165,6 +178,7 @@ public class IdentityService : IIdentityService
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
         var resetUrl = $"{_identitySettings.PasswordResetUrlBase}?userId={user.Id}&token={encodedToken}";
 
         var template = _emailTemplateFactory.GetTemplate("PasswordReset");
@@ -185,11 +199,7 @@ public class IdentityService : IIdentityService
         await _emailService.SendAsync(message, cancellationToken);
     }
 
-    public async Task ResetPasswordAsync(
-        string userId,
-        string encodedToken,
-        string newPassword,
-        CancellationToken cancellationToken = default)
+    public async Task ResetPasswordAsync(string userId, string encodedToken, string newPassword, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
             throw new BadRequestException("UserId must be provided.");
@@ -197,8 +207,8 @@ public class IdentityService : IIdentityService
         if (string.IsNullOrWhiteSpace(encodedToken))
             throw new BadRequestException("Token must be provided.");
 
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
+        var user = await _userManager.FindByIdAsync(userId.Trim());
+        if (user is null)
             throw new BadRequestException("User not found.");
 
         user.MustChangePassword = false;
@@ -215,13 +225,17 @@ public class IdentityService : IIdentityService
         await _userManager.UpdateAsync(user);
     }
 
+    // --------------------
+    // Helpers
+    // --------------------
+
     private async Task<ApplicationUserEntity> ValidateCredentialsAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new BadRequestException("Email must be provided.");
 
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        if (user is null)
             throw new UnauthenticatedException("Invalid email.");
 
         var validPassword = await _userManager.CheckPasswordAsync(user, password);
@@ -265,6 +279,7 @@ public class IdentityService : IIdentityService
 
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
         var confirmationUrl = $"{_identitySettings.ConfirmationUrlBase}?userId={user.Id}&token={encodedToken}";
 
         var template = _emailTemplateFactory.GetTemplate("Confirmation");
@@ -295,13 +310,18 @@ public class IdentityService : IIdentityService
     {
         return new ApplicationUserEntity
         {
-            FullName = fullName,
-            Email = email,
+            FullName = fullName.Trim(),
+            Email = email.Trim(),
+            UserName = email.Trim(), // إذا عندك rule مختلف للـ username عدليه هون
             Department = department,
-            TenantId = tenantId,
-            UserName = email,
+            TenantId = string.IsNullOrWhiteSpace(tenantId) ? null : tenantId.Trim(),
             DateOfBirth = dateOfBirth,
-            PhoneNumber = phoneNumber
+            PhoneNumber = phoneNumber?.Trim()
         };
+    }
+
+    Task<User> IIdentityService.RegisterUserAsync(string fullName, Department department, string password, DateOnly dateOfBirth, UserRole role, string tenantId, string email, string phoneNumber, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
     }
 }

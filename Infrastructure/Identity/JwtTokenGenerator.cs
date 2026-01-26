@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
-using Domain.Models;
-using Infrastructure.Persistence.Mappers;
+using Domain.Entities;
+using Infrastructure.Persistence.Mapping;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

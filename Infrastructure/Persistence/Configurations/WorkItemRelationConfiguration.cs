@@ -2,20 +2,26 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace Infrastructure.Persistence.Configurations;
+
 public class WorkItemRelationConfiguration : IEntityTypeConfiguration<WorkItemRelationEntity>
 {
     public void Configure(EntityTypeBuilder<WorkItemRelationEntity> builder)
     {
         builder.HasKey(r => r.Id);
 
-        builder.HasOne(r => r.OutgoingWorkItem)
-               .WithMany(w => w.OutgoingRelations)
-               .HasForeignKey(r => r.OutgoingWorkItemId)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(r => r.SourceWorkItem)
+            .WithMany(w => w.OutgoingRelations)
+            .HasForeignKey(r => r.SourceWorkItemId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(r => r.IncomingWorkItem)
-               .WithMany(w => w.IncomingRelations)
-               .HasForeignKey(r => r.IncomingWorkItemId)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(r => r.TargetWorkItem)
+            .WithMany(w => w.IncomingRelations)
+            .HasForeignKey(r => r.TargetWorkItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(r => new { r.SourceWorkItemId, r.TargetWorkItemId, r.RelationType })
+            .IsUnique()
+            .HasDatabaseName("UX_WorkItemRelation_Unique");
     }
 }

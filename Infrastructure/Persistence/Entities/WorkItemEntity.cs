@@ -19,18 +19,19 @@ public class WorkItemEntity : DbEntity
     public DateTime? EndDate { get; set; }
 
     public string? AssignedToUserId { get; set; }
-    public string? AssignedToUserName { get; set; }
+    public ApplicationUserEntity? AssignedToUser { get; set; }
+
     public string CreatedByUserId { get; set; } = null!;
+    public ApplicationUserEntity CreatedByUser { get; set; } = null!;
 
     public string ProjectId { get; set; } = null!;
-    public string? SprintId { get; set; }
-
-    public ApplicationUserEntity? AssignedToUser { get; set; }
-    public ApplicationUserEntity CreatedByUser { get; set; } = null!;
     public ProjectEntity Project { get; set; } = null!;
+
+    public string? SprintId { get; set; }
     public SprintEntity? Sprint { get; set; }
 
     public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
+
     public ICollection<WorkItemRelationEntity> OutgoingRelations { get; set; } = new List<WorkItemRelationEntity>();
     public ICollection<WorkItemRelationEntity> IncomingRelations { get; set; } = new List<WorkItemRelationEntity>();
 }

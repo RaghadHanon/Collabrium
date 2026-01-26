@@ -1,104 +1,131 @@
 ﻿using Application.Common;
 using Application.Features.Tenants.DTOs;
-using Application.Features.Users.DTOs;
 using Application.Interfaces.Repositories;
-using AutoMapper;
-using Domain.Models;
+using Domain.Entities;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mapping;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class TenantRepository : ITenantRepository
+public sealed class TenantRepository : ITenantRepository
 {
     private readonly AppDbContext _dbContext;
-    private readonly IMapper _mapper;
 
-    public TenantRepository(AppDbContext context, IMapper mapper)
+    public TenantRepository(AppDbContext dbContext)
     {
-        _dbContext = context;
-        _mapper = mapper;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public async Task AddTenantAsync(Tenant tenant, CancellationToken cancellationToken = default)
+    public async Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
+        if (tenant is null) throw new ArgumentNullException(nameof(tenant));
+
         var entity = TenantMapper.ToEntity(tenant);
         await _dbContext.Tenants.AddAsync(entity, cancellationToken);
     }
 
-    public async Task<Tenant?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
-        var entity = await _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
-            .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+        if (tenant is null) throw new ArgumentNullException(nameof(tenant));
 
-        return entity == null ? null : TenantMapper.ToDomain(entity);
+        var entity = await _dbContext.Tenants
+            .FirstOrDefaultAsync(t => t.Id == tenant.Id, cancellationToken);
+
+        if (entity is null)
+            throw new InvalidOperationException($"Tenant '{tenant.Id}' was not found.");
+
+        TenantMapper.UpdateEntity(tenant, entity);
     }
 
-    public async Task<Tenant?> GetTenantByIdAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<bool> RemoveAsync(string tenantId, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(tenantId)) return false;
+
+        var id = tenantId.Trim();
+
         var entity = await _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (entity is null) return false;
+
+        _dbContext.Tenants.Remove(entity);
+        return true;
+    }
+
+    public async Task<bool> UpdateProfileImageAsync(string tenantId, string url, string publicId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId)) return false;
+        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentNullException(nameof(url));
+        if (string.IsNullOrWhiteSpace(publicId)) throw new ArgumentNullException(nameof(publicId));
+
+        var id = tenantId.Trim();
+
+        var entity = await _dbContext.Tenants
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+        if (entity is null) return false;
+
+        entity.ProfileImage = new StoredImageOwned
+        {
+            Url = url.Trim(),
+            PublicId = publicId.Trim()
+        };
+
+        entity.UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
+    public async Task<bool?> ToggleActivationAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId)) return null;
+
+        var id = tenantId.Trim();
+
+        var entity = await _dbContext.Tenants
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+        if (entity is null) return null;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        return entity.IsActive;
+    }
+
+    public async Task<Tenant?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId)) return null;
+
+        var id = tenantId.Trim();
+
+        var entity = await _dbContext.Tenants
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
-        return entity == null ? null : TenantMapper.ToDomain(entity);
+        return entity is null ? null : TenantMapper.ToDomain(entity);
     }
 
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(domain)) return null;
+
+        var normalized = domain.Trim().ToLowerInvariant();
+
         var entity = await _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Domain == domain, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Domain == normalized, cancellationToken);
 
-        return entity == null ? null : TenantMapper.ToDomain(entity);
+        return entity is null ? null : TenantMapper.ToDomain(entity);
     }
 
-    public async Task<bool> IsTenantNameUniqueAsync(string name, CancellationToken cancellationToken = default)
-    {
-        var normalized = name.Trim().ToLower();
-        var exists = await _dbContext.Tenants
-            .AnyAsync(t => t.Name.ToLower() == normalized, cancellationToken);
-
-        return !exists;
-    }
-
-    public async Task<bool> IsTenantDomainUniqueAsync(string domain, CancellationToken cancellationToken = default)
-    {
-        var normalized = domain.Trim().ToLower();
-        var exists = await _dbContext.Tenants
-            .AnyAsync(t => t.Domain.ToLower() == normalized, cancellationToken);
-
-        return !exists;
-    }
-
-    public async Task<bool> RemoveTenantAsync(string id, CancellationToken cancellationToken = default)
-    {
-        var tenant = await _dbContext.Tenants
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-        if (tenant == null) return false;
-
-        _dbContext.Tenants.Remove(tenant);
-        return true;
-    }
-
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<PagedList<Tenant, DateTime?>> GetTenantsAsync(
+    public async Task<PagedList<Tenant, DateTime?>> GetPagedAsync(
         TenantsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
+        parameters ??= new TenantsSearchAndFilterParametersDto();
+
         var query = _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
             .AsNoTracking()
             .AsQueryable();
 
@@ -126,24 +153,55 @@ public class TenantRepository : ITenantRepository
         };
     }
 
+    public async Task<bool> IsNameUniqueAsync(string name, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return false;
+
+        var normalized = name.Trim().ToLowerInvariant();
+
+        return !await _dbContext.Tenants
+            .AsNoTracking()
+            .AnyAsync(t => t.Name.ToLower() == normalized, cancellationToken);
+    }
+
+    public async Task<bool> IsDomainUniqueAsync(string domain, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(domain)) return false;
+
+        var normalized = domain.Trim().ToLowerInvariant();
+
+        return !await _dbContext.Tenants
+            .AsNoTracking()
+            .AnyAsync(t => t.Domain == normalized, cancellationToken);
+    }
+
     private static IQueryable<TenantEntity> ApplyFilters(
         IQueryable<TenantEntity> query,
         TenantsSearchAndFilterParametersDto parameters)
     {
         if (!string.IsNullOrWhiteSpace(parameters.Country))
         {
-            var country = parameters.Country.Trim().ToLower();
+            var country = parameters.Country.Trim().ToLowerInvariant();
             query = query.Where(t => t.Country != null && t.Country.ToLower() == country);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.DescriptionContains))
-            query = query.Where(t => t.Description != null && t.Description.Contains(parameters.DescriptionContains));
+        {
+            var term = parameters.DescriptionContains.Trim();
+            query = query.Where(t => t.Description != null && t.Description.Contains(term));
+        }
 
         if (!string.IsNullOrWhiteSpace(parameters.NameContains))
-            query = query.Where(t => t.Name.Contains(parameters.NameContains));
+        {
+            var term = parameters.NameContains.Trim();
+            query = query.Where(t => t.Name.Contains(term));
+        }
 
         if (!string.IsNullOrWhiteSpace(parameters.DomainContains))
-            query = query.Where(t => t.Domain.Contains(parameters.DomainContains));
+        {
+            var term = parameters.DomainContains.Trim();
+            query = query.Where(t => t.Domain.Contains(term));
+        }
 
         if (parameters.IsActive.HasValue)
             query = query.Where(t => t.IsActive == parameters.IsActive.Value);
@@ -155,62 +213,11 @@ public class TenantRepository : ITenantRepository
             query = query.Where(t => t.CreatedAt <= parameters.CreatedBefore.Value);
 
         if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
-            query = query.Where(t => t.TenantContactInfo != null &&
-                                     t.TenantContactInfo.PhoneNumber == parameters.PhoneNumber);
+        {
+            var phone = parameters.PhoneNumber.Trim();
+            query = query.Where(t => t.ContactInfo.PhoneNumber == phone);
+        }
 
         return query;
-    }
-
-    public async Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
-    {
-        var entity = await _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
-            .FirstOrDefaultAsync(t => t.Id == tenant.Id, cancellationToken);
-
-        if (entity == null)
-            throw new InvalidOperationException($"Tenant '{tenant.Id}' was not found.");
-
-        TenantMapper.UpdateEntity(tenant, entity);
-    }
-
-
-
-    public async Task<bool> UpdateProfileImageAsync(string tenantId, string url, string publicId, CancellationToken cancellationToken = default) 
-    { 
-        var entity = await _dbContext.Tenants
-            .Include(t => t.ProfileImage)
-            .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken); 
-
-        if (entity == null) 
-            return false; 
-
-        if (entity.ProfileImage == null) 
-            entity.ProfileImage = new TenantImageEntity { TenantId = entity.Id }; 
-        
-        entity.ProfileImage.Url = url; 
-        entity.ProfileImage.PublicId = publicId; 
-        entity.ProfileImage.TenantId = entity.Id;
-
-        return true; 
-    }
-    public async Task<bool?> ToggleActivationAsync(string tenantId, CancellationToken cancellationToken = default)
-    {
-        var entity = await _dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
-            .Include(t => t.ProfileImage)
-            .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken); 
-        
-        if (entity == null) 
-            return null; 
-        
-        var domain = TenantMapper.ToDomain(entity); 
-        if (domain.IsActive) 
-            domain.Deactivate(); 
-        else domain.Activate(); 
-        
-        TenantMapper.UpdateEntity(domain, entity);
-        
-        return entity.IsActive;
     }
 }

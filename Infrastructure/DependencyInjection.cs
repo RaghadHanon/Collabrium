@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.Identity;

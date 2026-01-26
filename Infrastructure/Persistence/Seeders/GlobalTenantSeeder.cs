@@ -1,4 +1,4 @@
-﻿using Application.Interfaces;
+﻿using Application.Interfaces.Services;
 using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -21,11 +21,11 @@ public static class GlobalTenantSeeder
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var identityService = scope.ServiceProvider.GetRequiredService<IIdentityService>();
 
+        // 1) Ensure Global tenant exists
         var globalTenant = await dbContext.Tenants
-            .Include(t => t.TenantContactInfo)
             .FirstOrDefaultAsync(t => t.Domain == GlobalTenantDomain);
 
-        if (globalTenant == null)
+        if (globalTenant is null)
         {
             globalTenant = new TenantEntity
             {
@@ -34,12 +34,21 @@ public static class GlobalTenantSeeder
                 Domain = GlobalTenantDomain,
                 Description = "Global tenant for SuperAdmin and platform-level services.",
                 IsActive = true,
-                WebsiteURL = null,
-                TenantContactInfo = new TenantContactInfoEntity
+                WebsiteUrl = null,
+                Country = null,
+
+                // ✅ Owned ContactInfo (إذا عندك default empty، هذا اختياري)
+                ContactInfo = new ContactDetailsOwned
                 {
-                    TenantId = GlobalTenantId,
-                    Email = string.Empty,
-                    PhoneNumber = string.Empty
+                    Email = "",
+                    PhoneNumber = "",
+                    Socials = new SocialLinksOwned()
+                    {
+                        LinkedIn = "",
+                        Facebook = "",
+                        Instagram = "",
+                        YouTube = ""
+                    }
                 }
             };
 
@@ -47,12 +56,14 @@ public static class GlobalTenantSeeder
             await dbContext.SaveChangesAsync();
         }
 
+        // 2) Ensure SuperAdmin exists for this tenant
         var existingSuperAdmin = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == SuperAdminEmail && u.TenantId == globalTenant.Id);
 
-        if (existingSuperAdmin != null)
+        if (existingSuperAdmin is not null)
         {
+            // Ensure tenant has admin id set
             if (string.IsNullOrWhiteSpace(globalTenant.TenantAdminId))
             {
                 globalTenant.TenantAdminId = existingSuperAdmin.Id;
@@ -62,6 +73,7 @@ public static class GlobalTenantSeeder
             return;
         }
 
+        // 3) Create SuperAdmin user using IdentityService
         var superAdminDomain = await identityService.RegisterUserAsync(
             fullName: "Super Admin",
             department: Department.Administration,
@@ -73,6 +85,7 @@ public static class GlobalTenantSeeder
             phoneNumber: string.Empty
         );
 
+        // 4) Assign admin
         globalTenant.TenantAdminId = superAdminDomain.Id;
         await dbContext.SaveChangesAsync();
     }

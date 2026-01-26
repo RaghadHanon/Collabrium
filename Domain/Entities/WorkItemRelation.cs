@@ -1,19 +1,32 @@
 ﻿using Domain.Enums;
 
-namespace Domain.Models;
+namespace Domain.Entities;
 
 public sealed class WorkItemRelation : Entity
 {
-    public string OutgoingWorkItemId { get; private set; } = null!;
-    public string IncomingWorkItemId { get; private set; } = null!;
+    public string SourceWorkItemId { get; private set; } = null!;
+    public string TargetWorkItemId { get; private set; } = null!;
     public WorkItemRelationType RelationType { get; private set; }
 
-    public WorkItemRelation() { }
+    private WorkItemRelation() { }
 
-    public WorkItemRelation(string id, string outgoingId, string incomingId, WorkItemRelationType type) : base(id)
+    public WorkItemRelation(string id, string sourceId, string targetId, WorkItemRelationType type) : base(id)
     {
-        OutgoingWorkItemId = outgoingId;
-        IncomingWorkItemId = incomingId;
+        SourceWorkItemId = sourceId;
+        TargetWorkItemId = targetId;
         RelationType = type;
+    }
+
+    public static WorkItemRelation Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string sourceId,
+        string targetId,
+        WorkItemRelationType type)
+    {
+        var r = new WorkItemRelation(id, sourceId, targetId, type);
+        r.SetTimestamps(createdAt, updatedAt);
+        return r;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Application.Common;
-using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Models;
+using Application.Interfaces.Services;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;

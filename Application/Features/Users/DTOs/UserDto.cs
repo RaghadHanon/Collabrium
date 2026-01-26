@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Application.Common.DTOs;
+using Domain.Enums;
 
 namespace Application.Features.Users.DTOs;
 public class UserDto
@@ -13,5 +14,5 @@ public class UserDto
     public DateOnly DateOfBirth { get; set; }
     public int Age { get; set; }
     public string? ProfileImageUrl { get; set; }
-    public required UserContactInfoDto UserContactInfo { get; set; }
+    public required ContactDetailsDto ContactInfo { get; set; }
 }

@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using AutoMapper;
 using Domain.Enums;
 using MediatR;
 using System.Net;

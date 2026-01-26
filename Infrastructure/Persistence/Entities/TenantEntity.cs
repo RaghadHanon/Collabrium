@@ -8,10 +8,11 @@ public class TenantEntity : DbEntity
     public string? Country { get; set; }
     public bool IsActive { get; set; }
     public string? TenantAdminId { get; set; }
-    public string? WebsiteURL { get; set; }
+    public string? WebsiteUrl { get; set; }
 
-    public TenantImageEntity? ProfileImage { get; set; }
-    public TenantContactInfoEntity? TenantContactInfo { get; set; }
+    // ✅ Owned
+    public ContactDetailsOwned ContactInfo { get; set; } = new();
+    public StoredImageOwned? ProfileImage { get; set; }
 
     public ICollection<ApplicationUserEntity> Users { get; set; } = new List<ApplicationUserEntity>();
     public ICollection<TeamEntity> Teams { get; set; } = new List<TeamEntity>();

@@ -1,6 +1,7 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
-namespace Domain.Models;
+namespace Domain.Entities;
 
 public sealed class TestCase : WorkItem
 {
@@ -8,7 +9,9 @@ public sealed class TestCase : WorkItem
     public string Steps { get; private set; } = null!;
     public TestEnvironment TestEnvironment { get; private set; }
     public string ExpectedResult { get; private set; } = null!;
-    public string ActualResult { get; private set; } = null!;
+    public string? ActualResult { get; private set; }
+
+    private TestCase() { }
 
     public TestCase(
         string id,
@@ -22,9 +25,45 @@ public sealed class TestCase : WorkItem
         : base(id, title, createdByUserId, projectId)
     {
         Type = WorkItemType.TestCase;
-        Preconditions = preconditions;
-        Steps = steps;
+        Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
+        Steps = Guard.NotNullOrWhiteSpace(steps, nameof(steps));
+        ExpectedResult = Guard.NotNullOrWhiteSpace(expectedResult, nameof(expectedResult));
         TestEnvironment = env;
-        ExpectedResult = expectedResult;
+    }
+
+    public static TestCase Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string title,
+        string createdByUserId,
+        string projectId,
+        WorkItemStatus status,
+        WorkItemPriority priority,
+        bool isBlocked,
+        int effortPoints,
+        string? description,
+        string? acceptanceCriteria,
+        string? assignedToUserId,
+        string? sprintId,
+        DateTime? startDate,
+        DateTime? endDate,
+        string preconditions,
+        string steps,
+        TestEnvironment env,
+        string expectedResult,
+        string? actualResult)
+    {
+        var tc = new TestCase(id, title, createdByUserId, projectId, preconditions, steps, env, expectedResult);
+        tc.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
+            assignedToUserId, sprintId, startDate, endDate);
+        tc.ActualResult = actualResult;
+        return tc;
+    }
+
+    public void RecordActualResult(string? actual)
+    {
+        ActualResult = actual?.Trim();
+        Touch();
     }
 }

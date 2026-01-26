@@ -8,5 +8,5 @@ public class TestCaseEntity : WorkItemEntity
     public string Steps { get; set; } = null!;
     public TestEnvironment TestEnvironment { get; set; }
     public string ExpectedResult { get; set; } = null!;
-    public string ActualResult { get; set; } = null!;
+    public string? ActualResult { get; set; }
 }

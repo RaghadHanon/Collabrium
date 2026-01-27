@@ -20,16 +20,14 @@ public sealed class UsersRepository : IUsersRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    // ---------------------------
-    // Read
-    // ---------------------------
-
     public async Task<User?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userId)) return null;
 
-        var entity = await UsersReadQuery()
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var id = userId.Trim();
+
+        var entity = await DomainReadOnlyQuery()
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
     }
@@ -40,7 +38,7 @@ public sealed class UsersRepository : IUsersRepository
 
         var normalized = email.Trim();
 
-        var entity = await UsersReadQuery()
+        var entity = await DomainReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.Email == normalized, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
@@ -52,21 +50,10 @@ public sealed class UsersRepository : IUsersRepository
 
         var normalized = username.Trim();
 
-        var entity = await UsersReadQuery()
+        var entity = await DomainReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.UserName == normalized, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
-    }
-
-    public async Task<List<User>> GetUsersByTenantAsync(string tenantId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId)) return new List<User>();
-
-        var entities = await UsersReadQuery()
-            .Where(u => u.TenantId == tenantId.Trim())
-            .ToListAsync(cancellationToken);
-
-        return entities.Select(UserMapper.ToDomain).ToList();
     }
 
     public async Task<List<User>> GetByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default)
@@ -81,79 +68,58 @@ public sealed class UsersRepository : IUsersRepository
 
         if (ids.Count == 0) return new List<User>();
 
-        var entities = await UsersReadQuery()
+        var entities = await DomainReadOnlyQuery()
             .Where(u => ids.Contains(u.Id))
             .ToListAsync(cancellationToken);
 
         return entities.Select(UserMapper.ToDomain).ToList();
     }
 
-    public async Task<PagedList<User, DateTime?>> GetUsersAsync(
-        UsersSearchAndFilterParametersDto parameters,
-        CancellationToken cancellationToken = default)
-    {
-        parameters ??= new UsersSearchAndFilterParametersDto();
-
-        var query = UsersReadQuery();
-        query = ApplyFilters(query, parameters);
-
-        // cursor pagination
-        if (parameters.Cursor.HasValue)
-            query = query.Where(u => u.CreatedAt >= parameters.Cursor.Value);
-
-        var entities = await query
-            .OrderBy(u => u.CreatedAt)
-            .Take(parameters.PageSize + 1)
-            .ToListAsync(cancellationToken);
-
-        DateTime? nextCursor = null;
-        if (entities.Count > parameters.PageSize)
-        {
-            nextCursor = entities.Last().CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
-        }
-
-        return new PagedList<User, DateTime?>
-        {
-            Items = entities.Select(UserMapper.ToDomain).ToList(),
-            NextCursor = nextCursor
-        };
-    }
-
-    // ---------------------------
-    // Write (Identity)
-    // ---------------------------
-
-    public async Task<IdentityResult> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
+    public async Task<bool> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
     {
         if (user is null) throw new ArgumentNullException(nameof(user));
         if (string.IsNullOrWhiteSpace(password)) throw new ArgumentNullException(nameof(password));
 
-        // إنشاء entity من domain (بالحقول اللي بتخصك)
         var entity = UserMapper.ToEntity(user);
+        var result = await _userManager.CreateAsync(entity, password);
 
-        // IdentityResult
-        return await _userManager.CreateAsync(entity, password);
+        if (!result.Succeeded)
+        {
+            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Failed to create user: {msg}");
+        }
+
+        return true;
     }
 
-    public async Task<IdentityResult> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return IdentityResult.Failed(new IdentityError { Description = "UserId is required." });
+            return false;
+
+        var id = userId.Trim();
 
         var entity = await _userManager.Users
-            .FirstOrDefaultAsync(u => u.Id == userId.Trim(), cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
-        return entity is null
-            ? IdentityResult.Failed(new IdentityError { Description = "User not found." })
-            : await _userManager.DeleteAsync(entity);
+        if (entity is null)
+            return false;
+
+        var result = await _userManager.DeleteAsync(entity);
+
+        if (!result.Succeeded)
+        {
+            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"Failed to delete user: {msg}");
+        }
+
+        return true;
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
         if (user is null) throw new ArgumentNullException(nameof(user));
 
-        // للتعديل لازم Tracking + Identity entity
         var entity = await _userManager.Users
             .FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
 
@@ -169,10 +135,6 @@ public sealed class UsersRepository : IUsersRepository
             throw new InvalidOperationException($"Failed to update user: {msg}");
         }
     }
-
-    // ---------------------------
-    // Validation helpers
-    // ---------------------------
 
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
@@ -194,52 +156,26 @@ public sealed class UsersRepository : IUsersRepository
             .AnyAsync(u => u.UserName == normalized, cancellationToken) == false;
     }
 
-    // ---------------------------
-    // Private query building
-    // ---------------------------
-
-    private IQueryable<ApplicationUserEntity> UsersReadQuery()
+    private IQueryable<ApplicationUserEntity> DomainReadOnlyQuery()
     {
         return _dbContext.Users
-                .AsNoTracking()
-                .Include(u => u.Tenant); // إذا ما بدك tenant دائماً، احكيلي وبعملها optional
+            .AsNoTracking()
+            .AsQueryable();
     }
 
-    private static IQueryable<ApplicationUserEntity> ApplyFilters(
-        IQueryable<ApplicationUserEntity> query,
-        UsersSearchAndFilterParametersDto parameters)
+    private IQueryable<ApplicationUserEntity> DomainQuery()
     {
-        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
-            query = query.Where(u => u.TenantId == parameters.TenantId.Trim());
+        return _dbContext.Users
+            .AsQueryable();
+    }
 
-        if (parameters.Department.HasValue)
-            query = query.Where(u => u.Department == parameters.Department.Value);
+    public Task<List<User>> GetUsersByTenantAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 
-        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
-        {
-            var term = parameters.NameContains.Trim();
-            query = query.Where(u => u.FullName.Contains(term));
-        }
-
-        if (parameters.DateOfBirth.HasValue)
-            query = query.Where(u => u.DateOfBirth >= parameters.DateOfBirth.Value);
-
-        if (parameters.LastLoginAfter.HasValue)
-            query = query.Where(u => u.LastLoginAt >= parameters.LastLoginAfter.Value);
-
-        if (parameters.CreatedAfter.HasValue)
-            query = query.Where(u => u.CreatedAt >= parameters.CreatedAfter.Value);
-
-        if (parameters.CreatedBefore.HasValue)
-            query = query.Where(u => u.CreatedAt <= parameters.CreatedBefore.Value);
-
-        if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
-        {
-            var phone = parameters.PhoneNumber.Trim();
-            // انتِ بتقصدي PhoneNumber تبع IdentityUser (مش ContactInfo)
-            query = query.Where(u => u.PhoneNumber == phone);
-        }
-
-        return query;
+    public Task<PagedList<User, DateTime?>> GetUsersAsync(UsersSearchAndFilterParametersDto parameters, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }

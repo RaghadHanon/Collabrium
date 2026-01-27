@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using MediatR;
@@ -7,7 +8,7 @@ using System.Net;
 
 namespace Application.Features.Users.Commands;
 
-public class UploadUserProfilePhoto
+public class UploadUserProfileImage
 {
     public class Command : IRequest<Result<Unit>>
     {
@@ -17,7 +18,8 @@ public class UploadUserProfilePhoto
     public class Handler(
         IPhotoService photoService,
         ICurrentUserAccessor currentUserAccessor,
-        IUsersRepository usersRepository)
+        IUsersRepository usersRepository,
+        IUnitOfWork unitOfWork)
         : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
@@ -34,9 +36,11 @@ public class UploadUserProfilePhoto
             if (uploadResult == null)
                 return Result<Unit>.Failure("Failed to upload the photo", HttpStatusCode.BadRequest);
 
-            user.SetProfileImage(new UserImage(uploadResult.Url, uploadResult.PublicId));
+            user.SetProfileImage(uploadResult.Url, uploadResult.PublicId);
 
             await usersRepository.UpdateAsync(user, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }
     }

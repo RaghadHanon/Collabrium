@@ -21,15 +21,11 @@ public static class UserMapper
             department: entity.Department,
             lastLoginAt: entity.LastLoginAt,
             mustChangePassword: entity.MustChangePassword,
-            contactInfo: entity.ContactInfo.ToDomain(),
+            contactInfo: entity.ContactDetails.ToDomain(),
             profileImage: entity.ProfileImage.ToDomain()
         );
     }
 
-    /// <summary>
-    /// يفضل استخدام UpdateEntity بدل ToEntity لأن IdentityUser فيه حقول كثيرة
-    /// (PasswordHash, SecurityStamp, ConcurrencyStamp...)
-    /// </summary>
     public static ApplicationUserEntity ToEntity(User domain)
     {
         return domain is null
@@ -51,7 +47,7 @@ public static class UserMapper
                 Email = domain.Email,
                 UserName = domain.UserName,
 
-                ContactInfo = domain.ContactInfo.ToOwned(),
+                ContactDetails = domain.ContactInfo.ToOwned(),
                 ProfileImage = domain.ProfileImage.ToOwned()
             };
     }
@@ -68,15 +64,13 @@ public static class UserMapper
 
         entity.DateOfBirth = domain.DateOfBirth;
 
-        // هذول من الدومين (rehydrated أو updated)
         entity.LastLoginAt = domain.LastLoginAt;
         entity.MustChangePassword = domain.MustChangePassword;
 
-        // IdentityUser fields (Email/UserName) — خليهم متزامنين
         entity.Email = domain.Email;
         entity.UserName = domain.UserName;
 
-        entity.ContactInfo = domain.ContactInfo.ToOwned();
+        entity.ContactDetails = domain.ContactInfo.ToOwned();
         entity.ProfileImage = domain.ProfileImage.ToOwned();
 
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;

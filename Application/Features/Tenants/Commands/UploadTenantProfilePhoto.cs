@@ -18,29 +18,31 @@ public class UploadTenantProfilePhoto
     public class Handler(
         IPhotoService photoService,
         ITenantContext tenantContext,
-        ITenantRepository tenantRepository
+        ITenantRepository tenantRepository,
+        IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var tenantId = tenantContext.CurrentTenant?.Id;
+            var tenantId = tenantContext.CurrentTenant?.Id?.Trim();
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Current tenant not found.", HttpStatusCode.NotFound);
 
-            var uploadResult = await photoService.UploadPhoto(request.File);
-            if (uploadResult == null)
+            var upload = await photoService.UploadPhoto(request.File);
+            if (upload is null)
                 return Result<Unit>.Failure("Failed to upload the photo.", HttpStatusCode.BadRequest);
 
-            var updated = await tenantRepository.UpdateProfileImageAsync(
-                tenantId,
-                uploadResult.Url,
-                uploadResult.PublicId,
-                cancellationToken);
-
-            if (!updated)
+            var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+            if (tenant is null)
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            await tenantRepository.SaveChangesAsync(cancellationToken);
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                tenant.SetProfileImage(upload.Url, upload.PublicId);
+
+                await tenantRepository.UpdateAsync(tenant, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+            }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }

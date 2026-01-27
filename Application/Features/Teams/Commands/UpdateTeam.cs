@@ -20,48 +20,56 @@ public class UpdateTeam
     }
 
     public class Handler(
-        ITeamsRepository teamRepository,
-        ITenantContext tenantContext,
-        IUsersRepository usersRepository
-        ) : IRequestHandler<Command, Result<Unit>>
+            ITeamsRepository teamsRepository,
+            ITenantContext tenantContext,
+            IUsersRepository usersRepository,
+            IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var tenant = tenantContext.CurrentTenant;
-            if (tenant is null)
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var existing = await teamRepository.GetByIdAsync(tenant.Id, request.Id, cancellationToken);
-            if (existing is null)
+            var team = await teamsRepository.GetByIdAsync(tenantId, request.Id, cancellationToken);
+            if (team is null)
                 return Result<Unit>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
 
-            if (!existing.IsActive)
+            if (!team.IsActive)
                 return Result<Unit>.Failure("Cannot update an inactive team.", HttpStatusCode.BadRequest);
 
-            if (request.TeamLeadId != null)
+            if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
-                if (leader is null || leader.TenantId != tenant.Id)
-                    return Result<Unit>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
-
-                existing.ChangeLead(request.TeamLeadId);
-            }
-
-            if (request.Name != null)
-            {
-                var isNameUnique = await teamRepository.IsTeamNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
-                if (!isNameUnique)
+                var isUnique = await teamsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
+                if (!isUnique && !string.Equals(team.Name, request.Name, StringComparison.OrdinalIgnoreCase))
                     return Result<Unit>.Failure("A team with this name already exists in the tenant.", HttpStatusCode.BadRequest);
             }
 
-            var newName = request.Name ?? existing.Name;
-            var newDescription = request.Description ?? existing.Description;
-            var newCapacity = request.Capacity ?? existing.Capacity;
+            if (!string.IsNullOrWhiteSpace(request.TeamLeadId))
+            {
+                var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
+                if (leader is null || !string.Equals(leader.TenantId, tenantId, StringComparison.Ordinal))
+                    return Result<Unit>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
+            }
 
-            existing.UpdateDetails(newName, newDescription, newCapacity);
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                if (!string.IsNullOrWhiteSpace(request.TeamLeadId) &&
+                    !string.Equals(request.TeamLeadId, team.TeamLeadId, StringComparison.Ordinal))
+                {
+                    team.ChangeLead(request.TeamLeadId);
+                }
 
-            await teamRepository.UpdateTeamAsync(existing, cancellationToken);
-            await teamRepository.SaveChangesAsync(cancellationToken);
+                team.UpdateDetails(
+                    request.Name ?? team.Name,
+                    request.Description ?? team.Description,
+                    request.Capacity ?? team.Capacity,
+                    request.Department ?? team.Department
+                    );
+
+                await teamsRepository.UpdateAsync(team, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+            }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }

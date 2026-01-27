@@ -83,7 +83,7 @@ public class UsersController : ApiBaseController
     [HttpPatch("user-profile")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateUserProfile(UpdateUserProfileRequest request)
     {
-        var command = Mapper.Map<UpdateUserProfile.Command>(request);
+        var command = Mapper.Map<UpdateUserContactDetails.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -112,7 +112,7 @@ public class UsersController : ApiBaseController
     [HttpPost("profile-image")]
     public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
     {
-        var command = Mapper.Map<UploadUserProfilePhoto.Command>(request);
+        var command = Mapper.Map<UploadUserProfileImage.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }

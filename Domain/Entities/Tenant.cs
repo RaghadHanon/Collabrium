@@ -78,8 +78,9 @@ public sealed class Tenant : Entity
     public void Activate() { IsActive = true; Touch(); }
     public void Deactivate() { IsActive = false; Touch(); }
 
-    public void SetProfileImage(StoredImage image)
+    public void SetProfileImage(string url, string publicId)
     {
+        var image = StoredImage.Create(url, publicId);
         ProfileImage = image ?? throw new DomainException("Image is required.");
         Touch();
     }
@@ -90,7 +91,8 @@ public sealed class Tenant : Entity
         Touch();
     }
 
-    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook, string? instagram, string? youTube)
+    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook,
+        string? instagram, string? youTube)
     {
         var socials = SocialLinks.Create(linkedIn, facebook, instagram, youTube);
         ContactInfo = ContactDetails.Create(email, phone, socials);

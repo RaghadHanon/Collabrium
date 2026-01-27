@@ -6,4 +6,5 @@ public sealed class SocialLinksDto
     public string Facebook { get; init; } = "";
     public string Instagram { get; init; } = "";
     public string YouTube { get; init; } = "";
+    public string Github { get; set; } = "";
 }

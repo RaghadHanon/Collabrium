@@ -1,10 +1,7 @@
 ﻿using Application.Common;
-using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
-using Application.Interfaces;
-using Application.Interfaces.Repositories;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
-using AutoMapper;
 using MediatR;
 using System.Net;
 
@@ -19,9 +16,7 @@ public class GetUser
 
     public class Handler(
         ICurrentUserAccessor currentUserAccessor,
-        IUsersRepository usersRepository,
-        ITenantContext tenantContext,
-        IMapper mapper)
+        IUsersReadModel usersReadModel)
         : IRequestHandler<Query, Result<UserWithTenantDto>>
     {
         public async Task<Result<UserWithTenantDto>> Handle(Query request, CancellationToken cancellationToken)
@@ -30,19 +25,10 @@ public class GetUser
             if (string.IsNullOrWhiteSpace(userId))
                 return Result<UserWithTenantDto>.Failure("User not found", HttpStatusCode.NotFound);
 
-            var user = await usersRepository.GetByIdAsync(userId, cancellationToken);
-            if (user == null)
-                return Result<UserWithTenantDto>.Failure("User not found", HttpStatusCode.NotFound);
-
-            var dto = mapper.Map<UserWithTenantDto>(user);
-
-            var tenant = tenantContext.CurrentTenant;
-            if (tenant is null)
-                return Result<UserWithTenantDto>.Failure("Tenant not found", HttpStatusCode.NotFound);
-
-            dto.Tenant = mapper.Map<TenantDto>(tenant);
-
-            return Result<UserWithTenantDto>.Success(dto, HttpStatusCode.OK);
+            var UserWithTenantDto = await usersReadModel.GetUserWithTenantAsync(userId, cancellationToken);
+            return UserWithTenantDto == null
+                ? Result<UserWithTenantDto>.Failure("User not found", HttpStatusCode.NotFound)
+                : Result<UserWithTenantDto>.Success(UserWithTenantDto, HttpStatusCode.OK);
         }
     }
 }

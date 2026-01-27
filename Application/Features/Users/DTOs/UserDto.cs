@@ -6,13 +6,11 @@ public class UserDto
 {
     public required string Id { get; set; }
     public string FullName { get; set; } = null!;
-    public string PhoneNumber { get; set; } = null!;
     public string Email { get; set; } = null!;
     public Department Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public DateOnly DateOfBirth { get; set; }
-    public int Age { get; set; }
     public string? ProfileImageUrl { get; set; }
-    public required ContactDetailsDto ContactInfo { get; set; }
+    public required ContactDetailsDto ContactDetails { get; set; }
 }

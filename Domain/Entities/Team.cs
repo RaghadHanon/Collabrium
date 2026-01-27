@@ -18,8 +18,8 @@ public sealed class Team : Entity
 
     private Team() { }
 
-    public Team(string id, string tenantId, string teamLeadId, string name, Department department, int? capacity = null, bool isActive = true)
-        : base(id)
+    public Team(string tenantId, string teamLeadId, string name, Department department,
+        string? description, int? capacity = null, bool isActive = true)
     {
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
         TeamLeadId = Guard.NotNullOrWhiteSpace(teamLeadId, nameof(teamLeadId));
@@ -28,10 +28,18 @@ public sealed class Team : Entity
 
         Department = department;
         Capacity = capacity;
+        Description = description?.Trim();
         IsActive = isActive;
 
         _memberIds.Add(TeamLeadId);
         Touch();
+    }
+
+    public Team(string id, string tenantId, string teamLeadId, string name,
+        Department department, string? description, int? capacity = null, bool isActive = true)
+        : this(tenantId, teamLeadId, name, department, description, capacity, isActive)
+    {
+        Id = id;
     }
 
     public static Team Rehydrate(
@@ -47,7 +55,7 @@ public sealed class Team : Entity
         bool isActive,
         IEnumerable<string> memberIds)
     {
-        var t = new Team(id, tenantId, teamLeadId, name, department, capacity, isActive);
+        var t = new Team(id, tenantId, teamLeadId, name, department, description, capacity, isActive);
         t.SetTimestamps(createdAt, updatedAt);
 
         t.Description = description?.Trim();
@@ -58,17 +66,19 @@ public sealed class Team : Entity
         foreach (var m in memberIds.Distinct())
             t._memberIds.Add(m);
 
-        t._memberIds.Add(teamLeadId); // invariant
+        t._memberIds.Add(teamLeadId);
 
         return t;
     }
 
-    public void UpdateDetails(string name, string? description, int? capacity)
+    public void UpdateDetails(string name, string? description, int? capacity, Department? department)
     {
         Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
         Description = description?.Trim();
         Guard.Against(capacity is < 1, "Capacity must be >= 1 if provided.");
         Capacity = capacity;
+        if (department.HasValue)
+            Department = department.Value;
         Touch();
     }
 

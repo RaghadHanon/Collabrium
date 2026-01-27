@@ -35,8 +35,18 @@ public partial class RefactorCode : Migration
                 Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 IsActive = table.Column<bool>(type: "bit", nullable: false),
                 TenantAdminId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                WebsiteURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                WebsiteUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ContactDetails_Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                ContactDetails_PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                ContactDetails_Socials_LinkedIn = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Facebook = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Instagram = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_YouTube = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                ProfileImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                ProfileImage_PublicId = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
@@ -73,9 +83,19 @@ public partial class RefactorCode : Migration
                 FullName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                 Department = table.Column<int>(type: "int", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                 LastLoginAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                 MustChangePassword = table.Column<bool>(type: "bit", nullable: false),
                 DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
+                ContactDetails_Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                ContactDetails_PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                ContactDetails_Socials_LinkedIn = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Facebook = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Instagram = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_YouTube = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                ProfileImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                ProfileImage_PublicId = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
                 UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                 NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                 Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -100,52 +120,6 @@ public partial class RefactorCode : Migration
                     principalTable: "Tenants",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "TenantContactInfos",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                TenantId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                LinkedIn = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Facebook = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Instagram = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                YouTube = table.Column<string>(type: "nvarchar(max)", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_TenantContactInfos", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_TenantContactInfos_Tenants_TenantId",
-                    column: x => x.TenantId,
-                    principalTable: "Tenants",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "TenantImages",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                TenantId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                PublicId = table.Column<string>(type: "nvarchar(max)", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_TenantImages", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_TenantImages_Tenants_TenantId",
-                    column: x => x.TenantId,
-                    principalTable: "Tenants",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
             });
 
         migrationBuilder.CreateTable(
@@ -266,75 +240,6 @@ public partial class RefactorCode : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "UserContactInfos",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                Github = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                LinkedIn = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Facebook = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Instagram = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                YouTube = table.Column<string>(type: "nvarchar(max)", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_UserContactInfos", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_UserContactInfos_AspNetUsers_UserId",
-                    column: x => x.UserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "UserImages",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                PublicId = table.Column<string>(type: "nvarchar(max)", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_UserImages", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_UserImages_AspNetUsers_ApplicationUserId",
-                    column: x => x.ApplicationUserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "ApplicationUserEntityTeamEntity",
-            columns: table => new
-            {
-                MembersId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                TeamsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_ApplicationUserEntityTeamEntity", x => new { x.MembersId, x.TeamsId });
-                table.ForeignKey(
-                    name: "FK_ApplicationUserEntityTeamEntity_AspNetUsers_MembersId",
-                    column: x => x.MembersId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-                table.ForeignKey(
-                    name: "FK_ApplicationUserEntityTeamEntity_Teams_TeamsId",
-                    column: x => x.TeamsId,
-                    principalTable: "Teams",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
             name: "Projects",
             columns: table => new
             {
@@ -344,7 +249,8 @@ public partial class RefactorCode : Migration
                 CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 TeamId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 TenantId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
@@ -370,6 +276,61 @@ public partial class RefactorCode : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "TeamMembers",
+            columns: table => new
+            {
+                TeamId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TeamMembers", x => new { x.TeamId, x.UserId });
+                table.ForeignKey(
+                    name: "FK_TeamMembers_AspNetUsers_UserId",
+                    column: x => x.UserId,
+                    principalTable: "AspNetUsers",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+                table.ForeignKey(
+                    name: "FK_TeamMembers_Teams_TeamId",
+                    column: x => x.TeamId,
+                    principalTable: "Teams",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "ProjectHistories",
+            columns: table => new
+            {
+                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                ChangedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                PropertyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                NewValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_ProjectHistories", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_ProjectHistories_AspNetUsers_ChangedByUserId",
+                    column: x => x.ChangedByUserId,
+                    principalTable: "AspNetUsers",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+                table.ForeignKey(
+                    name: "FK_ProjectHistories_Projects_ProjectId",
+                    column: x => x.ProjectId,
+                    principalTable: "Projects",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
             name: "Sprints",
             columns: table => new
             {
@@ -379,7 +340,8 @@ public partial class RefactorCode : Migration
                 EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                 Status = table.Column<int>(type: "int", nullable: false),
                 ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
@@ -409,11 +371,9 @@ public partial class RefactorCode : Migration
                 StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                 EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                 AssignedToUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                AssignedToUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 SprintId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                WorkItemType = table.Column<int>(type: "int", nullable: false),
                 StepsToReproduce = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 BugEntity_ActualResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 BugEntity_ExpectedResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -423,7 +383,8 @@ public partial class RefactorCode : Migration
                 ExpectedResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 ActualResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 StoryPoints = table.Column<int>(type: "int", nullable: true),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
@@ -461,7 +422,8 @@ public partial class RefactorCode : Migration
                 Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                 CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
@@ -481,36 +443,32 @@ public partial class RefactorCode : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "workItemRelations",
+            name: "WorkItemRelations",
             columns: table => new
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                OutgoingWorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                IncomingWorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                SourceWorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                TargetWorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 RelationType = table.Column<int>(type: "int", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
             },
             constraints: table =>
             {
-                table.PrimaryKey("PK_workItemRelations", x => x.Id);
+                table.PrimaryKey("PK_WorkItemRelations", x => x.Id);
                 table.ForeignKey(
-                    name: "FK_workItemRelations_WorkItems_IncomingWorkItemId",
-                    column: x => x.IncomingWorkItemId,
+                    name: "FK_WorkItemRelations_WorkItems_SourceWorkItemId",
+                    column: x => x.SourceWorkItemId,
                     principalTable: "WorkItems",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
                 table.ForeignKey(
-                    name: "FK_workItemRelations_WorkItems_OutgoingWorkItemId",
-                    column: x => x.OutgoingWorkItemId,
+                    name: "FK_WorkItemRelations_WorkItems_TargetWorkItemId",
+                    column: x => x.TargetWorkItemId,
                     principalTable: "WorkItems",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Restrict);
             });
-
-        migrationBuilder.CreateIndex(
-            name: "IX_ApplicationUserEntityTeamEntity_TeamsId",
-            table: "ApplicationUserEntityTeamEntity",
-            column: "TeamsId");
 
         migrationBuilder.CreateIndex(
             name: "IX_AspNetRoleClaims_RoleId",
@@ -574,6 +532,16 @@ public partial class RefactorCode : Migration
             column: "WorkItemId");
 
         migrationBuilder.CreateIndex(
+            name: "IX_ProjectHistories_ChangedByUserId",
+            table: "ProjectHistories",
+            column: "ChangedByUserId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_ProjectHistories_ProjectId",
+            table: "ProjectHistories",
+            column: "ProjectId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Projects_CreatedByUserId",
             table: "Projects",
             column: "CreatedByUserId");
@@ -594,6 +562,11 @@ public partial class RefactorCode : Migration
             column: "ProjectId");
 
         migrationBuilder.CreateIndex(
+            name: "IX_TeamMembers_UserId",
+            table: "TeamMembers",
+            column: "UserId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Team_Name",
             table: "Teams",
             column: "Name",
@@ -610,19 +583,6 @@ public partial class RefactorCode : Migration
             column: "TenantId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_TenantContactInfos_TenantId",
-            table: "TenantContactInfos",
-            column: "TenantId",
-            unique: true,
-            filter: "[TenantId] IS NOT NULL");
-
-        migrationBuilder.CreateIndex(
-            name: "IX_TenantImages_TenantId",
-            table: "TenantImages",
-            column: "TenantId",
-            unique: true);
-
-        migrationBuilder.CreateIndex(
             name: "IX_Tenant_Domain",
             table: "Tenants",
             column: "Domain",
@@ -635,27 +595,15 @@ public partial class RefactorCode : Migration
             unique: true);
 
         migrationBuilder.CreateIndex(
-            name: "IX_UserContactInfos_UserId",
-            table: "UserContactInfos",
-            column: "UserId",
-            unique: true,
-            filter: "[UserId] IS NOT NULL");
+            name: "IX_WorkItemRelations_TargetWorkItemId",
+            table: "WorkItemRelations",
+            column: "TargetWorkItemId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_UserImages_ApplicationUserId",
-            table: "UserImages",
-            column: "ApplicationUserId",
+            name: "UX_WorkItemRelation_Unique",
+            table: "WorkItemRelations",
+            columns: new[] { "SourceWorkItemId", "TargetWorkItemId", "RelationType" },
             unique: true);
-
-        migrationBuilder.CreateIndex(
-            name: "IX_workItemRelations_IncomingWorkItemId",
-            table: "workItemRelations",
-            column: "IncomingWorkItemId");
-
-        migrationBuilder.CreateIndex(
-            name: "IX_workItemRelations_OutgoingWorkItemId",
-            table: "workItemRelations",
-            column: "OutgoingWorkItemId");
 
         migrationBuilder.CreateIndex(
             name: "IX_WorkItems_AssignedToUserId",
@@ -682,9 +630,6 @@ public partial class RefactorCode : Migration
     protected override void Down(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DropTable(
-            name: "ApplicationUserEntityTeamEntity");
-
-        migrationBuilder.DropTable(
             name: "AspNetRoleClaims");
 
         migrationBuilder.DropTable(
@@ -703,19 +648,13 @@ public partial class RefactorCode : Migration
             name: "Comments");
 
         migrationBuilder.DropTable(
-            name: "TenantContactInfos");
+            name: "ProjectHistories");
 
         migrationBuilder.DropTable(
-            name: "TenantImages");
+            name: "TeamMembers");
 
         migrationBuilder.DropTable(
-            name: "UserContactInfos");
-
-        migrationBuilder.DropTable(
-            name: "UserImages");
-
-        migrationBuilder.DropTable(
-            name: "workItemRelations");
+            name: "WorkItemRelations");
 
         migrationBuilder.DropTable(
             name: "AspNetRoles");

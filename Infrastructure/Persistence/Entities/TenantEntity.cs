@@ -10,10 +10,10 @@ public class TenantEntity : DbEntity
     public string? TenantAdminId { get; set; }
     public string? WebsiteUrl { get; set; }
 
-    // ✅ Owned
-    public ContactDetailsOwned ContactInfo { get; set; } = new();
+    public ContactDetailsOwned ContactDetails { get; set; } = new();
     public StoredImageOwned? ProfileImage { get; set; }
 
+    public ApplicationUserEntity? TenantAdmin { get; set; }
     public ICollection<ApplicationUserEntity> Users { get; set; } = new List<ApplicationUserEntity>();
     public ICollection<TeamEntity> Teams { get; set; } = new List<TeamEntity>();
     public ICollection<ProjectEntity> Projects { get; set; } = new List<ProjectEntity>();

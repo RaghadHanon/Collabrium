@@ -53,7 +53,7 @@ public sealed class User : Entity
         TenantId = tenantId?.Trim();
         Department = department;
 
-        MustChangePassword = false;
+        MustChangePassword = true;
     }
 
     public static User Rehydrate(
@@ -115,15 +115,17 @@ public sealed class User : Entity
         Touch();
     }
 
-    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook, string? instagram, string? youTube)
+    public void SetContactInfo(string? email, string? phone, string? linkedIn, string? facebook,
+        string? instagram, string? youTube, string? github)
     {
-        var socials = SocialLinks.Create(linkedIn, facebook, instagram, youTube);
+        var socials = SocialLinks.Create(linkedIn, facebook, instagram, youTube, github);
         ContactInfo = ContactDetails.Create(email, phone, socials);
         Touch();
     }
 
-    public void SetProfileImage(StoredImage? image)
+    public void SetProfileImage(string url, string publicId)
     {
+        var image = StoredImage.Create(url, publicId);
         ProfileImage = image;
         Touch();
     }

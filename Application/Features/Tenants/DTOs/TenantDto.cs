@@ -17,5 +17,5 @@ public class TenantDto
     public string? Country { get; init; }
     public string? WebsiteUrl { get; init; }
 
-    public ContactDetailsDto ContactInfo { get; init; } = new();
+    public ContactDetailsDto ContactDetails { get; init; } = new();
 }

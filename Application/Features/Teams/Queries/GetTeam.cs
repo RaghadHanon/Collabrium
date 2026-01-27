@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Teams.DTOs;
 using Application.Interfaces;
-using Application.Interfaces.Repositories;
+using Application.Interfaces.ReadModels;
 using MediatR;
 using System.Net;
 
@@ -13,7 +13,7 @@ public class GetTeam
         public required string TeamId { get; set; }
     }
 
-    public class Handler(ITenantContext tenantContext, ITeamsRepository teamRepository)
+    public class Handler(ITenantContext tenantContext, ITeamsReadModel teamsReadModel)
         : IRequestHandler<Query, Result<TeamFullInfoDto>>
     {
         public async Task<Result<TeamFullInfoDto>> Handle(Query request, CancellationToken cancellationToken)
@@ -22,7 +22,7 @@ public class GetTeam
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<TeamFullInfoDto>.Failure("Tenant not found", HttpStatusCode.NotFound);
 
-            var dto = await teamRepository.GetTeamFullAsync(tenantId, request.TeamId, cancellationToken);
+            var dto = await teamsReadModel.GetTeamFullAsync(tenantId, request.TeamId, cancellationToken);
             return dto == null
                 ? Result<TeamFullInfoDto>.Failure("Team not found", HttpStatusCode.NotFound)
                 : Result<TeamFullInfoDto>.Success(dto, HttpStatusCode.OK);

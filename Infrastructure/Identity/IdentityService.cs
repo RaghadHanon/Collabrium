@@ -24,7 +24,6 @@ public sealed class IdentityService : IIdentityService
     private readonly IEmailService _emailService;
     private readonly IdentitySettings _identitySettings;
     private readonly IEmailTemplateFactory _emailTemplateFactory;
-    private readonly AppDbContext _dbContext;
 
     public IdentityService(
         UserManager<ApplicationUserEntity> userManager,
@@ -38,49 +37,45 @@ public sealed class IdentityService : IIdentityService
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         _identitySettings = identityOptions?.Value ?? throw new ArgumentNullException(nameof(identityOptions));
         _emailTemplateFactory = emailTemplateFactory ?? throw new ArgumentNullException(nameof(emailTemplateFactory));
     }
 
     public async Task<User> RegisterUserAsync(
-        string fullName,
-        Department department,
-        string password,
-        DateOnly dateOfBirth,
-        UserRole role,
-        string tenantId,
-        string email,
-        string phoneNumber,
-        CancellationToken cancellationToken = default)
+    string fullName,
+    Department department,
+    string password,
+    DateOnly dateOfBirth,
+    UserRole role,
+    string tenantId,
+    string email,
+    string phoneNumber,
+    CancellationToken cancellationToken = default)
     {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
+
+        userEntity.ContactDetails = new ContactDetailsOwned
+        {
+            Email = email.Trim(),
+            PhoneNumber = phoneNumber?.Trim() ?? "",
+            Socials = new SocialLinksOwned()
+        };
+
+        userEntity.MustChangePassword = role != UserRole.SuperAdmin;
+
+        await CreateUserAsync(userEntity, password);
+        await AssignRoleAsync(userEntity, role);
 
         try
         {
-            var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
-
-            // ✅ لا يوجد UserContactInfoEntity بعد الآن (Owned)
-            // userEntity.ContactInfo ... لو عندك owned contact details في entity، خليها تتعبى هنا (اختياري)
-
-            userEntity.MustChangePassword = role != UserRole.SuperAdmin;
-
-            await CreateUserAsync(userEntity, password);
-            await AssignRoleAsync(userEntity, role);
-
             await SendConfirmationEmailAsync(userEntity, cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
-
-            // ✅ رجّع Domain user (بدون توقع navigations محمّلة)
-            return UserMapper.ToDomain(userEntity);
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
         }
+
+        return UserMapper.ToDomain(userEntity);
     }
 
     public async Task<(string Token, string Id, string TenantId)> LoginAsync(
@@ -89,16 +84,13 @@ public sealed class IdentityService : IIdentityService
         CancellationToken cancellationToken = default)
     {
         var userEntity = await ValidateCredentialsAsync(email, password);
-
         if (!await _userManager.IsEmailConfirmedAsync(userEntity))
             throw new UnauthenticatedException("You must confirm your email before logging in.");
 
         var roles = await GetRolesAsync(userEntity);
-
         userEntity.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(userEntity);
 
-        // ✅ token يعتمد على domain user (mappers لازم تكون updated)
         var token = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(userEntity), roles);
 
         return string.IsNullOrWhiteSpace(token)
@@ -225,10 +217,6 @@ public sealed class IdentityService : IIdentityService
         await _userManager.UpdateAsync(user);
     }
 
-    // --------------------
-    // Helpers
-    // --------------------
-
     private async Task<ApplicationUserEntity> ValidateCredentialsAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -312,16 +300,11 @@ public sealed class IdentityService : IIdentityService
         {
             FullName = fullName.Trim(),
             Email = email.Trim(),
-            UserName = email.Trim(), // إذا عندك rule مختلف للـ username عدليه هون
+            UserName = email.Trim(),
             Department = department,
             TenantId = string.IsNullOrWhiteSpace(tenantId) ? null : tenantId.Trim(),
             DateOfBirth = dateOfBirth,
             PhoneNumber = phoneNumber?.Trim()
         };
-    }
-
-    Task<User> IIdentityService.RegisterUserAsync(string fullName, Department department, string password, DateOnly dateOfBirth, UserRole role, string tenantId, string email, string phoneNumber, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

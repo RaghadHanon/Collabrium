@@ -30,8 +30,6 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
         if (string.IsNullOrWhiteSpace(userId))
             return null;
 
-        // Owned types لا تحتاج Include
-        // Tenant فقط إذا بدك تتأكد إنه موجود/تحميل بيانات إضافية عنه
         var entity = await _dbContext.Users
             .AsNoTracking()
             .Include(u => u.Tenant)

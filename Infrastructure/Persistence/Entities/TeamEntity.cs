@@ -1,5 +1,4 @@
 ﻿using Domain.Enums;
-using Infrastructure.Persistence.Entities.Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Entities;
 
@@ -19,7 +18,6 @@ public class TeamEntity : DbEntity
 
     public new DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // ✅ Join Entity بدل Many-to-Many مباشرة
     public ICollection<TeamMemberEntity> Members { get; set; } = new List<TeamMemberEntity>();
 
     public ICollection<ProjectEntity> Projects { get; set; } = new List<ProjectEntity>();

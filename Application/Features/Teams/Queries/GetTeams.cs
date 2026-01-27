@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Teams.DTOs;
 using Application.Interfaces;
-using Application.Interfaces.Repositories;
+using Application.Interfaces.ReadModels;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
@@ -29,7 +29,7 @@ public class GetTeams
     }
 
     public class Handler(
-        ITeamsRepository teamsRepository,
+        ITeamsReadModel teamsReadModel,
         ITenantContext tenantContext,
         IMapper mapper
     ) : IRequestHandler<Query, Result<PagedList<TeamDto, DateTime?>>>
@@ -45,17 +45,9 @@ public class GetTeams
 
             var queryParams = mapper.Map<TeamsSearchAndFilterParametersDto>(request);
             queryParams.TenantId = tenant.Id;
-            var pagedTeams = await teamsRepository.GetTeamsAsync(queryParams, cancellationToken);
-            var teamDtos = pagedTeams.Items.Select(t => mapper.Map<TeamDto>(t)).ToList();
+            var pagedTeams = await teamsReadModel.GetTeamsAsync(queryParams, cancellationToken);
 
-            return Result<PagedList<TeamDto, DateTime?>>.Success(
-                new PagedList<TeamDto, DateTime?>
-                {
-                    Items = teamDtos,
-                    NextCursor = pagedTeams.NextCursor
-                },
-                HttpStatusCode.OK
-            );
+            return Result<PagedList<TeamDto, DateTime?>>.Success(pagedTeams, HttpStatusCode.OK);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
-using Application.Interfaces.Repositories;
+using Application.Interfaces.ReadModels;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
@@ -24,8 +24,11 @@ public class GetTenantUsers
         public int PageSize { get; set; }
     }
 
-    public class Handler(IUsersRepository usersRepository, IMapper mapper
-        , ITenantContext tenantContext) : IRequestHandler<Query, Result<PagedList<UserDto, DateTime?>>>
+    public class Handler(
+        IUsersReadModel usersReadModel,
+        IMapper mapper,
+        ITenantContext tenantContext
+        ) : IRequestHandler<Query, Result<PagedList<UserDto, DateTime?>>>
     {
         public async Task<Result<PagedList<UserDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
         {
@@ -33,7 +36,7 @@ public class GetTenantUsers
             if (queryParams.TenantId is null)
                 queryParams.TenantId = tenantContext.TenantId;
 
-            var pagedUsers = await usersRepository.GetUsersAsync(queryParams, cancellationToken);
+            var pagedUsers = await usersReadModel.GetUsersAsync(queryParams, cancellationToken);
             var usersDto = pagedUsers.Items.Select(c => mapper.Map<UserDto>(c)).ToList();
 
             return Result<PagedList<UserDto, DateTime?>>.Success(

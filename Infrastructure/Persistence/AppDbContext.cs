@@ -1,5 +1,4 @@
 ﻿using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Entities.Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

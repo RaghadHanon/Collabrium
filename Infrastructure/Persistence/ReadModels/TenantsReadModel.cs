@@ -1,7 +1,9 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
 using Application.Features.Tenants.DTOs;
 using Application.Interfaces.ReadModels;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -9,93 +11,60 @@ namespace Infrastructure.Persistence.ReadModels;
 public sealed class TenantsReadModel : ITenantsReadModel
 {
     private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public TenantsReadModel(AppDbContext dbContext)
+    public TenantsReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public Task<TenantDto?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default)
+    public async Task<TenantDto?> GetByIdAsync(
+        string tenantId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) return Task.FromResult<TenantDto?>(null);
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return null;
 
         var id = tenantId.Trim();
 
-        return _dbContext.Tenants
+        return await _dbContext.Tenants
             .AsNoTracking()
             .Where(t => t.Id == id)
-            .Select(MapTenantDto())
+            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<TenantDto?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)
+    public async Task<TenantDto?> GetByDomainAsync(
+        string domain,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(domain)) return Task.FromResult<TenantDto?>(null);
+        if (string.IsNullOrWhiteSpace(domain))
+            return null;
 
         var normalized = domain.Trim().ToLowerInvariant();
 
-        return _dbContext.Tenants
+        return await _dbContext.Tenants
             .AsNoTracking()
             .Where(t => t.Domain == normalized)
-            .Select(MapTenantDto())
+            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<TenantWithAdminDto?> GetWithAdminAsync(string tenantId, CancellationToken cancellationToken = default)
+    public async Task<TenantWithAdminDto?> GetWithAdminAsync(
+        string tenantId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) return Task.FromResult<TenantWithAdminDto?>(null);
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return null;
 
         var id = tenantId.Trim();
 
-        return _dbContext.Tenants
+        return await _dbContext.Tenants
             .AsNoTracking()
+            .Include(t => t.TenantAdmin)
             .Where(t => t.Id == id)
-            .Select(t => new TenantWithAdminDto
-            {
-                Id = t.Id,
-                CreatedAt = t.CreatedAt,
-                Name = t.Name,
-                Domain = t.Domain,
-                Description = t.Description,
-                IsActive = t.IsActive,
-                ProfileImageUrl = t.ProfileImage != null ? t.ProfileImage.Url : null,
-                Country = t.Country,
-                WebsiteUrl = t.WebsiteUrl,
-
-                ContactInfo = new ContactDetailsDto
-                {
-                    Email = t.ContactInfo.Email,
-                    PhoneNumber = t.ContactInfo.PhoneNumber,
-                    Socials = new SocialLinksDto
-                    {
-                        LinkedIn = t.ContactInfo.Socials.LinkedIn,
-                        Facebook = t.ContactInfo.Socials.Facebook,
-                        Instagram = t.ContactInfo.Socials.Instagram,
-                        YouTube = t.ContactInfo.Socials.YouTube
-                    }
-                },
-
-                TenantAdmin = t.TenantAdminId == null ? null : new TenantAdminDto
-                {
-                    Id = t.TenantAdminId,
-                    FullName = t.Users
-                        .Where(u => u.Id == t.TenantAdminId)
-                        .Select(u => u.FullName)
-                        .FirstOrDefault() ?? "",
-                    PhoneNumber = t.Users
-                        .Where(u => u.Id == t.TenantAdminId)
-                        .Select(u => u.PhoneNumber ?? "")
-                        .FirstOrDefault() ?? "",
-                    Email = t.Users
-                        .Where(u => u.Id == t.TenantAdminId)
-                        .Select(u => u.Email ?? "")
-                        .FirstOrDefault() ?? "",
-                    Department = t.Users
-                        .Where(u => u.Id == t.TenantAdminId)
-                        .Select(u => u.Department)
-                        .FirstOrDefault()
-                }
-            })
+            .ProjectTo<TenantWithAdminDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -104,10 +73,9 @@ public sealed class TenantsReadModel : ITenantsReadModel
         CancellationToken cancellationToken = default)
     {
         parameters ??= new TenantsSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        var query = _dbContext.Tenants
-            .AsNoTracking()
-            .AsQueryable();
+        var query = _dbContext.Tenants.AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 
@@ -116,12 +84,12 @@ public sealed class TenantsReadModel : ITenantsReadModel
 
         var items = await query
             .OrderBy(t => t.CreatedAt)
-            .Select(MapTenantDto())
-            .Take(parameters.PageSize + 1)
+            .Take(pageSize + 1)
+            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > parameters.PageSize)
+        if (items.Count > pageSize)
         {
             nextCursor = items.Last().CreatedAt;
             items.RemoveAt(items.Count - 1);
@@ -134,8 +102,8 @@ public sealed class TenantsReadModel : ITenantsReadModel
         };
     }
 
-    private static IQueryable<Entities.TenantEntity> ApplyFilters(
-        IQueryable<Entities.TenantEntity> query,
+    private static IQueryable<TenantEntity> ApplyFilters(
+        IQueryable<TenantEntity> query,
         TenantsSearchAndFilterParametersDto parameters)
     {
         if (!string.IsNullOrWhiteSpace(parameters.Country))
@@ -174,37 +142,9 @@ public sealed class TenantsReadModel : ITenantsReadModel
         if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
         {
             var phone = parameters.PhoneNumber.Trim();
-            query = query.Where(t => t.ContactInfo.PhoneNumber == phone);
+            query = query.Where(t => t.ContactDetails.PhoneNumber == phone);
         }
 
         return query;
-    }
-
-    private static System.Linq.Expressions.Expression<Func<Entities.TenantEntity, TenantDto>> MapTenantDto()
-    {
-        return t => new TenantDto
-        {
-            Id = t.Id,
-            CreatedAt = t.CreatedAt,
-            Name = t.Name,
-            Domain = t.Domain,
-            Description = t.Description,
-            IsActive = t.IsActive,
-            ProfileImageUrl = t.ProfileImage != null ? t.ProfileImage.Url : null,
-            Country = t.Country,
-            WebsiteUrl = t.WebsiteUrl,
-            ContactInfo = new ContactDetailsDto
-            {
-                Email = t.ContactInfo.Email,
-                PhoneNumber = t.ContactInfo.PhoneNumber,
-                Socials = new SocialLinksDto
-                {
-                    LinkedIn = t.ContactInfo.Socials.LinkedIn,
-                    Facebook = t.ContactInfo.Socials.Facebook,
-                    Instagram = t.ContactInfo.Socials.Instagram,
-                    YouTube = t.ContactInfo.Socials.YouTube
-                }
-            }
-        };
     }
 }

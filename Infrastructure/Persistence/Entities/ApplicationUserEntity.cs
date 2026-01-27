@@ -31,7 +31,7 @@ public class ApplicationUserEntity : IdentityUser
         }
     }
 
-    public ContactDetailsOwned ContactInfo { get; set; } = new();
+    public ContactDetailsOwned ContactDetails { get; set; } = new();
     public StoredImageOwned? ProfileImage { get; set; }
 
     public ICollection<TeamMemberEntity> TeamMemberships { get; set; } = new List<TeamMemberEntity>();

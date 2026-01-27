@@ -7,7 +7,7 @@ public static class OwnedConverters
 {
     public static SocialLinks ToDomain(this SocialLinksOwned o)
     {
-        return SocialLinks.Create(o.LinkedIn, o.Facebook, o.Instagram, o.YouTube);
+        return SocialLinks.Create(o.LinkedIn, o.Facebook, o.Instagram, o.YouTube, o.Github);
     }
 
     public static SocialLinksOwned ToOwned(this SocialLinks v)
@@ -17,7 +17,8 @@ public static class OwnedConverters
             LinkedIn = v.LinkedIn ?? "",
             Facebook = v.Facebook ?? "",
             Instagram = v.Instagram ?? "",
-            YouTube = v.YouTube ?? ""
+            YouTube = v.YouTube ?? "",
+            Github = v.Github ?? ""
         };
     }
 

@@ -8,103 +8,80 @@ using System.Net;
 
 namespace Application.Features.Tenants.Commands;
 
-public sealed class UpdateTenant
+public class UpdateTenant
 {
-    public sealed class Command : IRequest<Result<Unit>>
+    public class Command : IRequest<Result<Unit>>
     {
-        public string? Description { get; init; }
-        public string? Country { get; init; }
-        public string? WebsiteUrl { get; init; }
+        public string? Description { get; set; }
+        public string? Country { get; set; }
+        public string? WebsiteUrl { get; set; }
 
-        public IFormFile? File { get; init; }
+        public IFormFile? File { get; set; }
 
-        public string? Email { get; init; }
-        public string? PhoneNumber { get; init; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
 
-        public string? LinkedIn { get; init; }
-        public string? Facebook { get; init; }
-        public string? Instagram { get; init; }
-        public string? YouTube { get; init; }
+        public string? LinkedIn { get; set; }
+        public string? Facebook { get; set; }
+        public string? Instagram { get; set; }
+        public string? YouTube { get; set; }
     }
 
-    public sealed class Handler : IRequestHandler<Command, Result<Unit>>
+    public class Handler(
+        IPhotoService photoService,
+        ITenantRepository tenantRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork
+    ) : IRequestHandler<Command, Result<Unit>>
     {
-        private readonly IPhotoService _photoService;
-        private readonly ITenantRepository _tenantRepository;
-        private readonly ITenantContext _tenantContext;
-        private readonly IUnitOfWork _uow;
-
-        public Handler(
-            IPhotoService photoService,
-            ITenantRepository tenantRepository,
-            ITenantContext tenantContext,
-            IUnitOfWork uow)
-        {
-            _photoService = photoService ?? throw new ArgumentNullException(nameof(photoService));
-            _tenantRepository = tenantRepository ?? throw new ArgumentNullException(nameof(tenantRepository));
-            _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
-            _uow = uow ?? throw new ArgumentNullException(nameof(uow));
-        }
-
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var tenant = _tenantContext.CurrentTenant;
+            var tenantId = tenantContext.CurrentTenant?.Id?.Trim();
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
             if (tenant is null)
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            // 1) upload image (optional)
-            string? uploadedUrl = null;
-            string? uploadedPublicId = null;
-
-            if (request.File is not null)
+            try
             {
-                var upload = await _photoService.UploadPhoto(request.File);
-                if (upload is null)
-                    return Result<Unit>.Failure("Photo upload failed.", HttpStatusCode.BadRequest);
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    if (request.File is not null)
+                    {
+                        var upload = await photoService.UploadPhoto(request.File);
+                        if (upload is null)
+                            throw new InvalidOperationException("Photo upload failed.");
 
-                uploadedUrl = upload.Url;
-                uploadedPublicId = upload.PublicId;
+                        tenant.SetProfileImage(upload.Url, upload.PublicId);
+                    }
+
+                    tenant.UpdateProfile(
+                        description: request.Description ?? tenant.Description,
+                        country: request.Country ?? tenant.Country,
+                        websiteUrl: request.WebsiteUrl ?? tenant.WebsiteUrl
+                    );
+
+                    tenant.SetContactInfo(
+                        email: request.Email ?? tenant.ContactInfo.Email,
+                        phone: request.PhoneNumber ?? tenant.ContactInfo.PhoneNumber,
+                        linkedIn: request.LinkedIn ?? tenant.ContactInfo.Socials.LinkedIn,
+                        facebook: request.Facebook ?? tenant.ContactInfo.Socials.Facebook,
+                        instagram: request.Instagram ?? tenant.ContactInfo.Socials.Instagram,
+                        youTube: request.YouTube ?? tenant.ContactInfo.Socials.YouTube
+                    );
+
+                    await tenantRepository.UpdateAsync(tenant, ct);
+                    await unitOfWork.SaveChangesAsync(ct);
+                }, cancellationToken);
+
+                return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
             }
-
-            // 2) update profile (null means "no change" is NOT supported by your Tenant.UpdateProfile)
-            // Tenant.UpdateProfile will overwrite with null -> so we must MERGE manually.
-            tenant.UpdateProfile(
-                description: request.Description ?? tenant.Description,
-                country: request.Country ?? tenant.Country,
-                websiteUrl: request.WebsiteUrl ?? tenant.WebsiteUrl
-            );
-
-            // 3) merge contact info (because SetContactInfo replaces)
-            var current = tenant.ContactInfo;
-
-            var mergedEmail = request.Email ?? current.Email;
-            var mergedPhone = request.PhoneNumber ?? current.PhoneNumber;
-
-            var mergedLinkedIn = request.LinkedIn ?? current.Socials.LinkedIn;
-            var mergedFacebook = request.Facebook ?? current.Socials.Facebook;
-            var mergedInstagram = request.Instagram ?? current.Socials.Instagram;
-            var mergedYouTube = request.YouTube ?? current.Socials.YouTube;
-
-            tenant.SetContactInfo(
-                email: mergedEmail,
-                phone: mergedPhone,
-                linkedIn: mergedLinkedIn,
-                facebook: mergedFacebook,
-                instagram: mergedInstagram,
-                youTube: mergedYouTube
-            );
-
-            // 4) set profile image if uploaded
-            if (!string.IsNullOrWhiteSpace(uploadedUrl) && !string.IsNullOrWhiteSpace(uploadedPublicId))
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Photo upload failed"))
             {
-                tenant.SetProfileImage(new Domain.ValueObjects.StoredImage(uploadedUrl, uploadedPublicId));
+                return Result<Unit>.Failure("Photo upload failed.", HttpStatusCode.BadRequest);
             }
-
-            // 5) persist
-            await _tenantRepository.UpdateAsync(tenant, cancellationToken);
-            await _uow.SaveChangesAsync(cancellationToken);
-
-            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }
     }
 }

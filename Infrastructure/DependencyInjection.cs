@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Emails;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Infrastructure.Email;
@@ -8,6 +9,7 @@ using Infrastructure.Identity;
 using Infrastructure.Images;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.ReadModels;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Security;
 using Infrastructure.Settings;
@@ -28,42 +30,29 @@ namespace Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
-       IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("SqlServer")
-            )
-        );
+            options.UseSqlServer(configuration.GetConnectionString("SqlServer")));
+
         AddIdentity(services, configuration);
+
         AddRepositories(services);
+        AddReadModels(services);
+        AddAutoMapper(services);
+
         AddEmailServices(services, configuration);
         AddAuthorizationHandlers(services);
 
         services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
-
         services.AddScoped<IPhotoService, PhotoService>();
+
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
-    }
-
-    private static void AddEmailServices(IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<SmtpSettings>(configuration.GetSection("SmtpSettings"));
-        services.AddSingleton<IEmailService, SmtpEmailService>();
-        services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
-        var templateTypes = typeof(EmailTemplateFactory)
-            .Assembly
-            .GetTypes()
-            .Where(t => typeof(IEmailTemplate).IsAssignableFrom(t)
-                        && !t.IsInterface && !t.IsAbstract);
-
-        foreach (var type in templateTypes)
-        {
-            services.AddScoped(typeof(IEmailTemplate), type);
-        }
     }
 
     private static void AddRepositories(IServiceCollection services)
@@ -71,6 +60,37 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IUsersRepository, UsersRepository>();
         services.AddScoped<ITeamsRepository, TeamsRepository>();
+    }
+
+    private static void AddReadModels(IServiceCollection services)
+    {
+        services.AddScoped<IUsersReadModel, UsersReadModel>();
+        services.AddScoped<ITenantsReadModel, TenantsReadModel>();
+        services.AddScoped<ITeamsReadModel, TeamsReadModel>();
+    }
+
+    private static void AddAutoMapper(IServiceCollection services)
+    {
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AllowNullCollections = true;
+            cfg.AllowNullDestinationValues = true;
+        }, typeof(DependencyInjection).Assembly);
+    }
+
+    private static void AddEmailServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<SmtpSettings>(configuration.GetSection("SmtpSettings"));
+        services.AddSingleton<IEmailService, SmtpEmailService>();
+        services.AddScoped<IEmailTemplateFactory, EmailTemplateFactory>();
+
+        var templateTypes = typeof(EmailTemplateFactory)
+            .Assembly
+            .GetTypes()
+            .Where(t => typeof(IEmailTemplate).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+
+        foreach (var type in templateTypes)
+            services.AddScoped(typeof(IEmailTemplate), type);
     }
 
     private static void AddAuthorizationHandlers(IServiceCollection services)

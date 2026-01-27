@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260125181009_RefactorCode")]
-    partial class RefactorCode
+    [Migration("20260127182254_UpdateTenantEntity")]
+    partial class UpdateTenantEntity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,21 +24,6 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ApplicationUserEntityTeamEntity", b =>
-                {
-                    b.Property<string>("MembersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("TeamsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("MembersId", "TeamsId");
-
-                    b.HasIndex("TeamsId");
-
-                    b.ToTable("ApplicationUserEntityTeamEntity");
-                });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
@@ -111,6 +96,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -151,6 +139,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
@@ -193,6 +184,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
@@ -202,6 +196,43 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ChangedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PropertyName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectHistories");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
@@ -229,6 +260,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -286,42 +320,22 @@ namespace Infrastructure.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantContactInfoEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamMemberEntity", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("TeamId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                    b.HasKey("TeamId", "UserId");
 
-                    b.Property<string>("Facebook")
-                        .HasColumnType("nvarchar(max)");
+                    b.HasIndex("UserId");
 
-                    b.Property<string>("Instagram")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LinkedIn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TenantId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("YouTube")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId")
-                        .IsUnique()
-                        .HasFilter("[TenantId] IS NOT NULL");
-
-                    b.ToTable("TenantContactInfos");
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
@@ -352,9 +366,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("TenantAdminId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("WebsiteURL")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WebsiteUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -367,98 +384,9 @@ namespace Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Tenant_Name");
 
+                    b.HasIndex("TenantAdminId");
+
                     b.ToTable("Tenants");
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantImageEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId")
-                        .IsUnique();
-
-                    b.ToTable("TenantImages");
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserContactInfoEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Facebook")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Github")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Instagram")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LinkedIn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("YouTube")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
-
-                    b.ToTable("UserContactInfos");
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserImageEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PublicId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId")
-                        .IsUnique();
-
-                    b.ToTable("UserImages");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
@@ -471,9 +399,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("AssignedToUserId")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssignedToUserName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -518,11 +443,11 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedDate")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("WorkItemType")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -536,7 +461,7 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("WorkItems");
 
-                    b.HasDiscriminator<int>("WorkItemType").HasValue(0);
+                    b.HasDiscriminator<int>("Type").HasValue(0);
 
                     b.UseTphMappingStrategy();
                 });
@@ -549,24 +474,29 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("IncomingWorkItemId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("OutgoingWorkItemId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("RelationType")
                         .HasColumnType("int");
 
+                    b.Property<string>("SourceWorkItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TargetWorkItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("IncomingWorkItemId");
+                    b.HasIndex("TargetWorkItemId");
 
-                    b.HasIndex("OutgoingWorkItemId");
+                    b.HasIndex("SourceWorkItemId", "TargetWorkItemId", "RelationType")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WorkItemRelation_Unique");
 
-                    b.ToTable("workItemRelations");
+                    b.ToTable("WorkItemRelations");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -747,7 +677,6 @@ namespace Infrastructure.Migrations
                     b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
 
                     b.Property<string>("ActualResult")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExpectedResult")
@@ -778,27 +707,103 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(2);
                 });
 
-            modelBuilder.Entity("ApplicationUserEntityTeamEntity", b =>
-                {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
-                        .WithMany()
-                        .HasForeignKey("MembersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", null)
-                        .WithMany()
-                        .HasForeignKey("TeamsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
                         .WithMany("Users")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                        {
+                            b1.Property<string>("ApplicationUserEntityId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("Email")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)");
+
+                            b1.Property<string>("PhoneNumber")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.HasKey("ApplicationUserEntityId");
+
+                            b1.ToTable("AspNetUsers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ApplicationUserEntityId");
+
+                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                                {
+                                    b2.Property<string>("ContactDetailsOwnedApplicationUserEntityId")
+                                        .HasColumnType("nvarchar(450)");
+
+                                    b2.Property<string>("Facebook")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("Github")
+                                        .IsRequired()
+                                        .HasColumnType("nvarchar(max)");
+
+                                    b2.Property<string>("Instagram")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("LinkedIn")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("YouTube")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.HasKey("ContactDetailsOwnedApplicationUserEntityId");
+
+                                    b2.ToTable("AspNetUsers");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ContactDetailsOwnedApplicationUserEntityId");
+                                });
+
+                            b1.Navigation("Socials")
+                                .IsRequired();
+                        });
+
+                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                        {
+                            b1.Property<string>("ApplicationUserEntityId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("PublicId")
+                                .IsRequired()
+                                .HasMaxLength(300)
+                                .HasColumnType("nvarchar(300)");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("nvarchar(1000)");
+
+                            b1.HasKey("ApplicationUserEntityId");
+
+                            b1.ToTable("AspNetUsers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ApplicationUserEntityId");
+                        });
+
+                    b.Navigation("ContactDetails")
+                        .IsRequired();
+
+                    b.Navigation("ProfileImage");
 
                     b.Navigation("Tenant");
                 });
@@ -849,6 +854,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ChangedByUser")
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedByUser");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
@@ -879,46 +903,123 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantContactInfoEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamMemberEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
-                        .WithOne("TenantContactInfo")
-                        .HasForeignKey("Infrastructure.Persistence.Entities.TenantContactInfoEntity", "TenantId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantImageEntity", b =>
-                {
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
-                        .WithOne("ProfileImage")
-                        .HasForeignKey("Infrastructure.Persistence.Entities.TenantImageEntity", "TenantId")
+                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
+                        .WithMany("Members")
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserContactInfoEntity", b =>
-                {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
-                        .WithOne("UserContactInfo")
-                        .HasForeignKey("Infrastructure.Persistence.Entities.UserContactInfoEntity", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany("TeamMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserImageEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ApplicationUser")
-                        .WithOne("ProfileImage")
-                        .HasForeignKey("Infrastructure.Persistence.Entities.UserImageEntity", "ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "TenantAdmin")
+                        .WithMany()
+                        .HasForeignKey("TenantAdminId");
+
+                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                        {
+                            b1.Property<string>("TenantEntityId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("Email")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)");
+
+                            b1.Property<string>("PhoneNumber")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.HasKey("TenantEntityId");
+
+                            b1.ToTable("Tenants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantEntityId");
+
+                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                                {
+                                    b2.Property<string>("ContactDetailsOwnedTenantEntityId")
+                                        .HasColumnType("nvarchar(450)");
+
+                                    b2.Property<string>("Facebook")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("Github")
+                                        .IsRequired()
+                                        .HasColumnType("nvarchar(max)");
+
+                                    b2.Property<string>("Instagram")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("LinkedIn")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.Property<string>("YouTube")
+                                        .IsRequired()
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
+
+                                    b2.HasKey("ContactDetailsOwnedTenantEntityId");
+
+                                    b2.ToTable("Tenants");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("ContactDetailsOwnedTenantEntityId");
+                                });
+
+                            b1.Navigation("Socials")
+                                .IsRequired();
+                        });
+
+                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                        {
+                            b1.Property<string>("TenantEntityId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("PublicId")
+                                .IsRequired()
+                                .HasMaxLength(300)
+                                .HasColumnType("nvarchar(300)");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("nvarchar(1000)");
+
+                            b1.HasKey("TenantEntityId");
+
+                            b1.ToTable("Tenants");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantEntityId");
+                        });
+
+                    b.Navigation("ContactDetails")
                         .IsRequired();
 
-                    b.Navigation("ApplicationUser");
+                    b.Navigation("ProfileImage");
+
+                    b.Navigation("TenantAdmin");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
@@ -956,21 +1057,21 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "IncomingWorkItem")
-                        .WithMany("IncomingRelations")
-                        .HasForeignKey("IncomingWorkItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "OutgoingWorkItem")
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
                         .WithMany("OutgoingRelations")
-                        .HasForeignKey("OutgoingWorkItemId")
+                        .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("IncomingWorkItem");
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "TargetWorkItem")
+                        .WithMany("IncomingRelations")
+                        .HasForeignKey("TargetWorkItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("OutgoingWorkItem");
+                    b.Navigation("SourceWorkItem");
+
+                    b.Navigation("TargetWorkItem");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1030,11 +1131,9 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedWorkItems");
 
-                    b.Navigation("ProfileImage");
-
                     b.Navigation("Projects");
 
-                    b.Navigation("UserContactInfo");
+                    b.Navigation("TeamMemberships");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -1051,18 +1150,16 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
                 {
+                    b.Navigation("Members");
+
                     b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
                 {
-                    b.Navigation("ProfileImage");
-
                     b.Navigation("Projects");
 
                     b.Navigation("Teams");
-
-                    b.Navigation("TenantContactInfo");
 
                     b.Navigation("Users");
                 });

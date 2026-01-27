@@ -19,7 +19,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasForeignKey(u => u.TenantId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.OwnsOne(u => u.ContactInfo, ci =>
+        builder.OwnsOne(u => u.ContactDetails, ci =>
         {
             ci.Property(x => x.Email).HasMaxLength(256);
             ci.Property(x => x.PhoneNumber).HasMaxLength(50);

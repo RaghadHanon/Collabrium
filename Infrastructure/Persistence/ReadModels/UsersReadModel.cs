@@ -1,9 +1,9 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
-using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces.ReadModels;
-using Domain.Enums;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -11,89 +11,112 @@ namespace Infrastructure.Persistence.ReadModels;
 public sealed class UsersReadModel : IUsersReadModel
 {
     private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-    public UsersReadModel(AppDbContext dbContext)
+    public UsersReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public Task<UserWithTenantDto?> GetUserWithTenantAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<UserWithTenantDto?> GetUserWithTenantAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
-            return Task.FromResult<UserWithTenantDto?>(null);
+            return null;
 
         var id = userId.Trim();
 
-        return _dbContext.Users
+        return await _dbContext.Users
             .AsNoTracking()
             .Where(u => u.Id == id)
-            .Select(u => new UserWithTenantDto
-            {
-                Id = u.Id,
-                FullName = u.FullName,
-                Email = u.Email ?? "",
-                Department = (Department) u.Department!,
-
-                Tenant = u.Tenant == null ? null : new TenantDto
-                {
-                    Id = u.Tenant.Id,
-                    CreatedAt = u.Tenant.CreatedAt,
-                    Name = u.Tenant.Name,
-                    Domain = u.Tenant.Domain,
-                    Description = u.Tenant.Description,
-                    IsActive = u.Tenant.IsActive,
-
-                    ProfileImageUrl = u.Tenant.ProfileImage != null ? u.Tenant.ProfileImage.Url : null,
-                    Country = u.Tenant.Country,
-                    WebsiteUrl = u.Tenant.WebsiteUrl,
-
-                    ContactInfo = new ContactDetailsDto
-                    {
-                        Email = u.Tenant.ContactInfo.Email,
-                        PhoneNumber = u.Tenant.ContactInfo.PhoneNumber,
-                        Socials = new SocialLinksDto
-                        {
-                            LinkedIn = u.Tenant.ContactInfo.Socials.LinkedIn,
-                            Facebook = u.Tenant.ContactInfo.Socials.Facebook,
-                            Instagram = u.Tenant.ContactInfo.Socials.Instagram,
-                            YouTube = u.Tenant.ContactInfo.Socials.YouTube
-                        }
-                    }
-                },
-
-                ContactInfo = new ContactDetailsDto
-                {
-                    Email = u.ContactInfo.Email,
-                    PhoneNumber = u.ContactInfo.PhoneNumber,
-                    Socials = new SocialLinksDto
-                    {
-                        LinkedIn = u.ContactInfo.Socials.LinkedIn,
-                        Facebook = u.ContactInfo.Socials.Facebook,
-                        Instagram = u.ContactInfo.Socials.Instagram,
-                        YouTube = u.ContactInfo.Socials.YouTube
-                    }
-                }
-            })
+            .ProjectTo<UserWithTenantDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<PagedList<UserDto, DateTime?>> GetUsersAsync(
-    UsersSearchAndFilterParametersDto parameters,
-    CancellationToken cancellationToken = default)
+        UsersSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Users
+        parameters ??= new UsersSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var query = _dbContext.Users.AsNoTracking();
+
+        query = ApplyFilters(query, parameters);
+        return await ApplyPagination(parameters, pageSize, query, cancellationToken);
+    }
+
+    private async Task<PagedList<UserDto, DateTime?>> ApplyPagination(
+        UsersSearchAndFilterParametersDto parameters, int pageSize,
+        IQueryable<ApplicationUserEntity> query,
+        CancellationToken cancellationToken)
+    {
+        if (parameters.Cursor.HasValue)
+            query = query.Where(u => u.CreatedAt >= parameters.Cursor.Value);
+
+        var items = await query
+            .OrderBy(u => u.CreatedAt)
+            .Take(pageSize + 1)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items.Last().CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<UserDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
+    public async Task<List<UserDto>> GetUsersByTenantAsync(
+        string tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return new List<UserDto>();
+
+        var id = tenantId.Trim();
+
+        return await _dbContext.Users
             .AsNoTracking()
-            .AsQueryable();
+            .Where(u => u.TenantId == id)
+            .OrderBy(u => u.CreatedAt)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
 
-        // ---------------- Filters ----------------
+    private static IQueryable<ApplicationUserEntity> ApplyFilters(
+        IQueryable<ApplicationUserEntity> query,
+        UsersSearchAndFilterParametersDto parameters)
+    {
         if (!string.IsNullOrWhiteSpace(parameters.TenantId))
-            query = query.Where(u => u.TenantId == parameters.TenantId);
-
-        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
-            query = query.Where(u => u.FullName.Contains(parameters.NameContains));
+        {
+            var tenantId = parameters.TenantId.Trim();
+            query = query.Where(u => u.TenantId == tenantId);
+        }
 
         if (parameters.Department.HasValue)
             query = query.Where(u => u.Department == parameters.Department.Value);
+
+        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
+        {
+            var term = parameters.NameContains.Trim();
+            query = query.Where(u => u.FullName.Contains(term));
+        }
+
+        if (parameters.DateOfBirth.HasValue)
+            query = query.Where(u => u.DateOfBirth >= parameters.DateOfBirth.Value);
+
+        if (parameters.LastLoginAfter.HasValue)
+            query = query.Where(u => u.LastLoginAt >= parameters.LastLoginAfter.Value);
 
         if (parameters.CreatedAfter.HasValue)
             query = query.Where(u => u.CreatedAt >= parameters.CreatedAfter.Value);
@@ -101,58 +124,13 @@ public sealed class UsersReadModel : IUsersReadModel
         if (parameters.CreatedBefore.HasValue)
             query = query.Where(u => u.CreatedAt <= parameters.CreatedBefore.Value);
 
-        if (parameters.LastLoginAfter.HasValue)
-            query = query.Where(u => u.LastLoginAt >= parameters.LastLoginAfter.Value);
-
-        if (parameters.DateOfBirth.HasValue)
-            query = query.Where(u => u.DateOfBirth >= parameters.DateOfBirth.Value);
-
         if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
-            query = query.Where(u => u.PhoneNumber == parameters.PhoneNumber);
-
-        // Cursor pagination
-        if (parameters.Cursor.HasValue)
-            query = query.Where(u => u.CreatedAt > parameters.Cursor.Value);
-
-        // ---------------- Query execution ----------------
-        var entities = await query
-            .OrderBy(u => u.CreatedAt)
-            .Take(parameters.PageSize + 1)
-            .Select(u => new UserDto
-            {
-                Id = u.Id,
-                FullName = u.FullName,
-                Email = u.Email ?? "",
-                Department = (Department) u.Department!,
-                CreatedAt = u.CreatedAt,
-                LastLoginAt = u.LastLoginAt,
-                ContactInfo = new ContactDetailsDto
-                {
-                    Email = u.ContactInfo.Email,
-                    PhoneNumber = u.ContactInfo.PhoneNumber,
-                    Socials = new SocialLinksDto
-                    {
-                        LinkedIn = u.ContactInfo.Socials.LinkedIn,
-                        Facebook = u.ContactInfo.Socials.Facebook,
-                        Instagram = u.ContactInfo.Socials.Instagram,
-                        YouTube = u.ContactInfo.Socials.YouTube
-                    }
-                }
-            })
-            .ToListAsync(cancellationToken);
-
-        // ---------------- Cursor handling ----------------
-        DateTime? nextCursor = null;
-        if (entities.Count > parameters.PageSize)
         {
-            nextCursor = entities.Last().CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
+            var phone = parameters.PhoneNumber.Trim();
+
+            query = query.Where(u => u.ContactDetails.PhoneNumber == phone);
         }
 
-        return new PagedList<UserDto, DateTime?>
-        {
-            Items = entities,
-            NextCursor = nextCursor
-        };
+        return query;
     }
 }

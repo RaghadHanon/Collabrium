@@ -1,4 +1,4 @@
-﻿using Infrastructure.Persistence.Entities.Infrastructure.Persistence.Entities;
+﻿using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Mapping;
 

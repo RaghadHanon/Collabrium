@@ -6,41 +6,37 @@ using System.Net;
 
 namespace Application.Features.Tenants.Commands;
 
-public sealed class ToggleTenantsActivation
+public class ToggleTenantsActivation
 {
-    public sealed class Command : IRequest<Result<bool>>
+    public class Command : IRequest<Result<bool>>
     {
-        public string? TenantId { get; init; }
+        public string? TenantId { get; set; }
     }
 
-    public sealed class Handler : IRequestHandler<Command, Result<bool>>
+    public class Handler(
+        ITenantRepository tenantRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork
+        ) : IRequestHandler<Command, Result<bool>>
     {
-        private readonly ITenantRepository _tenantRepository;
-        private readonly ITenantContext _tenantContext;
-        private readonly IUnitOfWork _uow;
-
-        public Handler(ITenantRepository tenantRepository, ITenantContext tenantContext, IUnitOfWork uow)
-        {
-            _tenantRepository = tenantRepository ?? throw new ArgumentNullException(nameof(tenantRepository));
-            _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
-            _uow = uow ?? throw new ArgumentNullException(nameof(uow));
-        }
-
         public async Task<Result<bool>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var tenantId = request.TenantId ?? _tenantContext.CurrentTenant?.Id;
-
+            var tenantId = request.TenantId ?? tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var newState = await _tenantRepository.ToggleActivationAsync(tenantId, cancellationToken);
-
-            if (newState is null)
+            var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
+            if (tenant is null)
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            await _uow.SaveChangesAsync(cancellationToken);
+            if (tenant.IsActive)
+                tenant.Deactivate();
+            else tenant.Activate();
 
-            return Result<bool>.Success(newState.Value, HttpStatusCode.OK);
+            await tenantRepository.UpdateAsync(tenant, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result<bool>.Success(tenant.IsActive, HttpStatusCode.OK);
         }
     }
 }

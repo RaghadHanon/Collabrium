@@ -7,36 +7,29 @@ using System.Net;
 
 namespace Application.Features.Tenants.Queries;
 
-public sealed class GetTenant
+public class GetTenant
 {
-    public sealed class Query : IRequest<Result<TenantWithAdminDto>>
+    public class Query : IRequest<Result<TenantWithAdminDto>>
     {
-        public string? TenantId { get; init; }
+        public string? TenantId { get; set; }
     }
 
-    public sealed class Handler : IRequestHandler<Query, Result<TenantWithAdminDto>>
+    public class Handler(
+        ITenantsReadModel tenantsReadModel,
+        ITenantContext tenantContext
+        ) : IRequestHandler<Query, Result<TenantWithAdminDto>>
     {
-        private readonly ITenantsReadModel _tenantsReadModel;
-        private readonly ITenantContext _tenantContext;
-
-        public Handler(ITenantsReadModel tenantsReadModel, ITenantContext tenantContext)
-        {
-            _tenantsReadModel = tenantsReadModel ?? throw new ArgumentNullException(nameof(tenantsReadModel));
-            _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
-        }
-
         public async Task<Result<TenantWithAdminDto>> Handle(Query request, CancellationToken cancellationToken)
         {
-            var tenantId = request.TenantId ?? _tenantContext.CurrentTenant?.Id;
+            var tenantId = request.TenantId ?? tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var dto = await _tenantsReadModel.GetWithAdminAsync(tenantId, cancellationToken);
+            var dto = await tenantsReadModel.GetWithAdminAsync(tenantId, cancellationToken);
 
-            if (dto is null)
-                return Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
-
-            return Result<TenantWithAdminDto>.Success(dto, HttpStatusCode.OK);
+            return dto is null
+                ? Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound)
+                : Result<TenantWithAdminDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

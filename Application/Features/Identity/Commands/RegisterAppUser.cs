@@ -1,9 +1,8 @@
 ﻿using Application.Common;
-using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
-using AutoMapper;
 using Domain.Enums;
 using MediatR;
 using System.Net;
@@ -23,8 +22,11 @@ public class RegisterAppUser
         public required string PhoneNumber { get; set; }
     }
 
-    public class Handler(IIdentityService identityService, ITenantContext tenantContext
-        , IMapper mapper) : IRequestHandler<Command, Result<UserWithTenantDto>>
+    public class Handler(
+        IIdentityService identityService,
+        ITenantContext tenantContext,
+        IUsersReadModel usersReadModel
+        ) : IRequestHandler<Command, Result<UserWithTenantDto>>
     {
         public async Task<Result<UserWithTenantDto>> Handle(Command request, CancellationToken cancellationToken)
         {
@@ -50,8 +52,7 @@ public class RegisterAppUser
                 request.PhoneNumber,
                 cancellationToken);
 
-            var dto = mapper.Map<UserWithTenantDto>(user);
-            dto.Tenant = mapper.Map<TenantDto>(tenant);
+            var dto = await usersReadModel.GetUserWithTenantAsync(user.Id, cancellationToken);
 
             return Result<UserWithTenantDto>.Success(dto, HttpStatusCode.Created);
         }

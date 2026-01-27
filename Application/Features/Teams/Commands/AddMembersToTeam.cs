@@ -16,7 +16,8 @@ public class AddMembersToTeam
 
     public class Handler(
         ITeamsRepository teamRepository,
-        ITenantContext tenantContext
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<string>>
     {
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
@@ -25,16 +26,10 @@ public class AddMembersToTeam
             if (tenant is null)
                 return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var memberIds = request.MemberIds
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Select(id => id.Trim())
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-
             try
             {
-                await teamRepository.AddMembersAsync(tenant.Id, request.TeamId, memberIds, cancellationToken);
-                await teamRepository.SaveChangesAsync(cancellationToken);
+                await teamRepository.AddMembersAsync(tenant.Id, request.TeamId, request.MemberIds, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
                 return Result<string>.Success("Members added successfully.", HttpStatusCode.OK);
             }
             catch (InvalidOperationException ex)

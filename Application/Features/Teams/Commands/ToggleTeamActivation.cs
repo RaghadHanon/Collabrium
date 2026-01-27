@@ -14,7 +14,8 @@ public class ToggleTeamActivation
 
     public class Handler(
         ITenantContext tenantContext,
-        ITeamsRepository teamsRepository
+        ITeamsRepository teamsRepository,
+        IUnitOfWork unitOfWork
         ) : IRequestHandler<Command, Result<bool>>
     {
         public async Task<Result<bool>> Handle(Command request, CancellationToken cancellationToken)
@@ -23,13 +24,18 @@ public class ToggleTeamActivation
             if (tenant is null)
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            await teamsRepository.ToggleActivationAsync(tenant.Id, request.TeamId, cancellationToken);
-            await teamsRepository.SaveChangesAsync(cancellationToken);
+            var team = await teamsRepository.GetByIdAsync(tenant.Id, request.TeamId, cancellationToken);
+            if (team is null)
+                return Result<bool>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
 
-            var updated = await teamsRepository.GetByIdAsync(tenant.Id, request.TeamId, cancellationToken);
-            return updated is null
-                ? Result<bool>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound)
-                : Result<bool>.Success(updated.IsActive, HttpStatusCode.OK);
+            if (team.IsActive)
+                team.Deactivate();
+            else team.Activate();
+
+            await teamsRepository.UpdateAsync(team);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result<bool>.Success(team.IsActive, HttpStatusCode.OK);
         }
     }
 }

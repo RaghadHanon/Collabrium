@@ -20,7 +20,7 @@ public static class TenantMapper
             country: entity.Country,
             websiteUrl: entity.WebsiteUrl,
             tenantAdminId: entity.TenantAdminId,
-            contactInfo: entity.ContactInfo.ToDomain(),
+            contactInfo: entity.ContactDetails.ToDomain(),
             profileImage: entity.ProfileImage.ToDomain()
         );
     }
@@ -44,7 +44,7 @@ public static class TenantMapper
                 WebsiteUrl = domain.WebsiteUrl,
                 TenantAdminId = domain.TenantAdminId,
 
-                ContactInfo = domain.ContactInfo.ToOwned(),
+                ContactDetails = domain.ContactInfo.ToOwned(),
                 ProfileImage = domain.ProfileImage.ToOwned()
             };
     }
@@ -63,7 +63,7 @@ public static class TenantMapper
         entity.WebsiteUrl = domain.WebsiteUrl;
         entity.TenantAdminId = domain.TenantAdminId;
 
-        entity.ContactInfo = domain.ContactInfo.ToOwned();
+        entity.ContactDetails = domain.ContactInfo.ToOwned();
         entity.ProfileImage = domain.ProfileImage.ToOwned();
 
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;

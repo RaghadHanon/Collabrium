@@ -53,46 +53,6 @@ public sealed class TenantRepository : ITenantRepository
         return true;
     }
 
-    public async Task<bool> UpdateProfileImageAsync(string tenantId, string url, string publicId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId)) return false;
-        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentNullException(nameof(url));
-        if (string.IsNullOrWhiteSpace(publicId)) throw new ArgumentNullException(nameof(publicId));
-
-        var id = tenantId.Trim();
-
-        var entity = await _dbContext.Tenants
-            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-
-        if (entity is null) return false;
-
-        entity.ProfileImage = new StoredImageOwned
-        {
-            Url = url.Trim(),
-            PublicId = publicId.Trim()
-        };
-
-        entity.UpdatedAt = DateTime.UtcNow;
-        return true;
-    }
-
-    public async Task<bool?> ToggleActivationAsync(string tenantId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId)) return null;
-
-        var id = tenantId.Trim();
-
-        var entity = await _dbContext.Tenants
-            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-
-        if (entity is null) return null;
-
-        entity.IsActive = !entity.IsActive;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        return entity.IsActive;
-    }
-
     public async Task<Tenant?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId)) return null;
@@ -215,7 +175,7 @@ public sealed class TenantRepository : ITenantRepository
         if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
         {
             var phone = parameters.PhoneNumber.Trim();
-            query = query.Where(t => t.ContactInfo.PhoneNumber == phone);
+            query = query.Where(t => t.ContactDetails.PhoneNumber == phone);
         }
 
         return query;

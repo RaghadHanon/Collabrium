@@ -1,6 +1,4 @@
-﻿using Application.Common;
-using Application.Features.Teams.DTOs;
-using Application.Interfaces.Repositories;
+﻿using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;
@@ -17,45 +15,19 @@ public sealed class TeamsRepository : ITeamsRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    // -----------------------
-    // Write
-    // -----------------------
-
     public async Task AddAsync(Team team, CancellationToken cancellationToken = default)
     {
-        if (team is null) throw new ArgumentNullException(nameof(team));
+        ArgumentNullException.ThrowIfNull(team);
 
         var entity = TeamMapper.ToEntity(team);
-
-        // ✅ add leader as member by default عبر join table
-        // lead لازم يكون member (domain invariant)، لكن DB كمان لازم يعكسه
-        entity.Members.Add(new TeamMemberEntity
-        {
-            TeamId = entity.Id,
-            UserId = team.TeamLeadId,
-            JoinedAt = DateTime.UtcNow
-        });
+        entity.Members.Add(CreateMemberRow(entity.Id, team.TeamLeadId));
 
         await _dbContext.Teams.AddAsync(entity, cancellationToken);
     }
 
-    public async Task<bool> RemoveAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
-            return false;
-
-        var entity = await _dbContext.Teams
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId.Trim() && t.Id == teamId.Trim(), cancellationToken);
-
-        if (entity is null) return false;
-
-        _dbContext.Teams.Remove(entity);
-        return true;
-    }
-
     public async Task UpdateAsync(Team team, CancellationToken cancellationToken = default)
     {
-        if (team is null) throw new ArgumentNullException(nameof(team));
+        ArgumentNullException.ThrowIfNull(team);
 
         var entity = await _dbContext.Teams
             .FirstOrDefaultAsync(t => t.Id == team.Id, cancellationToken);
@@ -66,18 +38,32 @@ public sealed class TeamsRepository : ITeamsRepository
         TeamMapper.UpdateEntity(team, entity);
     }
 
-    public async Task ToggleActivationAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    public async Task<bool> RemoveAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
-            return;
+        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+            return false;
 
         var entity = await _dbContext.Teams
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId.Trim() && t.Id == teamId.Trim(), cancellationToken);
+            .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
 
-        if (entity is null) return;
+        if (entity is null) return false;
 
-        entity.IsActive = !entity.IsActive;
-        entity.UpdatedAt = DateTime.UtcNow;
+        _dbContext.Teams.Remove(entity);
+        return true;
+    }
+
+    public async Task<Team?> GetByIdAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId)) return null;
+
+        var tenantIdNorm = tenantId.Trim();
+        var teamIdNorm = teamId.Trim();
+
+        var entity = await _dbContext.Teams
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TenantId == tenantIdNorm && t.Id == teamIdNorm, cancellationToken);
+
+        return entity is null ? null : TeamMapper.ToDomain(entity);
     }
 
     public async Task AddMembersAsync(
@@ -86,59 +72,30 @@ public sealed class TeamsRepository : ITeamsRepository
         IReadOnlyCollection<string> memberIds,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) throw new ArgumentNullException(nameof(tenantId));
-        if (string.IsNullOrWhiteSpace(teamId)) throw new ArgumentNullException(nameof(teamId));
-        if (memberIds is null || memberIds.Count == 0) return;
+        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+            throw new ArgumentNullException("tenantId/teamId");
 
-        tenantId = tenantId.Trim();
-        teamId = teamId.Trim();
-
-        var team = await _dbContext.Teams
-            .Include(t => t.Members) // join rows
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == teamId, cancellationToken);
-
-        if (team is null) throw new InvalidOperationException("Team not found.");
-        if (!team.IsActive) throw new InvalidOperationException("Cannot add members to an inactive team.");
-
-        var ids = memberIds
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
+        var ids = NormalizeUserIds(memberIds);
         if (ids.Count == 0) return;
 
-        // تأكد المستخدمين موجودين وبنفس tenant
-        var users = await _dbContext.Users
-            .AsNoTracking()
-            .Where(u => ids.Contains(u.Id))
-            .Select(u => new { u.Id, u.TenantId })
-            .ToListAsync(cancellationToken);
+        var teamEntity = await LoadTeamWithMembersOrThrow(tId, tmId, cancellationToken);
+        await EnsureUsersExistInTenantOrThrow(tId, ids, cancellationToken);
+        var teamDomain = TeamMapper.ToDomain(teamEntity);
 
-        if (users.Count != ids.Count)
-            throw new InvalidOperationException("One or more users were not found.");
+        foreach (var id in ids)
+            teamDomain.AddMember(id);
 
-        if (users.Any(u => u.TenantId != tenantId))
-            throw new InvalidOperationException("One or more users are not in the current tenant.");
+        var existing = teamEntity.Members
+            .Select(m => m.UserId)
+            .ToHashSet(StringComparer.Ordinal);
 
-        var existingIds = team.Members.Select(m => m.UserId).ToHashSet(StringComparer.Ordinal);
-        if (ids.Any(existingIds.Contains))
-            throw new InvalidOperationException("One or more users are already members of the team.");
-
-        if (team.Capacity.HasValue && existingIds.Count + ids.Count > team.Capacity.Value)
-            throw new InvalidOperationException("Adding these members exceeds the team capacity.");
-
-        foreach (var userId in ids)
+        foreach (var id in ids)
         {
-            team.Members.Add(new TeamMemberEntity
-            {
-                TeamId = team.Id,
-                UserId = userId,
-                JoinedAt = DateTime.UtcNow
-            });
+            if (existing.Contains(id)) continue;
+            teamEntity.Members.Add(CreateMemberRow(teamEntity.Id, id));
         }
 
-        team.UpdatedAt = DateTime.UtcNow;
+        TeamMapper.UpdateEntity(teamDomain, teamEntity);
     }
 
     public async Task RemoveMembersAsync(
@@ -147,178 +104,91 @@ public sealed class TeamsRepository : ITeamsRepository
         IReadOnlyCollection<string> memberIds,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) throw new ArgumentNullException(nameof(tenantId));
-        if (string.IsNullOrWhiteSpace(teamId)) throw new ArgumentNullException(nameof(teamId));
-        if (memberIds is null || memberIds.Count == 0) return;
+        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+            throw new ArgumentNullException("tenantId/teamId");
 
-        tenantId = tenantId.Trim();
-        teamId = teamId.Trim();
-
-        var team = await _dbContext.Teams
-            .Include(t => t.Members)
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == teamId, cancellationToken);
-
-        if (team is null) throw new InvalidOperationException("Team not found.");
-
-        var ids = memberIds
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
+        var ids = NormalizeUserIds(memberIds);
         if (ids.Count == 0) return;
 
-        // ما بنسمح حذف الـ lead
-        if (ids.Contains(team.TeamLeadId, StringComparer.Ordinal))
-            throw new InvalidOperationException("Cannot remove the team lead.");
+        var teamEntity = await LoadTeamWithMembersOrThrow(tId, tmId, cancellationToken);
 
-        var toRemove = team.Members.Where(m => ids.Contains(m.UserId)).ToList();
-        if (toRemove.Count == 0) return;
+        var teamDomain = TeamMapper.ToDomain(teamEntity);
+
+        foreach (var id in ids)
+            teamDomain.RemoveMember(id);
+
+        var toRemove = teamEntity.Members
+            .Where(m => ids.Contains(m.UserId, StringComparer.Ordinal))
+            .ToList();
 
         foreach (var row in toRemove)
-            team.Members.Remove(row);
+            teamEntity.Members.Remove(row);
 
-        team.UpdatedAt = DateTime.UtcNow;
+        TeamMapper.UpdateEntity(teamDomain, teamEntity);
     }
-
-    // -----------------------
-    // Read (Domain)
-    // -----------------------
-
-    public async Task<Team?> GetByIdAsync(string tenantId, string teamId, bool includeMembers = false, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
-            return null;
-
-        tenantId = tenantId.Trim();
-        teamId = teamId.Trim();
-
-        var query = _dbContext.Teams.AsNoTracking().AsQueryable();
-
-        if (includeMembers)
-            query = query.Include(t => t.Members);
-
-        var entity = await query
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == teamId, cancellationToken);
-
-        return entity is null ? null : TeamMapper.ToDomain(entity);
-    }
-
-    public async Task<IReadOnlyList<Team>> GetByTenantAsync(string tenantId, bool includeMembers = false, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return Array.Empty<Team>();
-
-        tenantId = tenantId.Trim();
-
-        var query = _dbContext.Teams.AsNoTracking().AsQueryable();
-
-        if (includeMembers)
-            query = query.Include(t => t.Members);
-
-        var entities = await query
-            .Where(t => t.TenantId == tenantId)
-            .ToListAsync(cancellationToken);
-
-        return entities.Select(TeamMapper.ToDomain).ToList();
-    }
-
-    public async Task<PagedList<Team, DateTime?>> GetPagedAsync(
-        TeamsSearchAndFilterParametersDto parameters,
-        CancellationToken cancellationToken = default)
-    {
-        parameters ??= new TeamsSearchAndFilterParametersDto();
-
-        var query = _dbContext.Teams
-            .AsNoTracking()
-            .AsQueryable();
-
-        query = ApplyFilters(query, parameters);
-
-        if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
-
-        var entities = await query
-            .OrderBy(t => t.CreatedAt)
-            .Take(parameters.PageSize + 1)
-            .ToListAsync(cancellationToken);
-
-        DateTime? nextCursor = null;
-        if (entities.Count > parameters.PageSize)
-        {
-            nextCursor = entities.Last().CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
-        }
-
-        return new PagedList<Team, DateTime?>
-        {
-            Items = entities.Select(TeamMapper.ToDomain).ToList(),
-            NextCursor = nextCursor
-        };
-    }
-
-    // -----------------------
-    // Rules checks
-    // -----------------------
 
     public async Task<bool> IsNameUniqueAsync(string tenantId, string name, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId)) return false;
         if (string.IsNullOrWhiteSpace(name)) return false;
 
-        tenantId = tenantId.Trim();
+        var tId = tenantId.Trim();
         var normalized = name.Trim().ToLowerInvariant();
 
         return !await _dbContext.Teams
             .AsNoTracking()
-            .AnyAsync(t => t.TenantId == tenantId && t.Name.ToLower() == normalized, cancellationToken);
+            .AnyAsync(t => t.TenantId == tId && t.Name.ToLower() == normalized, cancellationToken);
     }
 
-    // -----------------------
-    // Filters
-    // -----------------------
-
-    private static IQueryable<TeamEntity> ApplyFilters(IQueryable<TeamEntity> query, TeamsSearchAndFilterParametersDto parameters)
+    private static TeamMemberEntity CreateMemberRow(string teamId, string userId)
     {
-        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
-            query = query.Where(t => t.TenantId == parameters.TenantId.Trim());
-
-        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
+        return new()
         {
-            var term = parameters.NameContains.Trim();
-            query = query.Where(t => t.Name.Contains(term));
-        }
+            TeamId = teamId,
+            UserId = userId,
+            JoinedAt = DateTime.UtcNow
+        };
+    }
 
-        if (!string.IsNullOrWhiteSpace(parameters.DescriptionContains))
-        {
-            var term = parameters.DescriptionContains.Trim();
-            query = query.Where(t => t.Description != null && t.Description.Contains(term));
-        }
+    private static bool TryNormalizeIds(string tenantId, string teamId, out string tId, out string tmId)
+    {
+        tId = tenantId?.Trim() ?? "";
+        tmId = teamId?.Trim() ?? "";
+        return !string.IsNullOrWhiteSpace(tId) && !string.IsNullOrWhiteSpace(tmId);
+    }
 
-        if (parameters.Department.HasValue)
-            query = query.Where(t => t.Department == parameters.Department.Value);
+    private static List<string> NormalizeUserIds(IReadOnlyCollection<string>? memberIds)
+    {
+        return memberIds is null || memberIds.Count == 0
+            ? new List<string>()
+            : memberIds
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
 
-        if (parameters.IsActive.HasValue)
-            query = query.Where(t => t.IsActive == parameters.IsActive.Value);
+    private async Task<TeamEntity> LoadTeamWithMembersOrThrow(string tenantId, string teamId, CancellationToken ct)
+    {
+        var entity = await _dbContext.Teams
+            .Include(t => t.Members)
+            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == teamId, ct);
 
-        if (parameters.CapacityMin.HasValue)
-            query = query.Where(t => t.Capacity >= parameters.CapacityMin.Value);
+        return entity ?? throw new InvalidOperationException("Team not found.");
+    }
 
-        if (parameters.CapacityMax.HasValue)
-            query = query.Where(t => t.Capacity <= parameters.CapacityMax.Value);
+    private async Task EnsureUsersExistInTenantOrThrow(string tenantId, List<string> ids, CancellationToken ct)
+    {
+        var users = await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .Select(u => new { u.Id, u.TenantId })
+            .ToListAsync(ct);
 
-        if (parameters.UpdatedAfter.HasValue)
-            query = query.Where(t => t.UpdatedAt >= parameters.UpdatedAfter.Value);
+        if (users.Count != ids.Count)
+            throw new InvalidOperationException("One or more users were not found.");
 
-        if (parameters.UpdatedBefore.HasValue)
-            query = query.Where(t => t.UpdatedAt <= parameters.UpdatedBefore.Value);
-
-        if (parameters.CreatedAfter.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.CreatedAfter.Value);
-
-        if (parameters.CreatedBefore.HasValue)
-            query = query.Where(t => t.CreatedAt <= parameters.CreatedBefore.Value);
-
-        return query;
+        if (users.Any(u => u.TenantId != tenantId))
+            throw new InvalidOperationException("One or more users are not in the current tenant.");
     }
 }

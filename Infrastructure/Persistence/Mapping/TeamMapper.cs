@@ -9,7 +9,6 @@ public static class TeamMapper
     {
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        // TeamMemberEntity join table
         var memberIds =
             entity.Members?.Select(m => m.UserId) ??
             Enumerable.Empty<string>();

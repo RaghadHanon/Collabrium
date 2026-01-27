@@ -21,7 +21,7 @@ public class TenantConfiguration : IEntityTypeConfiguration<TenantEntity>
         builder.HasIndex(t => t.Name).IsUnique().HasDatabaseName("IX_Tenant_Name");
         builder.HasIndex(t => t.Domain).IsUnique().HasDatabaseName("IX_Tenant_Domain");
 
-        builder.OwnsOne(t => t.ContactInfo, ci =>
+        builder.OwnsOne(t => t.ContactDetails, ci =>
         {
             ci.Property(x => x.Email).HasMaxLength(256);
             ci.Property(x => x.PhoneNumber).HasMaxLength(50);
@@ -55,6 +55,11 @@ public class TenantConfiguration : IEntityTypeConfiguration<TenantEntity>
         builder.HasMany(t => t.Projects)
             .WithOne(p => p.Tenant)
             .HasForeignKey(p => p.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(t => t.TenantAdmin)
+            .WithMany()
+            .HasForeignKey(t => t.TenantAdminId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

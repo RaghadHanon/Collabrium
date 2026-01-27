@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Users.DTOs;
+using Application.Features.Tenants.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -13,83 +13,73 @@ namespace Application.Features.Tenants.Commands;
 
 public class RegisterTenantWithAdmin
 {
-    public sealed class Command : IRequest<Result<UserWithTenantDto>>
+    public class Command : IRequest<Result<TenantWithAdminDto>>
     {
-        public required string TenantName { get; init; }
-        public required string Domain { get; init; }
-        public required string Description { get; init; }
+        public required string TenantName { get; set; }
+        public required string Domain { get; set; }
+        public required string Description { get; set; }
 
-        public required string FullName { get; init; }
-        public required string Email { get; init; }
-        public required string Password { get; init; }
-        public DateOnly DateOfBirth { get; init; }
-        public required string PhoneNumber { get; init; }
+        public required string FullName { get; set; }
+        public required string Email { get; set; }
+        public required string Password { get; set; }
+        public DateOnly DateOfBirth { get; set; }
+        public required string PhoneNumber { get; set; }
     }
 
-    public sealed class Handler : IRequestHandler<Command, Result<UserWithTenantDto>>
+    public class Handler(
+        ITenantRepository tenantRepository,
+        IIdentityService identityService,
+        ITenantsReadModel tenantsReadModel,
+        IUnitOfWork unitOfWork
+    ) : IRequestHandler<Command, Result<TenantWithAdminDto>>
     {
-        private readonly ITenantRepository _tenantRepository;
-        private readonly IIdentityService _identityService;
-        private readonly IUsersReadModel _usersReadModel;
-        private readonly IUnitOfWork _uow;
-
-        public Handler(
-            ITenantRepository tenantRepository,
-            IIdentityService identityService,
-            IUsersReadModel usersReadModel,
-            IUnitOfWork uow)
+        public async Task<Result<TenantWithAdminDto>> Handle(Command request, CancellationToken cancellationToken)
         {
-            _tenantRepository = tenantRepository ?? throw new ArgumentNullException(nameof(tenantRepository));
-            _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
-            _usersReadModel = usersReadModel ?? throw new ArgumentNullException(nameof(usersReadModel));
-            _uow = uow ?? throw new ArgumentNullException(nameof(uow));
-        }
-
-        public async Task<Result<UserWithTenantDto>> Handle(Command request, CancellationToken cancellationToken)
-        {
-            // 1) business checks (write-model side)
-            if (!await _tenantRepository.IsDomainUniqueAsync(request.Domain, cancellationToken))
-                return Result<UserWithTenantDto>.Failure(
+            if (!await tenantRepository.IsDomainUniqueAsync(request.Domain, cancellationToken))
+                return Result<TenantWithAdminDto>.Failure(
                     "A tenant with this domain already exists.",
                     HttpStatusCode.BadRequest);
 
-            if (!await _tenantRepository.IsNameUniqueAsync(request.TenantName, cancellationToken))
-                return Result<UserWithTenantDto>.Failure(
+            if (!await tenantRepository.IsNameUniqueAsync(request.TenantName, cancellationToken))
+                return Result<TenantWithAdminDto>.Failure(
                     "A tenant with this name already exists.",
                     HttpStatusCode.BadRequest);
 
-            // 2) create tenant aggregate
-            var tenant = new Tenant(request.TenantName, request.Domain);
-            tenant.UpdateProfile(request.Description, country: null, websiteUrl: null);
+            Tenant tenant = null!;
+            string adminId = null!;
 
-            await _tenantRepository.AddAsync(tenant, cancellationToken);
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                tenant = new Tenant(request.TenantName, request.Domain);
+                tenant.UpdateProfile(request.Description, country: null, websiteUrl: null);
 
-            // 3) create admin user through Identity
-            var admin = await _identityService.RegisterUserAsync(
-                fullName: request.FullName,
-                department: Department.ITSupport,
-                password: request.Password,
-                dateOfBirth: request.DateOfBirth,
-                role: UserRole.TenantAdmin,
-                tenantId: tenant.Id,
-                email: request.Email,
-                phoneNumber: request.PhoneNumber);
+                await tenantRepository.AddAsync(tenant, ct);
 
-            // 4) assign admin to tenant
-            tenant.AssignAdmin(admin.Id);
-            await _tenantRepository.UpdateAsync(tenant, cancellationToken);
+                var admin = await identityService.RegisterUserAsync(
+                    fullName: request.FullName,
+                    department: Department.ITSupport,
+                    password: request.Password,
+                    dateOfBirth: request.DateOfBirth,
+                    role: UserRole.TenantAdmin,
+                    tenantId: tenant.Id,
+                    email: request.Email,
+                    phoneNumber: request.PhoneNumber,
+                    cancellationToken: ct);
 
-            // 5) persist (UOW)
-            await _uow.SaveChangesAsync(cancellationToken);
+                adminId = admin.Id;
 
-            // 6) read DTO (read-model side)
-            var dto = await _usersReadModel.GetUserWithTenantAsync(admin.Id, cancellationToken);
+                tenant.AssignAdmin(adminId);
+                await tenantRepository.UpdateAsync(tenant, ct);
+
+            }, cancellationToken);
+
+            var dto = await tenantsReadModel.GetWithAdminAsync(tenant.Id, cancellationToken);
 
             return dto is null
-                ? Result<UserWithTenantDto>.Failure(
-                    "User was created but could not be loaded.",
+                ? Result<TenantWithAdminDto>.Failure(
+                    "Tenant was created but could not be loaded.",
                     HttpStatusCode.InternalServerError)
-                : Result<UserWithTenantDto>.Success(dto, HttpStatusCode.Created);
+                : Result<TenantWithAdminDto>.Success(dto, HttpStatusCode.Created);
         }
     }
 }

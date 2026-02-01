@@ -2,7 +2,7 @@
 
 public enum TestEnvironment
 {
-    Software,
-    Hardware,
-    Network,
+    Software = 0,
+    Hardware = 1,
+    Network = 2,
 }

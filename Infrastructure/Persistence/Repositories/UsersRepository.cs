@@ -1,6 +1,4 @@
-﻿using Application.Common;
-using Application.Features.Users.DTOs;
-using Application.Interfaces.Repositories;
+﻿using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;
@@ -25,7 +23,6 @@ public sealed class UsersRepository : IUsersRepository
         if (string.IsNullOrWhiteSpace(userId)) return null;
 
         var id = userId.Trim();
-
         var entity = await DomainReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
@@ -167,15 +164,5 @@ public sealed class UsersRepository : IUsersRepository
     {
         return _dbContext.Users
             .AsQueryable();
-    }
-
-    public Task<List<User>> GetUsersByTenantAsync(string tenantId, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<PagedList<User, DateTime?>> GetUsersAsync(UsersSearchAndFilterParametersDto parameters, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
     }
 }

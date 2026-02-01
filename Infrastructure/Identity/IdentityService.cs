@@ -54,14 +54,6 @@ public sealed class IdentityService : IIdentityService
     CancellationToken cancellationToken = default)
     {
         var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
-
-        userEntity.ContactDetails = new ContactDetailsOwned
-        {
-            Email = email.Trim(),
-            PhoneNumber = phoneNumber?.Trim() ?? "",
-            Socials = new SocialLinksOwned()
-        };
-
         userEntity.MustChangePassword = role != UserRole.SuperAdmin;
 
         await CreateUserAsync(userEntity, password);
@@ -296,7 +288,7 @@ public sealed class IdentityService : IIdentityService
         string email,
         string phoneNumber)
     {
-        return new ApplicationUserEntity
+        var user = new ApplicationUserEntity
         {
             FullName = fullName.Trim(),
             Email = email.Trim(),
@@ -306,5 +298,14 @@ public sealed class IdentityService : IIdentityService
             DateOfBirth = dateOfBirth,
             PhoneNumber = phoneNumber?.Trim()
         };
+
+        user.ContactDetails = new ContactDetailsOwned
+        {
+            Email = email.Trim(),
+            PhoneNumber = phoneNumber?.Trim() ?? "",
+            Socials = new SocialLinksOwned()
+        };
+
+        return user;
     }
 }

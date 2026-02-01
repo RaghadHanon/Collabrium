@@ -68,7 +68,6 @@ public class UpdateTeam
                     );
 
                 await teamsRepository.UpdateAsync(team, ct);
-                await unitOfWork.SaveChangesAsync(ct);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

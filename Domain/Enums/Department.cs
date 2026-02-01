@@ -2,13 +2,13 @@
 
 public enum Department
 {
-    SoftwareDevelopment,
-    QualityAssurance,
-    ITSupport,
-    HumanResources,
-    ProductManagement,
-    Design,
-    ResearchAndDevelopment,
-    DevOps,
-    Administration
+    SoftwareDevelopment = 0,
+    QualityAssurance = 1,
+    ITSupport = 2,
+    HumanResources = 3,
+    ProductManagement = 4,
+    Design = 5,
+    ResearchAndDevelopment = 6,
+    DevOps = 7,
+    Administration = 8,
 }

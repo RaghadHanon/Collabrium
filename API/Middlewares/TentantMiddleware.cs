@@ -35,7 +35,7 @@ public class TenantMiddleware
 
         if (await userManager.IsInRoleAsync(user, "SuperAdmin"))
         {
-            var globalTenant = await tenantRepository.GetByDomainAsync("global.platform")
+            var globalTenant = await tenantContext.GetGlobalTenant()
                 ?? throw new Exception("Global tenant is not configured.");
 
             tenantContext.TenantId = globalTenant.Id;

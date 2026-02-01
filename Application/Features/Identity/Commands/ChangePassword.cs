@@ -13,7 +13,9 @@ public class ChangePassword
         public required string NewPassword { get; set; }
     }
 
-    public class Handler(IIdentityService identityService, ICurrentUserAccessor currentUserAccessor
+    public class Handler(
+        IIdentityService identityService,
+        ICurrentUserAccessor currentUserAccessor
         ) : IRequestHandler<Command, Result<string>>
     {
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)

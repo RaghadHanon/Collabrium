@@ -30,6 +30,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
                 s.Property(p => p.Facebook).HasMaxLength(300);
                 s.Property(p => p.Instagram).HasMaxLength(300);
                 s.Property(p => p.YouTube).HasMaxLength(300);
+                s.Property(p => p.Github).HasMaxLength(300);
             });
         });
 

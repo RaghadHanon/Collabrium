@@ -10,12 +10,7 @@ public interface IUsersRepository
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<User?> GetByUserNameAsync(string username, CancellationToken cancellationToken = default);
 
-    Task<List<User>> GetUsersByTenantAsync(string tenantId, CancellationToken cancellationToken = default);
     Task<List<User>> GetByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default);
-
-    Task<PagedList<User, DateTime?>> GetUsersAsync(
-        UsersSearchAndFilterParametersDto parameters,
-        CancellationToken cancellationToken = default);
 
     Task<bool> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);

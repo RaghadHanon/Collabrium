@@ -93,7 +93,7 @@ public sealed class User : Entity
     public void RecordLogin()
     {
         LastLoginAt = DateTime.UtcNow;
-        MustChangePassword = false;
+        //MustChangePassword = false;
         Touch();
     }
 

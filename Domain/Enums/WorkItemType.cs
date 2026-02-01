@@ -2,10 +2,10 @@
 
 public enum WorkItemType
 {
-    WorkItem,
-    Epic,
-    UserStory,
-    TaskItem,
-    Bug,
-    TestCase
+    WorkItem = 0,
+    Epic = 1,
+    UserStory = 2,
+    TaskItem = 3,
+    Bug = 4,
+    TestCase = 5,
 }

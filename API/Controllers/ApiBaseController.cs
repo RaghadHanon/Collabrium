@@ -69,6 +69,9 @@ public class ApiBaseController : ControllerBase
                 case HttpStatusCode.NoContent:
                     return NoContent();
 
+                case HttpStatusCode.Accepted:
+                    return Accepted();
+
                 default:
                     return Ok(result.Value);
             }

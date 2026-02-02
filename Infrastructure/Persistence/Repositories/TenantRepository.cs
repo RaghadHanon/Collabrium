@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Tenants.DTOs;
 using Application.Interfaces.Repositories;
-using Domain.Entities;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;
 using Microsoft.EntityFrameworkCore;
@@ -13,21 +13,19 @@ public sealed class TenantRepository : ITenantRepository
     private readonly AppDbContext _dbContext;
 
     public TenantRepository(AppDbContext dbContext)
-    {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
+        => _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
-    public async Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
+    public Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
-        if (tenant is null) throw new ArgumentNullException(nameof(tenant));
+        ArgumentNullException.ThrowIfNull(tenant);
 
-        var entity = TenantMapper.ToEntity(tenant);
-        await _dbContext.Tenants.AddAsync(entity, cancellationToken);
+        _dbContext.Tenants.Add(TenantMapper.ToEntity(tenant));
+        return Task.CompletedTask;
     }
 
     public async Task UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
-        if (tenant is null) throw new ArgumentNullException(nameof(tenant));
+        ArgumentNullException.ThrowIfNull(tenant);
 
         var entity = await _dbContext.Tenants
             .FirstOrDefaultAsync(t => t.Id == tenant.Id, cancellationToken);
@@ -40,9 +38,8 @@ public sealed class TenantRepository : ITenantRepository
 
     public async Task<bool> RemoveAsync(string tenantId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) return false;
-
-        var id = tenantId.Trim();
+        if (!TryNormalize(tenantId, out var id))
+            return false;
 
         var entity = await _dbContext.Tenants
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -55,9 +52,8 @@ public sealed class TenantRepository : ITenantRepository
 
     public async Task<Tenant?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) return null;
-
-        var id = tenantId.Trim();
+        if (!TryNormalize(tenantId, out var id))
+            return null;
 
         var entity = await _dbContext.Tenants
             .AsNoTracking()
@@ -68,9 +64,10 @@ public sealed class TenantRepository : ITenantRepository
 
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(domain)) return null;
+        if (!TryNormalize(domain, out var normalized))
+            return null;
 
-        var normalized = domain.Trim().ToLowerInvariant();
+        normalized = normalized.ToLowerInvariant();
 
         var entity = await _dbContext.Tenants
             .AsNoTracking()
@@ -84,25 +81,23 @@ public sealed class TenantRepository : ITenantRepository
         CancellationToken cancellationToken = default)
     {
         parameters ??= new TenantsSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        var query = _dbContext.Tenants
-            .AsNoTracking()
-            .AsQueryable();
-
+        IQueryable<TenantEntity> query = _dbContext.Tenants.AsNoTracking();
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(t => t.CreatedAt > parameters.Cursor.Value);
 
         var entities = await query
             .OrderBy(t => t.CreatedAt)
-            .Take(parameters.PageSize + 1)
+            .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (entities.Count > parameters.PageSize)
+        if (entities.Count > pageSize)
         {
-            nextCursor = entities.Last().CreatedAt;
+            nextCursor = entities[^1].CreatedAt;
             entities.RemoveAt(entities.Count - 1);
         }
 
@@ -115,9 +110,10 @@ public sealed class TenantRepository : ITenantRepository
 
     public async Task<bool> IsNameUniqueAsync(string name, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(name)) return false;
+        if (!TryNormalize(name, out var normalized))
+            return false;
 
-        var normalized = name.Trim().ToLowerInvariant();
+        normalized = normalized.ToLowerInvariant();
 
         return !await _dbContext.Tenants
             .AsNoTracking()
@@ -126,55 +122,60 @@ public sealed class TenantRepository : ITenantRepository
 
     public async Task<bool> IsDomainUniqueAsync(string domain, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(domain)) return false;
+        if (!TryNormalize(domain, out var normalized))
+            return false;
 
-        var normalized = domain.Trim().ToLowerInvariant();
+        normalized = normalized.ToLowerInvariant();
 
         return !await _dbContext.Tenants
             .AsNoTracking()
             .AnyAsync(t => t.Domain == normalized, cancellationToken);
     }
 
-    private static IQueryable<TenantEntity> ApplyFilters(
-        IQueryable<TenantEntity> query,
-        TenantsSearchAndFilterParametersDto parameters)
+    private static bool TryNormalize(string? value, out string normalized)
     {
-        if (!string.IsNullOrWhiteSpace(parameters.Country))
+        normalized = value?.Trim() ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(normalized);
+    }
+
+    private static IQueryable<TenantEntity> ApplyFilters(IQueryable<TenantEntity> query, TenantsSearchAndFilterParametersDto p)
+    {
+        if (!string.IsNullOrWhiteSpace(p.Country))
         {
-            var country = parameters.Country.Trim().ToLowerInvariant();
+            var country = p.Country.Trim().ToLowerInvariant();
             query = query.Where(t => t.Country != null && t.Country.ToLower() == country);
         }
 
-        if (!string.IsNullOrWhiteSpace(parameters.DescriptionContains))
+        if (!string.IsNullOrWhiteSpace(p.DescriptionContains))
         {
-            var term = parameters.DescriptionContains.Trim();
+            var term = p.DescriptionContains.Trim();
             query = query.Where(t => t.Description != null && t.Description.Contains(term));
         }
 
-        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
+        if (!string.IsNullOrWhiteSpace(p.NameContains))
         {
-            var term = parameters.NameContains.Trim();
+            var term = p.NameContains.Trim();
             query = query.Where(t => t.Name.Contains(term));
         }
 
-        if (!string.IsNullOrWhiteSpace(parameters.DomainContains))
+        if (!string.IsNullOrWhiteSpace(p.DomainContains))
         {
-            var term = parameters.DomainContains.Trim();
+            var term = p.DomainContains.Trim().ToLowerInvariant();
             query = query.Where(t => t.Domain.Contains(term));
         }
 
-        if (parameters.IsActive.HasValue)
-            query = query.Where(t => t.IsActive == parameters.IsActive.Value);
+        if (p.IsActive.HasValue)
+            query = query.Where(t => t.IsActive == p.IsActive.Value);
 
-        if (parameters.CreatedAfter.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.CreatedAfter.Value);
+        if (p.CreatedAfter.HasValue)
+            query = query.Where(t => t.CreatedAt >= p.CreatedAfter.Value);
 
-        if (parameters.CreatedBefore.HasValue)
-            query = query.Where(t => t.CreatedAt <= parameters.CreatedBefore.Value);
+        if (p.CreatedBefore.HasValue)
+            query = query.Where(t => t.CreatedAt <= p.CreatedBefore.Value);
 
-        if (!string.IsNullOrWhiteSpace(parameters.PhoneNumber))
+        if (!string.IsNullOrWhiteSpace(p.PhoneNumber))
         {
-            var phone = parameters.PhoneNumber.Trim();
+            var phone = p.PhoneNumber.Trim();
             query = query.Where(t => t.ContactDetails.PhoneNumber == phone);
         }
 

@@ -40,7 +40,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
     /// <response code="404">If the tenant does not exist.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
     [HttpPost("team")]
     public async Task<ActionResult<string>> CreateTeam(CreateTeamRequest request)
     {
@@ -106,11 +106,48 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If the team or any user is not found in the tenant.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
     [HttpPost("team/members")]
     public async Task<ActionResult<string>> AddMembersToTeam(AddMembersToTeamRequest request)
     {
         var command = Mapper.Map<AddMembersToTeam.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Removes members from an existing team within the current tenant.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows authorized roles to remove one or more users from a team.
+    /// The operation is scoped to the current tenant context.
+    ///
+    /// Sample request:
+    ///
+    ///     PATCH /api/teams/team/members
+    ///     Content-Type: application/json
+    ///
+    ///     {
+    ///       "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    ///       "memberIds": [
+    ///         "11111111-1111-1111-1111-111111111111",
+    ///         "22222222-2222-2222-2222-222222222222"
+    ///       ]
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="request">The team id and the member ids to remove.</param>
+    /// <returns>A success message if members were removed.</returns>
+    /// <response code="200">Members were removed successfully.</response>
+    /// <response code="400">If validation fails.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized.</response>
+    /// <response code="404">If the team or any user is not found in the tenant.</response>
+    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [HttpPatch("team/members")]
+    public async Task<ActionResult<string>> RemoveMembersToTeam(RemoveMembersFromTeamRequest request)
+    {
+        var command = Mapper.Map<RemoveMembersFromTeam.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -173,7 +210,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If tenant, team, or team lead is not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
     [HttpPatch("team/{id}")]
     public async Task<ActionResult> UpdateTeam(string id, UpdateTeamRequest request)
     {
@@ -201,7 +238,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If the team with the specified ID does not exist.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerOrTenantAdmin)]
+    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {

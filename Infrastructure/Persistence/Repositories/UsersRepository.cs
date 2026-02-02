@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces.Repositories;
-using Domain.Entities;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;
 using Microsoft.AspNetCore.Identity;
@@ -20,10 +20,10 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId)) return null;
+        if (!TryNormalize(userId, out var id))
+            return null;
 
-        var id = userId.Trim();
-        var entity = await DomainReadOnlyQuery()
+        var entity = await ReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
@@ -31,11 +31,10 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(email)) return null;
+        if (!TryNormalize(email, out var normalized))
+            return null;
 
-        var normalized = email.Trim();
-
-        var entity = await DomainReadOnlyQuery()
+        var entity = await ReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.Email == normalized, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
@@ -43,11 +42,10 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByUserNameAsync(string username, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(username)) return null;
+        if (!TryNormalize(username, out var normalized))
+            return null;
 
-        var normalized = username.Trim();
-
-        var entity = await DomainReadOnlyQuery()
+        var entity = await ReadOnlyQuery()
             .FirstOrDefaultAsync(u => u.UserName == normalized, cancellationToken);
 
         return entity is null ? null : UserMapper.ToDomain(entity);
@@ -55,17 +53,17 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<List<User>> GetByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default)
     {
-        if (userIds is null) return new List<User>();
+        if (userIds is null) return new();
 
         var ids = userIds
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Select(id => id.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
-        if (ids.Count == 0) return new List<User>();
+        if (ids.Count == 0) return new();
 
-        var entities = await DomainReadOnlyQuery()
+        var entities = await ReadOnlyQuery()
             .Where(u => ids.Contains(u.Id))
             .ToListAsync(cancellationToken);
 
@@ -74,48 +72,39 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<bool> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
     {
-        if (user is null) throw new ArgumentNullException(nameof(user));
-        if (string.IsNullOrWhiteSpace(password)) throw new ArgumentNullException(nameof(password));
+        ArgumentNullException.ThrowIfNull(user);
+        if (!TryNormalize(password, out _))
+            throw new ArgumentNullException(nameof(password));
 
         var entity = UserMapper.ToEntity(user);
-        var result = await _userManager.CreateAsync(entity, password);
 
+        var result = await _userManager.CreateAsync(entity, password);
         if (!result.Succeeded)
-        {
-            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Failed to create user: {msg}");
-        }
+            throw new InvalidOperationException($"Failed to create user: {JoinErrors(result)}");
 
         return true;
     }
 
     public async Task<bool> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        if (!TryNormalize(userId, out var id))
             return false;
-
-        var id = userId.Trim();
 
         var entity = await _userManager.Users
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
-        if (entity is null)
-            return false;
+        if (entity is null) return false;
 
         var result = await _userManager.DeleteAsync(entity);
-
         if (!result.Succeeded)
-        {
-            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Failed to delete user: {msg}");
-        }
+            throw new InvalidOperationException($"Failed to delete user: {JoinErrors(result)}");
 
         return true;
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
-        if (user is null) throw new ArgumentNullException(nameof(user));
+        ArgumentNullException.ThrowIfNull(user);
 
         var entity = await _userManager.Users
             .FirstOrDefaultAsync(u => u.Id == user.Id, cancellationToken);
@@ -127,42 +116,38 @@ public sealed class UsersRepository : IUsersRepository
 
         var result = await _userManager.UpdateAsync(entity);
         if (!result.Succeeded)
-        {
-            var msg = string.Join("; ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"Failed to update user: {msg}");
-        }
+            throw new InvalidOperationException($"Failed to update user: {JoinErrors(result)}");
     }
 
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(email)) return false;
-        var normalized = email.Trim();
+        if (!TryNormalize(email, out var normalized))
+            return false;
 
-        return await _dbContext.Users
+        return !await _dbContext.Users
             .AsNoTracking()
-            .AnyAsync(u => u.Email == normalized, cancellationToken) == false;
+            .AnyAsync(u => u.Email == normalized, cancellationToken);
     }
 
     public async Task<bool> IsUserNameUniqueAsync(string username, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(username)) return false;
-        var normalized = username.Trim();
+        if (!TryNormalize(username, out var normalized))
+            return false;
 
-        return await _dbContext.Users
+        return !await _dbContext.Users
             .AsNoTracking()
-            .AnyAsync(u => u.UserName == normalized, cancellationToken) == false;
+            .AnyAsync(u => u.UserName == normalized, cancellationToken);
     }
 
-    private IQueryable<ApplicationUserEntity> DomainReadOnlyQuery()
+    private IQueryable<ApplicationUserEntity> ReadOnlyQuery()
+        => _dbContext.Users.AsNoTracking();
+
+    private static bool TryNormalize(string? value, out string normalized)
     {
-        return _dbContext.Users
-            .AsNoTracking()
-            .AsQueryable();
+        normalized = value?.Trim() ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(normalized);
     }
 
-    private IQueryable<ApplicationUserEntity> DomainQuery()
-    {
-        return _dbContext.Users
-            .AsQueryable();
-    }
+    private static string JoinErrors(IdentityResult result)
+        => string.Join("; ", result.Errors.Select(e => e.Description));
 }

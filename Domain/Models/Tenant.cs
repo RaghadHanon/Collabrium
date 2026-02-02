@@ -1,7 +1,7 @@
 ﻿using Domain.Common;
 using Domain.ValueObjects;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
 public sealed class Tenant : Entity
 {

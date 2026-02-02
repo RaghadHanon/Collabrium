@@ -2,7 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Services;
-using Domain.Entities;
+using Domain.Models;
 using Domain.Enums;
 using Infrastructure.Email;
 using Infrastructure.Persistence;

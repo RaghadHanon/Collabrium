@@ -60,6 +60,6 @@ public class TenantConfiguration : IEntityTypeConfiguration<TenantEntity>
         builder.HasOne(t => t.TenantAdmin)
             .WithMany()
             .HasForeignKey(t => t.TenantAdminId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

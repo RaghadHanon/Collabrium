@@ -1,6 +1,6 @@
 ﻿using Domain.Common;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
 public sealed class ProjectHistory : Entity
 {

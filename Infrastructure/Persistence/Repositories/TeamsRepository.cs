@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces.Repositories;
-using Domain.Entities;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +20,7 @@ public sealed class TeamsRepository : ITeamsRepository
         ArgumentNullException.ThrowIfNull(team);
 
         var entity = TeamMapper.ToEntity(team);
+
         entity.Members.Add(CreateMemberRow(entity.Id, team.TeamLeadId));
 
         await _dbContext.Teams.AddAsync(entity, cancellationToken);
@@ -33,14 +34,14 @@ public sealed class TeamsRepository : ITeamsRepository
             .FirstOrDefaultAsync(t => t.Id == team.Id, cancellationToken);
 
         if (entity is null)
-            throw new InvalidOperationException($"Team '{team.Id}' was not found.");
+            throw new InvalidOperationException("Team not found.");
 
         TeamMapper.UpdateEntity(team, entity);
     }
 
     public async Task<bool> RemoveAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
     {
-        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+        if (!TryNormalize(tenantId, teamId, out var tId, out var tmId))
             return false;
 
         var entity = await _dbContext.Teams
@@ -54,14 +55,12 @@ public sealed class TeamsRepository : ITeamsRepository
 
     public async Task<Team?> GetByIdAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId)) return null;
-
-        var tenantIdNorm = tenantId.Trim();
-        var teamIdNorm = teamId.Trim();
+        if (!TryNormalize(tenantId, teamId, out var tId, out var tmId))
+            return null;
 
         var entity = await _dbContext.Teams
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TenantId == tenantIdNorm && t.Id == teamIdNorm, cancellationToken);
+            .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
 
         return entity is null ? null : TeamMapper.ToDomain(entity);
     }
@@ -72,16 +71,22 @@ public sealed class TeamsRepository : ITeamsRepository
         IReadOnlyCollection<string> memberIds,
         CancellationToken cancellationToken = default)
     {
-        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+        if (!TryNormalize(tenantId, teamId, out var tId, out var tmId))
             throw new ArgumentNullException("tenantId/teamId");
 
-        var ids = NormalizeUserIds(memberIds);
+        var ids = NormalizeIds(memberIds);
         if (ids.Count == 0) return;
 
-        var teamEntity = await LoadTeamWithMembersOrThrow(tId, tmId, cancellationToken);
-        await EnsureUsersExistInTenantOrThrow(tId, ids, cancellationToken);
-        var teamDomain = TeamMapper.ToDomain(teamEntity);
+        var teamEntity = await _dbContext.Teams
+            .Include(t => t.Members) 
+            .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
 
+        if (teamEntity is null)
+            throw new InvalidOperationException("Team not found.");
+
+        await EnsureUsersExistInTenantAsync(tId, ids, cancellationToken);
+
+        var teamDomain = TeamMapper.ToDomain(teamEntity);
         foreach (var id in ids)
             teamDomain.AddMember(id);
 
@@ -104,18 +109,22 @@ public sealed class TeamsRepository : ITeamsRepository
         IReadOnlyCollection<string> memberIds,
         CancellationToken cancellationToken = default)
     {
-        if (!TryNormalizeIds(tenantId, teamId, out var tId, out var tmId))
+        if (!TryNormalize(tenantId, teamId, out var tId, out var tmId))
             throw new ArgumentNullException("tenantId/teamId");
 
-        var ids = NormalizeUserIds(memberIds);
+        var ids = NormalizeIds(memberIds);
         if (ids.Count == 0) return;
 
-        var teamEntity = await LoadTeamWithMembersOrThrow(tId, tmId, cancellationToken);
+        var teamEntity = await _dbContext.Teams
+            .Include(t => t.Members)
+            .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
+
+        if (teamEntity is null)
+            throw new InvalidOperationException("Team not found.");
 
         var teamDomain = TeamMapper.ToDomain(teamEntity);
-
         foreach (var id in ids)
-            teamDomain.RemoveMember(id);
+            teamDomain.RemoveMember(id); 
 
         var toRemove = teamEntity.Members
             .Where(m => ids.Contains(m.UserId, StringComparer.Ordinal))
@@ -140,55 +149,44 @@ public sealed class TeamsRepository : ITeamsRepository
             .AnyAsync(t => t.TenantId == tId && t.Name.ToLower() == normalized, cancellationToken);
     }
 
-    private static TeamMemberEntity CreateMemberRow(string teamId, string userId)
-    {
-        return new()
+    private static TeamMemberEntity CreateMemberRow(string teamId, string userId) =>
+        new()
         {
             TeamId = teamId,
             UserId = userId,
             JoinedAt = DateTime.UtcNow
         };
-    }
 
-    private static bool TryNormalizeIds(string tenantId, string teamId, out string tId, out string tmId)
+    private static bool TryNormalize(string tenantId, string teamId, out string tId, out string tmId)
     {
         tId = tenantId?.Trim() ?? "";
         tmId = teamId?.Trim() ?? "";
         return !string.IsNullOrWhiteSpace(tId) && !string.IsNullOrWhiteSpace(tmId);
     }
 
-    private static List<string> NormalizeUserIds(IReadOnlyCollection<string>? memberIds)
+    private static List<string> NormalizeIds(IReadOnlyCollection<string>? ids)
     {
-        return memberIds is null || memberIds.Count == 0
-            ? new List<string>()
-            : memberIds
+        if (ids is null || ids.Count == 0) return new();
+
+        return ids
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())
             .Distinct(StringComparer.Ordinal)
             .ToList();
     }
 
-    private async Task<TeamEntity> LoadTeamWithMembersOrThrow(string tenantId, string teamId, CancellationToken ct)
-    {
-        var entity = await _dbContext.Teams
-            .Include(t => t.Members)
-            .FirstOrDefaultAsync(t => t.TenantId == tenantId && t.Id == teamId, ct);
-
-        return entity ?? throw new InvalidOperationException("Team not found.");
-    }
-
-    private async Task EnsureUsersExistInTenantOrThrow(string tenantId, List<string> ids, CancellationToken ct)
+    private async Task EnsureUsersExistInTenantAsync(string tenantId, List<string> userIds, CancellationToken ct)
     {
         var users = await _dbContext.Users
             .AsNoTracking()
-            .Where(u => ids.Contains(u.Id))
+            .Where(u => userIds.Contains(u.Id))
             .Select(u => new { u.Id, u.TenantId })
             .ToListAsync(ct);
 
-        if (users.Count != ids.Count)
+        if (users.Count != userIds.Count)
             throw new InvalidOperationException("One or more users were not found.");
 
-        if (users.Any(u => u.TenantId != tenantId))
+        if (users.Any(u => !string.Equals(u.TenantId, tenantId, StringComparison.Ordinal)))
             throw new InvalidOperationException("One or more users are not in the current tenant.");
     }
 }

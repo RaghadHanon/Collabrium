@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 

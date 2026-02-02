@@ -62,13 +62,19 @@ public static class ServiceCollectionExtensions
                          nameof(UserRole.TeamLead),
                          nameof(UserRole.BusinessAnalyst)
                      ));
+            options.AddPolicy(Policies.ProductOwnerTeamLeadTenantAdmin, p =>
+                     p.RequireRole(
+                         nameof(UserRole.ProductOwner),
+                         nameof(UserRole.TeamLead),
+                         nameof(UserRole.TenantAdmin)
+                     ));
             options.AddPolicy(Policies.ProductTeamMember, p =>
                     p.RequireRole(
                         nameof(UserRole.BackendDev),
                         nameof(UserRole.QA),
                         nameof(UserRole.FrontendDev)
                     ));
-            options.AddPolicy(Policies.ProductTeamManagerOrTenantAdmin, p =>
+            options.AddPolicy(Policies.ProductTeamManagerTenantAdmin, p =>
                     p.RequireRole(
                         nameof(UserRole.ProductOwner),
                         nameof(UserRole.TeamLead),

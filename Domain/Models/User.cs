@@ -2,7 +2,7 @@
 using Domain.Enums;
 using Domain.ValueObjects;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
 public sealed class User : Entity
 {

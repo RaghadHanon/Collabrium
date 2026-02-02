@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 using Domain.Enums;
 
 namespace Application.Interfaces.Services;

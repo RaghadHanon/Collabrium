@@ -168,13 +168,21 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<string>("TeamId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("TenantId")
@@ -745,7 +753,8 @@ namespace Infrastructure.Migrations
 
                                     b2.Property<string>("Github")
                                         .IsRequired()
-                                        .HasColumnType("nvarchar(max)");
+                                        .HasMaxLength(300)
+                                        .HasColumnType("nvarchar(300)");
 
                                     b2.Property<string>("Instagram")
                                         .IsRequired()
@@ -835,8 +844,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
                         .WithMany("Projects")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
                         .WithMany("Projects")
@@ -924,7 +932,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "TenantAdmin")
                         .WithMany()
                         .HasForeignKey("TenantAdminId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
                         {

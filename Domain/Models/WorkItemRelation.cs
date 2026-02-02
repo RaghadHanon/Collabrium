@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
 public sealed class WorkItemRelation : Entity
 {

@@ -1,0 +1,132 @@
+﻿using Application.Common;
+using Application.Features.Projects.DTOs;
+using Application.Features.WorkItems.DTOs;
+using Application.Interfaces.ReadModels;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Persistence.ReadModels;
+
+public sealed class ProjectsReadModel : IProjectsReadModel
+{
+    private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
+
+    public ProjectsReadModel(AppDbContext dbContext, IMapper mapper)
+    {
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    }
+
+    public Task<ProjectDto?> GetByIdAsync(string tenantId, string projectId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return Task.FromResult<ProjectDto?>(null);
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+
+        return _dbContext.Projects
+            .AsNoTracking()
+            .Where(p => p.TenantId == tId && p.Id == pId)
+            .ProjectTo<ProjectDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<PagedList<ProjectDto, DateTime?>> GetProjectsAsync(
+        ProjectsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
+    {
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        IQueryable<ProjectEntity> query = _dbContext.Projects.AsNoTracking();
+
+        query = ApplyFilters(query, parameters);
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(p => p.CreatedAt >= parameters.Cursor.Value);
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .ProjectTo<ProjectDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items[^1].CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<ProjectDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
+    public async Task<IReadOnlyList<WorkItemDto>> GetBacklogAsync(
+        string tenantId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return Array.Empty<WorkItemDto>();
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+
+        return await _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(w => w.ProjectId == pId && w.SprintId == null)
+            .OrderBy(w => w.CreatedAt)
+            .ProjectTo<WorkItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
+    private static IQueryable<ProjectEntity> ApplyFilters(
+        IQueryable<ProjectEntity> query,
+        ProjectsSearchAndFilterParametersDto p)
+    {
+        if (!string.IsNullOrWhiteSpace(p.TeamId))
+        {
+            var teamId = p.TeamId.Trim();
+            query = query.Where(x => x.TeamId == teamId);
+        }
+
+        if (p.AssignedToTeam)
+            query = query.Where(x => x.TeamId != null);
+
+        if (!string.IsNullOrWhiteSpace(p.NameContains))
+        {
+            var term = p.NameContains.Trim();
+            query = query.Where(x => x.Name.Contains(term));
+        }
+
+        if (p.Status.HasValue)
+            query = query.Where(x => x.Status == p.Status.Value);
+
+        if (p.StartAfter.HasValue)
+            query = query.Where(x => x.StartDate != null && x.StartDate >= p.StartAfter.Value);
+
+        if (p.StartBefore.HasValue)
+            query = query.Where(x => x.StartDate != null && x.StartDate <= p.StartBefore.Value);
+
+        if (p.EndAfter.HasValue)
+            query = query.Where(x => x.EndDate != null && x.EndDate >= p.EndAfter.Value);
+
+        if (p.EndBefore.HasValue)
+            query = query.Where(x => x.EndDate != null && x.EndDate <= p.EndBefore.Value);
+
+        if (p.CreatedAfter.HasValue)
+            query = query.Where(x => x.CreatedAt >= p.CreatedAfter.Value);
+
+        if (p.CreatedBefore.HasValue)
+            query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
+
+        return query;
+    }
+}

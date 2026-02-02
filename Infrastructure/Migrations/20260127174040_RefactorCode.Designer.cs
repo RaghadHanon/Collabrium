@@ -25,7 +25,7 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ApplicationUserEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -123,7 +123,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.CommentEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -156,7 +156,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -198,7 +198,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectHistoryEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -235,7 +235,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("ProjectHistories");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.SprintEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -271,7 +271,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Sprints");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TeamEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -320,7 +320,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamMemberEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TeamMemberEntity", b =>
                 {
                     b.Property<string>("TeamId")
                         .HasColumnType("nvarchar(450)");
@@ -338,7 +338,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("TeamMembers");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TenantEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -387,7 +387,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Tenants");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.WorkItemEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -464,7 +464,7 @@ namespace Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.WorkItemRelationEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -630,9 +630,9 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.BugEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.BugEntity", b =>
                 {
-                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
+                    b.HasBaseType("Infrastructure.Persistence.Models.WorkItemEntity");
 
                     b.Property<string>("ActualResult")
                         .HasColumnType("nvarchar(max)");
@@ -656,23 +656,23 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(4);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.EpicEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.EpicEntity", b =>
                 {
-                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
+                    b.HasBaseType("Infrastructure.Persistence.Models.WorkItemEntity");
 
                     b.HasDiscriminator().HasValue(1);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TaskItemEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TaskItemEntity", b =>
                 {
-                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
+                    b.HasBaseType("Infrastructure.Persistence.Models.WorkItemEntity");
 
                     b.HasDiscriminator().HasValue(3);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TestCaseEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TestCaseEntity", b =>
                 {
-                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
+                    b.HasBaseType("Infrastructure.Persistence.Models.WorkItemEntity");
 
                     b.Property<string>("ActualResult")
                         .HasColumnType("nvarchar(max)");
@@ -695,9 +695,9 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(5);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserStoryEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.UserStoryEntity", b =>
                 {
-                    b.HasBaseType("Infrastructure.Persistence.Entities.WorkItemEntity");
+                    b.HasBaseType("Infrastructure.Persistence.Models.WorkItemEntity");
 
                     b.Property<int>("StoryPoints")
                         .HasColumnType("int");
@@ -705,14 +705,14 @@ namespace Infrastructure.Migrations
                     b.HasDiscriminator().HasValue(2);
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ApplicationUserEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Models.TenantEntity", "Tenant")
                         .WithMany("Users")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Models.ContactDetailsOwned", "ContactDetails", b1 =>
                         {
                             b1.Property<string>("ApplicationUserEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -734,7 +734,7 @@ namespace Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("ApplicationUserEntityId");
 
-                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                            b1.OwnsOne("Infrastructure.Persistence.Models.SocialLinksOwned", "Socials", b2 =>
                                 {
                                     b2.Property<string>("ContactDetailsOwnedApplicationUserEntityId")
                                         .HasColumnType("nvarchar(450)");
@@ -775,7 +775,7 @@ namespace Infrastructure.Migrations
                                 .IsRequired();
                         });
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Models.StoredImageOwned", "ProfileImage", b1 =>
                         {
                             b1.Property<string>("ApplicationUserEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -806,15 +806,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.CommentEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
+                    b.HasOne("Infrastructure.Persistence.Models.WorkItemEntity", "WorkItem")
                         .WithMany("Comments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -825,21 +825,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorkItem");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "CreatedByUser")
                         .WithMany("Projects")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
+                    b.HasOne("Infrastructure.Persistence.Models.TeamEntity", "Team")
                         .WithMany("Projects")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Models.TenantEntity", "Tenant")
                         .WithMany("Projects")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -852,15 +852,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectHistoryEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ChangedByUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "ChangedByUser")
                         .WithMany()
                         .HasForeignKey("ChangedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
+                    b.HasOne("Infrastructure.Persistence.Models.ProjectEntity", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -871,9 +871,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.SprintEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
+                    b.HasOne("Infrastructure.Persistence.Models.ProjectEntity", "Project")
                         .WithMany("Sprints")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -882,15 +882,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TeamEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "TeamLead")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "TeamLead")
                         .WithMany()
                         .HasForeignKey("TeamLeadId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                    b.HasOne("Infrastructure.Persistence.Models.TenantEntity", "Tenant")
                         .WithMany("Teams")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -901,15 +901,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamMemberEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TeamMemberEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
+                    b.HasOne("Infrastructure.Persistence.Models.TeamEntity", "Team")
                         .WithMany("Members")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "User")
                         .WithMany("TeamMemberships")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -920,9 +920,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TenantEntity", b =>
                 {
-                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Models.ContactDetailsOwned", "ContactDetails", b1 =>
                         {
                             b1.Property<string>("TenantEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -944,7 +944,7 @@ namespace Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("TenantEntityId");
 
-                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                            b1.OwnsOne("Infrastructure.Persistence.Models.SocialLinksOwned", "Socials", b2 =>
                                 {
                                     b2.Property<string>("ContactDetailsOwnedTenantEntityId")
                                         .HasColumnType("nvarchar(450)");
@@ -985,7 +985,7 @@ namespace Infrastructure.Migrations
                                 .IsRequired();
                         });
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Models.StoredImageOwned", "ProfileImage", b1 =>
                         {
                             b1.Property<string>("TenantEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -1014,26 +1014,26 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProfileImage");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.WorkItemEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedToUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "AssignedToUser")
                         .WithMany("AssignedWorkItems")
                         .HasForeignKey("AssignedToUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "CreatedByUser")
                         .WithMany("CreatedWorkItems")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
+                    b.HasOne("Infrastructure.Persistence.Models.ProjectEntity", "Project")
                         .WithMany("WorkItems")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.SprintEntity", "Sprint")
+                    b.HasOne("Infrastructure.Persistence.Models.SprintEntity", "Sprint")
                         .WithMany("WorkItems")
                         .HasForeignKey("SprintId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -1047,15 +1047,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Sprint");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.WorkItemRelationEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
+                    b.HasOne("Infrastructure.Persistence.Models.WorkItemEntity", "SourceWorkItem")
                         .WithMany("OutgoingRelations")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "TargetWorkItem")
+                    b.HasOne("Infrastructure.Persistence.Models.WorkItemEntity", "TargetWorkItem")
                         .WithMany("IncomingRelations")
                         .HasForeignKey("TargetWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1077,7 +1077,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1086,7 +1086,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1101,7 +1101,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1110,14 +1110,14 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", null)
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ApplicationUserEntity", b =>
                 {
                     b.Navigation("AssignedWorkItems");
 
@@ -1128,26 +1128,26 @@ namespace Infrastructure.Migrations
                     b.Navigation("TeamMemberships");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectEntity", b =>
                 {
                     b.Navigation("Sprints");
 
                     b.Navigation("WorkItems");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.SprintEntity", b =>
                 {
                     b.Navigation("WorkItems");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TeamEntity", b =>
                 {
                     b.Navigation("Members");
 
                     b.Navigation("Projects");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.TenantEntity", b =>
                 {
                     b.Navigation("Projects");
 
@@ -1156,7 +1156,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
+            modelBuilder.Entity("Infrastructure.Persistence.Models.WorkItemEntity", b =>
                 {
                     b.Navigation("Comments");
 

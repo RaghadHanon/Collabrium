@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Users.DTOs;
-using Domain.Entities;
+using Domain.Models;
 
 namespace Application.Interfaces.Repositories;
 

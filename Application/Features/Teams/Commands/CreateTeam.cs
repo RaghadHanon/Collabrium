@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Entities;
+using Domain.Models;
 using Domain.Enums;
 using MediatR;
 using System.Net;

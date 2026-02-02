@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Mapping;
@@ -7,14 +7,20 @@ public static class ProjectMapper
 {
     public static Project ToDomain(ProjectEntity entity)
     {
-        return entity is null
-            ? throw new ArgumentNullException(nameof(entity))
-            : Project.Rehydrate(
+        ArgumentNullException.ThrowIfNull(entity);
+
+        return Project.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
+
             name: entity.Name,
             description: entity.Description,
+
+            status: entity.Status,
+            startDate: entity.StartDate,
+            endDate: entity.EndDate,
+
             createdByUserId: entity.CreatedByUserId,
             teamId: entity.TeamId,
             tenantId: entity.TenantId
@@ -23,35 +29,44 @@ public static class ProjectMapper
 
     public static ProjectEntity ToEntity(Project domain)
     {
-        return domain is null
-            ? throw new ArgumentNullException(nameof(domain))
-            : new ProjectEntity
-            {
-                Id = domain.Id,
-                CreatedAt = domain.CreatedAt,
-                UpdatedAt = domain.UpdatedAt,
+        ArgumentNullException.ThrowIfNull(domain);
 
-                Name = domain.Name,
-                Description = domain.Description,
+        return new ProjectEntity
+        {
+            Id = domain.Id,
+            CreatedAt = domain.CreatedAt,
+            UpdatedAt = domain.UpdatedAt,
 
-                CreatedByUserId = domain.CreatedByUserId,
-                TeamId = domain.TeamId,
-                TenantId = domain.TenantId
-            };
+            Name = domain.Name,
+            Description = domain.Description,
+
+            Status = domain.Status,
+            StartDate = domain.StartDate,
+            EndDate = domain.EndDate,
+
+            CreatedByUserId = domain.CreatedByUserId,
+            TeamId = domain.TeamId,
+            TenantId = domain.TenantId
+        };
     }
 
     public static void UpdateEntity(Project domain, ProjectEntity entity)
     {
-        if (domain is null) throw new ArgumentNullException(nameof(domain));
-        if (entity is null) throw new ArgumentNullException(nameof(entity));
+        ArgumentNullException.ThrowIfNull(domain);
+        ArgumentNullException.ThrowIfNull(entity);
 
         entity.Name = domain.Name;
         entity.Description = domain.Description;
 
-        entity.TeamId = domain.TeamId;
-        entity.TenantId = domain.TenantId;
+        entity.Status = domain.Status;
+        entity.StartDate = domain.StartDate;
+        entity.EndDate = domain.EndDate;
 
-        // عادة CreatedByUserId ما بتتغير بعد الإنشاء
+        entity.TeamId = domain.TeamId;
+
+        entity.TenantId = domain.TenantId;
+        entity.CreatedByUserId = domain.CreatedByUserId;
+
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
     }
 }

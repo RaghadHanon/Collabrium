@@ -1,7 +1,7 @@
 ﻿using Application.Features.Tenants.Queries;
 using Application.Features.Users.DTOs;
 using AutoMapper;
-using Domain.Entities;
+using Domain.Models;
 
 namespace Application.Features.Users;
 public class UsersMappingProfile : Profile

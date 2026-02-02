@@ -1,7 +1,7 @@
 ﻿using Domain.Common;
 using Domain.Enums;
 
-namespace Domain.Entities;
+namespace Domain.Models;
 
 public sealed class Sprint : Entity
 {

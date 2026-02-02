@@ -11,6 +11,7 @@ public class TeamsMappingProfile : Profile
     {
         CreateMap<CreateTeamRequest, CreateTeam.Command>();
         CreateMap<AddMembersToTeamRequest, AddMembersToTeam.Command>();
+        CreateMap<RemoveMembersFromTeamRequest, AddMembersToTeam.Command>();
         CreateMap<GetTeamsRequest, GetTeams.Query>();
         CreateMap<UpdateTeamRequest, UpdateTeam.Command>();
     }

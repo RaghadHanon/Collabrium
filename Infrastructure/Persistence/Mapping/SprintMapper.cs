@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Mapping;

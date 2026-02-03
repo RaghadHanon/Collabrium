@@ -1,4 +1,4 @@
-﻿namespace API.Contracts.Identity;
+﻿namespace API.Contracts.Users;
 /// <summary>
 /// Request model for updating user profile information.
 /// </summary>

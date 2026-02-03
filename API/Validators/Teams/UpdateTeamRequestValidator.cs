@@ -1,0 +1,49 @@
+﻿using API.Contracts.Teams;
+using Domain.Enums;
+using FluentValidation;
+
+namespace API.Validators.Teams;
+
+public sealed class UpdateTeamRequestValidator : AbstractValidator<UpdateTeamRequest>
+{
+    public UpdateTeamRequestValidator()
+    {
+        RuleFor(x => x.TeamLeadId)
+            .Must(x => !string.IsNullOrWhiteSpace(x))
+            .When(x => x.TeamLeadId is not null)
+            .WithMessage("TeamLeadId cannot be empty.");
+
+        RuleFor(x => x.Name)
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Name));
+
+        RuleFor(x => x.Description)
+            .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Description));
+
+        RuleFor(x => x.Department)
+            .Must(BeValidDepartment)
+            .When(x => !string.IsNullOrWhiteSpace(x.Department))
+            .WithMessage("Department must be a valid value.");
+
+        RuleFor(x => x.Capacity)
+            .GreaterThanOrEqualTo(1)
+            .When(x => x.Capacity.HasValue)
+            .WithMessage("Capacity must be >= 1 if provided.");
+
+        RuleFor(x => x)
+            .Must(HasAnyField)
+            .WithMessage("At least one field must be provided to update the team.");
+    }
+
+    private static bool BeValidDepartment(string? value)
+        => !string.IsNullOrWhiteSpace(value)
+           && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
+
+    private static bool HasAnyField(UpdateTeamRequest r)
+        => !string.IsNullOrWhiteSpace(r.TeamLeadId)
+           || !string.IsNullOrWhiteSpace(r.Name)
+           || !string.IsNullOrWhiteSpace(r.Description)
+           || !string.IsNullOrWhiteSpace(r.Department)
+           || r.Capacity.HasValue;
+}

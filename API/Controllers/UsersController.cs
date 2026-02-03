@@ -1,5 +1,5 @@
-﻿using API.Contracts.Identity;
-using API.Contracts.Tenants;
+﻿using API.Contracts.Tenants;
+using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Features.Users.Commands;
 using Application.Features.Users.DTOs;

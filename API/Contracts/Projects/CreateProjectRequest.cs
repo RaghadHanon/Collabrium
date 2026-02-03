@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace API.Contracts.Projects;
+﻿namespace API.Contracts.Projects;
 
 public sealed class CreateProjectRequest
 {

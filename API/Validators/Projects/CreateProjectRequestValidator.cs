@@ -1,0 +1,28 @@
+﻿using API.Contracts.Projects;
+using FluentValidation;
+
+namespace API.Validators.Projects;
+
+public sealed class CreateProjectRequestValidator : AbstractValidator<CreateProjectRequest>
+{
+    public CreateProjectRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+
+        RuleFor(x => x.Description)
+            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Description));
+
+        RuleFor(x => x.TeamId)
+            .Must(x => !string.IsNullOrWhiteSpace(x))
+            .When(x => x.TeamId is not null)
+            .WithMessage("TeamId cannot be empty.");
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate!.Value)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
+            .WithMessage("EndDate must be greater than or equal to StartDate.");
+    }
+}

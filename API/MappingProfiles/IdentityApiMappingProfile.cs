@@ -1,5 +1,6 @@
 ﻿using API.Contracts.Identity;
 using API.Contracts.Tenants;
+using API.Contracts.Users;
 using Application.Features.Identity.Commands;
 using Application.Features.Users.Commands;
 using AutoMapper;

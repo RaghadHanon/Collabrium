@@ -1,4 +1,5 @@
-﻿using API.Contracts.Tenants;
+﻿using API.Contracts.Projects;
+using API.Contracts.Tenants;
 using FluentValidation;
 
 namespace API.Validators.Tenants;
@@ -69,7 +70,25 @@ public sealed class UpdateTenantRequestValidator : AbstractValidator<UpdateTenan
             .Must(BeValidImageFile)
             .When(x => x.File is not null)
             .WithMessage("File must be an image (jpg, jpeg, png, webp).");
+
+        RuleFor(x => x)
+           .Must(HasAnyField)
+           .WithMessage("At least one field must be provided to update the project.");
     }
+
+    private static bool HasAnyField(UpdateTenantRequest r)
+        => !string.IsNullOrWhiteSpace(r.Name)
+          || !string.IsNullOrWhiteSpace(r.Description)
+          || !string.IsNullOrWhiteSpace(r.Domain)
+          || !string.IsNullOrWhiteSpace(r.Country)
+          || !string.IsNullOrWhiteSpace(r.WebsiteURL)
+          || !string.IsNullOrWhiteSpace(r.Email)
+          || !string.IsNullOrWhiteSpace(r.PhoneNumber)
+          || !string.IsNullOrWhiteSpace(r.LinkedIn)
+          || !string.IsNullOrWhiteSpace(r.Facebook)
+          || !string.IsNullOrWhiteSpace(r.Instagram)
+          || !string.IsNullOrWhiteSpace(r.YouTube)
+          || r.File is not null;
 
     private static bool BeValidUrl(string? url)
         => Uri.TryCreate(url, UriKind.Absolute, out var uri)

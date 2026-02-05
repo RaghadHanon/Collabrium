@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Projects;
+using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.Projects;
@@ -14,6 +15,11 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.Description));
+
+        RuleFor(x => x.Status)
+            .Must(status => Enum.IsDefined(typeof(ProjectStatus), status))
+            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .WithMessage("Status must be a valid ProjectStatus value.");
 
         RuleFor(x => x.TeamId)
             .Must(x => !string.IsNullOrWhiteSpace(x))
@@ -33,7 +39,7 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     private static bool HasAnyField(UpdateProjectRequest r)
         => !string.IsNullOrWhiteSpace(r.Name)
            || !string.IsNullOrWhiteSpace(r.Description)
-           || r.Status.HasValue
+           || !string.IsNullOrWhiteSpace(r.Status)
            || r.StartDate.HasValue
            || r.EndDate.HasValue
            || r.TeamId is not null;

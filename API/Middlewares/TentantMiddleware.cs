@@ -53,10 +53,10 @@ public class TenantMiddleware
             throw new UnauthorizedAccessException("X-Tenant-Id header is empty.");
 
         var tenant = await tenantRepository.GetByIdAsync(tenantId)
-            ?? throw new UnauthorizedAccessException("The tenant does not exist.");
+            ?? throw new TenantNotFoundException($"The tenant with id:{tenantId} does not exist.");
 
         if (!tenant.IsActive)
-            throw new UnauthorizedAccessException("The tenant is not active.");
+            throw new TenantNotActiveException("The tenant is not active.");
 
         if (user.TenantId != tenant.Id)
             throw new UnauthorizedAccessException("User does not belong to the specified tenant.");

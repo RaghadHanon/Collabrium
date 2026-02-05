@@ -1,12 +1,10 @@
-﻿using Domain.Enums;
-
-namespace API.Contracts.Projects;
+﻿namespace API.Contracts.Projects;
 
 public sealed class UpdateProjectRequest
 {
     public string? Name { get; set; }
     public string? Description { get; init; }
-    public ProjectStatus? Status { get; init; }
+    public string? Status { get; init; }
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
     public string? TeamId { get; init; }

@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Projects;
+using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.Projects;
@@ -15,6 +16,11 @@ public sealed class GetProjectsRequestValidator : AbstractValidator<GetProjectsR
             .Must(x => !string.IsNullOrWhiteSpace(x))
             .When(x => x.TeamId is not null)
             .WithMessage("TeamId cannot be empty.");
+
+        RuleFor(x => x.Status)
+            .Must(status => Enum.IsDefined(typeof(ProjectStatus), status))
+            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .WithMessage("Status must be a valid ProjectStatus value.");
 
         RuleFor(x => x.NameContains)
             .MaximumLength(100)

@@ -65,6 +65,9 @@ public class UsersController : ApiBaseController
     ///
     ///     PUT /api/users/user-profile
     ///     {
+    ///         "firstName": "John",
+    ///         "lastName": "Doe",
+    ///         "dateOfBirth": "1990-01-01",
     ///         "phoneNumber": "0597612345",
     ///         "linkedIn": "https://linkedin.com/in/johndoe",
     ///         "facebook": "https://facebook.com/johndoe",
@@ -83,7 +86,7 @@ public class UsersController : ApiBaseController
     [HttpPatch("user-profile")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateUserProfile(UpdateUserProfileRequest request)
     {
-        var command = Mapper.Map<UpdateUserContactDetails.Command>(request);
+        var command = Mapper.Map<UpdateUserProfile.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }

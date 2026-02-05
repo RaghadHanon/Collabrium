@@ -117,6 +117,30 @@ public class TenantsController : ApiBaseController
     }
 
     /// <summary>
+    /// Retrieves the tenant details associated with the currently logged-in user with admin details.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /api/tenants/my-tenant
+    /// 
+    /// </remarks>
+    /// <returns>The details of the current user's tenant.</returns>
+    /// <response code="200">Returns the tenant details successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user has not changed their initial password.</response>
+    /// <response code="404">If the user is not assigned to a tenant.</response>
+    [Authorize(Policy = Policies.PasswordChanged)]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [HttpGet("my-tenant-with-admin")]
+    public async Task<ActionResult<TenantDto>> GetCurrentTenantForAdmin()
+    {
+        var query = new GetTenantWithAdmin.Query();
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
     /// Retrieves the details of a specific tenant by its ID.
     /// </summary>
     /// <remarks>
@@ -137,7 +161,7 @@ public class TenantsController : ApiBaseController
     [HttpGet("{id}")]
     public async Task<ActionResult<TenantDto>> GetTenant(string id)
     {
-        var query = new GetTenant.Query();
+        var query = new GetTenantWithAdmin.Query();
         query.TenantId = id;
 
         return HandleResult(await Mediator.Send(query));
@@ -275,14 +299,14 @@ public class TenantsController : ApiBaseController
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {
-        var command = new ToggleTenantsActivation.Command();
+        var command = new DeactivateTenant.Command();
         command.TenantId = id;
 
         return HandleResult(await Mediator.Send(command));
     }
 
     /// <summary>
-    /// Toggles the active status of the current tenant.
+    /// Deactivate current tenant.
     /// </summary>
     /// <remarks>
     /// This endpoint is restricted to Tenant Admins and affects only the tenant
@@ -290,18 +314,18 @@ public class TenantsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PUT /api/tenants/my-tenant/toggle-active
+    ///     PUT /api/tenants/my-tenant/deactivate
     ///
     /// </remarks>
     /// <returns>No content if the operation succeeds.</returns>
-    /// <response code="204">The tenant active status was toggled successfully.</response>
+    /// <response code="204">The tenant active status was deactivated successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
-    [HttpPatch("my-tenant/toggle-active")]
-    public async Task<ActionResult> ToggleMyTenantActiveStatus()
+    [HttpPatch("my-tenant/deactivate")]
+    public async Task<ActionResult> DeactivateMyTenant()
     {
-        var command = new ToggleTenantsActivation.Command();
+        var command = new DeactivateTenant.Command();
 
         return HandleResult(await Mediator.Send(command));
     }

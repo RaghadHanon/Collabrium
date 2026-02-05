@@ -7,6 +7,22 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
 {
     public UpdateUserProfileRequestValidator()
     {
+
+        RuleFor(x => x.FirstName)
+            .MaximumLength(50)
+            .When(x => !string.IsNullOrWhiteSpace(x.FirstName))
+            .WithMessage("First name cannot exceed 50 characters.");
+
+        RuleFor(x => x.LastName)
+            .MaximumLength(50)
+            .When(x => !string.IsNullOrWhiteSpace(x.LastName))
+            .WithMessage("Last name cannot exceed 50 characters.");
+
+        RuleFor(x => x.DateOfBirth)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18))
+            .When(x => x.DateOfBirth.HasValue)
+            .WithMessage("User must be at least 18 years old.");
+
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^\+?\d{9,15}$")
             .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
@@ -36,7 +52,22 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
             .Must(BeValidUrl)
             .When(x => !string.IsNullOrWhiteSpace(x.Github))
             .WithMessage("Github must be a valid URL.");
+
+        RuleFor(x => x)
+           .Must(HasAnyField)
+           .WithMessage("At least one field must be provided to update the project.");
     }
+
+    private static bool HasAnyField(UpdateUserProfileRequest r)
+        => !string.IsNullOrWhiteSpace(r.FirstName)
+           || !string.IsNullOrWhiteSpace(r.LastName)
+           || r.DateOfBirth.HasValue
+           || !string.IsNullOrWhiteSpace(r.PhoneNumber)
+           || !string.IsNullOrWhiteSpace(r.LinkedIn)
+           || !string.IsNullOrWhiteSpace(r.Facebook)
+           || !string.IsNullOrWhiteSpace(r.Instagram)
+           || !string.IsNullOrWhiteSpace(r.YouTube)
+           || !string.IsNullOrWhiteSpace(r.Github);
 
     private static bool BeValidUrl(string? url)
         => Uri.TryCreate(url, UriKind.Absolute, out var uri)

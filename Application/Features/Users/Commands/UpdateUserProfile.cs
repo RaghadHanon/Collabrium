@@ -7,10 +7,13 @@ using System.Net;
 
 namespace Application.Features.Users.Commands;
 
-public class UpdateUserContactDetails
+public class UpdateUserProfile
 {
     public class Command : IRequest<Result<Unit>>
     {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
         public string? LinkedIn { get; set; }
         public string? Facebook { get; set; }
@@ -40,6 +43,13 @@ public class UpdateUserContactDetails
             {
                 return Result<Unit>.Failure("User not found in this tenant.", HttpStatusCode.Forbidden);
             }
+
+            user.UpdateIdentity(
+                fullName: $"{request.FirstName} {request.LastName}",
+                email: user.Email,
+                userName: user.UserName,
+                dateOfBirth: request.DateOfBirth ?? user.DateOfBirth
+            );
 
             user.SetContactInfo(
                 email: user.Email,

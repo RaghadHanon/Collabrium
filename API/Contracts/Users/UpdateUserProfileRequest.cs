@@ -4,6 +4,10 @@
 /// </summary>
 public class UpdateUserProfileRequest
 {
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
+
     // Contact Info
     public string? PhoneNumber { get; set; }
     public string? LinkedIn { get; set; }

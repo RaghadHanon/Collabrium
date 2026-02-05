@@ -26,7 +26,7 @@ public class IdentityApiMappingProfile : Profile
         CreateMap<ChangePasswordRequest, ChangePassword.Command>();
         CreateMap<ConfirmEmailRequest, ConfirmEmail.Command>();
         CreateMap<LoginRequest, LoginUser.Command>();
-        CreateMap<UpdateUserProfileRequest, UpdateUserContactDetails.Command>();
+        CreateMap<UpdateUserProfileRequest, UpdateUserProfile.Command>();
         CreateMap<UploadFileRequest, UploadUserProfileImage.Command>();
     }
 }

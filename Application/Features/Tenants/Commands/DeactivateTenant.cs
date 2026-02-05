@@ -6,7 +6,7 @@ using System.Net;
 
 namespace Application.Features.Tenants.Commands;
 
-public class ToggleTenantsActivation
+public class DeactivateTenant
 {
     public class Command : IRequest<Result<bool>>
     {
@@ -29,10 +29,7 @@ public class ToggleTenantsActivation
             if (tenant is null)
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (tenant.IsActive)
-                tenant.Deactivate();
-            else tenant.Activate();
-
+            tenant.Deactivate();
             await tenantRepository.UpdateAsync(tenant, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

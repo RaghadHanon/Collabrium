@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Route("api/sprints")]
+[Authorize(Policy = Policies.PasswordChanged)]
 public sealed class SprintsController : ApiBaseController
 {
     /// <summary>

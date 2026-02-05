@@ -157,7 +157,6 @@ public class TenantsController : ApiBaseController
     /// <response code="404">If the tenant with the specified ID was not found.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
     [IgnoreTenantContext]
-    [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("{id}")]
     public async Task<ActionResult<TenantDto>> GetTenant(string id)
     {
@@ -189,6 +188,7 @@ public class TenantsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized (must be a Tenant Admin).</response>
     [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.PasswordChanged)]
     [HttpPost("profile-image")]
     public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
     {
@@ -212,6 +212,7 @@ public class TenantsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("my-tenant/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetMyTenantUsers([FromQuery] GetTenantUsersRequest request)
     {
@@ -322,6 +323,7 @@ public class TenantsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.PasswordChanged)]
     [HttpPatch("my-tenant/deactivate")]
     public async Task<ActionResult> DeactivateMyTenant()
     {

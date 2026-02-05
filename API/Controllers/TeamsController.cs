@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Route("api/teams")]
+[Authorize(Policy = Policies.PasswordChanged)]
 public class TeamsController : ApiBaseController
 {
     /// <summary>

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Route("api/projects")]
+[Authorize(Policy = Policies.PasswordChanged)]
 public sealed class ProjectsController : ApiBaseController
 {
     /// <summary>

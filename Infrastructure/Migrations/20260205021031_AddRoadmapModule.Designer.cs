@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260205011247_AddRoadmapModule")]
+    [Migration("20260205021031_AddRoadmapModule")]
     partial class AddRoadmapModule
     {
         /// <inheritdoc />

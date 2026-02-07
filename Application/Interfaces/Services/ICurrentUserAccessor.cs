@@ -1,9 +1,10 @@
-﻿using Domain.Models;
+﻿using Domain.Enums;
+using Domain.Models;
 
 namespace Application.Interfaces.Services;
 
 public interface ICurrentUserAccessor
 {
     string? GetUserId();
-    Task<User?> GetUserAsync(CancellationToken cancellationToken = default);
+    Task<User?> GetCurrentUserAsync(CancellationToken cancellationToken = default);
 }

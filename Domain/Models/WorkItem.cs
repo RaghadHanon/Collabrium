@@ -1,5 +1,6 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace Domain.Models;
 
@@ -28,6 +29,12 @@ public abstract class WorkItem : Entity
 
     private readonly List<Comment> _comments = new();
     public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+
+    private readonly List<CodeLink> _codeLinks = new();
+    public IReadOnlyCollection<CodeLink> CodeLinks => _codeLinks.AsReadOnly();
+
+    private readonly List<Attachment> _attachments = new();
+    public IReadOnlyCollection<Attachment> Attachments => _attachments.AsReadOnly();
 
     protected WorkItem() { } // EF
 
@@ -72,6 +79,7 @@ public abstract class WorkItem : Entity
         StartDate = startDate;
         EndDate = endDate;
     }
+
     public void RehydrateAddComment(Comment comment)
     {
         _comments.Add(comment);
@@ -80,6 +88,16 @@ public abstract class WorkItem : Entity
     public void RehydrateAddRelation(WorkItemRelation relation)
     {
         _relations.Add(relation);
+    }
+
+    public void RehydrateAddCodeLink(CodeLink link)
+    {
+        _codeLinks.Add(link);
+    }
+
+    public void RehydrateAddAttachment(Attachment attachment)
+    {
+        _attachments.Add(attachment);
     }
 
     public bool IsDone => Status == WorkItemStatus.Done;
@@ -94,13 +112,33 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    protected virtual bool CanReopenFromDone => false;
+
+    protected virtual bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        return from == to
+            || from switch
+            {
+                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
+                WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
+                WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
+    }
+
     public void ChangeStatus(WorkItemStatus newStatus)
     {
         Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
             "Blocked work item cannot be moved to InProgress.");
 
-        Guard.Against(Status == WorkItemStatus.Done && newStatus != WorkItemStatus.Done,
-            "Done work item cannot change status.");
+        if (Status == WorkItemStatus.Done && newStatus != WorkItemStatus.Done)
+        {
+            Guard.Against(!CanReopenFromDone, "Done work item cannot be reopened.");
+        }
 
         Guard.Against(!IsValidTransition(Status, newStatus),
             $"Invalid status transition: {Status} -> {newStatus}");
@@ -113,24 +151,45 @@ public abstract class WorkItem : Entity
         if (newStatus == WorkItemStatus.Done)
             EndDate = DateTime.UtcNow;
 
+        if (newStatus != WorkItemStatus.Done && EndDate is not null && CanReopenFromDone)
+            EndDate = null;
+
         Touch();
     }
 
-    private static bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    public void MoveToBacklog()
     {
-        return from == to
-            ? true
-            : from switch
-            {
-                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
-                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
-                WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
-                WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
-                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
-                WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
-                _ => false
-            };
+        ChangeStatus(WorkItemStatus.Backlog);
+    }
+
+    public void MoveToReadyForDev()
+    {
+        ChangeStatus(WorkItemStatus.ReadyForDev);
+    }
+
+    public void Start()
+    {
+        ChangeStatus(WorkItemStatus.InProgress);
+    }
+
+    public void SendToReview()
+    {
+        ChangeStatus(WorkItemStatus.InReview);
+    }
+
+    public void SendToTesting()
+    {
+        ChangeStatus(WorkItemStatus.InTesting);
+    }
+
+    public void MarkReadyForRelease()
+    {
+        ChangeStatus(WorkItemStatus.ReadyForRelease);
+    }
+
+    public void MarkDone()
+    {
+        ChangeStatus(WorkItemStatus.Done);
     }
 
     public void SetPriority(WorkItemPriority priority)
@@ -154,12 +213,14 @@ public abstract class WorkItem : Entity
 
     public void AssignTo(string? userId)
     {
+        Guard.Against(IsDone, "Cannot assign a completed work item.");
         AssignedToUserId = userId is null ? null : Guard.NotNullOrWhiteSpace(userId, nameof(userId));
         Touch();
     }
 
     public void MoveToSprint(string? sprintId)
     {
+        Guard.Against(IsDone, "Cannot move a completed work item.");
         SprintId = sprintId is null ? null : Guard.NotNullOrWhiteSpace(sprintId, nameof(sprintId));
         Touch();
     }
@@ -191,6 +252,48 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public void AddRelation(WorkItem target, WorkItemRelationType type)
+    {
+        Guard.Against(target is null, "Target is required.");
+        ValidateRelationRules(this.Type, target!.Type, type);
+        AddRelation(target.Id, type);
+    }
+
+    private static void ValidateRelationRules(WorkItemType source, WorkItemType target, WorkItemRelationType relationType)
+    {
+        if (relationType is WorkItemRelationType.Parent)
+        {
+            var ok = (source, target) switch
+            {
+                (WorkItemType.UserStory, WorkItemType.Epic) => true,
+                (WorkItemType.TaskItem, WorkItemType.UserStory) => true,
+                (WorkItemType.Bug, WorkItemType.UserStory) => true,
+                (WorkItemType.TestCase, WorkItemType.UserStory) => true,
+                _ => false
+            };
+            Guard.Against(!ok, $"Invalid parent relation: {target} cannot be parent of {source}.");
+        }
+
+        if (relationType is WorkItemRelationType.Child)
+        {
+            var ok = (source, target) switch
+            {
+                (WorkItemType.Epic, WorkItemType.UserStory) => true,
+                (WorkItemType.UserStory, WorkItemType.TaskItem) => true,
+                (WorkItemType.UserStory, WorkItemType.Bug) => true,
+                (WorkItemType.UserStory, WorkItemType.TestCase) => true,
+                _ => false
+            };
+            Guard.Against(!ok, $"Invalid child relation: {source} cannot have child {target}.");
+        }
+
+        if (relationType is WorkItemRelationType.FoundByTestCase)
+        {
+            var ok = (source, target) is (WorkItemType.Bug, WorkItemType.TestCase);
+            Guard.Against(!ok, "FoundByTestCase relation must be Bug -> TestCase.");
+        }
+    }
+
     public string? GetParentId()
     {
         return _relations.FirstOrDefault(r => r.RelationType == WorkItemRelationType.Parent)?.TargetWorkItemId;
@@ -198,10 +301,70 @@ public abstract class WorkItem : Entity
 
     public IReadOnlyCollection<string> GetChildrenIds()
     {
-        return _relations
-                .Where(r => r.RelationType == WorkItemRelationType.Child)
+        return _relations.Where(r => r.RelationType == WorkItemRelationType.Child)
                 .Select(r => r.TargetWorkItemId)
                 .Distinct()
                 .ToList();
+    }
+
+    public IReadOnlyCollection<string> GetRelatedIds(WorkItemRelationType type)
+    {
+        return _relations.Where(r => r.RelationType == type)
+                .Select(r => r.TargetWorkItemId)
+                .Distinct()
+                .ToList();
+    }
+
+    public CodeLink AddCodeLink(string linkId, string url, CodeLinkType type, string? displayName = null)
+    {
+        url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
+
+        Guard.Against(_codeLinks.Any(l => l.Url.Equals(url, StringComparison.OrdinalIgnoreCase)),
+            "This code link already exists.");
+
+        var link = new CodeLink(linkId, url, type, displayName);
+        _codeLinks.Add(link);
+        Touch();
+        return link;
+    }
+
+    public void RemoveCodeLink(string linkId)
+    {
+        linkId = Guard.NotNullOrWhiteSpace(linkId, nameof(linkId));
+        var link = _codeLinks.FirstOrDefault(x => x.Id == linkId);
+        Guard.Against(link is null, "Code link not found.");
+
+        _codeLinks.Remove(link);
+        Touch();
+    }
+
+    public Attachment AddAttachment(
+        string attachmentId,
+        string fileName,
+        string storagePath,
+        string contentType,
+        long sizeBytes,
+        AttachmentType type,
+        string uploadedByUserId,
+        string? checksum = null)
+    {
+        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); // optional rule
+
+        var att = new Attachment(
+            attachmentId, fileName, storagePath, contentType, type, uploadedByUserId);
+
+        _attachments.Add(att);
+        Touch();
+        return att;
+    }
+
+    public void RemoveAttachment(string attachmentId)
+    {
+        attachmentId = Guard.NotNullOrWhiteSpace(attachmentId, nameof(attachmentId));
+        var att = _attachments.FirstOrDefault(x => x.Id == attachmentId);
+        Guard.Against(att is null, "Attachment not found.");
+
+        _attachments.Remove(att);
+        Touch();
     }
 }

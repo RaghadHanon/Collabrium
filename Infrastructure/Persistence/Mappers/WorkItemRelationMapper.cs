@@ -9,9 +9,6 @@ public static class WorkItemRelationMapper
     {
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        // إذا عندك أسماء قديمة:
-        // OutgoingWorkItemId بدل SourceWorkItemId
-        // IncomingWorkItemId بدل TargetWorkItemId
         return WorkItemRelation.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,

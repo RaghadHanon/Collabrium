@@ -2,6 +2,7 @@
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
 using MediatR;
 using System.Net;
 

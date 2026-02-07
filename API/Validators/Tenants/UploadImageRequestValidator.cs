@@ -3,12 +3,11 @@ using FluentValidation;
 
 namespace API.Validators.Tenants;
 
-public sealed class UploadFileRequestValidator : AbstractValidator<UploadFileRequest>
+public sealed class UploadImageRequestValidator : AbstractValidator<UploadImageRequest>
 {
-    public UploadFileRequestValidator()
+    public UploadImageRequestValidator()
     {
         RuleFor(x => x.File)
-            .NotNull().WithMessage("File is required.")
             .Must(f => f is not null && f.Length > 0)
             .WithMessage("File cannot be empty.")
             .Must(BeAllowedFile)
@@ -23,9 +22,8 @@ public sealed class UploadFileRequestValidator : AbstractValidator<UploadFileReq
             "image/jpg",
             "image/png",
             "image/webp",
-            "application/pdf"
         };
 
-        return allowed.Contains(file.ContentType);
+        return allowed.Contains(file?.ContentType);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 
 namespace Infrastructure.Persistence.Mapping;
 

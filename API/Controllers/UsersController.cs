@@ -1,4 +1,5 @@
-﻿using API.Contracts.Tenants;
+﻿using API.Common.Attributes;
+using API.Contracts.Tenants;
 using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Features.Users.Commands;
@@ -112,8 +113,9 @@ public class UsersController : ApiBaseController
     /// <response code="400">If no file is provided or the file format is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
+    [RejectUnknownFormFields(typeof(UploadImageRequest), allowEmptyRequest: false)]
     [HttpPost("profile-image")]
-    public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
+    public async Task<ActionResult> UploadProfileImage([FromForm] UploadImageRequest request)
     {
         var command = Mapper.Map<UploadUserProfileImage.Command>(request);
 

@@ -1,5 +1,6 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 
 namespace Infrastructure.Persistence.Mapping;
 
@@ -30,7 +31,8 @@ public static class TestCaseMapper
             steps: entity.Steps,
             env: entity.TestEnvironment,
             expectedResult: entity.ExpectedResult,
-            actualResult: entity.ActualResult
+            actualResult: entity.ActualResult,
+            result: entity.Result
         );
 
         WorkItemMappingHelpers.HydrateChildrenIfRequested(entity, domain, includeChildren);
@@ -47,7 +49,8 @@ public static class TestCaseMapper
             Steps = domain.Steps,
             TestEnvironment = domain.TestEnvironment,
             ExpectedResult = domain.ExpectedResult,
-            ActualResult = domain.ActualResult
+            ActualResult = domain.ActualResult,
+            Result = domain.Result
         };
 
         WorkItemMappingHelpers.FillEntityBaseFields(domain, entity);
@@ -64,5 +67,8 @@ public static class TestCaseMapper
         entity.TestEnvironment = domain.TestEnvironment;
         entity.ExpectedResult = domain.ExpectedResult;
         entity.ActualResult = domain.ActualResult;
+        entity.Result = domain.Result;
+
+        WorkItemMappingHelpers.FillEntityBaseFields(domain, entity);
     }
 }

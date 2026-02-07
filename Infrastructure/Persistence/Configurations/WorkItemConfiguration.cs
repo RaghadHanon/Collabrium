@@ -50,6 +50,16 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
             .HasForeignKey(c => c.WorkItemId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(w => w.CodeLinks)
+            .WithOne(cl => cl.WorkItem)
+            .HasForeignKey(cl => cl.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(w => w.Attachments)
+            .WithOne(a => a.WorkItem)
+            .HasForeignKey(a => a.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder
             .HasDiscriminator(w => w.Type)
             .HasValue<WorkItemEntity>(WorkItemType.WorkItem)

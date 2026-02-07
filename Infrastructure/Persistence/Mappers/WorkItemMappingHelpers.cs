@@ -1,7 +1,8 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mapping;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 internal static class WorkItemMappingHelpers
 {
@@ -15,7 +16,6 @@ internal static class WorkItemMappingHelpers
                 domain.RehydrateAddComment(CommentMapper.ToDomain(c));
         }
 
-        // إذا بدك كل العلاقات سواء outgoing + incoming
         if (entity.OutgoingRelations is not null)
         {
             foreach (var r in entity.OutgoingRelations)
@@ -26,6 +26,18 @@ internal static class WorkItemMappingHelpers
         {
             foreach (var r in entity.IncomingRelations)
                 domain.RehydrateAddRelation(WorkItemRelationMapper.ToDomain(r));
+        }
+
+        if (entity.CodeLinks is not null)
+        {
+            foreach (var linkEntity in entity.CodeLinks)
+                domain.RehydrateAddCodeLink(CodeLinkMapper.ToDomain(linkEntity));
+        }
+
+        if (entity.Attachments is not null)
+        {
+            foreach (var attEntity in entity.Attachments)
+                domain.RehydrateAddAttachment(AttachmentMapper.ToDomain(attEntity));
         }
     }
 
@@ -47,7 +59,6 @@ internal static class WorkItemMappingHelpers
         entity.IsBlocked = domain.IsBlocked;
         entity.StartDate = domain.StartDate;
         entity.EndDate = domain.EndDate;
-        entity.UpdatedDate = domain.UpdatedAt;
 
         entity.AssignedToUserId = domain.AssignedToUserId;
 

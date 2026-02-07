@@ -1,5 +1,6 @@
 ﻿using API.Common.Attributes;
 using API.Contracts.Tenants;
+using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Tenants.Commands;
@@ -85,6 +86,7 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user is not a TenantAdmin.</response>
     /// <response code="404">If the tenant could not be found.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
+    [RejectUnknownFormFields(typeof(UpdateTenantRequest), allowEmptyRequest: false)]
     [HttpPatch("my-tenant")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateTenant([FromForm] UpdateTenantRequest request)
     {
@@ -141,7 +143,7 @@ public class TenantsController : ApiBaseController
     }
 
     /// <summary>
-    /// Retrieves the details of a specific tenant by its ID.
+    /// Retrieves the details of a specific tenant by its ID, if id is not provided then the super admin's tenant will be returned.
     /// </summary>
     /// <remarks>
     /// Sample request:
@@ -189,8 +191,9 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user is not authorized (must be a Tenant Admin).</response>
     [Authorize(Policy = Policies.TenantAdmin)]
     [Authorize(Policy = Policies.PasswordChanged)]
+    [RejectUnknownFormFields(typeof(UploadImageRequest), allowEmptyRequest: false)]
     [HttpPost("profile-image")]
-    public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
+    public async Task<ActionResult> UploadProfileImage([FromForm] UploadImageRequest request)
     {
         var command = Mapper.Map<UploadTenantProfilePhoto.Command>(request);
 

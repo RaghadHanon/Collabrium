@@ -1,4 +1,3 @@
-using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Seeders;
 using Microsoft.EntityFrameworkCore;

@@ -11,6 +11,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.ReadModels;
 using Infrastructure.Persistence.Repositories;
+using Infrastructure.Persistence.Seeders;
 using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.TenantContexts;

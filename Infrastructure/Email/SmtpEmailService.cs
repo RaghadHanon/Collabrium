@@ -28,7 +28,7 @@ public class SmtpEmailService : IEmailService
         foreach (var att in message.Attachments)
         {
             var stream = new MemoryStream(att.content);
-            mail.Attachments.Add(new Attachment(stream, att.filename, att.contentType));
+            mail.Attachments.Add(new System.Net.Mail.Attachment(stream, att.filename, att.contentType));
         }
 
         using var smtp = new SmtpClient(_settings.Host, _settings.Port)

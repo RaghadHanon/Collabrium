@@ -2,7 +2,7 @@
 using Application.Features.Sprints.DTOs;
 using Domain.Models;
 
-namespace Application.Interfaces;
+namespace Application.Interfaces.Repositories;
 
 public interface ISprintsRepository
 {

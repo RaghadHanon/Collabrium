@@ -1,15 +1,16 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 
 namespace Infrastructure.Persistence.Mapping;
 
-public static class BugMapper
+public static class UserStoryMapper
 {
-    public static Bug ToDomain(BugEntity entity, bool includeChildren = true)
+    public static UserStory ToDomain(UserStoryEntity entity, bool includeChildren = true)
     {
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        var domain = Bug.Rehydrate(
+        var domain = UserStory.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
@@ -26,37 +27,31 @@ public static class BugMapper
             sprintId: entity.SprintId,
             startDate: entity.StartDate,
             endDate: entity.EndDate,
-            stepsToReproduce: entity.StepsToReproduce,
-            expectedResult: entity.ExpectedResult,
-            actualResult: entity.ActualResult
+            storyPoints: entity.StoryPoints
         );
 
         WorkItemMappingHelpers.HydrateChildrenIfRequested(entity, domain, includeChildren);
         return domain;
     }
 
-    public static BugEntity ToEntity(Bug domain)
+    public static UserStoryEntity ToEntity(UserStory domain)
     {
         if (domain is null) throw new ArgumentNullException(nameof(domain));
 
-        var entity = new BugEntity
+        var entity = new UserStoryEntity
         {
-            StepsToReproduce = domain.StepsToReproduce,
-            ExpectedResult = domain.ExpectedResult,
-            ActualResult = domain.ActualResult
+            StoryPoints = domain.StoryPoints
         };
 
         WorkItemMappingHelpers.FillEntityBaseFields(domain, entity);
         return entity;
     }
 
-    public static void UpdateEntity(Bug domain, BugEntity entity)
+    public static void UpdateEntity(UserStory domain, UserStoryEntity entity)
     {
         if (domain is null) throw new ArgumentNullException(nameof(domain));
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        entity.StepsToReproduce = domain.StepsToReproduce;
-        entity.ExpectedResult = domain.ExpectedResult;
-        entity.ActualResult = domain.ActualResult;
+        entity.StoryPoints = domain.StoryPoints;
     }
 }

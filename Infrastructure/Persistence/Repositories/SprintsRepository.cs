@@ -1,6 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Sprints.DTOs;
-using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mapping;

@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
 using Application.Features.Sprints.DTOs;
 
 namespace Application.Interfaces.ReadModels;

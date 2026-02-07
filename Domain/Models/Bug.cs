@@ -18,6 +18,34 @@ public sealed class Bug : WorkItem
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
+    protected override bool CanReopenFromDone => true;
+
+    protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        // Bug workflow: Backlog -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Allow Done -> InProgress (Reopen)
+        if (from == WorkItemStatus.Done && to == WorkItemStatus.InProgress) return true;
+
+        return from == to
+            || from switch
+            {
+                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
+    }
+
+    public void Reopen(string reopenedByUserId, string? note = null)
+    {
+        Guard.Against(!IsDone, "Only Done bug can be reopened.");
+        ChangeStatus(WorkItemStatus.InProgress);
+        if (!string.IsNullOrWhiteSpace(note))
+            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
+    }
+
     public static Bug Rehydrate(
         string id,
         DateTime createdAt,

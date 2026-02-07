@@ -27,6 +27,6 @@ public class IdentityApiMappingProfile : Profile
         CreateMap<ConfirmEmailRequest, ConfirmEmail.Command>();
         CreateMap<LoginRequest, LoginUser.Command>();
         CreateMap<UpdateUserProfileRequest, UpdateUserProfile.Command>();
-        CreateMap<UploadFileRequest, UploadUserProfileImage.Command>();
+        CreateMap<UploadImageRequest, UploadUserProfileImage.Command>();
     }
 }

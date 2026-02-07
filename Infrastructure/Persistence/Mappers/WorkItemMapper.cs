@@ -43,7 +43,6 @@ public static class WorkItemMapper
         if (domain is null) throw new ArgumentNullException(nameof(domain));
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        // base shared fields
         entity.Title = domain.Title;
         entity.Description = domain.Description;
         entity.AcceptanceCriteria = domain.AcceptanceCriteria;
@@ -56,15 +55,12 @@ public static class WorkItemMapper
         entity.IsBlocked = domain.IsBlocked;
         entity.StartDate = domain.StartDate;
         entity.EndDate = domain.EndDate;
-        entity.UpdatedDate = domain.UpdatedAt;
 
         entity.AssignedToUserId = domain.AssignedToUserId;
         entity.SprintId = domain.SprintId;
 
-        // لا تغيّري CreatedByUserId/ProjectId عادةً بعد الإنشاء
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
 
-        // subtype fields
         switch (domain.Type)
         {
             case WorkItemType.Bug:

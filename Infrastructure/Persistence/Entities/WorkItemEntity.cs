@@ -30,9 +30,7 @@ public class WorkItemEntity : DbEntity
     public SprintEntity? Sprint { get; set; }
 
     public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
-
-    public ICollection<WorkItemRelationEntity> OutgoingRelations { get; set; } = new List<WorkItemRelationEntity>();
-    public ICollection<WorkItemRelationEntity> IncomingRelations { get; set; } = new List<WorkItemRelationEntity>();
+    public ICollection<WorkItemRelationEntity> Relations { get; set; } = new List<WorkItemRelationEntity>();
     public ICollection<CodeLinkEntity> CodeLinks { get; set; } = new List<CodeLinkEntity>();
     public ICollection<AttachmentEntity> Attachments { get; set; } = new List<AttachmentEntity>();
 }

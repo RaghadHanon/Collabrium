@@ -5,9 +5,9 @@ using AutoMapper;
 
 namespace API.MappingProfiles;
 
-public class ProjectsMappingProfile : Profile
+public class ProjectsApiMappingProfile : Profile
 {
-    public ProjectsMappingProfile()
+    public ProjectsApiMappingProfile()
     {
         CreateMap<CreateProjectRequest, CreateProject.Command>();
         CreateMap<UpdateProjectRequest, UpdateProject.Command>();

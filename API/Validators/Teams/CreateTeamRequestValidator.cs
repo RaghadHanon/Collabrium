@@ -30,6 +30,8 @@ public sealed class CreateTeamRequestValidator : AbstractValidator<CreateTeamReq
     }
 
     private static bool BeValidDepartment(string? value)
-        => !string.IsNullOrWhiteSpace(value)
-           && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
+    }
 }

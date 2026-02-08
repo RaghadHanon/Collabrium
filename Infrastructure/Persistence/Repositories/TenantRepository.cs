@@ -3,7 +3,7 @@ using Application.Features.Tenants.DTOs;
 using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -13,7 +13,9 @@ public sealed class TenantRepository : ITenantRepository
     private readonly AppDbContext _dbContext;
 
     public TenantRepository(AppDbContext dbContext)
-        => _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    {
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
     public Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
@@ -83,7 +85,7 @@ public sealed class TenantRepository : ITenantRepository
         parameters ??= new TenantsSearchAndFilterParametersDto();
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<TenantEntity> query = _dbContext.Tenants.AsNoTracking();
+        var query = _dbContext.Tenants.AsNoTracking();
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)

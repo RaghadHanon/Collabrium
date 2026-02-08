@@ -37,10 +37,12 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     }
 
     private static bool HasAnyField(UpdateProjectRequest r)
-        => !string.IsNullOrWhiteSpace(r.Name)
-           || !string.IsNullOrWhiteSpace(r.Description)
-           || !string.IsNullOrWhiteSpace(r.Status)
-           || r.StartDate.HasValue
-           || r.EndDate.HasValue
-           || r.TeamId is not null;
+    {
+        return !string.IsNullOrWhiteSpace(r.Name)
+               || !string.IsNullOrWhiteSpace(r.Description)
+               || !string.IsNullOrWhiteSpace(r.Status)
+               || r.StartDate.HasValue
+               || r.EndDate.HasValue
+               || r.TeamId is not null;
+    }
 }

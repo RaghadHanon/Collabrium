@@ -37,13 +37,17 @@ public sealed class UpdateTeamRequestValidator : AbstractValidator<UpdateTeamReq
     }
 
     private static bool BeValidDepartment(string? value)
-        => !string.IsNullOrWhiteSpace(value)
-           && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
+    }
 
     private static bool HasAnyField(UpdateTeamRequest r)
-        => !string.IsNullOrWhiteSpace(r.TeamLeadId)
-           || !string.IsNullOrWhiteSpace(r.Name)
-           || !string.IsNullOrWhiteSpace(r.Description)
-           || !string.IsNullOrWhiteSpace(r.Department)
-           || r.Capacity.HasValue;
+    {
+        return !string.IsNullOrWhiteSpace(r.TeamLeadId)
+               || !string.IsNullOrWhiteSpace(r.Name)
+               || !string.IsNullOrWhiteSpace(r.Description)
+               || !string.IsNullOrWhiteSpace(r.Department)
+               || r.Capacity.HasValue;
+    }
 }

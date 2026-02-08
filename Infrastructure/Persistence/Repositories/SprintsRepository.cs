@@ -3,7 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -55,6 +55,17 @@ public class SprintsRepository : ISprintsRepository
         return true;
     }
 
+    public async Task<bool> IsExistsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+            return false;
+        var tId = tenantId.Trim();
+        var sId = sprintId.Trim();
+        return await _dbContext.Sprints
+            .AsNoTracking()
+            .AnyAsync(s => s.TenantId == tId && s.Id == sId, cancellationToken);
+    }
+
     public async Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
@@ -103,7 +114,7 @@ public class SprintsRepository : ISprintsRepository
     {
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<SprintEntity> query = _dbContext.Sprints.AsNoTracking();
+        var query = _dbContext.Sprints.AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 

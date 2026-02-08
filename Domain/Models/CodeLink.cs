@@ -18,6 +18,13 @@ public sealed class CodeLink : Entity
         DisplayName = displayName?.Trim();
     }
 
+    public CodeLink(string url, CodeLinkType linkType, string? displayName = null)
+    {
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
+        LinkType = linkType;
+        DisplayName = displayName?.Trim();
+    }
+
     public static CodeLink Rehydrate(
         string id,
         DateTime createdAt,

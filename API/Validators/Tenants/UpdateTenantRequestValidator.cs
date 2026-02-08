@@ -1,5 +1,4 @@
-﻿using API.Contracts.Projects;
-using API.Contracts.Tenants;
+﻿using API.Contracts.Tenants;
 using FluentValidation;
 
 namespace API.Validators.Tenants;
@@ -77,22 +76,26 @@ public sealed class UpdateTenantRequestValidator : AbstractValidator<UpdateTenan
     }
 
     private static bool HasAnyField(UpdateTenantRequest r)
-        => !string.IsNullOrWhiteSpace(r.Name)
-          || !string.IsNullOrWhiteSpace(r.Description)
-          || !string.IsNullOrWhiteSpace(r.Domain)
-          || !string.IsNullOrWhiteSpace(r.Country)
-          || !string.IsNullOrWhiteSpace(r.WebsiteURL)
-          || !string.IsNullOrWhiteSpace(r.Email)
-          || !string.IsNullOrWhiteSpace(r.PhoneNumber)
-          || !string.IsNullOrWhiteSpace(r.LinkedIn)
-          || !string.IsNullOrWhiteSpace(r.Facebook)
-          || !string.IsNullOrWhiteSpace(r.Instagram)
-          || !string.IsNullOrWhiteSpace(r.YouTube)
-          || r.File is not null;
+    {
+        return !string.IsNullOrWhiteSpace(r.Name)
+              || !string.IsNullOrWhiteSpace(r.Description)
+              || !string.IsNullOrWhiteSpace(r.Domain)
+              || !string.IsNullOrWhiteSpace(r.Country)
+              || !string.IsNullOrWhiteSpace(r.WebsiteURL)
+              || !string.IsNullOrWhiteSpace(r.Email)
+              || !string.IsNullOrWhiteSpace(r.PhoneNumber)
+              || !string.IsNullOrWhiteSpace(r.LinkedIn)
+              || !string.IsNullOrWhiteSpace(r.Facebook)
+              || !string.IsNullOrWhiteSpace(r.Instagram)
+              || !string.IsNullOrWhiteSpace(r.YouTube)
+              || r.File is not null;
+    }
 
     private static bool BeValidUrl(string? url)
-        => Uri.TryCreate(url, UriKind.Absolute, out var uri)
-           && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
 
     private static bool BeValidImageFile(IFormFile? file)
     {

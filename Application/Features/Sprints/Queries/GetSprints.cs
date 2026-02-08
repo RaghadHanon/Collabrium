@@ -27,7 +27,7 @@ public class GetSprints
         public DateTime? CreatedBefore { get; set; }
 
         public DateTime? Cursor { get; set; }
-        public int PageSize { get; set; } 
+        public int PageSize { get; set; }
     }
 
     public class Handler(

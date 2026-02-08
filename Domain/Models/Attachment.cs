@@ -32,6 +32,22 @@ public sealed class Attachment : Entity
         UploadedAt = DateTime.UtcNow;
     }
 
+    public Attachment(
+        string fileName,
+        string storagePath,
+        string contentType,
+        AttachmentType type,
+        string uploadedByUserId)
+    {
+        FileName = Guard.NotNullOrWhiteSpace(fileName, nameof(fileName)).Trim();
+        StoragePath = Guard.NotNullOrWhiteSpace(storagePath, nameof(storagePath)).Trim();
+        ContentType = Guard.NotNullOrWhiteSpace(contentType, nameof(contentType)).Trim();
+        Type = type;
+
+        UploadedByUserId = Guard.NotNullOrWhiteSpace(uploadedByUserId, nameof(uploadedByUserId));
+        UploadedAt = DateTime.UtcNow;
+    }
+
     public static Attachment Rehydrate(
         string id,
         DateTime createdAt,
@@ -44,8 +60,8 @@ public sealed class Attachment : Entity
         DateTime uploadedAt)
     {
         var att = new Attachment(id, fileName, storagePath, contentType, type, uploadedByUserId);
-        att.UploadedAt = uploadedAt;             
-        att.SetTimestamps(createdAt, updatedAt);  
+        att.UploadedAt = uploadedAt;
+        att.SetTimestamps(createdAt, updatedAt);
         return att;
     }
 }

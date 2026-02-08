@@ -1,15 +1,15 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class AttachmentMapper
 {
     public static Attachment ToDomain(AttachmentEntity entity)
     {
-        if (entity is null) throw new ArgumentNullException(nameof(entity));
-
-        return Attachment.Rehydrate(
+        return entity is null
+            ? throw new ArgumentNullException(nameof(entity))
+            : Attachment.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
@@ -24,21 +24,21 @@ public static class AttachmentMapper
 
     public static AttachmentEntity ToEntity(Attachment domain, string workItemId)
     {
-        if (domain is null) throw new ArgumentNullException(nameof(domain));
-
-        return new AttachmentEntity
-        {
-            Id = domain.Id,
-            WorkItemId = workItemId,
-            FileName = domain.FileName,
-            StoragePath = domain.StoragePath,
-            ContentType = domain.ContentType,
-            Type = domain.Type,
-            UploadedByUserId = domain.UploadedByUserId,
-            UploadedAt = domain.UploadedAt,
-            CreatedAt = domain.CreatedAt,
-            UpdatedAt = domain.UpdatedAt
-        };
+        return domain is null
+            ? throw new ArgumentNullException(nameof(domain))
+            : new AttachmentEntity
+            {
+                Id = domain.Id,
+                WorkItemId = workItemId,
+                FileName = domain.FileName,
+                StoragePath = domain.StoragePath,
+                ContentType = domain.ContentType,
+                Type = domain.Type,
+                UploadedByUserId = domain.UploadedByUserId,
+                UploadedAt = domain.UploadedAt,
+                CreatedAt = domain.CreatedAt,
+                UpdatedAt = domain.UpdatedAt
+            };
     }
 
     public static void UpdateEntity(Attachment domain, AttachmentEntity entity)

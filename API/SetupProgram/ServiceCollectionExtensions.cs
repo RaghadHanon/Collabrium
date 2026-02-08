@@ -55,8 +55,25 @@ public static class ServiceCollectionExtensions
             options.AddPolicy(Policies.QA, p => p.RequireRole(nameof(UserRole.QA)));
             options.AddPolicy(Policies.BusinessAnalyst, p => p.RequireRole(nameof(UserRole.BusinessAnalyst)));
             options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer)));
-            options.AddPolicy(Policies.PasswordChanged, policy =>
-                    policy.Requirements.Add(new IsPasswordChangedRequirement()));
+
+            options.AddPolicy(Policies.TenantMember, p =>
+                     p.RequireRole(
+                         nameof(UserRole.TenantAdmin),
+                         nameof(UserRole.IT),
+                         nameof(UserRole.CEO),
+                         nameof(UserRole.HR), 
+                         nameof(UserRole.Designer),
+
+                         nameof(UserRole.ProductOwner),
+                         nameof(UserRole.TeamLead),
+                         nameof(UserRole.BusinessAnalyst),
+
+                         nameof(UserRole.BackendDev),
+                         nameof(UserRole.FrontendDev), 
+                         nameof(UserRole.FullStackDev),
+                         nameof(UserRole.QA)
+                     ));
+
             options.AddPolicy(Policies.ProductTeamManager, p =>
                      p.RequireRole(
                          nameof(UserRole.ProductOwner),
@@ -82,6 +99,11 @@ public static class ServiceCollectionExtensions
                         nameof(UserRole.BusinessAnalyst),
                         nameof(UserRole.TenantAdmin)
                     ));
+
+            options.AddPolicy(Policies.PasswordChanged, policy =>
+                    policy.Requirements.Add(new IsPasswordChangedRequirement()));
+            options.AddPolicy(Policies.MustHaveProjectAccess, policy =>
+                    policy.Requirements.Add(new MustHaveProjectAccessRequirement()));
         });
 
         services.AddCors(options =>

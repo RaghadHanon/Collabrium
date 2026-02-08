@@ -11,6 +11,7 @@ namespace API.Controllers;
 
 [Route("api/sprints")]
 [Authorize(Policy = Policies.PasswordChanged)]
+[Authorize(Policy = Policies.MustHaveProjectAccess)]
 public sealed class SprintsController : ApiBaseController
 {
     /// <summary>
@@ -61,7 +62,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="200">Returns the sprint.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("sprint/{sprintId}")]
     public async Task<ActionResult<SprintDto>> GetSprint(string sprintId)
     {
@@ -87,7 +88,7 @@ public sealed class SprintsController : ApiBaseController
     /// <returns>A paged list of sprints.</returns>
     /// <response code="200">Returns sprints successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet]
     public async Task<ActionResult<PagedList<SprintDto, DateTime?>>> GetSprints([FromQuery] GetSprintsRequest request)
     {

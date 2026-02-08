@@ -5,13 +5,13 @@ using AutoMapper;
 
 namespace API.MappingProfiles;
 
-public class TeamsMappingProfile : Profile
+public class TeamsApiMappingProfile : Profile
 {
-    public TeamsMappingProfile()
+    public TeamsApiMappingProfile()
     {
         CreateMap<CreateTeamRequest, CreateTeam.Command>();
         CreateMap<AddMembersToTeamRequest, AddMembersToTeam.Command>();
-        CreateMap<RemoveMembersFromTeamRequest, AddMembersToTeam.Command>();
+        CreateMap<RemoveMembersFromTeamRequest, RemoveMembersFromTeam.Command>();
         CreateMap<GetTeamsRequest, GetTeams.Query>();
         CreateMap<UpdateTeamRequest, UpdateTeam.Command>();
     }

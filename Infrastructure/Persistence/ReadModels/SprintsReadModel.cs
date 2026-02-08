@@ -41,7 +41,7 @@ public sealed class SprintsReadModel : ISprintsReadModel
         parameters ??= new SprintsSearchAndFilterParametersDto();
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<SprintEntity> query = _dbContext.Sprints.AsNoTracking();
+        var query = _dbContext.Sprints.AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 

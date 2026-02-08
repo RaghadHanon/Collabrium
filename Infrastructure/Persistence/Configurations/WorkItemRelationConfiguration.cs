@@ -11,13 +11,8 @@ public class WorkItemRelationConfiguration : IEntityTypeConfiguration<WorkItemRe
         builder.HasKey(r => r.Id);
 
         builder.HasOne(r => r.SourceWorkItem)
-            .WithMany(w => w.OutgoingRelations)
+            .WithMany(w => w.Relations)
             .HasForeignKey(r => r.SourceWorkItemId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(r => r.TargetWorkItem)
-            .WithMany(w => w.IncomingRelations)
-            .HasForeignKey(r => r.TargetWorkItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(r => new { r.SourceWorkItemId, r.TargetWorkItemId, r.RelationType })

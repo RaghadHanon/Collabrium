@@ -18,15 +18,22 @@ public sealed class Bug : WorkItem
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
+    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
+           : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+    }
+
     protected override bool CanReopenFromDone => true;
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
         // Bug workflow: Backlog -> ReadyForDev -> InProgress -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
-        if (from == WorkItemStatus.Done && to == WorkItemStatus.InProgress) return true;
-
-        return from == to
+        return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
+            ? true
+            : from == to
             || from switch
             {
                 WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,

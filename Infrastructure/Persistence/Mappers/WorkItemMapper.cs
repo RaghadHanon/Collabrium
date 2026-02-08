@@ -1,8 +1,8 @@
-﻿using Domain.Models;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class WorkItemMapper
 {
@@ -43,23 +43,7 @@ public static class WorkItemMapper
         if (domain is null) throw new ArgumentNullException(nameof(domain));
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        entity.Title = domain.Title;
-        entity.Description = domain.Description;
-        entity.AcceptanceCriteria = domain.AcceptanceCriteria;
-        entity.EffortPoints = domain.EffortPoints;
-
-        entity.Type = domain.Type;
-        entity.Status = domain.Status;
-        entity.Priority = domain.Priority;
-
-        entity.IsBlocked = domain.IsBlocked;
-        entity.StartDate = domain.StartDate;
-        entity.EndDate = domain.EndDate;
-
-        entity.AssignedToUserId = domain.AssignedToUserId;
-        entity.SprintId = domain.SprintId;
-
-        entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
+        WorkItemMappingHelpers.FillEntityBaseFields(domain, entity);
 
         switch (domain.Type)
         {

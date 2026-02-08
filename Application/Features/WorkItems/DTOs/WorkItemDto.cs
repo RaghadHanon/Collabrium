@@ -2,15 +2,29 @@
 
 namespace Application.Features.WorkItems.DTOs;
 
-public sealed class WorkItemDto
+public class WorkItemDto
 {
-    public required string Id { get; init; }
-    public required string ProjectId { get; init; }
+    public required string Id { get; set; }
 
-    public required string Title { get; init; }
-    public WorkItemStatus Status { get; init; }
-    public WorkItemPriority Priority { get; init; }
+    public required string ProjectId { get; set; }
+    public string? SprintId { get; set; }
 
-    public DateTime CreatedAt { get; init; }
-    public string? AssignedToUserId { get; init; }
+    public required string Title { get; set; }
+    public string? Description { get; set; }
+    public string? AcceptanceCriteria { get; set; }
+
+    public int EffortPoints { get; set; }
+    public WorkItemType Type { get; set; }
+    public WorkItemStatus Status { get; set; }
+    public WorkItemPriority Priority { get; set; }
+    public bool IsBlocked { get; set; }
+
+    public string CreatedByUserId { get; set; } = null!;
+    public string? AssignedToUserId { get; set; }
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

@@ -15,6 +15,12 @@ public sealed class Comment : Entity
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
     }
 
+    public Comment(string createdByUserId, string content)
+    {
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
+    }
+
     public static Comment Rehydrate(string id, DateTime createdAt, DateTime? updatedAt, string createdByUserId, string content)
     {
         var c = new Comment(id, createdByUserId, content);

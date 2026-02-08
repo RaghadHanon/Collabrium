@@ -5,9 +5,9 @@ using AutoMapper;
 
 namespace API.MappingProfiles;
 
-public class SprintsApiProfile : Profile
+public class SprintsApiMappingProfile : Profile
 {
-    public SprintsApiProfile()
+    public SprintsApiMappingProfile()
     {
         CreateMap<CreateSprintRequest, CreateSprint.Command>();
         CreateMap<UpdateSprintRequest, UpdateSprint.Command>();

@@ -1,7 +1,7 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class CommentMapper
 {

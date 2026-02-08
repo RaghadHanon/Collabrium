@@ -67,7 +67,7 @@ public class TeamsController : ApiBaseController
     /// <response code="200">Returns the team information successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If the team with the specified ID does not exist.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("team/{teamId}")]
     public async Task<ActionResult<TeamFullInfoDto>> GetTeam(string teamId)
     {
@@ -130,7 +130,7 @@ public class TeamsController : ApiBaseController
     ///
     ///     {
     ///       "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    ///       "memberIds": [
+    ///       "membersIds": [
     ///         "11111111-1111-1111-1111-111111111111",
     ///         "22222222-2222-2222-2222-222222222222"
     ///       ]
@@ -146,7 +146,7 @@ public class TeamsController : ApiBaseController
     /// <response code="404">If the team or any user is not found in the tenant.</response>
     [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
     [HttpPatch("team/members")]
-    public async Task<ActionResult<string>> RemoveMembersToTeam(RemoveMembersFromTeamRequest request)
+    public async Task<ActionResult<string>> RemoveMembersFromTeam(RemoveMembersFromTeamRequest request)
     {
         var command = Mapper.Map<RemoveMembersFromTeam.Command>(request);
 
@@ -173,7 +173,7 @@ public class TeamsController : ApiBaseController
     /// <response code="200">Returns teams successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If the tenant does not exist.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet]
     public async Task<ActionResult<PagedList<TeamDto, DateTime?>>> GetTeams([FromQuery] GetTeamsRequest request)
     {

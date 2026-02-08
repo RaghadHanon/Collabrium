@@ -1,8 +1,8 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 

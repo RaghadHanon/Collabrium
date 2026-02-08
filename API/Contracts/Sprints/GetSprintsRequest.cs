@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace API.Contracts.Sprints;
+﻿namespace API.Contracts.Sprints;
 
 public sealed class GetSprintsRequest
 {

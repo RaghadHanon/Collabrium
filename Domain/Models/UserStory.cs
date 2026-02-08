@@ -16,6 +16,13 @@ public sealed class UserStory : WorkItem
         Estimate(storyPoints);
     }
 
+    public UserStory(string title, string createdByUserId, string projectId, int storyPoints)
+        : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.UserStory;
+        Estimate(storyPoints);
+    }
+
     public void Estimate(int points)
     {
         Guard.Against(points < 0, "StoryPoints cannot be negative.");

@@ -1,8 +1,7 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mappers;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class BugMapper
 {

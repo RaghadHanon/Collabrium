@@ -59,17 +59,21 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
     }
 
     private static bool HasAnyField(UpdateUserProfileRequest r)
-        => !string.IsNullOrWhiteSpace(r.FirstName)
-           || !string.IsNullOrWhiteSpace(r.LastName)
-           || r.DateOfBirth.HasValue
-           || !string.IsNullOrWhiteSpace(r.PhoneNumber)
-           || !string.IsNullOrWhiteSpace(r.LinkedIn)
-           || !string.IsNullOrWhiteSpace(r.Facebook)
-           || !string.IsNullOrWhiteSpace(r.Instagram)
-           || !string.IsNullOrWhiteSpace(r.YouTube)
-           || !string.IsNullOrWhiteSpace(r.Github);
+    {
+        return !string.IsNullOrWhiteSpace(r.FirstName)
+               || !string.IsNullOrWhiteSpace(r.LastName)
+               || r.DateOfBirth.HasValue
+               || !string.IsNullOrWhiteSpace(r.PhoneNumber)
+               || !string.IsNullOrWhiteSpace(r.LinkedIn)
+               || !string.IsNullOrWhiteSpace(r.Facebook)
+               || !string.IsNullOrWhiteSpace(r.Instagram)
+               || !string.IsNullOrWhiteSpace(r.YouTube)
+               || !string.IsNullOrWhiteSpace(r.Github);
+    }
 
     private static bool BeValidUrl(string? url)
-        => Uri.TryCreate(url, UriKind.Absolute, out var uri)
-           && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
 }

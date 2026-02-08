@@ -1,8 +1,7 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mappers;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class TestCaseMapper
 {
@@ -68,7 +67,5 @@ public static class TestCaseMapper
         entity.ExpectedResult = domain.ExpectedResult;
         entity.ActualResult = domain.ActualResult;
         entity.Result = domain.Result;
-
-        WorkItemMappingHelpers.FillEntityBaseFields(domain, entity);
     }
 }

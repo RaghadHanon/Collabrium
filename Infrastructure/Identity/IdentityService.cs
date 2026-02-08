@@ -2,12 +2,12 @@
 using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Services;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Email;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;

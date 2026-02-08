@@ -1,15 +1,15 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class WorkItemRelationMapper
 {
     public static WorkItemRelation ToDomain(WorkItemRelationEntity entity)
     {
-        if (entity is null) throw new ArgumentNullException(nameof(entity));
-
-        return WorkItemRelation.Rehydrate(
+        return entity is null
+            ? throw new ArgumentNullException(nameof(entity))
+            : WorkItemRelation.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
@@ -33,5 +33,17 @@ public static class WorkItemRelationMapper
                 TargetWorkItemId = domain.TargetWorkItemId,
                 RelationType = domain.RelationType
             };
+    }
+
+    public static void UpdateEntity(WorkItemRelation domain, WorkItemRelationEntity entity)
+    {
+        if (domain is null) throw new ArgumentNullException(nameof(domain));
+        if (entity is null) throw new ArgumentNullException(nameof(entity));
+
+        entity.SourceWorkItemId = domain.SourceWorkItemId;
+        entity.TargetWorkItemId = domain.TargetWorkItemId;
+        entity.RelationType = domain.RelationType;
+
+        entity.UpdatedAt = DateTime.UtcNow;
     }
 }

@@ -35,14 +35,9 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
             .HasForeignKey(w => w.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(w => w.OutgoingRelations)
+        builder.HasMany(w => w.Relations)
             .WithOne(r => r.SourceWorkItem)
             .HasForeignKey(r => r.SourceWorkItemId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(w => w.IncomingRelations)
-            .WithOne(r => r.TargetWorkItem)
-            .HasForeignKey(r => r.TargetWorkItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(w => w.Comments)

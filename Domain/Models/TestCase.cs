@@ -33,15 +33,32 @@ public sealed class TestCase : WorkItem
         TestEnvironment = env;
     }
 
+    public TestCase(
+    string title,
+    string createdByUserId,
+    string projectId,
+    string preconditions,
+    string steps,
+    TestEnvironment env,
+    string expectedResult)
+    : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.TestCase;
+        Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
+        Steps = Guard.NotNullOrWhiteSpace(steps, nameof(steps));
+        ExpectedResult = Guard.NotNullOrWhiteSpace(expectedResult, nameof(expectedResult));
+        TestEnvironment = env;
+    }
+
     protected override bool CanReopenFromDone => true;
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
         // TestCase: Backlog -> InTesting -> Done
         // Allow Done -> InTesting (re-run)
-        if (from == WorkItemStatus.Done && to == WorkItemStatus.InTesting) return true;
-
-        return from == to
+        return from == WorkItemStatus.Done && to == WorkItemStatus.InTesting
+            ? true
+            : from == to
             || from switch
             {
                 WorkItemStatus.Backlog => to is WorkItemStatus.InTesting or WorkItemStatus.ReadyForDev,
@@ -103,5 +120,14 @@ public sealed class TestCase : WorkItem
         tc.ActualResult = actualResult;
         tc.Result = result;
         return tc;
+    }
+
+    public void UpdateDefinition(string preconditions, string steps, TestEnvironment env, string expectedResult)
+    {
+        Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
+        Steps = Guard.NotNullOrWhiteSpace(steps, nameof(steps));
+        ExpectedResult = Guard.NotNullOrWhiteSpace(expectedResult, nameof(expectedResult));
+        TestEnvironment = env;
+        Touch();
     }
 }

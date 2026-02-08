@@ -18,9 +18,12 @@ public static class Policies
     public const string Designer = "IsDesigner";
     public const string IT = "IsIT";
     public const string TenantAdmin = "TenantAdmin";
-    public const string PasswordChanged = "IsPasswordChanged";
+    public const string TenantMember = "TenantMember";
     public const string ProductTeamManagerTenantAdmin = "ProductTeamManagerTenantAdmin";
     public const string ProductOwnerTeamLeadTenantAdmin = "ProductOwnerTeamLeadTenantAdmin";
     public const string ProductTeamManager = "ProductTeamManager";
     public const string ProductTeamMember = "ProductTeamMember";
+
+    public const string PasswordChanged = "IsPasswordChanged";
+    public const string MustHaveProjectAccess = "MustHaveProjectAccess";
 }

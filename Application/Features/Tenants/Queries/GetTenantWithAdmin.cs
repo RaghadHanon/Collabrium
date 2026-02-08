@@ -2,7 +2,6 @@
 using Application.Features.Tenants.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
-using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 

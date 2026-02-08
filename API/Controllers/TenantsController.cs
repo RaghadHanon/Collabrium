@@ -1,6 +1,5 @@
 ﻿using API.Common.Attributes;
 using API.Contracts.Tenants;
-using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Tenants.Commands;

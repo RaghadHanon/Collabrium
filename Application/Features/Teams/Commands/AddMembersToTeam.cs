@@ -30,7 +30,7 @@ public sealed class AddMembersToTeam
                 return Result<string>.Failure("TeamId is required.", HttpStatusCode.BadRequest);
 
             if (request.MemberIds is null || request.MemberIds.Length == 0)
-                return Result<string>.Failure("MemberIds is required.", HttpStatusCode.BadRequest);
+                return Result<string>.Failure("MembersIds is required.", HttpStatusCode.BadRequest);
 
             try
             {

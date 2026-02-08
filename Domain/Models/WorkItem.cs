@@ -1,6 +1,5 @@
 ﻿using Domain.Common;
 using Domain.Enums;
-using Domain.ValueObjects;
 
 namespace Domain.Models;
 
@@ -39,6 +38,17 @@ public abstract class WorkItem : Entity
     protected WorkItem() { } // EF
 
     protected WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
+    {
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+        ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
+
+        Status = WorkItemStatus.Backlog;
+        Priority = WorkItemPriority.Medium;
+        Touch();
+    }
+
+    protected WorkItem(string title, string createdByUserId, string projectId)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));

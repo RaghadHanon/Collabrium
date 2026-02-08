@@ -5,9 +5,9 @@ using AutoMapper;
 
 namespace API.MappingProfiles;
 
-public class TenantsMappingProfile : Profile
+public class TenantsApiMappingProfile : Profile
 {
-    public TenantsMappingProfile()
+    public TenantsApiMappingProfile()
     {
         CreateMap<RegisterTenantWithAdminRequest, RegisterTenantWithAdmin.Command>();
         CreateMap<UploadImageRequest, UploadTenantProfilePhoto.Command>();

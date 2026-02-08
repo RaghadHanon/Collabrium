@@ -12,6 +12,12 @@ public sealed class Epic : WorkItem
         Type = WorkItemType.Epic;
     }
 
+    public Epic(string title, string createdByUserId, string projectId)
+           : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Epic;
+    }
+
     public static Epic Rehydrate(
         string id,
         DateTime createdAt,
@@ -34,5 +40,21 @@ public sealed class Epic : WorkItem
         e.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
             assignedToUserId, sprintId, startDate, endDate);
         return e;
+    }
+
+    protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        // Bug workflow: Backlog -> InProgress  -> Done
+        // Allow Done -> InProgress (Reopen)
+        return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
+            ? true
+            : from == to
+            || from switch
+            {
+                WorkItemStatus.Backlog => to is WorkItemStatus.InProgress,
+                WorkItemStatus.InProgress => to is WorkItemStatus.Done or WorkItemStatus.Backlog,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
     }
 }

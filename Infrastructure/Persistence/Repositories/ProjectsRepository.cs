@@ -2,7 +2,7 @@
 using Application.Common.DTOs;
 using Application.Interfaces.Repositories;
 using Domain.Models;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -72,6 +72,28 @@ public sealed class ProjectsRepository : IProjectsRepository
         return !await _dbContext.Projects
             .AsNoTracking()
             .AnyAsync(p => p.TenantId == tId && p.Name.ToLower() == normalized, cancellationToken);
+    }
+
+    public async Task<bool> IsUserHasAccessToProjectAsync(string tenantId, string userId, string projectId, CancellationToken cancellationToken = default)
+    {
+        return !TryNormalize(tenantId, projectId, out var tId, out var pId)
+            ? false
+            : await _dbContext.Projects
+         .AsNoTracking()
+         .AnyAsync(p =>
+             p.TenantId == tId &&
+             p.Id == pId &&
+             p.Team != null && p.Team.Members.Any(m => m.UserId == userId),
+             cancellationToken);
+    }
+
+    public async Task<bool> IsProjectExists(string tenantId, string projectId, CancellationToken cancellationToken = default)
+    {
+        return !TryNormalize(tenantId, projectId, out var tId, out var pId)
+            ? false
+            : await _dbContext.Projects
+                .AsNoTracking()
+                .AnyAsync(p => p.TenantId == tId && p.Id == pId, cancellationToken);
     }
 
     public async Task<PagedList<Project, DateTime?>> GetPagedAsync(

@@ -12,6 +12,12 @@ public sealed class TaskItem : WorkItem
         Type = WorkItemType.TaskItem;
     }
 
+    public TaskItem(string title, string createdByUserId, string projectId)
+        : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.TaskItem;
+    }
+
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
         // Task workflow: Backlog -> ReadyForDev -> InProgress -> InReview -> Done

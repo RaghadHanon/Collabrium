@@ -15,10 +15,7 @@ public sealed class TeamsReadProfile : Profile
                 o => o.MapFrom(s => s.Members.Count));
 
         CreateMap<TeamEntity, TeamFullInfoDto>()
-            .ForMember(d => d.Members, o => o.MapFrom(s => s.Members.Select(m => m.User)))
-            .ForMember(d => d.TeamLeadName,
-                o => o.MapFrom(s => s.TeamLead != null ? s.TeamLead.FullName : ""))
-            .ForMember(d => d.Count,
-                o => o.MapFrom(s => s.Members.Count));
+            .IncludeBase<TeamEntity, TeamDto>()
+            .ForMember(d => d.Members, o => o.MapFrom(s => s.Members.Select(m => m.User)));
     }
 }

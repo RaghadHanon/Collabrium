@@ -58,7 +58,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="200">Returns the project.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("project/{projectId}")]
     public async Task<ActionResult<ProjectDto>> GetProject(string projectId)
     {
@@ -81,7 +81,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <response code="200">Returns projects successfully.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet]
     public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetProjects([FromQuery] GetProjectsRequest request)
     {
@@ -202,7 +202,7 @@ public sealed class ProjectsController : ApiBaseController
     /// </remarks>
     /// <response code="200">Returns backlog items.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize]
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("project/{projectId}/backlog")]
     public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId)
     {

@@ -1,4 +1,5 @@
 ﻿using Application.Common.Exceptions;
+using Domain.Common;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -95,8 +96,7 @@ public class GlobalExceptionHandler(
     {
         return exception switch
         {
-            MustChangePasswordException =>
-            (StatusCodes.Status403Forbidden, "Password Change Required", exception.Message),
+            MustChangePasswordException => (StatusCodes.Status403Forbidden, "Password Change Required", exception.Message),
             BadRequestException => (StatusCodes.Status400BadRequest, "Bad Request", exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
             UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Unauthorized", exception.Message),
@@ -104,6 +104,8 @@ public class GlobalExceptionHandler(
             UnauthenticatedException => (StatusCodes.Status401Unauthorized, "Unauthenticated", exception.Message),
             TenantNotFoundException => (StatusCodes.Status404NotFound, "Tenant Not Found", exception.Message),
             TenantNotActiveException => (StatusCodes.Status403Forbidden, "Tenant Not Active", exception.Message),
+            DomainException => (StatusCodes.Status400BadRequest, "Bad Request", exception.Message),
+            NoAccessToTheProjectException => (StatusCodes.Status403Forbidden, "Forbidden", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Server Error", "An unexpected error occurred.")
         };
     }

@@ -1,15 +1,15 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.Mapping;
+namespace Infrastructure.Persistence.Mappers;
 
 public static class CodeLinkMapper
 {
     public static CodeLink ToDomain(CodeLinkEntity entity)
     {
-        if (entity is null) throw new ArgumentNullException(nameof(entity));
-
-        return CodeLink.Rehydrate(
+        return entity is null
+            ? throw new ArgumentNullException(nameof(entity))
+            : CodeLink.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
@@ -21,18 +21,18 @@ public static class CodeLinkMapper
 
     public static CodeLinkEntity ToEntity(CodeLink domain, string workItemId)
     {
-        if (domain is null) throw new ArgumentNullException(nameof(domain));
-
-        return new CodeLinkEntity
-        {
-            Id = domain.Id,
-            WorkItemId = workItemId,
-            Url = domain.Url,
-            LinkType = domain.LinkType,
-            DisplayName = domain.DisplayName,
-            CreatedAt = domain.CreatedAt,
-            UpdatedAt = domain.UpdatedAt
-        };
+        return domain is null
+            ? throw new ArgumentNullException(nameof(domain))
+            : new CodeLinkEntity
+            {
+                Id = domain.Id,
+                WorkItemId = workItemId,
+                Url = domain.Url,
+                LinkType = domain.LinkType,
+                DisplayName = domain.DisplayName,
+                CreatedAt = domain.CreatedAt,
+                UpdatedAt = domain.UpdatedAt
+            };
     }
 
     public static void UpdateEntity(CodeLink domain, CodeLinkEntity entity)

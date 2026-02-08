@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamsRepository, TeamsRepository>();
         services.AddScoped<IProjectsRepository, ProjectsRepository>();
         services.AddScoped<ISprintsRepository, SprintsRepository>();
+        services.AddScoped<IWorkItemsRepository, WorkItemsRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -72,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<ITeamsReadModel, TeamsReadModel>();
         services.AddScoped<IProjectsReadModel, ProjectsReadModel>();
         services.AddScoped<ISprintsReadModel, SprintsReadModel>();
+        services.AddScoped<IWorkItemsReadModel, WorkItemsReadModel>();
     }
 
     private static void AddAutoMapper(IServiceCollection services)
@@ -101,6 +103,7 @@ public static class DependencyInjection
     private static void AddAuthorizationHandlers(IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, IsPasswordChangedHandler>();
+        services.AddScoped<IAuthorizationHandler, MustHaveProjectAccessHandler>();
     }
 
     private static void AddIdentity(IServiceCollection services, IConfiguration configuration)

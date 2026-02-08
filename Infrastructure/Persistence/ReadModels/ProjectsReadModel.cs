@@ -41,7 +41,7 @@ public sealed class ProjectsReadModel : IProjectsReadModel
     {
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<ProjectEntity> query = _dbContext.Projects.AsNoTracking();
+        var query = _dbContext.Projects.AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 
@@ -68,13 +68,13 @@ public sealed class ProjectsReadModel : IProjectsReadModel
         };
     }
 
-    public async Task<IReadOnlyList<WorkItemDto>> GetBacklogAsync(
+    public async Task<IReadOnlyList<WorkItemListItemDto>> GetBacklogAsync(
         string tenantId,
         string projectId,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return Array.Empty<WorkItemDto>();
+            return Array.Empty<WorkItemListItemDto>();
 
         var tId = tenantId.Trim();
         var pId = projectId.Trim();
@@ -83,7 +83,7 @@ public sealed class ProjectsReadModel : IProjectsReadModel
             .AsNoTracking()
             .Where(w => w.ProjectId == pId && w.SprintId == null)
             .OrderBy(w => w.CreatedAt)
-            .ProjectTo<WorkItemDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
 

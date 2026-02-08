@@ -1,6 +1,5 @@
 ﻿using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
 
 namespace Infrastructure.Persistence.Mappers;
 
@@ -16,15 +15,9 @@ internal static class WorkItemMappingHelpers
                 domain.RehydrateAddComment(CommentMapper.ToDomain(c));
         }
 
-        if (entity.OutgoingRelations is not null)
+        if (entity.Relations is not null)
         {
-            foreach (var r in entity.OutgoingRelations)
-                domain.RehydrateAddRelation(WorkItemRelationMapper.ToDomain(r));
-        }
-
-        if (entity.IncomingRelations is not null)
-        {
-            foreach (var r in entity.IncomingRelations)
+            foreach (var r in entity.Relations)
                 domain.RehydrateAddRelation(WorkItemRelationMapper.ToDomain(r));
         }
 

@@ -87,7 +87,7 @@ public sealed class User : Entity
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
         Email = (email ?? "").Trim();
         UserName = (userName ?? "").Trim();
-        Guard.Against(dateOfBirth <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18), 
+        Guard.Against(dateOfBirth <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18),
             "User Must be at least 18.");
         Touch();
     }

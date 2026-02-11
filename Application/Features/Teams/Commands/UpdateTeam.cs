@@ -1,8 +1,10 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Domain.Enums;
 using MediatR;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Net;
 
 namespace Application.Features.Teams.Commands;
@@ -23,6 +25,7 @@ public class UpdateTeam
             ITeamsRepository teamsRepository,
             ITenantContext tenantContext,
             IUsersRepository usersRepository,
+            ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
@@ -50,6 +53,9 @@ public class UpdateTeam
                 var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
                 if (leader is null || !string.Equals(leader.TenantId, tenantId, StringComparison.Ordinal))
                     return Result<Unit>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
+
+                if(await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead.ToString())
+                    return Result<Unit>.Failure("Only team leaders can be assigned to lead the team.", HttpStatusCode.BadRequest);
             }
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>

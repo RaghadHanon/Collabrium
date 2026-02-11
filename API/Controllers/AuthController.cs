@@ -72,6 +72,7 @@ public class AuthController : ApiBaseController
     /// <response code="201">Returns the newly created user and a Location header pointing to it.</response>
     /// <response code="400">If the request data is invalid.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.PasswordChanged)]
     [HttpPost("tenant-employee")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantEmployee(RegisterEmployeeRequest registerEmployeeRequest)
     {

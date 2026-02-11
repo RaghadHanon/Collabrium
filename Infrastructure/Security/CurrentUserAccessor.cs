@@ -42,4 +42,17 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
 
         return entity is null ? null : UserMapper.ToDomain(entity);
     }
+
+    public async Task<string?> GetUserRole(string userId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return null;
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return null;
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return roles.FirstOrDefault();
+    }
 }

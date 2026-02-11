@@ -232,6 +232,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("project/{projectId}/board")]
     public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId)
     {
@@ -255,6 +256,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("project/{projectId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
     {
@@ -282,6 +284,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
+    [Authorize(Policy = Policies.TenantMember)]
     [HttpGet("project/{projectId}/epics")]
     public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId)
     {

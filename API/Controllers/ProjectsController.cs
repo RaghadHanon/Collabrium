@@ -5,6 +5,8 @@ using Application.Features.Projects.Commands;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Boards;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -192,7 +194,7 @@ public sealed class ProjectsController : ApiBaseController
 
     /// <summary>
     /// Retrieves backlog for a project.
-    /// Backlog = all work items in the project that are not assigned to any sprint.
+    /// ToDo = all work items in the project that are not assigned to any sprint.
     /// </summary>
     /// <remarks>
     /// Sample request:
@@ -207,6 +209,87 @@ public sealed class ProjectsController : ApiBaseController
     public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId)
     {
         var query = new GetProjectBacklog.Query { ProjectId = projectId };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the project board (workflow columns) with work items grouped by status.
+    /// </summary>
+    /// <remarks>
+    /// Returns the board columns:
+    /// ToDo / ReadyForDev / InProgress / InReview / InTesting / ReadyForRelease / Done
+    /// with the items under each column.
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/board
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <returns>The board data grouped by workflow status.</returns>
+    /// <response code="200">Board loaded successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project not found.</response>
+    [HttpGet("project/{projectId}/board")]
+    public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId)
+    {
+        var query = new GetProjectBoard.Query { ProjectId = projectId };
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the projects list of user stories.
+    /// </summary>
+    /// <remarks>
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/user-stories
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <returns>The list of user stories of a project.</returns>
+    /// <response code="200">User stories loaded successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project not found.</response>
+    [HttpGet("project/{projectId}/user-stories")]
+    public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
+    {
+        var query = new GetWorkItemsByType.Query { 
+            ProjectId = projectId, 
+            Type = WorkItemType.UserStory
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the projects list of Epics.
+    /// </summary>
+    /// <remarks>
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/epics
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <returns>The list of epics of a project.</returns>
+    /// <response code="200">Epics loaded successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project not found.</response>
+    [HttpGet("project/{projectId}/epics")]
+    public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId)
+    {
+        var query = new GetWorkItemsByType.Query
+        {
+            ProjectId = projectId,
+            Type = WorkItemType.Epic
+        };
 
         return HandleResult(await Mediator.Send(query));
     }

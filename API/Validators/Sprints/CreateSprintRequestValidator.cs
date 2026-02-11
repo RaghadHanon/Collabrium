@@ -7,9 +7,6 @@ public sealed class CreateSprintRequestValidator : AbstractValidator<CreateSprin
 {
     public CreateSprintRequestValidator()
     {
-        RuleFor(x => x.ProjectId)
-            .NotEmpty().WithMessage("ProjectId is required.");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required.")
             .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");

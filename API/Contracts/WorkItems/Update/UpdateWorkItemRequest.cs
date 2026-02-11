@@ -11,7 +11,5 @@ public abstract class UpdateWorkItemRequest
     public string? AssignedToUserId { get; init; }
     public string? SprintId { get; init; }
 
-    // Optional lifecycle (if you allow update here; many teams make separate endpoints)
-    public string? Status { get; init; }
     public bool? IsBlocked { get; init; }
 }

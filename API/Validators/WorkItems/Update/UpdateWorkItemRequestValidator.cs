@@ -29,11 +29,6 @@ public sealed class UpdateWorkItemRequestValidator : AbstractValidator<UpdateWor
             .WithMessage("Priority must be a valid WorkItemPriority value.")
             .When(x => !string.IsNullOrWhiteSpace(x.Priority));
 
-        RuleFor(x => x.Status)
-            .Must(s => Enum.TryParse<WorkItemStatus>(s, true, out _))
-            .WithMessage("Status must be a valid WorkItemStatus value.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Status));
-
         RuleFor(x => x.AssignedToUserId)
             .Must(x => !string.IsNullOrWhiteSpace(x))
             .When(x => x.AssignedToUserId is not null)
@@ -58,7 +53,6 @@ public sealed class UpdateWorkItemRequestValidator : AbstractValidator<UpdateWor
                || !string.IsNullOrWhiteSpace(r.Priority)
                || r.AssignedToUserId is not null
                || r.SprintId is not null
-               || !string.IsNullOrWhiteSpace(r.Status)
                || r.IsBlocked.HasValue;
     }
 }

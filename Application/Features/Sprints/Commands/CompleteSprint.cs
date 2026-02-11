@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Sprints.DTOs;
+using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -12,6 +13,7 @@ public class CompleteSprint
 {
     public class Command : IRequest<Result<SprintDto>>
     {
+        public required string ProjectId { get; set; }
         public required string SprintId { get; set; }
     }
 
@@ -27,7 +29,7 @@ public class CompleteSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, cancellationToken);
+            var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
@@ -37,7 +39,7 @@ public class CompleteSprint
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
             }, cancellationToken);
 
-            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, cancellationToken);
+            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint completed but could not be loaded.", HttpStatusCode.InternalServerError)

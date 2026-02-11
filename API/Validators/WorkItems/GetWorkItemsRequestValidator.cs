@@ -4,7 +4,7 @@ using FluentValidation;
 
 namespace API.Validators.WorkItems;
 
-public sealed class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsRequest>
+public class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsRequest>
 {
     public GetWorkItemsRequestValidator()
     {

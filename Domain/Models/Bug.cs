@@ -29,15 +29,15 @@ public sealed class Bug : WorkItem
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        // Bug workflow: Backlog -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
         return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
             ? true
             : from == to
             || from switch
             {
-                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
-                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
                 WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
                 WorkItemStatus.Done => to is WorkItemStatus.Done,

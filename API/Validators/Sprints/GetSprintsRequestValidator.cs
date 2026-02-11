@@ -8,9 +8,6 @@ public sealed class GetSprintsRequestValidator : AbstractValidator<GetSprintsReq
 {
     public GetSprintsRequestValidator()
     {
-        RuleFor(x => x.ProjectId)
-            .NotEmpty().WithMessage("ProjectId is required.");
-
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
 

@@ -518,4 +518,45 @@ public sealed class WorkItemsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+
+    /// <summary>
+    /// Changes the workflow status of a work item.
+    /// </summary>
+    /// <remarks>
+    /// Moves a work item between workflow columns (ToDo / ReadyForDev / InProgress / InReview / InTesting / ReadyForRelease / Done)
+    /// using the domain transition rules.
+    ///
+    /// Sample request:
+    ///
+    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/status
+    ///     Content-Type: application/json
+    ///
+    ///     {
+    ///       "newStatus": "InProgress"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="projectId">The project identifier.</param>
+    /// <param name="workItemId">The work item identifier.</param>
+    /// <param name="request">The new status payload.</param>
+    /// <returns>The updated work item.</returns>
+    /// <response code="200">Status changed successfully.</response>
+    /// <response code="400">If the request is invalid or the transition is not allowed by workflow rules.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the work item does not exist in the project.</response>
+    /// <response code="500">If an unexpected error occurred.</response>
+    [HttpPatch("{workItemId}/status")]
+    public async Task<ActionResult<WorkItemDto>> ChangeStatus(
+        string projectId,
+        string workItemId,
+        ChangeWorkItemStatusRequest request)
+    {
+
+        var command = Mapper.Map<ChangeWorkItemStatus.Command>(request);
+        command.ProjectId = projectId;
+        command.WorkItemId = workItemId;
+
+        return HandleResult(await Mediator.Send(command));
+    }
 }

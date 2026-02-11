@@ -11,6 +11,7 @@ public class GetSprint
 {
     public class Query : IRequest<Result<SprintDto>>
     {
+        public required string ProjectId { get; set; }
         public required string SprintId { get; set; }
     }
 
@@ -24,7 +25,7 @@ public class GetSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var dto = await sprintsReadModel.GetByIdAsync(tenantId, request.SprintId, cancellationToken);
+            var dto = await sprintsReadModel.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound)

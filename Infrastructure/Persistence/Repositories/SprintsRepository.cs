@@ -55,18 +55,20 @@ public class SprintsRepository : ISprintsRepository
         return true;
     }
 
-    public async Task<bool> IsExistsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistsAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
             return false;
+
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
+
         return await _dbContext.Sprints
             .AsNoTracking()
-            .AnyAsync(s => s.TenantId == tId && s.Id == sId, cancellationToken);
+            .AnyAsync(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId), cancellationToken);
     }
 
-    public async Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
             return null;
@@ -76,7 +78,7 @@ public class SprintsRepository : ISprintsRepository
 
         var entity = await _dbContext.Sprints
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId), cancellationToken);
 
         return entity is null ? null : SprintMapper.ToDomain(entity);
     }

@@ -30,7 +30,6 @@ public sealed partial class UpdateWorkItem
         public string? AssignedToUserId { get; set; }
         public string? SprintId { get; set; }
         public bool? IsBlocked { get; set; }
-        public WorkItemStatus? Status { get; set; }
 
         public IWorkItemUpdateDetails? Details { get; set; }
     }
@@ -57,7 +56,7 @@ public sealed partial class UpdateWorkItem
 
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
-                request.ProjectId,
+                request.ProjectId!,
                 request.WorkItemId,
                 includeChildren: true,
                 cancellationToken);
@@ -65,7 +64,7 @@ public sealed partial class UpdateWorkItem
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            if (request.SprintId is not null && !(await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, cancellationToken)))
+            if (request.SprintId is not null && !(await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken)))
                 return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
 
             if (request.Type != workItem.Type)
@@ -101,9 +100,6 @@ public sealed partial class UpdateWorkItem
                     if (request.IsBlocked.Value) workItem.Block();
                     else workItem.Unblock();
                 }
-
-                if (request.Status.HasValue)
-                    workItem.ChangeStatus(request.Status.Value);
 
                 ApplyTypeSpecificPatch(workItem, request);
 

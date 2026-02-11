@@ -20,12 +20,12 @@ public sealed class TaskItem : WorkItem
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        // Task workflow: Backlog -> ReadyForDev -> InProgress -> InReview -> Done
+        // Task workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> Done
         return from == to
             || from switch
             {
-                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
-                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.ReadyForDev,
                 WorkItemStatus.InReview => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
                 WorkItemStatus.Done => to is WorkItemStatus.Done,

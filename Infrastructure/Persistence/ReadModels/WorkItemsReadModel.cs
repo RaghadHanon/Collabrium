@@ -3,6 +3,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,65 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .FirstOrDefaultAsync(cancellationToken);
 
         return entity is null ? null : _mapper.Map<WorkItemDto>(entity);
+    }
+
+    public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
+        string tenantId,
+        string projectId,
+        string? sprintId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return new List<WorkItemListItemDto>();
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var sId = sprintId?.Trim();
+
+        var query = _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
+
+        if (!string.IsNullOrWhiteSpace(sId))
+            query = query.Where(w => w.SprintId == sId);
+
+        var items = await query
+            .OrderBy(x => x.CreatedAt)
+            .Where(x => x.Type != WorkItemType.UserStory && x.Type != WorkItemType.Epic && x.SprintId != null)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        return items;
+    }
+
+    public async Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(
+            string tenantId,
+            string projectId,
+            WorkItemType type,
+            string? sprintId,
+            CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return new List<WorkItemListItemDto>();
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var sId = sprintId?.Trim();
+
+        var query = _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
+
+        if (!string.IsNullOrWhiteSpace(sId))
+            query = query.Where(w => w.SprintId == sId);
+
+        var items = await query
+            .OrderBy(x => x.CreatedAt)
+            .Where(x => x.Type == type)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        return items;
     }
 
     public async Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsAsync(

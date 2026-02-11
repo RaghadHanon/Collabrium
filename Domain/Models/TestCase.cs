@@ -54,16 +54,15 @@ public sealed class TestCase : WorkItem
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        // TestCase: Backlog -> InTesting -> Done
+        // TestCase: ToDo -> InTesting -> Done
         // Allow Done -> InTesting (re-run)
         return from == WorkItemStatus.Done && to == WorkItemStatus.InTesting
             ? true
             : from == to
             || from switch
             {
-                WorkItemStatus.Backlog => to is WorkItemStatus.InTesting or WorkItemStatus.ReadyForDev,
-                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InTesting or WorkItemStatus.Backlog,
-                WorkItemStatus.InTesting => to is WorkItemStatus.Done,
+                WorkItemStatus.ToDo => to is WorkItemStatus.InTesting,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.ToDo,
                 WorkItemStatus.Done => to is WorkItemStatus.Done,
                 _ => false
             };

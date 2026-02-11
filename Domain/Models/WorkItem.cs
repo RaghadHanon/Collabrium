@@ -43,7 +43,7 @@ public abstract class WorkItem : Entity
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
-        Status = WorkItemStatus.Backlog;
+        Status = WorkItemStatus.ToDo;
         Priority = WorkItemPriority.Medium;
         Touch();
     }
@@ -54,7 +54,7 @@ public abstract class WorkItem : Entity
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
-        Status = WorkItemStatus.Backlog;
+        Status = WorkItemStatus.ToDo;
         Priority = WorkItemPriority.Medium;
         Touch();
     }
@@ -129,8 +129,8 @@ public abstract class WorkItem : Entity
         return from == to
             || from switch
             {
-                WorkItemStatus.Backlog => to is WorkItemStatus.ReadyForDev,
-                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.Backlog,
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
                 WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
@@ -169,7 +169,7 @@ public abstract class WorkItem : Entity
 
     public void MoveToBacklog()
     {
-        ChangeStatus(WorkItemStatus.Backlog);
+        ChangeStatus(WorkItemStatus.ToDo);
     }
 
     public void MoveToReadyForDev()

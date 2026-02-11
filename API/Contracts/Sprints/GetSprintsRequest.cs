@@ -2,7 +2,6 @@
 
 public sealed class GetSprintsRequest
 {
-    public required string ProjectId { get; init; }
     public string? NameContains { get; init; }
     public string? Status { get; init; }
 

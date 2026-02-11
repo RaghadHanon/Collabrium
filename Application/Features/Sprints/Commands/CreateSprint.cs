@@ -52,7 +52,7 @@ public class CreateSprint
                 await sprintsRepository.AddAsync(sprint, cancellationToken);
             }, cancellationToken);
 
-            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, cancellationToken);
+            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint created but could not be loaded.", HttpStatusCode.InternalServerError)

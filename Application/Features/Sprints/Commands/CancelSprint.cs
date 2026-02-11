@@ -12,6 +12,7 @@ public class CancelSprint
 {
     public class Command : IRequest<Result<SprintDto>>
     {
+        public required string ProjectId { get; set; }
         public required string SprintId { get; set; }
     }
 
@@ -27,7 +28,7 @@ public class CancelSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, cancellationToken);
+            var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
@@ -37,7 +38,7 @@ public class CancelSprint
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
             }, cancellationToken);
 
-            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, cancellationToken);
+            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint canceled but could not be loaded.", HttpStatusCode.InternalServerError)

@@ -1,6 +1,10 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
+using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -17,6 +21,7 @@ public sealed class DeleteWorkItem
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
         ITenantContext tenantContext,
+        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
@@ -24,6 +29,22 @@ public sealed class DeleteWorkItem
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
+            if (workItem == null)
+                return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
+
+            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
+            var isAdmin = new[] {
+                UserRole.TenantAdmin.ToString(),
+                UserRole.TeamLead.ToString(),
+                UserRole.BusinessAnalyst.ToString(),
+                UserRole.ProductOwner.ToString()
+            }.Contains(userRole);
+
+            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
+                && !isAdmin)
+                return Result<Unit>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
 
             var removed = false;
 

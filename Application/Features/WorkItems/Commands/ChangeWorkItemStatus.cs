@@ -3,8 +3,10 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Domain.Enums;
 using MediatR;
+using System.Linq;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
@@ -22,7 +24,8 @@ public sealed class ChangeWorkItemStatus
         IWorkItemsRepository workItemsRepository,
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<WorkItemDto>>
     {
         public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -41,6 +44,18 @@ public sealed class ChangeWorkItemStatus
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
+            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
+            var isAdmin = new[] { 
+                UserRole.TenantAdmin.ToString(), 
+                UserRole.TeamLead.ToString(),
+                UserRole.BusinessAnalyst.ToString(),
+                UserRole.ProductOwner.ToString()
+            }.Contains(userRole);
+
+            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory) 
+                && !isAdmin)
+                return Result<WorkItemDto>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
+            
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 workItem.ChangeStatus(request.NewStatus);

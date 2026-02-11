@@ -567,7 +567,6 @@ public sealed class WorkItemsController : ApiBaseController
         string workItemId,
         ChangeWorkItemStatusRequest request)
     {
-
         var command = Mapper.Map<ChangeWorkItemStatus.Command>(request);
         command.ProjectId = projectId;
         command.WorkItemId = workItemId;

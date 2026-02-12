@@ -106,6 +106,7 @@ public class GlobalExceptionHandler(
             TenantNotActiveException => (StatusCodes.Status403Forbidden, "Tenant Not Active", exception.Message),
             DomainException => (StatusCodes.Status400BadRequest, "Bad Request", exception.Message),
             NoAccessToTheProjectException => (StatusCodes.Status403Forbidden, "Forbidden", exception.Message),
+            NotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Server Error", "An unexpected error occurred.")
         };
     }

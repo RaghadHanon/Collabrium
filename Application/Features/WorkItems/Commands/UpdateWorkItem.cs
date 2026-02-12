@@ -70,11 +70,11 @@ public sealed partial class UpdateWorkItem
             if (request.Type != workItem.Type)
                 return Result<WorkItemDto>.Failure("Work item type mismatch.", HttpStatusCode.BadRequest);
 
-            var isUserValidToBeAssigned = request.AssignedToUserId is not null
+            var isUserValidToBeAssigned = !string.IsNullOrEmpty(request.AssignedToUserId)
                  && await usersReadModel.UserExistsAsync(request.AssignedToUserId, cancellationToken)
                  && await projectsRepository.IsUserHasAccessToProjectAsync(tenantId, request.AssignedToUserId, request.ProjectId, cancellationToken);
 
-            if (!isUserValidToBeAssigned)
+            if (!string.IsNullOrEmpty(request.AssignedToUserId) && !isUserValidToBeAssigned)
                 return Result<WorkItemDto>.Failure("Assigned user is invalid or does not have access to the project.", HttpStatusCode.BadRequest);
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>

@@ -18,6 +18,7 @@ public interface IWorkItemsReadModel
             WorkItemType type,
             string? sprintId,
             CancellationToken cancellationToken = default);
+    List<WorkItemStatus> GetAllowedStatusesByType(WorkItemType type);
     Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken ct = default);

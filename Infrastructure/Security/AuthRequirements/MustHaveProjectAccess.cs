@@ -70,8 +70,7 @@ public class MustHaveProjectAccessHandler
 
         if(!(await _projectsRepository.IsProjectExists(user!.TenantId!, projectIdString)))
         {
-            context.Fail();
-            return;
+            throw new NotFoundException("Project not found");
         }
 
         var hasAccess = await _projectsRepository.IsUserHasAccessToProjectAsync(user!.TenantId!, userId, projectIdString);

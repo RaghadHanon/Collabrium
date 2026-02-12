@@ -27,4 +27,6 @@ public class WorkItemDto
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+
+    public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
 }

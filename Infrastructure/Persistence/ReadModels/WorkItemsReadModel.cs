@@ -3,8 +3,10 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Core;
 using Domain.Enums;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -40,7 +42,16 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return entity is null ? null : _mapper.Map<WorkItemDto>(entity);
+        var domainItem = WorkItemMapper.ToDomain(entity!);
+        var allowedStatuses = domainItem != null 
+            ? domainItem.GetAllowedStatusTransitions()
+            : new List<WorkItemStatus>();
+        var dto = entity is null ? null : _mapper.Map<WorkItemDto>(entity);
+
+        if (dto != null)
+            dto.AllowedStatuses = allowedStatuses;
+
+        return entity is null ? null : dto;
     }
 
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
@@ -70,6 +81,11 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .ToListAsync(cancellationToken);
 
         return items;
+    }
+
+    public List<WorkItemStatus> GetAllowedStatusesByType(WorkItemType type)
+    {
+        return WorkItemStatusRules.GetAllowedStatusesByType(type) ?? new List<WorkItemStatus>();
     }
 
     public async Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(

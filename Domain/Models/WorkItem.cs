@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -165,6 +166,16 @@ public abstract class WorkItem : Entity
             EndDate = null;
 
         Touch();
+    }
+
+    public List<WorkItemStatus> GetAllowedStatuses()
+    {
+        return WorkItemStatusRules.GetAllowedStatusesByType(Type) ?? new List<WorkItemStatus>();
+    }
+
+    public List<WorkItemStatus> GetAllowedStatusTransitions()
+    {
+        return GetAllowedStatuses().Where(s => IsValidTransition(Status, s)).ToList();
     }
 
     public void MoveToBacklog()

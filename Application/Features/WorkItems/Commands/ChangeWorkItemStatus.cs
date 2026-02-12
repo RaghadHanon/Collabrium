@@ -56,6 +56,10 @@ public sealed class ChangeWorkItemStatus
                 && !isAdmin)
                 return Result<WorkItemDto>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
             
+            var allowedStatuses = workItem.GetAllowedStatuses();
+            if (!allowedStatuses.Contains(request.NewStatus))
+                return Result<WorkItemDto>.Failure($"Invalid status transition. Allowed statuses: {string.Join(", ", allowedStatuses)}.", HttpStatusCode.BadRequest);
+            
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 workItem.ChangeStatus(request.NewStatus);

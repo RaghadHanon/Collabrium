@@ -43,22 +43,41 @@ public class UpdateUserProfile
             {
                 return Result<Unit>.Failure("User not found in this tenant.", HttpStatusCode.Forbidden);
             }
+            var first = PatchHelpers.DecideStringPatch(request.FirstName);
+            var last = PatchHelpers.DecideStringPatch(request.LastName);
+
+            var currentFullName = user.FullName ?? "";
+            var currentParts = currentFullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var currentFirst = currentParts.Length > 0 ? currentParts[0] : "";
+            var currentLast = currentParts.Length > 1 ? string.Join(' ', currentParts.Skip(1)) : "";
+
+            if (first.Action == PatchHelpers.PatchStringAction.Clear ||
+                last.Action == PatchHelpers.PatchStringAction.Clear)
+            {
+                return Result<Unit>.Failure("FirstName/LastName cannot be cleared.", HttpStatusCode.BadRequest);
+            }
+
+            var newFirst = first.Action == PatchHelpers.PatchStringAction.Set ? first.Value! : currentFirst;
+            var newLast = last.Action == PatchHelpers.PatchStringAction.Set ? last.Value! : currentLast;
+            var newFullName = $"{newFirst} {newLast}".Trim();
+
+            var newDob = request.DateOfBirth ?? user.DateOfBirth;
 
             user.UpdateIdentity(
-                fullName: $"{request.FirstName} {request.LastName}",
+                fullName: newFullName,
                 email: user.Email,
                 userName: user.UserName,
-                dateOfBirth: request.DateOfBirth ?? user.DateOfBirth
+                dateOfBirth: newDob
             );
 
             user.SetContactInfo(
                 email: user.Email,
-                phone: request.PhoneNumber ?? user.ContactInfo.PhoneNumber,
-                linkedIn: request.LinkedIn ?? user.ContactInfo.Socials.LinkedIn,
-                facebook: request.Facebook ?? user.ContactInfo.Socials.Facebook,
-                instagram: request.Instagram ?? user.ContactInfo.Socials.Instagram,
-                youTube: request.YouTube ?? user.ContactInfo.Socials.YouTube,
-                github: request.Github ?? user.ContactInfo.Socials.Github
+                phone: PatchHelpers.ApplyStringPatch(user.ContactInfo.PhoneNumber, request.PhoneNumber),
+                linkedIn: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.LinkedIn, request.LinkedIn),
+                facebook: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Facebook, request.Facebook),
+                instagram: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Instagram, request.Instagram),
+                youTube: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.YouTube, request.YouTube),
+                github: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Github, request.Github)
             );
 
             await usersRepository.UpdateAsync(user, cancellationToken);

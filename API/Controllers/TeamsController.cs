@@ -41,7 +41,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
     /// <response code="404">If the tenant does not exist.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Teams_Manage)]
     [HttpPost("team")]
     public async Task<ActionResult<string>> CreateTeam(CreateTeamRequest request)
     {
@@ -67,7 +67,7 @@ public class TeamsController : ApiBaseController
     /// <response code="200">Returns the team information successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If the team with the specified ID does not exist.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Teams_Read)]
     [HttpGet("team/{teamId}")]
     public async Task<ActionResult<TeamFullInfoDto>> GetTeam(string teamId)
     {
@@ -107,7 +107,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If the team or any user is not found in the tenant.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Teams_Manage)]
     [HttpPost("team/members")]
     public async Task<ActionResult<string>> AddMembersToTeam(AddMembersToTeamRequest request)
     {
@@ -144,7 +144,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If the team or any user is not found in the tenant.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Teams_Manage)]
     [HttpPatch("team/members")]
     public async Task<ActionResult<string>> RemoveMembersFromTeam(RemoveMembersFromTeamRequest request)
     {
@@ -173,7 +173,7 @@ public class TeamsController : ApiBaseController
     /// <response code="200">Returns teams successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If the tenant does not exist.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Teams_Read)]
     [HttpGet]
     public async Task<ActionResult<PagedList<TeamDto, DateTime?>>> GetTeams([FromQuery] GetTeamsRequest request)
     {
@@ -211,7 +211,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If tenant, team, or team lead is not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Teams_Manage)]
     [HttpPatch("team/{id}")]
     public async Task<ActionResult> UpdateTeam(string id, UpdateTeamRequest request)
     {
@@ -239,7 +239,7 @@ public class TeamsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If the team with the specified ID does not exist.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Teams_Manage)]
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {

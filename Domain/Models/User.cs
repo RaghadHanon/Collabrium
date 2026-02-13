@@ -18,17 +18,6 @@ public sealed class User : Entity
     public bool MustChangePassword { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
 
-    public int Age
-    {
-        get
-        {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var age = today.Year - DateOfBirth.Year;
-            if (DateOfBirth > today.AddYears(-age)) age--;
-            return age;
-        }
-    }
-
     public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
     public StoredImage? ProfileImage { get; private set; }
 

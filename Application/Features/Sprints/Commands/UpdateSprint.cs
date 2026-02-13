@@ -32,22 +32,31 @@ public class UpdateSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
+            var sprint = await sprintsRepository.GetByIdAsync(
+                tenantId, request.SprintId, request.ProjectId, cancellationToken);
+
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
+
+            var newStart = request.StartDate ?? sprint.StartDate;
+            var newEnd = request.EndDate ?? sprint.EndDate;
+
+            if (newEnd < newStart)
+                return Result<SprintDto>.Failure("Sprint end date must be >= start date.", HttpStatusCode.BadRequest);
 
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint.UpdateDetails(
-                    name: request.Name ?? sprint.Name,
-                    goal: request.Goal ?? sprint.Goal,
-                    start: request.StartDate ?? sprint.StartDate,
-                    end: request.EndDate ?? sprint.EndDate);
+                    name: PatchHelpers.ApplyStringPatch(sprint.Name, request.Name) ?? sprint.Name,
+                    goal: PatchHelpers.ApplyStringPatch(sprint.Goal, request.Goal) ?? sprint.Goal,
+                    start: newStart,
+                    end: newEnd);
 
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
             }, cancellationToken);
 
-            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
+            var dto = await sprintsReadModel.GetByIdAsync(
+                tenantId, sprint.Id, request.ProjectId, cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint updated but could not be loaded.", HttpStatusCode.InternalServerError)

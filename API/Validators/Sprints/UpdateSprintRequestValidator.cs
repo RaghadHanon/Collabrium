@@ -35,6 +35,7 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
     private static bool HasAnyField(UpdateSprintRequest r)
     {
         return r.Name is not null
+               || r.Goal is not null
                || r.StartDate.HasValue
                || r.EndDate.HasValue;
     }

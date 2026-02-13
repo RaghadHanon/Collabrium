@@ -6,7 +6,6 @@ using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
 using MediatR;
-using System.Linq;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
@@ -45,21 +44,16 @@ public sealed class ChangeWorkItemStatus
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isAdmin = new[] { 
-                UserRole.TenantAdmin.ToString(), 
-                UserRole.TeamLead.ToString(),
-                UserRole.BusinessAnalyst.ToString(),
-                UserRole.ProductOwner.ToString()
-            }.Contains(userRole);
+            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
 
-            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory) 
+            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
                 && !isAdmin)
                 return Result<WorkItemDto>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
-            
+
             var allowedStatuses = workItem.GetAllowedStatuses();
             if (!allowedStatuses.Contains(request.NewStatus))
                 return Result<WorkItemDto>.Failure($"Invalid status transition. Allowed statuses: {string.Join(", ", allowedStatuses)}.", HttpStatusCode.BadRequest);
-            
+
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 workItem.ChangeStatus(request.NewStatus);

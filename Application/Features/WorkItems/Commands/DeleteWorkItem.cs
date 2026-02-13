@@ -35,12 +35,7 @@ public sealed class DeleteWorkItem
                 return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isAdmin = new[] {
-                UserRole.TenantAdmin.ToString(),
-                UserRole.TeamLead.ToString(),
-                UserRole.BusinessAnalyst.ToString(),
-                UserRole.ProductOwner.ToString()
-            }.Contains(userRole);
+            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
 
             if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
                 && !isAdmin)

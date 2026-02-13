@@ -4,7 +4,6 @@ using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
 using MediatR;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Net;
 
 namespace Application.Features.Teams.Commands;
@@ -41,39 +40,51 @@ public class UpdateTeam
             if (!team.IsActive)
                 return Result<Unit>.Failure("Cannot update an inactive team.", HttpStatusCode.BadRequest);
 
-            if (!string.IsNullOrWhiteSpace(request.Name))
+            var nameDecision = PatchHelpers.DecideStringPatch(request.Name);
+            var descDecision = PatchHelpers.DecideStringPatch(request.Description);
+            var leadDecision = PatchHelpers.DecideStringPatch(request.TeamLeadId);
+
+            if (nameDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
-                var isUnique = await teamsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
-                if (!isUnique && !string.Equals(team.Name, request.Name, StringComparison.OrdinalIgnoreCase))
+                var newName = nameDecision.Value!;
+                var isUnique = await teamsRepository.IsNameUniqueAsync(tenantId, newName, cancellationToken);
+
+                if (!isUnique && !string.Equals(team.Name, newName, StringComparison.OrdinalIgnoreCase))
                     return Result<Unit>.Failure("A team with this name already exists in the tenant.", HttpStatusCode.BadRequest);
             }
 
-            if (!string.IsNullOrWhiteSpace(request.TeamLeadId))
+            if (leadDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
-                var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
+                var leaderId = leadDecision.Value!;
+                var leader = await usersRepository.GetByIdAsync(leaderId, cancellationToken);
+
                 if (leader is null || !string.Equals(leader.TenantId, tenantId, StringComparison.Ordinal))
                     return Result<Unit>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
 
-                if(await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead.ToString())
+                if (await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead)
                     return Result<Unit>.Failure("Only team leaders can be assigned to lead the team.", HttpStatusCode.BadRequest);
             }
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                if (!string.IsNullOrWhiteSpace(request.TeamLeadId) &&
-                    !string.Equals(request.TeamLeadId, team.TeamLeadId, StringComparison.Ordinal))
+                if (leadDecision.Action == PatchHelpers.PatchStringAction.Clear)
                 {
-                    team.ChangeLead(request.TeamLeadId);
+                    team.ChangeLead(null);
+                }
+                else if (leadDecision.Action == PatchHelpers.PatchStringAction.Set &&
+                         !string.Equals(leadDecision.Value, team.TeamLeadId, StringComparison.Ordinal))
+                {
+                    team.ChangeLead(leadDecision.Value);
                 }
 
                 team.UpdateDetails(
-                    request.Name ?? team.Name,
-                    request.Description ?? team.Description,
+                    PatchHelpers.ApplyStringPatch(team.Name, request.Name) ?? team.Name,
+                    PatchHelpers.ApplyStringPatch(team.Description, request.Description),
                     request.Capacity ?? team.Capacity,
                     request.Department ?? team.Department
-                    );
+                );
 
-                await teamsRepository.UpdateAsync(team, ct);
+                await teamsRepository.UpdateAsync(team, cancellationToken);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

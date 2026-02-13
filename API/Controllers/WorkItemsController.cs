@@ -14,7 +14,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/projects/{projectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
-[Authorize(Policy = Policies.MustHaveProjectAccess)]
+[Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsController : ApiBaseController
 {
     /// <summary>
@@ -48,7 +48,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.WorkItems_CreatePlanning)]
     [HttpPost("epics")]
     public async Task<ActionResult<string>> CreateEpic(string projectId, CreateEpicRequest request)
     {
@@ -90,7 +90,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.WorkItems_CreatePlanning)]
     [HttpPost("user-stories")]
     public async Task<ActionResult<string>> CreateUserStory(string projectId, CreateUserStoryRequest request)
     {
@@ -131,7 +131,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_CreateExecution)]
     [HttpPost("tasks")]
     public async Task<ActionResult<string>> CreateTask(string projectId, CreateTaskRequest request)
     {
@@ -176,7 +176,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_CreateExecution)]
     [HttpPost("bugs")]
     public async Task<ActionResult<string>> CreateBug(string projectId, CreateBugRequest request)
     {
@@ -221,7 +221,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_CreateExecution)]
     [HttpPost("test-cases")]
     public async Task<ActionResult<string>> CreateTestCase(string projectId, CreateTestCaseRequest request)
     {
@@ -250,7 +250,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the work item does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_Read)]
     [HttpGet("{workItemId}")]
     public async Task<ActionResult<WorkItemDto>> GetWorkItem(string projectId, string workItemId)
     {
@@ -283,7 +283,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_Read)]
     [HttpGet]
     public async Task<ActionResult<PagedList<WorkItemDto, DateTime?>>> GetWorkItems(
         string projectId,
@@ -317,7 +317,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "acceptanceCriteria": "All auth flows documented and reviewed",
     ///       "effortPoints": 13,
     ///       "priority": "High",
-    ///       "assignedToUserId": "user-123",
     ///       "sprintId": "sprint-2026-01",
     ///       "status": "InProgress",
     ///       "isBlocked": false
@@ -334,7 +333,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the work item does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.WorkItems_UpdatePlanning)]
     [HttpPatch("{workItemId}/epic")]
     public async Task<ActionResult<WorkItemDto>> UpdateEpic(string projectId, string workItemId, UpdateEpicRequest request)
     {
@@ -362,7 +361,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "acceptanceCriteria": "Login works with valid credentials",
     ///       "effortPoints": 8,
     ///       "priority": "High",
-    ///       "assignedToUserId": "user-123",
     ///       "sprintId": "sprint-2026-01",
     ///       "status": "InTesting",
     ///       "isBlocked": false,
@@ -374,7 +372,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <param name="workItemId">Work item identifier.</param>
     /// <param name="request">User Story update payload.</param>
     /// <returns>The updated work item.</returns>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.WorkItems_UpdatePlanning)]
     [HttpPatch("{workItemId}/user-story")]
     public async Task<ActionResult<WorkItemDto>> UpdateUserStory(string projectId, string workItemId, UpdateUserStoryRequest request)
     {
@@ -402,14 +400,13 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "acceptanceCriteria": "Refactor completed and tests passing",
     ///       "effortPoints": 5,
     ///       "priority": "Low",
-    ///       "assignedToUserId": "user-456",
     ///       "sprintId": "sprint-2026-02",
     ///       "status": "InReview",
     ///       "isBlocked": true
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/task")]
     public async Task<ActionResult<WorkItemDto>> UpdateTask(string projectId, string workItemId, UpdateTaskRequest request)
     {
@@ -437,7 +434,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "acceptanceCriteria": "Return 401 on expired token",
     ///       "effortPoints": 3,
     ///       "priority": "High",
-    ///       "assignedToUserId": "user-789",
     ///       "sprintId": "sprint-2026-01",
     ///       "status": "InProgress",
     ///       "isBlocked": false,
@@ -447,7 +443,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/bug")]
     public async Task<ActionResult<WorkItemDto>> UpdateBug(string projectId, string workItemId, UpdateBugRequest request)
     {
@@ -476,7 +472,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "acceptanceCriteria": "Login succeeds and dashboard opens",
     ///       "effortPoints": 2,
     ///       "priority": "Medium",
-    ///       "assignedToUserId": "user-222",
     ///       "sprintId": "sprint-2026-02",
     ///       "status": "InTesting",
     ///       "isBlocked": false,
@@ -489,7 +484,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/test-case")]
     public async Task<ActionResult<WorkItemDto>> UpdateTestCase(string projectId, string workItemId, UpdateTestCaseRequest request)
     {
@@ -520,7 +515,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="404">If the work item does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
 
-    [Authorize(Policy = Policies.ProductOwnerTeamLeadTenantAdmin)]
+    [Authorize(Policy = Policies.WorkItems_Delete)]
     [HttpDelete("{workItemId}")]
     public async Task<ActionResult> DeleteWorkItem(string projectId, string workItemId)
     {
@@ -560,7 +555,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the work item does not exist in the project.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.WorkItems_ChangeStatus)]
     [HttpPatch("{workItemId}/status")]
     public async Task<ActionResult<WorkItemDto>> ChangeStatus(
         string projectId,
@@ -568,6 +563,47 @@ public sealed class WorkItemsController : ApiBaseController
         ChangeWorkItemStatusRequest request)
     {
         var command = Mapper.Map<ChangeWorkItemStatus.Command>(request);
+        command.ProjectId = projectId;
+        command.WorkItemId = workItemId;
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Updates the assignee of a work item.
+    /// </summary>
+    /// <remarks>
+    /// Changes the assigned user of a work item. This endpoint allows for reassigning work items to different team members.
+    ///
+    /// Sample request:
+    ///
+    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/assignee
+    ///     Content-Type: application/json
+    ///
+    ///     {
+    ///       "assignedToUserId": "user-222"
+    ///     }
+    ///
+    /// </remarks>
+    /// 
+    /// <param name="projectId">The project identifier.</param>
+    /// <param name="workItemId">The work item identifier.</param>
+    /// <param name="request">The new assignee payload.</param>
+    /// <returns>The updated work item with the new assignee.</returns>
+    /// <response code="200">Assignee updated successfully.</response>
+    /// <response code="400">If the request is invalid or the user to assign does not exist.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project or permission to assign work items.</response>
+    /// <response code="404">If the work item does not exist in the project.</response>
+    /// <response code="500">If an unexpected error occurred.</response>
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
+    [HttpPatch("{workItemId}/assignee")]
+    public async Task<ActionResult<WorkItemDto>> UpdateAssignee(
+        string projectId,
+        string workItemId,
+        UpdateWorkItemAssigneeRequest request)
+    {
+        var command = Mapper.Map<UpdateWorkItemAssignee.Command>(request);
         command.ProjectId = projectId;
         command.WorkItemId = workItemId;
 

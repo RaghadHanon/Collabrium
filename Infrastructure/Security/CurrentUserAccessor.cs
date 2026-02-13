@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces.Services;
+using Domain.Enums;
 using Domain.Models;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
@@ -43,7 +44,7 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
         return entity is null ? null : UserMapper.ToDomain(entity);
     }
 
-    public async Task<string?> GetUserRole(string userId, CancellationToken cancellationToken)
+    public async Task<UserRole?> GetUserRole(string userId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(userId))
             return null;
@@ -53,6 +54,8 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
             return null;
 
         var roles = await _userManager.GetRolesAsync(user);
-        return roles.FirstOrDefault();
+        var role = Enum.TryParse(roles.FirstOrDefault(), true, out UserRole userRole) ? userRole : (UserRole?)null; 
+
+        return role;
     }
 }

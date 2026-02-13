@@ -296,7 +296,6 @@ public sealed class IdentityService : IIdentityService
             Department = department,
             TenantId = string.IsNullOrWhiteSpace(tenantId) ? null : tenantId.Trim(),
             DateOfBirth = dateOfBirth,
-            PhoneNumber = phoneNumber?.Trim()
         };
 
         user.ContactDetails = new ContactDetailsOwned

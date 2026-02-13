@@ -12,9 +12,9 @@ using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
 
-public sealed partial class UpdateWorkItem
+public partial class UpdateWorkItem
 {
-    public sealed class Command : IRequest<Result<WorkItemDto>>
+    public class Command : IRequest<Result<WorkItemDto>>
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
@@ -27,19 +27,17 @@ public sealed partial class UpdateWorkItem
         public int? EffortPoints { get; set; }
         public WorkItemPriority? Priority { get; set; }
 
-        public string? AssignedToUserId { get; set; }
         public string? SprintId { get; set; }
         public bool? IsBlocked { get; set; }
 
         public IWorkItemUpdateDetails? Details { get; set; }
     }
 
-    public sealed class Handler(
+    public class Handler(
         IWorkItemsRepository workItemsRepository,
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
-        IUsersReadModel usersReadModel,
         IProjectsRepository projectsRepository,
         ISprintsRepository sprintsRepository,
         IUnitOfWork unitOfWork)
@@ -51,12 +49,12 @@ public sealed partial class UpdateWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (request.ProjectId is not null && !(await projectsRepository.IsProjectExists(tenantId, request.ProjectId!, cancellationToken)))
-                return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.BadRequest);
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+                return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
-                request.ProjectId!,
+                request.ProjectId,
                 request.WorkItemId,
                 includeChildren: true,
                 cancellationToken);
@@ -64,36 +62,50 @@ public sealed partial class UpdateWorkItem
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            if (request.SprintId is not null && !(await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken)))
-                return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
-
             if (request.Type != workItem.Type)
                 return Result<WorkItemDto>.Failure("Work item type mismatch.", HttpStatusCode.BadRequest);
 
-            var isUserValidToBeAssigned = !string.IsNullOrEmpty(request.AssignedToUserId)
-                 && await usersReadModel.UserExistsAsync(request.AssignedToUserId, cancellationToken)
-                 && await projectsRepository.IsUserHasAccessToProjectAsync(tenantId, request.AssignedToUserId, request.ProjectId, cancellationToken);
+            var sprintDecision = PatchHelpers.DecideStringPatch(request.SprintId);
+            if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
+            {
+                var sprintIdToSet = sprintDecision.Value!;
 
-            if (!string.IsNullOrEmpty(request.AssignedToUserId) && !isUserValidToBeAssigned)
-                return Result<WorkItemDto>.Failure("Assigned user is invalid or does not have access to the project.", HttpStatusCode.BadRequest);
+                var sprintExists = await sprintsRepository.IsExistsAsync(
+                    tenantId,
+                    sprintIdToSet,
+                    request.ProjectId,
+                    cancellationToken);
+
+                if (!sprintExists)
+                    return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
+            }
+
+            var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
+                var patchedTitle = PatchHelpers.ApplyStringPatch(workItem.Title, request.Title);
+                var newTitle =
+                    titleDecision.Action == PatchHelpers.PatchStringAction.Clear
+                        ? string.Empty
+                        : (patchedTitle ?? workItem.Title);
+
+                var newDescription = PatchHelpers.ApplyStringPatch(workItem.Description, request.Description);
+                var newAcceptance = PatchHelpers.ApplyStringPatch(workItem.AcceptanceCriteria, request.AcceptanceCriteria);
+
                 workItem.UpdateDetails(
-                    request.Title ?? workItem.Title,
-                    request.Description ?? workItem.Description,
-                    request.AcceptanceCriteria ?? workItem.AcceptanceCriteria,
-                    request.EffortPoints ?? workItem.EffortPoints
-                   );
+                    newTitle,
+                    newDescription,
+                    newAcceptance,
+                    request.EffortPoints ?? workItem.EffortPoints);
 
                 if (request.Priority.HasValue)
                     workItem.SetPriority(request.Priority.Value);
 
-                if (isUserValidToBeAssigned)
-                    workItem.AssignTo(request.AssignedToUserId);
-
-                if (request.SprintId is not null)
-                    workItem.MoveToSprint(request.SprintId);
+                if (sprintDecision.Action == PatchHelpers.PatchStringAction.Clear)
+                    workItem.MoveToSprint(null);
+                else if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
+                    workItem.MoveToSprint(sprintDecision.Value);
 
                 if (request.IsBlocked.HasValue)
                 {
@@ -106,7 +118,11 @@ public sealed partial class UpdateWorkItem
                 await workItemsRepository.UpdateAsync(workItem, ct);
             }, cancellationToken);
 
-            var dto = await workItemsReadModel.GetByIdAsync(tenantId, request.ProjectId, workItem.Id, cancellationToken);
+            var dto = await workItemsReadModel.GetByIdAsync(
+                tenantId,
+                request.ProjectId,
+                workItem.Id,
+                cancellationToken);
 
             return dto is null
                 ? Result<WorkItemDto>.Failure("Work item updated but could not be loaded.", HttpStatusCode.InternalServerError)
@@ -153,8 +169,7 @@ public sealed partial class UpdateWorkItem
             bug.UpdateRepro(
                 d.StepsToReproduce ?? bug.StepsToReproduce,
                 d.ExpectedResult ?? bug.ExpectedResult,
-                d.ActualResult ?? bug.ActualResult
-               );
+                d.ActualResult ?? bug.ActualResult);
         }
 
         private void ApplyTestCasePatch(TestCase tc, IWorkItemUpdateDetails details)
@@ -180,9 +195,7 @@ public sealed partial class UpdateWorkItem
                     throw new InvalidOperationException("User id not found.");
 
                 if (d.Result.HasValue && d.Result.Value != TestCaseResult.NotRun)
-                {
                     tc.RecordOutcome(d.Result.Value, d.ActualResult, executedBy);
-                }
             }
         }
     }

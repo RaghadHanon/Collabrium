@@ -16,5 +16,21 @@ public sealed class UpdateUserStoryRequestValidator : AbstractValidator<UpdateUs
         RuleFor(x => x.StoryPoints)
             .LessThanOrEqualTo(100).WithMessage("StoryPoints is too high.")
             .When(x => x.StoryPoints.HasValue);
+
+        RuleFor(x => x)
+             .Must(HasAnyField)
+             .WithMessage("At least one field must be provided to update the work item.");
+    }
+
+    private static bool HasAnyField(UpdateUserStoryRequest r)
+    {
+        return !(r.Title is null)
+        || !(r.Description is null)
+        || !(r.AcceptanceCriteria is null)
+        || r.EffortPoints.HasValue
+        || !(r.Priority is null)
+        || r.SprintId is not null
+        || r.IsBlocked.HasValue
+        || r.StoryPoints.HasValue;  
     }
 }

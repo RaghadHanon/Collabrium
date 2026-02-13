@@ -44,44 +44,36 @@ public class UpdateTenant
             if (tenant is null)
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            try
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                if (request.File is not null)
                 {
-                    if (request.File is not null)
-                    {
-                        var upload = await photoService.UploadPhoto(request.File);
-                        if (upload is null)
-                            throw new InvalidOperationException("Photo upload failed.");
+                    var upload = await photoService.UploadPhoto(request.File);
+                    if (upload is null)
+                        throw new InvalidOperationException("Photo upload failed.");
 
-                        tenant.SetProfileImage(upload.Url, upload.PublicId);
-                    }
+                    tenant.SetProfileImage(upload.Url, upload.PublicId);
+                }
 
-                    tenant.UpdateProfile(
-                        description: request.Description ?? tenant.Description,
-                        country: request.Country ?? tenant.Country,
-                        websiteUrl: request.WebsiteUrl ?? tenant.WebsiteUrl
-                    );
+                tenant.UpdateProfile(
+                    description: PatchHelpers.ApplyStringPatch(tenant.Description, request.Description),
+                    country: PatchHelpers.ApplyStringPatch(tenant.Country, request.Country),
+                    websiteUrl: PatchHelpers.ApplyStringPatch(tenant.WebsiteUrl, request.WebsiteUrl)
+                );
 
-                    tenant.SetContactInfo(
-                        email: request.Email ?? tenant.ContactInfo.Email,
-                        phone: request.PhoneNumber ?? tenant.ContactInfo.PhoneNumber,
-                        linkedIn: request.LinkedIn ?? tenant.ContactInfo.Socials.LinkedIn,
-                        facebook: request.Facebook ?? tenant.ContactInfo.Socials.Facebook,
-                        instagram: request.Instagram ?? tenant.ContactInfo.Socials.Instagram,
-                        youTube: request.YouTube ?? tenant.ContactInfo.Socials.YouTube
-                    );
+                tenant.SetContactInfo(
+                    email: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Email, request.Email),
+                    phone: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.PhoneNumber, request.PhoneNumber),
+                    linkedIn: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.LinkedIn, request.LinkedIn),
+                    facebook: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.Facebook, request.Facebook),
+                    instagram: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.Instagram, request.Instagram),
+                    youTube: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.YouTube, request.YouTube)
+                );
 
-                    await tenantRepository.UpdateAsync(tenant, ct);
-                    await unitOfWork.SaveChangesAsync(ct);
-                }, cancellationToken);
+                await tenantRepository.UpdateAsync(tenant, cancellationToken);
+            }, cancellationToken);
 
-                return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Photo upload failed"))
-            {
-                return Result<Unit>.Failure("Photo upload failed.", HttpStatusCode.BadRequest);
-            }
+            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }
     }
 }

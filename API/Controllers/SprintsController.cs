@@ -14,7 +14,7 @@ namespace API.Controllers;
 
 [Route("api/projects/project/{projectId}/sprints")]
 [Authorize(Policy = Policies.PasswordChanged)]
-[Authorize(Policy = Policies.MustHaveProjectAccess)]
+[Authorize(Policy = Policies.Project_Access)]
 public sealed class SprintsController : ApiBaseController
 {
     /// <summary>
@@ -42,7 +42,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If tenant or project not found.</response>
-    [Authorize(Policy = Policies.ProductOwner)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPost("sprint")]
     public async Task<ActionResult<SprintDto>> CreateSprint(string projectId, CreateSprintRequest request)
     {
@@ -67,7 +67,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="200">Returns the sprint.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}")]
     public async Task<ActionResult<SprintDto>> GetSprint(string projectId, string sprintId)
     {
@@ -98,7 +98,7 @@ public sealed class SprintsController : ApiBaseController
     /// <returns>A paged list of sprints.</returns>
     /// <response code="200">Returns sprints successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet]
     public async Task<ActionResult<PagedList<SprintDto, DateTime?>>> GetSprints(string projectId, [FromQuery] GetSprintsRequest request)
     {
@@ -134,7 +134,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManager)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPatch("sprint/{sprintId}")]
     public async Task<ActionResult<SprintDto>> UpdateSprint(string projectId, string sprintId, UpdateSprintRequest request)
     {
@@ -161,7 +161,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.ProductOwner)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpDelete("sprint/{sprintId}")]
     public async Task<ActionResult> DeleteSprint(string projectId, string sprintId)
     {
@@ -192,7 +192,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.ProductOwner)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPatch("sprint/{sprintId}/start")]
     public async Task<ActionResult<SprintDto>> StartSprint(string projectId, string sprintId)
     {
@@ -221,7 +221,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.ProductOwner)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPatch("sprint/{sprintId}/cancel")]
     public async Task<ActionResult<SprintDto>> CancelSprint(string projectId, string sprintId)
     {
@@ -251,7 +251,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If sprint not found.</response>
-    [Authorize(Policy = Policies.ProductOwner)]
+    [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPatch("sprint/{sprintId}/complete")]
     public async Task<ActionResult<SprintDto>> CompleteSprint(string projectId, string sprintId)
     {
@@ -282,7 +282,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/board")]
     public async Task<ActionResult<BoardDto>> GetSprintBoard(string projectId, string sprintId)
     {
@@ -312,7 +312,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetSprintUserStories(string projectId, string sprintId)
     {

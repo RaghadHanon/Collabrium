@@ -10,12 +10,12 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
 
         RuleFor(x => x.FirstName)
             .MaximumLength(50)
-            .When(x => !string.IsNullOrWhiteSpace(x.FirstName))
+            .When(x => !(x.FirstName is null))
             .WithMessage("First name cannot exceed 50 characters.");
 
         RuleFor(x => x.LastName)
             .MaximumLength(50)
-            .When(x => !string.IsNullOrWhiteSpace(x.LastName))
+            .When(x => !(x.LastName is null))
             .WithMessage("Last name cannot exceed 50 characters.");
 
         RuleFor(x => x.DateOfBirth)
@@ -25,32 +25,32 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
 
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^\+?\d{9,15}$")
-            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
+            .When(x => !(x.PhoneNumber is null))
             .WithMessage("Phone number must be valid and contain only digits (optionally starting with +).");
 
         RuleFor(x => x.LinkedIn)
             .Must(BeValidUrl)
-            .When(x => !string.IsNullOrWhiteSpace(x.LinkedIn))
+            .When(x => !(x.LinkedIn is null))
             .WithMessage("LinkedIn must be a valid URL.");
 
         RuleFor(x => x.Facebook)
             .Must(BeValidUrl)
-            .When(x => !string.IsNullOrWhiteSpace(x.Facebook))
+            .When(x => !(x.Facebook is null))
             .WithMessage("Facebook must be a valid URL.");
 
         RuleFor(x => x.Instagram)
             .Must(BeValidUrl)
-            .When(x => !string.IsNullOrWhiteSpace(x.Instagram))
+            .When(x => !(x.Instagram is null))
             .WithMessage("Instagram must be a valid URL.");
 
         RuleFor(x => x.YouTube)
             .Must(BeValidUrl)
-            .When(x => !string.IsNullOrWhiteSpace(x.YouTube))
+            .When(x => !(x.YouTube is null))
             .WithMessage("YouTube must be a valid URL.");
 
         RuleFor(x => x.Github)
             .Must(BeValidUrl)
-            .When(x => !string.IsNullOrWhiteSpace(x.Github))
+            .When(x => !(x.Github is null))
             .WithMessage("Github must be a valid URL.");
 
         RuleFor(x => x)
@@ -60,15 +60,15 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
 
     private static bool HasAnyField(UpdateUserProfileRequest r)
     {
-        return !string.IsNullOrWhiteSpace(r.FirstName)
-               || !string.IsNullOrWhiteSpace(r.LastName)
+        return !(r.FirstName is null)
+               || !(r.LastName is null)
                || r.DateOfBirth.HasValue
-               || !string.IsNullOrWhiteSpace(r.PhoneNumber)
-               || !string.IsNullOrWhiteSpace(r.LinkedIn)
-               || !string.IsNullOrWhiteSpace(r.Facebook)
-               || !string.IsNullOrWhiteSpace(r.Instagram)
-               || !string.IsNullOrWhiteSpace(r.YouTube)
-               || !string.IsNullOrWhiteSpace(r.Github);
+               || !(r.PhoneNumber is null)
+               || !(r.LinkedIn is null)
+               || !(r.Facebook is null)
+               || !(r.Instagram is null)
+               || !(r.YouTube is null)
+               || !(r.Github is null);
     }
 
     private static bool BeValidUrl(string? url)

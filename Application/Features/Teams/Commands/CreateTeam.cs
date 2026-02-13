@@ -38,7 +38,7 @@ public class CreateTeam
             if (leader is null || leader.TenantId != tenant.Id)
                 return Result<string>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
 
-            if (await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead.ToString())
+            if (await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead)
                 return Result<string>.Failure("Only team leaders can be assigned to lead the team.", HttpStatusCode.BadRequest);
 
             var isNameUnique = await teamRepository.IsNameUniqueAsync(tenant.Id, request.Name, cancellationToken);

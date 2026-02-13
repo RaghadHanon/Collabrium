@@ -39,7 +39,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
     /// <response code="404">If tenant/team not found.</response>
-    [Authorize(Policy = Policies.ProductOwnerTeamLeadTenantAdmin)]
+    [Authorize(Policy = Policies.Projects_Manage)]
     [HttpPost("project")]
     public async Task<ActionResult<ProjectDto>> CreateProject(CreateProjectRequest request)
     {
@@ -60,7 +60,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="200">Returns the project.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project/{projectId}")]
     public async Task<ActionResult<ProjectDto>> GetProject(string projectId)
     {
@@ -83,7 +83,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <response code="200">Returns projects successfully.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet]
     public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetProjects([FromQuery] GetProjectsRequest request)
     {
@@ -114,7 +114,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="200">Returns the updated project.</response>
     /// <response code="400">If validation fails (duplicate name, invalid dates, inactive team, etc.).</response>
     /// <response code="404">If project (or team if provided) not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Projects_Manage)]
     [HttpPatch("project/{projectId}")]
     public async Task<ActionResult<ProjectDto>> UpdateProject(string projectId, UpdateProjectRequest request)
     {
@@ -135,7 +135,7 @@ public sealed class ProjectsController : ApiBaseController
     /// </remarks>
     /// <response code="204">Deleted successfully.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Projects_Manage)]
     [HttpDelete("project/{projectId}")]
     public async Task<ActionResult> DeleteProject(string projectId)
     {
@@ -159,7 +159,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="200">Returns updated project.</response>
     /// <response code="400">If team is inactive.</response>
     /// <response code="404">If project/team not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Projects_Manage)]
     [HttpPatch("project/{projectId}/assign-team")]
     public async Task<ActionResult<ProjectDto>> AssignProjectToTeam(string projectId, AssignProjectToTeamRequest request)
     {
@@ -183,7 +183,7 @@ public sealed class ProjectsController : ApiBaseController
     /// </remarks>
     /// <response code="200">Returns updated project.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize(Policy = Policies.ProductTeamManagerTenantAdmin)]
+    [Authorize(Policy = Policies.Projects_Manage)]
     [HttpPatch("project/{projectId}/unassign-team")]
     public async Task<ActionResult<ProjectDto>> UnassignProjectFromTeam(string projectId)
     {
@@ -204,7 +204,7 @@ public sealed class ProjectsController : ApiBaseController
     /// </remarks>
     /// <response code="200">Returns backlog items.</response>
     /// <response code="404">If project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project/{projectId}/backlog")]
     public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId)
     {
@@ -232,7 +232,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project/{projectId}/board")]
     public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId)
     {
@@ -256,7 +256,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project/{projectId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
     {
@@ -284,7 +284,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.TenantMember)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project/{projectId}/epics")]
     public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId)
     {

@@ -21,6 +21,7 @@ public class CompleteSprint
         ISprintsRepository sprintsRepository,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
+        IProjectsRepository projectsRepository,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<SprintDto>>
     {
         public async Task<Result<SprintDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -28,6 +29,9 @@ public class CompleteSprint
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
             if (sprint is null)

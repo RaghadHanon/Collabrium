@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
@@ -22,6 +23,7 @@ public sealed class DeleteWorkItem
         IWorkItemsRepository workItemsRepository,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
+        IProjectsRepository projectsRepository,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
@@ -29,6 +31,9 @@ public sealed class DeleteWorkItem
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
             if (workItem == null)

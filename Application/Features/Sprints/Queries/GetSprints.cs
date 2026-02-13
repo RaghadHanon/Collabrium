@@ -2,6 +2,7 @@
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
@@ -33,7 +34,8 @@ public class GetSprints
     public class Handler(
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
-        IMapper mapper
+        IMapper mapper,
+        IProjectsRepository projectsRepository
         ) : IRequestHandler<Query, Result<PagedList<SprintDto, DateTime?>>>
     {
         public async Task<Result<PagedList<SprintDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
@@ -41,6 +43,9 @@ public class GetSprints
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<PagedList<SprintDto, DateTime?>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<PagedList<SprintDto, DateTime?>>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var parameters = mapper.Map<SprintsSearchAndFilterParametersDto>(request);
 

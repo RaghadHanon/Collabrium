@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.Repositories;
+using AutoMapper.QueryableExtensions;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;

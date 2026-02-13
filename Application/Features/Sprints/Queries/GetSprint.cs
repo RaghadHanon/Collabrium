@@ -2,6 +2,7 @@
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
 using MediatR;
 using System.Net;
 
@@ -17,13 +18,18 @@ public class GetSprint
 
     public class Handler(
         ISprintsReadModel sprintsReadModel,
-        ITenantContext tenantContext) : IRequestHandler<Query, Result<SprintDto>>
+        ITenantContext tenantContext,
+        IProjectsRepository projectsRepository
+        ) : IRequestHandler<Query, Result<SprintDto>>
     {
         public async Task<Result<SprintDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
 

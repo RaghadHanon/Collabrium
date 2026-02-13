@@ -33,9 +33,8 @@ public class CreateSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
-            if (project is null)
-                return Result<SprintDto>.Failure("Project not found in this tenant.", HttpStatusCode.NotFound);
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             Sprint sprint = null!;
 

@@ -1,6 +1,8 @@
 ﻿using Application.Common;
+using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
 using Domain.Enums;
 using MediatR;
 using System.Net;
@@ -16,7 +18,8 @@ public class GetWorkItemStatusesByType
 
     public class Handler(
         ITenantContext tenantContext,
-        IWorkItemsReadModel workItemsReadModel
+        IWorkItemsReadModel workItemsReadModel,
+        IProjectsRepository projectsRepository
       ) : IRequestHandler<Query, Result<List<WorkItemStatus>>>
     {
         public async Task<Result<List<WorkItemStatus>>> Handle(Query request, CancellationToken cancellationToken)
@@ -24,6 +27,9 @@ public class GetWorkItemStatusesByType
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<List<WorkItemStatus>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<List<WorkItemStatus>>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var statuses = workItemsReadModel.GetAllowedStatusesByType(request.Type);
 

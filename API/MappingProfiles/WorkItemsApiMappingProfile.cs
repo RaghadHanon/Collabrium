@@ -16,7 +16,7 @@ public sealed class WorkItemsApiProfile : Profile
     {
         CreateMap<GetWorkItemsRequest, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<UpdateWorkItemRequest, UpdateWorkItem.Command>();
-        CreateMap<ChangeWorkItemStatusRequest, ChangeWorkItemStatus.Command>();
+        CreateMap<ChangeWorkItemStatusRequest, UpdateWorkItemStatus.Command>();
         CreateMap<UpdateWorkItemAssigneeRequest, UpdateWorkItemAssignee.Command>();
 
         CreateMap<CreateEpicRequest, CreateWorkItem.Command>()

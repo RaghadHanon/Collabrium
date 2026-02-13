@@ -1,16 +1,19 @@
 ﻿using Application.Common;
+using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
 
-public sealed class ChangeWorkItemStatus
+public sealed class UpdateWorkItemStatus
 {
     public sealed class Command : IRequest<Result<WorkItemDto>>
     {
@@ -24,7 +27,8 @@ public sealed class ChangeWorkItemStatus
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
-        ICurrentUserAccessor currentUserAccessor
+        ICurrentUserAccessor currentUserAccessor,
+        IProjectsRepository projectsRepository
     ) : IRequestHandler<Command, Result<WorkItemDto>>
     {
         public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -32,6 +36,9 @@ public sealed class ChangeWorkItemStatus
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
@@ -56,7 +63,13 @@ public sealed class ChangeWorkItemStatus
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                workItem.ChangeStatus(request.NewStatus);
+                //if(workItem.Type == WorkItemType.UserStory)
+                //{
+                //    var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
+                //    ((UserStory) workItem).ChangeStatusWithValidation(request.NewStatus, children!);
+                //}
+                //else
+                    workItem.ChangeStatus(request.NewStatus);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
             }, cancellationToken);

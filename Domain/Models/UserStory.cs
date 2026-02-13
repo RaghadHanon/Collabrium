@@ -7,7 +7,7 @@ public sealed class UserStory : WorkItem
 {
     public int StoryPoints { get; private set; }
 
-    private UserStory() { }
+    private UserStory() { } // EF
 
     public UserStory(string id, string title, string createdByUserId, string projectId, int storyPoints)
         : base(id, title, createdByUserId, projectId)
@@ -31,61 +31,79 @@ public sealed class UserStory : WorkItem
         Touch();
     }
 
-    /// <summary>
-    /// Returns true if Story can move to InTesting based on linked items snapshots.
-    /// Typical rule: all Tasks done AND no open Bugs.
-    /// </summary>
-    public bool CanMoveToTesting(IEnumerable<WorkItemSnapshot> linked)
+    public void ChangeStatusWithValidation(WorkItemStatus newStatus, IEnumerable<WorkItemSnapshot>? linked)
     {
-        var items = linked?.ToList() ?? new List<WorkItemSnapshot>();
-
-        var allTasksDone = items.Where(x => x.Type == WorkItemType.TaskItem).All(x => x.Status == WorkItemStatus.Done);
-
-        var noOpenBugs = items.Where(x => x.Type == WorkItemType.Bug).All(x => x.Status == WorkItemStatus.Done);
-
-        return allTasksDone && noOpenBugs;
+        ValidateStatusGate(newStatus, linked);
+        base.ChangeStatus(newStatus);
     }
 
-    /// <summary>
-    /// Returns true if Story can be Done: Tasks Done + Bugs Done + TestCases Passed.
-    /// </summary>
-    public bool CanBeCompleted(IEnumerable<WorkItemSnapshot> linked)
+    private void ValidateStatusGate(WorkItemStatus target, IEnumerable<WorkItemSnapshot>? linked)
     {
+        if (target is not (WorkItemStatus.InTesting or WorkItemStatus.ReadyForRelease or WorkItemStatus.Done))
+            return;
+
         var items = linked?.ToList() ?? new List<WorkItemSnapshot>();
 
-        var allTasksDone = items.Where(x => x.Type == WorkItemType.TaskItem).All(x => x.Status == WorkItemStatus.Done);
-        var allBugsClosed = items.Where(x => x.Type == WorkItemType.Bug).All(x => x.Status == WorkItemStatus.Done);
+        bool allTasksDone =
+            items.Where(x => x.Type == WorkItemType.TaskItem)
+                 .All(x => x.Status == WorkItemStatus.Done);
+
+        bool noOpenBugs =
+            items.Where(x => x.Type == WorkItemType.Bug)
+                 .All(x => x.Status == WorkItemStatus.Done);
 
         var testCases = items.Where(x => x.Type == WorkItemType.TestCase).ToList();
-        var allTestsPassed =
-            testCases.All(x => x.Status == WorkItemStatus.Done && x.TestCaseResult == TestCaseResult.Passed);
 
-        return allTasksDone && allBugsClosed && allTestsPassed;
-    }
+        bool allTestsPassed =
+            testCases.Count > 0 &&
+            testCases.All(x => x.Status == WorkItemStatus.Done &&
+                               x.TestCaseResult == TestCaseResult.Passed);
 
-    /// <summary>
-    /// Applies the workflow moves safely based on linked items.
-    /// Call this from Application Layer after fetching children.
-    /// </summary>
-    public void SyncStatusFromLinkedItems(IEnumerable<WorkItemSnapshot> linked)
-    {
-        if (Status == WorkItemStatus.Done) return;
-
-        if (CanBeCompleted(linked))
+        // ---- InTesting gate ----
+        if (target == WorkItemStatus.InTesting)
         {
-            if (Status != WorkItemStatus.ReadyForRelease)
-                ChangeStatus(WorkItemStatus.ReadyForRelease);
+            Guard.Against(!allTasksDone,
+                "Cannot move UserStory to InTesting until all linked Tasks are Done.");
 
-            ChangeStatus(WorkItemStatus.Done);
+            Guard.Against(!noOpenBugs,
+                "Cannot move UserStory to InTesting while there are open Bugs.");
+
             return;
         }
 
-        if (CanMoveToTesting(linked))
+        // ---- ReadyForRelease gate ----
+        if (target == WorkItemStatus.ReadyForRelease)
         {
-            if (Status is WorkItemStatus.InProgress or WorkItemStatus.InReview or WorkItemStatus.ReadyForDev)
-                ChangeStatus(WorkItemStatus.InTesting);
+            Guard.Against(!allTasksDone,
+                "Cannot move UserStory to ReadyForRelease until all linked Tasks are Done.");
+
+            Guard.Against(!noOpenBugs,
+                "Cannot move UserStory to ReadyForRelease while there are open Bugs.");
+
+            Guard.Against(!allTestsPassed,
+                "Cannot move UserStory to ReadyForRelease until all linked TestCases are Passed.");
+
+            return;
+        }
+
+        // ---- Done gate ----
+        if (target == WorkItemStatus.Done)
+        {
+            Guard.Against(!allTasksDone,
+                "Cannot complete UserStory until all linked Tasks are Done.");
+
+            Guard.Against(!noOpenBugs,
+                "Cannot complete UserStory while there are open Bugs.");
+
+            Guard.Against(!allTestsPassed,
+                "Cannot complete UserStory until all linked TestCases are Passed.");
         }
     }
+
+    protected override bool CanReopenFromDone => true;
+
+    // Optional: إذا بدك تمنعي transitions مختلفة للقصة، خليها زي base أو خصصيها هون.
+    // إذا ما عندك اختلاف، خليه بدون override.
 
     public static UserStory Rehydrate(
         string id,
@@ -107,8 +125,14 @@ public sealed class UserStory : WorkItem
         int storyPoints)
     {
         var us = new UserStory(id, title, createdByUserId, projectId, storyPoints);
-        us.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+
+        us.RehydrateCommon(
+            createdAt, updatedAt,
+            status, priority, isBlocked, effortPoints,
+            description, acceptanceCriteria,
+            assignedToUserId, sprintId,
+            startDate, endDate);
+
         us.StoryPoints = storyPoints;
         return us;
     }

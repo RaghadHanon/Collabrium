@@ -5,6 +5,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Core;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,28 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             dto.AllowedStatuses = allowedStatuses;
 
         return entity is null ? null : dto;
+    }
+
+    public async Task<List<WorkItemSnapshot>?> GetChildrenAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(workItemId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var wId = workItemId.Trim();
+
+        var entity = await _dbContext.WorkItems
+            .AsNoTracking()
+            .Include(w => w.Relations)
+            .FirstOrDefaultAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
+
+        var children = entity?.Relations
+            .Where(r => r.RelationType == WorkItemRelationType.Child)
+            .Select(r => r.TargetWorkItem)
+            .ToList();
+
+        var childrenSnapshot = _mapper.Map<List<WorkItemSnapshot>>(children);
+        return childrenSnapshot;
     }
 
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(

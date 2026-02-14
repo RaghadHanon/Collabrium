@@ -3,6 +3,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Boards;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
 using Domain.Enums;
 using MediatR;
 using System.Net;
@@ -19,6 +20,7 @@ public class GetProjectBoard
 
     public class Handler(
         IWorkItemsReadModel workItemsReadModel,
+        ISprintsRepository sprintsRepository,
         ITenantContext tenantContext) : IRequestHandler<Query, Result<BoardDto>>
     {
         public async Task<Result<BoardDto>> Handle(Query request, CancellationToken cancellationToken)
@@ -26,6 +28,9 @@ public class GetProjectBoard
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<BoardDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!string.IsNullOrWhiteSpace(request.SprintId) && !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
+                return Result<BoardDto>.Failure("Sprint not found in this project.", HttpStatusCode.NotFound);
 
             var items = await workItemsReadModel.GetBoardItemsAsync(
                 tenantId: tenantId,

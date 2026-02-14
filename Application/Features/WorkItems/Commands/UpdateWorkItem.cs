@@ -70,14 +70,17 @@ public partial class UpdateWorkItem
             {
                 var sprintIdToSet = sprintDecision.Value!;
 
-                var sprintExists = await sprintsRepository.IsExistsAsync(
+                var sprint = await sprintsRepository.GetByIdAsync(
                     tenantId,
                     sprintIdToSet,
                     request.ProjectId,
                     cancellationToken);
 
-                if (!sprintExists)
+                if (sprint is null)
                     return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
+
+                if(sprint.Status == SprintStatus.Cancelled || sprint.Status == SprintStatus.Completed)
+                    return Result<WorkItemDto>.Failure($"Can't assign workItems to a {sprint.Status} sprint.", HttpStatusCode.BadRequest);
             }
 
             var titleDecision = PatchHelpers.DecideStringPatch(request.Title);

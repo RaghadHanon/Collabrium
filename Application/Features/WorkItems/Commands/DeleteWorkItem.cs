@@ -1,11 +1,8 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
-using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -32,7 +29,7 @@ public sealed class DeleteWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);

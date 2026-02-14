@@ -17,6 +17,13 @@ public sealed class WorkItemRelation : Entity
         RelationType = type;
     }
 
+    public WorkItemRelation(string sourceId, string targetId, WorkItemRelationType type)
+    {
+        SourceWorkItemId = sourceId;
+        TargetWorkItemId = targetId;
+        RelationType = type;
+    }
+
     public static WorkItemRelation Rehydrate(
         string id,
         DateTime createdAt,

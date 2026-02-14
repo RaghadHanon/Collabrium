@@ -4,6 +4,7 @@ using API.Contracts.WorkItems.Update;
 using Application.Features.WorkItems.Commands;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
+using Application.Features.WorkItems.Queries;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enums;
@@ -18,6 +19,9 @@ public sealed class WorkItemsApiProfile : Profile
         CreateMap<UpdateWorkItemRequest, UpdateWorkItem.Command>();
         CreateMap<ChangeWorkItemStatusRequest, UpdateWorkItemStatus.Command>();
         CreateMap<UpdateWorkItemAssigneeRequest, UpdateWorkItemAssignee.Command>();
+
+        CreateMap<AddWorkItemsRelationRequest, AddWorkItemsRelation.Command>();
+        CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Command>();
 
         CreateMap<CreateEpicRequest, CreateWorkItem.Command>()
             .ForMember(d => d.Type, opt => opt.MapFrom(_ => WorkItemType.Epic))

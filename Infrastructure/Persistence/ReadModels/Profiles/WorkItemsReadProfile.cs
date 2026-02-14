@@ -1,5 +1,7 @@
 ﻿using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Relations;
 using AutoMapper;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.ReadModels.Profiles;
@@ -31,5 +33,10 @@ public sealed class WorkItemsReadProfile : Profile
             .IncludeBase<WorkItemEntity, WorkItemDto>();
 
         CreateMap<WorkItemEntity, WorkItemListItemDto>();
+
+        CreateMap<WorkItemEntity, RelationParticipantWorkItemDto>();
+
+        // relations
+        CreateMap<WorkItemRelationEntity, WorkItemRelationDto>();
     }
 }

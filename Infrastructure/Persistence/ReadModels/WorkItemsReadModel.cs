@@ -1,11 +1,11 @@
 ﻿using Application.Common;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Relations;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Core;
 using Domain.Enums;
-using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
@@ -39,23 +39,79 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var wId = workItemId.Trim();
 
         var entity = await _dbContext.WorkItems
+            .Include(w => w.Relations)
             .AsNoTracking()
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var domainItem = WorkItemMapper.ToDomain(entity!);
-        var allowedStatuses = domainItem != null 
-            ? domainItem.GetAllowedStatusTransitions()
-            : new List<WorkItemStatus>();
+        var allowedStatuses = GetAllowedStatuses(entity);
+        var parentRelation = GetParentAsync(entity);
         var dto = entity is null ? null : _mapper.Map<WorkItemDto>(entity);
 
         if (dto != null)
+        {
             dto.AllowedStatuses = allowedStatuses;
+            dto.Parent = _mapper.Map<WorkItemRelationDto>(parentRelation);
+        }
 
         return entity is null ? null : dto;
     }
 
-    public async Task<List<WorkItemSnapshot>?> GetChildrenAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default)
+    private WorkItemRelationEntity? GetParentAsync(WorkItemEntity? entity)
+    {
+        return entity is null
+            ? null
+            : entity.Relations
+                .Where(r => r.RelationType == WorkItemRelationType.Parent)
+                .FirstOrDefault();
+    }
+
+    private static List<WorkItemStatus> GetAllowedStatuses(WorkItemEntity? entity)
+    {
+        if (entity is null)
+            return new List<WorkItemStatus>();
+
+        var domainItem = WorkItemMapper.ToDomain(entity!);
+        return domainItem != null
+            ? domainItem.GetAllowedStatusTransitions()
+            : new List<WorkItemStatus>();
+    }
+
+    public async Task<WorkItemRelationDto?> GetRelationByIdAsync(
+       string projectId,
+       string sourceWorkItemId,
+       string targetWorkItemId,
+       string relationId,
+       CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(sourceWorkItemId) ||
+            string.IsNullOrWhiteSpace(targetWorkItemId) ||
+            string.IsNullOrWhiteSpace(relationId))
+            return null;
+
+        var pId = projectId.Trim();
+        var swId = sourceWorkItemId.Trim();
+        var twId = targetWorkItemId.Trim();
+        var rId = relationId.Trim();
+
+        return await _dbContext.WorkItemRelations
+            .AsNoTracking()
+            .Where(r =>
+                r.Id == rId &&
+                r.SourceWorkItemId == swId &&
+                r.TargetWorkItemId == twId &&
+                r.SourceWorkItem.ProjectId == pId)
+            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<WorkItemRelationDto>?> GetRelationsByTypeAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        WorkItemRelationType? relationType = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(workItemId))
             return null;
@@ -63,18 +119,19 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var tId = tenantId.Trim();
         var wId = workItemId.Trim();
 
-        var entity = await _dbContext.WorkItems
+        var query = _dbContext.WorkItemRelations
             .AsNoTracking()
-            .Include(w => w.Relations)
-            .FirstOrDefaultAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
+            .Where(r =>
+                r.SourceWorkItem.Project.TenantId == tId &&
+                r.SourceWorkItem.ProjectId == projectId &&
+                r.SourceWorkItemId == wId);
 
-        var children = entity?.Relations
-            .Where(r => r.RelationType == WorkItemRelationType.Child)
-            .Select(r => r.TargetWorkItem)
-            .ToList();
+        if (relationType.HasValue)
+            query = query.Where(r => r.RelationType == relationType.Value);
 
-        var childrenSnapshot = _mapper.Map<List<WorkItemSnapshot>>(children);
-        return childrenSnapshot;
+        return await query
+            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
@@ -97,10 +154,38 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         if (!string.IsNullOrWhiteSpace(sId))
             query = query.Where(w => w.SprintId == sId);
 
-        var items = await query
-            .OrderBy(x => x.CreatedAt)
-            .Where(x => x.Type != WorkItemType.UserStory && x.Type != WorkItemType.Epic && x.SprintId != null)
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+        var items = await _dbContext.WorkItems
+            .Where(w => w.Type != WorkItemType.UserStory && w.Type != WorkItemType.Epic && w.SprintId != null)
+            .OrderBy(w => w.CreatedAt)
+            .Select(w => new WorkItemListItemDto
+            {
+                Id = w.Id,
+                Title = w.Title,
+                Type = w.Type,
+                Status = w.Status,
+                Priority = w.Priority,
+                SprintId = w.SprintId,
+                ProjectId = w.ProjectId,
+                IsBlocked = w.IsBlocked,
+                AssignedToUserId = w.AssignedToUserId,
+                CreatedAt = w.CreatedAt,
+
+                Parent = w.Relations
+                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
+                    .Select(r => new WorkItemRelationDto
+                    {
+                        RelationType = r.RelationType,
+                        TargetWorkItem = new RelationParticipantWorkItemDto
+                        {
+                            Id = r.TargetWorkItem.Id,
+                            Title = r.TargetWorkItem.Title,
+                            Type = r.TargetWorkItem.Type,
+                            Status = r.TargetWorkItem.Status,
+                        }
+                    }
+                    )
+                    .FirstOrDefault()
+            })
             .ToListAsync(cancellationToken);
 
         return items;
@@ -134,8 +219,35 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
         var items = await query
             .OrderBy(x => x.CreatedAt)
-            .Where(x => x.Type == type)
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .Where(x => x.Type == type).Select(w => new WorkItemListItemDto
+            {
+                Id = w.Id,
+                Title = w.Title,
+                Type = w.Type,
+                Status = w.Status,
+                Priority = w.Priority,
+                SprintId = w.SprintId,
+                ProjectId = w.ProjectId,
+                IsBlocked = w.IsBlocked,
+                AssignedToUserId = w.AssignedToUserId,
+                CreatedAt = w.CreatedAt,
+
+                Parent = w.Relations
+                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
+                    .Select(r => new WorkItemRelationDto
+                    {
+                        RelationType = r.RelationType,
+                        TargetWorkItem = new RelationParticipantWorkItemDto
+                        {
+                            Id = r.TargetWorkItem.Id,
+                            Title = r.TargetWorkItem.Title,
+                            Type = r.TargetWorkItem.Type,
+                            Status = r.TargetWorkItem.Status,
+                        }
+                    }
+                    )
+                    .FirstOrDefault()
+            })
             .ToListAsync(cancellationToken);
 
         return items;
@@ -157,8 +269,35 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             query = query.Where(x => x.CreatedAt >= parameters.Cursor.Value);
 
         var items = await query
-            .OrderByDescending(x => x.CreatedAt)
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .OrderByDescending(x => x.CreatedAt).Select(w => new WorkItemListItemDto
+            {
+                Id = w.Id,
+                Title = w.Title,
+                Type = w.Type,
+                Status = w.Status,
+                Priority = w.Priority,
+                SprintId = w.SprintId,
+                ProjectId = w.ProjectId,
+                IsBlocked = w.IsBlocked,
+                AssignedToUserId = w.AssignedToUserId,
+                CreatedAt = w.CreatedAt,
+
+                Parent = w.Relations
+                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
+                    .Select(r => new WorkItemRelationDto
+                    {
+                        RelationType = r.RelationType,
+                        TargetWorkItem = new RelationParticipantWorkItemDto
+                        {
+                            Id = r.TargetWorkItem.Id,
+                            Title = r.TargetWorkItem.Title,
+                            Type = r.TargetWorkItem.Type,
+                            Status = r.TargetWorkItem.Status,
+                        }
+                    }
+                    )
+                    .FirstOrDefault()
+            })
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 

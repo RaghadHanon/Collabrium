@@ -11,7 +11,7 @@ public interface ITenantRepository
     Task<bool> RemoveAsync(string tenantId, CancellationToken cancellationToken = default);
     Task<Tenant?> GetByIdAsync(string tenantId, CancellationToken cancellationToken = default);
     Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default);
-
+    Task<bool> IsExistAsync(string tenantId, CancellationToken cancellationToken = default);
     Task<PagedList<Tenant, DateTime?>> GetPagedAsync(
         TenantsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);

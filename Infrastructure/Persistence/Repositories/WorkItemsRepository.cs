@@ -1,7 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.Repositories;
-using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
@@ -83,6 +83,59 @@ public class WorkItemsRepository : IWorkItemsRepository
         var entity = await query.FirstOrDefaultAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
 
         return entity is null ? null : WorkItemMapper.ToDomain(entity, includeChildren);
+    }
+
+    public async Task PersistRelationAsync(
+        string tenantId,
+        string projectId,
+        string sourceWorkItemId,
+        string targetWorkItemId,
+        WorkItemRelationType relationType,
+        CancellationToken ct = default)
+    {
+
+        var sourceWorkItemEntity = await _dbContext.WorkItems
+            .FirstOrDefaultAsync(w =>
+            w.Project.TenantId == tenantId && w.Id == sourceWorkItemId && w.ProjectId == projectId, ct);
+
+        var targetWorkItemEntity = await _dbContext.WorkItems
+            .FirstOrDefaultAsync(w =>
+            w.Project.TenantId == tenantId && w.Id == targetWorkItemId && w.ProjectId == projectId, ct);
+
+        if (sourceWorkItemEntity is null || targetWorkItemEntity is null)
+            return;
+
+        var sourceWorkItemDomain = WorkItemMapper.ToDomain(sourceWorkItemEntity, true);
+
+        sourceWorkItemDomain.AddRelation(targetWorkItemId, relationType);
+        sourceWorkItemEntity.Relations.Add(CreateRelationRow(sourceWorkItemId, targetWorkItemId, relationType));
+
+        EnsureInverse(targetWorkItemEntity, sourceWorkItemId, targetWorkItemId, relationType);
+    }
+
+    private void EnsureInverse(WorkItemEntity targetWorkItemEntity, string sourceWorkItemId, string targetWorkItemId, WorkItemRelationType relationType)
+    {
+        var targetWorkItemDomain = WorkItemMapper.ToDomain(targetWorkItemEntity, true);
+        if (relationType == WorkItemRelationType.Parent)
+        {
+            targetWorkItemDomain.AddRelation(sourceWorkItemId, relationType);
+            targetWorkItemEntity.Relations.Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Child));
+        }
+        else if (relationType == WorkItemRelationType.Child)
+        {
+            targetWorkItemDomain.AddRelation(sourceWorkItemId, relationType);
+            targetWorkItemEntity.Relations.Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Parent));
+        }
+    }
+
+    private static WorkItemRelationEntity CreateRelationRow(string sourceWorkItemId, string targetWorkItemId, WorkItemRelationType relationType)
+    {
+        return new WorkItemRelationEntity
+        {
+            SourceWorkItemId = sourceWorkItemId,
+            TargetWorkItemId = targetWorkItemId,
+            RelationType = relationType
+        };
     }
 
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(

@@ -1,21 +1,18 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
-using Domain.Models;
 using MediatR;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
 
-public sealed class UpdateWorkItemStatus
+public class UpdateWorkItemStatus
 {
-    public sealed class Command : IRequest<Result<WorkItemDto>>
+    public class Command : IRequest<Result<WorkItemDto>>
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
@@ -37,7 +34,7 @@ public sealed class UpdateWorkItemStatus
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(
@@ -63,13 +60,13 @@ public sealed class UpdateWorkItemStatus
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                //if(workItem.Type == WorkItemType.UserStory)
+                //if(sourceWorkItem.Type == WorkItemType.UserStory)
                 //{
                 //    var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
-                //    ((UserStory) workItem).ChangeStatusWithValidation(request.NewStatus, children!);
+                //    ((UserStory) sourceWorkItem).ChangeStatusWithValidation(request.NewStatus, children!);
                 //}
                 //else
-                    workItem.ChangeStatus(request.NewStatus);
+                workItem.ChangeStatus(request.NewStatus);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
             }, cancellationToken);

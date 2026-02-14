@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Application.Features.WorkItems.DTOs.Relations;
+using Domain.Enums;
 
 namespace Application.Features.WorkItems.DTOs;
 
-public sealed class WorkItemListItemDto
+public class WorkItemListItemDto
 {
     public required string Id { get; set; }
     public required string ProjectId { get; set; }
@@ -18,4 +19,5 @@ public sealed class WorkItemListItemDto
     public string? AssignedToUserId { get; set; }
 
     public DateTime CreatedAt { get; set; }
+    public WorkItemRelationDto? Parent { get; set; }
 }

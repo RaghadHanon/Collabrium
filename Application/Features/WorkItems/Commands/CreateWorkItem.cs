@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
@@ -40,7 +39,7 @@ public sealed class CreateWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var userId = currentUserAccessor.GetUserId();

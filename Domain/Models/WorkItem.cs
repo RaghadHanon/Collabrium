@@ -24,6 +24,7 @@ public abstract class WorkItem : Entity
     public string ProjectId { get; private set; } = null!;
     public string? SprintId { get; private set; }
 
+
     private readonly List<WorkItemRelation> _relations = new();
     public IReadOnlyCollection<WorkItemRelation> Relations => _relations.AsReadOnly();
 
@@ -178,41 +179,6 @@ public abstract class WorkItem : Entity
         return GetAllowedStatuses().Where(s => IsValidTransition(Status, s)).ToList();
     }
 
-    public void MoveToBacklog()
-    {
-        ChangeStatus(WorkItemStatus.ToDo);
-    }
-
-    public void MoveToReadyForDev()
-    {
-        ChangeStatus(WorkItemStatus.ReadyForDev);
-    }
-
-    public void Start()
-    {
-        ChangeStatus(WorkItemStatus.InProgress);
-    }
-
-    public void SendToReview()
-    {
-        ChangeStatus(WorkItemStatus.InReview);
-    }
-
-    public void SendToTesting()
-    {
-        ChangeStatus(WorkItemStatus.InTesting);
-    }
-
-    public void MarkReadyForRelease()
-    {
-        ChangeStatus(WorkItemStatus.ReadyForRelease);
-    }
-
-    public void MarkDone()
-    {
-        ChangeStatus(WorkItemStatus.Done);
-    }
-
     public void SetPriority(WorkItemPriority priority)
     {
         Priority = priority;
@@ -255,7 +221,7 @@ public abstract class WorkItem : Entity
         return comment;
     }
 
-    public void AddRelation(string targetWorkItemId, WorkItemRelationType type)
+    public string AddRelation(string targetWorkItemId, WorkItemRelationType type)
     {
         targetWorkItemId = Guard.NotNullOrWhiteSpace(targetWorkItemId, nameof(targetWorkItemId));
         Guard.Against(targetWorkItemId == Id, "WorkItem cannot relate to itself.");
@@ -268,16 +234,18 @@ public abstract class WorkItem : Entity
             Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent),
                 "WorkItem can have only one parent.");
         }
-
-        _relations.Add(new WorkItemRelation(Guid.NewGuid().ToString(), Id, targetWorkItemId, type));
+        var relation = new WorkItemRelation(Id, targetWorkItemId, type);
+        _relations.Add(relation);
         Touch();
+
+        return relation.Id;
     }
 
-    public void AddRelation(WorkItem target, WorkItemRelationType type)
+    public string AddRelation(WorkItem target, WorkItemRelationType type)
     {
         Guard.Against(target is null, "Target is required.");
         ValidateRelationRules(this.Type, target!.Type, type);
-        AddRelation(target.Id, type);
+        return AddRelation(target.Id, type);
     }
 
     private static void ValidateRelationRules(WorkItemType source, WorkItemType target, WorkItemRelationType relationType)
@@ -331,6 +299,14 @@ public abstract class WorkItem : Entity
     public IReadOnlyCollection<string> GetRelatedIds(WorkItemRelationType type)
     {
         return _relations.Where(r => r.RelationType == type)
+                .Select(r => r.TargetWorkItemId)
+                .Distinct()
+                .ToList();
+    }
+
+    public IReadOnlyCollection<string> GetAllRelatedIds()
+    {
+        return _relations
                 .Select(r => r.TargetWorkItemId)
                 .Distinct()
                 .ToList();

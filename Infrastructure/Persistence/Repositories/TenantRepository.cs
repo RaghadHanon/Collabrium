@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public sealed class TenantRepository : ITenantRepository
+public class TenantRepository : ITenantRepository
 {
     private readonly AppDbContext _dbContext;
 
@@ -62,6 +62,15 @@ public sealed class TenantRepository : ITenantRepository
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
         return entity is null ? null : TenantMapper.ToDomain(entity);
+    }
+
+    public async Task<bool> IsExistAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(tenantId, out var id))
+            return false;
+
+        return await _dbContext.Tenants
+            .AnyAsync(t => t.Id ==  tenantId, cancellationToken);   
     }
 
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)

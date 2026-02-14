@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Application.Features.WorkItems.DTOs.Relations;
+using Domain.Enums;
 
 namespace Application.Features.WorkItems.DTOs;
 
@@ -28,5 +29,6 @@ public class WorkItemDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
+    public WorkItemRelationDto? Parent { get; set; }
     public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
 }

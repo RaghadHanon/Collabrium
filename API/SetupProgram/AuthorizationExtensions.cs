@@ -128,6 +128,14 @@ public static class AuthorizationExtensions
                 nameof(UserRole.TeamLead),
                 nameof(UserRole.BusinessAnalyst),
                 nameof(UserRole.TenantAdmin)
+            )); 
+            options.AddPolicy(Policies.WorkItems_UpdateExecution, p => p.RequireRole(
+                nameof(UserRole.BackendDev),
+                nameof(UserRole.FrontendDev),
+                nameof(UserRole.FullStackDev),
+                nameof(UserRole.QA),
+                nameof(UserRole.TeamLead),
+                nameof(UserRole.TenantAdmin)
             ));
             options.AddPolicy(Policies.WorkItems_AssignSelf, p => p.RequireRole(ProductMembers));
             options.AddPolicy(Policies.WorkItems_AssignOthers, p => p.RequireRole(
@@ -141,6 +149,7 @@ public static class AuthorizationExtensions
                 nameof(UserRole.TenantAdmin)
             ));
             options.AddPolicy(Policies.WorkItems_ChangeStatus, p => p.RequireRole(TenantMembers));
+            options.AddPolicy(Policies.WorkItems_ChangeAssignee, p => p.RequireRole(TenantMembers));
         });
 
         return services;

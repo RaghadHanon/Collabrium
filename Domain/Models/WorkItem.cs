@@ -283,6 +283,20 @@ public abstract class WorkItem : Entity
         }
     }
 
+    public void RemoveRelation(string targetWorkItemId, WorkItemRelationType type)
+    {
+        targetWorkItemId = Guard.NotNullOrWhiteSpace(targetWorkItemId, nameof(targetWorkItemId));
+
+        var rel = _relations.FirstOrDefault(r =>
+            r.TargetWorkItemId == targetWorkItemId &&
+            r.RelationType == type);
+
+        Guard.Against(rel is null, "Relation not found.");
+
+        _relations.Remove(rel!);
+        Touch();
+    }
+
     public string? GetParentId()
     {
         return _relations.FirstOrDefault(r => r.RelationType == WorkItemRelationType.Parent)?.TargetWorkItemId;

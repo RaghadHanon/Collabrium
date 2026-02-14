@@ -2,9 +2,10 @@
 using API.Contracts.WorkItems.Create;
 using API.Contracts.WorkItems.Update;
 using Application.Features.WorkItems.Commands;
+using Application.Features.WorkItems.Commands.Relations;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
-using Application.Features.WorkItems.Queries;
+using Application.Features.WorkItems.Queries.Relations;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Enums;
@@ -20,8 +21,9 @@ public sealed class WorkItemsApiProfile : Profile
         CreateMap<ChangeWorkItemStatusRequest, UpdateWorkItemStatus.Command>();
         CreateMap<UpdateWorkItemAssigneeRequest, UpdateWorkItemAssignee.Command>();
 
-        CreateMap<AddWorkItemsRelationRequest, AddWorkItemsRelation.Command>();
-        CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Command>();
+        CreateMap<AddWorkItemRelationRequest, AddWorkItemRelation.Command>();
+        CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Query>();
+        CreateMap<UpdateWorkItemRelationRequest, UpdateWorkItemRelation.Command>();
 
         CreateMap<CreateEpicRequest, CreateWorkItem.Command>()
             .ForMember(d => d.Type, opt => opt.MapFrom(_ => WorkItemType.Epic))
@@ -42,7 +44,9 @@ public sealed class WorkItemsApiProfile : Profile
             .ForMember(d => d.Type, opt => opt.MapFrom(_ => WorkItemType.Bug))
             .ForMember(d => d.Details, opt => opt.MapFrom(s => new CreateBugDetails
             {
-                StepsToReproduce = s.StepsToReproduce
+                StepsToReproduce = s.StepsToReproduce,
+                ExpectedResult = s.ExpectedResult,
+                ActualResult = s.ActualResult
             }));
 
         CreateMap<CreateTestCaseRequest, CreateWorkItem.Command>()
@@ -52,7 +56,7 @@ public sealed class WorkItemsApiProfile : Profile
                 Preconditions = s.Preconditions,
                 Steps = s.Steps,
                 TestEnvironment = Enum.Parse<TestEnvironment>(s.TestEnvironment, true),
-                ExpectedResult = s.ExpectedResult
+                ExpectedResult = s.ExpectedResult,
             }));
 
 

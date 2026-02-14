@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -8,7 +7,7 @@ using Domain.Enums;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.Projects.Queries;
+namespace Application.Features.WorkItems.Queries;
 
 public class GetWorkItemsByType
 {
@@ -22,7 +21,8 @@ public class GetWorkItemsByType
     public class Handler(
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
-        IProjectsRepository projectsRepository
+        IProjectsRepository projectsRepository,
+        ISprintsRepository sprintsRepository
         ) : IRequestHandler<Query, Result<List<WorkItemListItemDto>>>
     {
         public async Task<Result<List<WorkItemListItemDto>>> Handle(Query request, CancellationToken cancellationToken)
@@ -31,8 +31,11 @@ public class GetWorkItemsByType
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<List<WorkItemListItemDto>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<List<WorkItemListItemDto>>.Failure("Project not found.", HttpStatusCode.NotFound);
+
+            if (!string.IsNullOrWhiteSpace(request.SprintId) && !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
+                return Result<List<WorkItemListItemDto>>.Failure("Sprint not found in this project.", HttpStatusCode.NotFound);
 
             var items = await workItemsReadModel.GetWorkItemsByTypeAsync(
                 tenantId: tenantId,

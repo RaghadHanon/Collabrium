@@ -6,6 +6,7 @@ using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Boards;
+using Application.Features.WorkItems.Queries;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

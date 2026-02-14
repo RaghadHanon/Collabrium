@@ -6,6 +6,7 @@ using Application.Features.Sprints.Commands;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
 using Application.Features.WorkItems.DTOs.Boards;
+using Application.Features.WorkItems.Queries;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

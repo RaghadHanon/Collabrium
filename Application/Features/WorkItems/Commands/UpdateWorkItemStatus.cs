@@ -37,6 +37,10 @@ public class UpdateWorkItemStatus
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
+            var currentUserId = currentUserAccessor.GetUserId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                return Result<WorkItemDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
                 request.ProjectId,
@@ -48,11 +52,18 @@ public class UpdateWorkItemStatus
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
+            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 
             if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
-                && !isAdmin)
+                && !isManager)
                 return Result<WorkItemDto>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
+           
+            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
+
+            if (!isManager && !isCurrentAssignee)
+                return Result<WorkItemDto>.Failure(
+                    "You can only update items assigned to you. Managers can update any item.",
+                    HttpStatusCode.Forbidden);
 
             var allowedStatuses = workItem.GetAllowedStatuses();
             if (!allowedStatuses.Contains(request.NewStatus))

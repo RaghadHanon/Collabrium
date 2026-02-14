@@ -42,11 +42,13 @@ public static class Policies
     public const string WorkItems_CreateExecution = "WorkItems.Create.Execution";   // Task/Bug/TestCase
 
     public const string WorkItems_UpdateContent = "WorkItems.Update.Content";
-    public const string WorkItems_UpdatePlanning = "WorkItems.Update.Planning";
+    public const string WorkItems_UpdatePlanning = "WorkItems.Update.Planning"; 
+    public const string WorkItems_UpdateExecution = "WorkItems.Update.Execution";
 
     public const string WorkItems_AssignSelf = "WorkItems.Assign.Self";
     public const string WorkItems_AssignOthers = "WorkItems.Assign.Others";
 
     public const string WorkItems_Delete = "WorkItems.Delete";
     public const string WorkItems_ChangeStatus = "WorkItems.ChangeStatus";
+    public const string WorkItems_ChangeAssignee = "WorkItems.ChangeAssignee";
 }

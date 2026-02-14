@@ -18,13 +18,20 @@ public sealed class Bug : WorkItem
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
-    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
+    public Bug(string title, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
            : base(title, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+        UpdateRepro(stepsToReproduce, actualResult, expectedResult);
     }
 
+    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
+       : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+    }
     protected override bool CanReopenFromDone => true;
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)

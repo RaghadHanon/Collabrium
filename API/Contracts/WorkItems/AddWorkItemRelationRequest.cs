@@ -1,6 +1,6 @@
-﻿namespace API.Contracts.WorkItems.Create;
+﻿namespace API.Contracts.WorkItems;
 
-public class AddWorkItemsRelationRequest
+public class AddWorkItemRelationRequest
 {
     public required string TargetWorkItemId { get; set; }
     public required string RelationType { get; set; }

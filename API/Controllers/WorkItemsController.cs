@@ -318,7 +318,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "effortPoints": 13,
     ///       "priority": "High",
     ///       "sprintId": "sprint-2026-01",
-    ///       "status": "InProgress",
     ///       "isBlocked": false
     ///     }
     ///     
@@ -362,7 +361,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "effortPoints": 8,
     ///       "priority": "High",
     ///       "sprintId": "sprint-2026-01",
-    ///       "status": "InTesting",
     ///       "isBlocked": false,
     ///       "storyPoints": 5
     ///     }
@@ -401,12 +399,11 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "effortPoints": 5,
     ///       "priority": "Low",
     ///       "sprintId": "sprint-2026-02",
-    ///       "status": "InReview",
     ///       "isBlocked": true
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
+    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
     [HttpPatch("{workItemId}/task")]
     public async Task<ActionResult<WorkItemDto>> UpdateTask(string projectId, string workItemId, UpdateTaskRequest request)
     {
@@ -435,7 +432,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "effortPoints": 3,
     ///       "priority": "High",
     ///       "sprintId": "sprint-2026-01",
-    ///       "status": "InProgress",
     ///       "isBlocked": false,
     ///       "stepsToReproduce": "1. Login\n2. Wait token expiry\n3. Call API",
     ///       "expectedResult": "401 Unauthorized",
@@ -443,7 +439,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
+    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
     [HttpPatch("{workItemId}/bug")]
     public async Task<ActionResult<WorkItemDto>> UpdateBug(string projectId, string workItemId, UpdateBugRequest request)
     {
@@ -473,7 +469,6 @@ public sealed class WorkItemsController : ApiBaseController
     ///       "effortPoints": 2,
     ///       "priority": "Medium",
     ///       "sprintId": "sprint-2026-02",
-    ///       "status": "InTesting",
     ///       "isBlocked": false,
     ///       "preconditions": "User exists and is active",
     ///       "steps": "1. Open login page\n2. Enter email\n3. Enter password\n4. Click login",
@@ -484,7 +479,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
+    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
     [HttpPatch("{workItemId}/test-case")]
     public async Task<ActionResult<WorkItemDto>> UpdateTestCase(string projectId, string workItemId, UpdateTestCaseRequest request)
     {
@@ -596,7 +591,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project or permission to assign work items.</response>
     /// <response code="404">If the work item does not exist in the project.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
+    [Authorize(Policy = Policies.WorkItems_ChangeAssignee)]
     [HttpPatch("{workItemId}/assignee")]
     public async Task<ActionResult<WorkItemDto>> UpdateAssignee(
         string projectId,

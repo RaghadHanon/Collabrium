@@ -85,59 +85,6 @@ public class WorkItemsRepository : IWorkItemsRepository
         return entity is null ? null : WorkItemMapper.ToDomain(entity, includeChildren);
     }
 
-    public async Task PersistRelationAsync(
-        string tenantId,
-        string projectId,
-        string sourceWorkItemId,
-        string targetWorkItemId,
-        WorkItemRelationType relationType,
-        CancellationToken ct = default)
-    {
-
-        var sourceWorkItemEntity = await _dbContext.WorkItems
-            .FirstOrDefaultAsync(w =>
-            w.Project.TenantId == tenantId && w.Id == sourceWorkItemId && w.ProjectId == projectId, ct);
-
-        var targetWorkItemEntity = await _dbContext.WorkItems
-            .FirstOrDefaultAsync(w =>
-            w.Project.TenantId == tenantId && w.Id == targetWorkItemId && w.ProjectId == projectId, ct);
-
-        if (sourceWorkItemEntity is null || targetWorkItemEntity is null)
-            return;
-
-        var sourceWorkItemDomain = WorkItemMapper.ToDomain(sourceWorkItemEntity, true);
-
-        sourceWorkItemDomain.AddRelation(targetWorkItemId, relationType);
-        sourceWorkItemEntity.Relations.Add(CreateRelationRow(sourceWorkItemId, targetWorkItemId, relationType));
-
-        EnsureInverse(targetWorkItemEntity, sourceWorkItemId, targetWorkItemId, relationType);
-    }
-
-    private void EnsureInverse(WorkItemEntity targetWorkItemEntity, string sourceWorkItemId, string targetWorkItemId, WorkItemRelationType relationType)
-    {
-        var targetWorkItemDomain = WorkItemMapper.ToDomain(targetWorkItemEntity, true);
-        if (relationType == WorkItemRelationType.Parent)
-        {
-            targetWorkItemDomain.AddRelation(sourceWorkItemId, relationType);
-            targetWorkItemEntity.Relations.Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Child));
-        }
-        else if (relationType == WorkItemRelationType.Child)
-        {
-            targetWorkItemDomain.AddRelation(sourceWorkItemId, relationType);
-            targetWorkItemEntity.Relations.Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Parent));
-        }
-    }
-
-    private static WorkItemRelationEntity CreateRelationRow(string sourceWorkItemId, string targetWorkItemId, WorkItemRelationType relationType)
-    {
-        return new WorkItemRelationEntity
-        {
-            SourceWorkItemId = sourceWorkItemId,
-            TargetWorkItemId = targetWorkItemId,
-            RelationType = relationType
-        };
-    }
-
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
@@ -218,5 +165,162 @@ public class WorkItemsRepository : IWorkItemsRepository
             query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
 
         return query;
+    }
+
+    // relations
+    public async Task PersistRelationAsync(
+        string tenantId,
+        string projectId,
+        string sourceWorkItemId,
+        string targetWorkItemId,
+        WorkItemRelationType relationType,
+        CancellationToken ct = default)
+    {
+
+        var sourceWorkItemEntity = await _dbContext.WorkItems
+            .Include(w => w.Relations)
+            .FirstOrDefaultAsync(w =>
+            w.Project.TenantId == tenantId && w.Id == sourceWorkItemId && w.ProjectId == projectId, ct);
+
+        var targetWorkItemEntity = await _dbContext.WorkItems
+            .Include(w => w.Relations)
+            .FirstOrDefaultAsync(w =>
+            w.Project.TenantId == tenantId && w.Id == targetWorkItemId && w.ProjectId == projectId, ct);
+
+        if (sourceWorkItemEntity is null || targetWorkItemEntity is null)
+            return;
+
+        var sourceWorkItemDomain = WorkItemMapper.ToDomain(sourceWorkItemEntity, true);
+
+        sourceWorkItemDomain.AddRelation(targetWorkItemId, relationType);
+        sourceWorkItemEntity.Relations.Add(CreateRelationRow(sourceWorkItemId, targetWorkItemId, relationType));
+
+        EnsureInverse(targetWorkItemEntity, sourceWorkItemId, targetWorkItemId, relationType);
+        WorkItemMapper.UpdateEntity(sourceWorkItemDomain, sourceWorkItemEntity);
+    }
+
+    private void EnsureInverse(
+        WorkItemEntity targetWorkItemEntity,
+        string sourceWorkItemId,
+        string targetWorkItemId,
+        WorkItemRelationType relationType)
+    {
+        var targetWorkItemDomain = WorkItemMapper.ToDomain(targetWorkItemEntity, true);
+        if (relationType == WorkItemRelationType.Parent)
+        {
+            targetWorkItemDomain.AddRelation(sourceWorkItemId, WorkItemRelationType.Child);
+            targetWorkItemEntity.Relations
+                .Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Child));
+        }
+        else if (relationType == WorkItemRelationType.Child)
+        {
+            targetWorkItemDomain.AddRelation(sourceWorkItemId, WorkItemRelationType.Parent);
+            targetWorkItemEntity.Relations
+                .Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Parent));
+        }
+
+        WorkItemMapper.UpdateEntity(targetWorkItemDomain, targetWorkItemEntity);
+    }
+
+    private static WorkItemRelationEntity CreateRelationRow(
+        string sourceWorkItemId, 
+        string targetWorkItemId, 
+        WorkItemRelationType relationType)
+    {
+        return new WorkItemRelationEntity
+        {
+            SourceWorkItemId = sourceWorkItemId,
+            TargetWorkItemId = targetWorkItemId,
+            RelationType = relationType
+        };
+    }
+    public async Task<bool> DeleteRelationAsync(
+        string tenantId,
+        string projectId,
+        string relationId,
+        CancellationToken ct = default)
+    {
+        tenantId = tenantId.Trim();
+        projectId = projectId.Trim();
+        relationId = relationId.Trim();
+
+        var relationEntity = await _dbContext.WorkItemRelations
+            .Include(r => r.SourceWorkItem)
+                .ThenInclude(w => w.Project)
+            .Include(r => r.SourceWorkItem)
+                .ThenInclude(w => w.Relations) 
+            .FirstOrDefaultAsync(r =>
+                r.Id == relationId &&
+                r.SourceWorkItem.ProjectId == projectId &&
+                r.SourceWorkItem.Project.TenantId == tenantId, ct);
+
+        if (relationEntity is null) return false;
+
+        var sourceDomain = WorkItemMapper.ToDomain(relationEntity.SourceWorkItem, includeChildren: true);
+        sourceDomain.RemoveRelation(relationEntity.TargetWorkItemId, relationEntity.RelationType);
+        _dbContext.WorkItemRelations.Remove(relationEntity);
+
+        await RemoveInverseRelation(relationEntity, ct);
+
+        WorkItemMapper.UpdateEntity(sourceDomain, relationEntity.SourceWorkItem);
+
+        return true;
+    }
+
+    private async Task RemoveInverseRelation(WorkItemRelationEntity relation, CancellationToken ct)
+    {
+        if (relation.RelationType is WorkItemRelationType.Parent or WorkItemRelationType.Child)
+        {
+            var inverseType = relation.RelationType == WorkItemRelationType.Parent
+                ? WorkItemRelationType.Child
+                : WorkItemRelationType.Parent;
+
+            var inverse = await _dbContext.WorkItemRelations
+                .FirstOrDefaultAsync(r =>
+                    r.SourceWorkItemId == relation.TargetWorkItemId &&
+                    r.TargetWorkItemId == relation.SourceWorkItemId &&
+                    r.RelationType == inverseType, ct);
+
+            if (inverse is not null)
+                _dbContext.WorkItemRelations.Remove(inverse);
+        }
+    }
+    public async Task<bool> UpdateRelationAsync(
+        string tenantId,
+        string projectId,
+        string relationId,
+        string newTargetWorkItemId,
+        WorkItemRelationType newRelationType,
+        CancellationToken ct = default)
+    {
+        tenantId = tenantId.Trim();
+        projectId = projectId.Trim();
+        relationId = relationId.Trim();
+        newTargetWorkItemId = newTargetWorkItemId.Trim();
+
+        var relationEntity = await _dbContext.WorkItemRelations
+            .Include(r => r.SourceWorkItem)
+                .ThenInclude(w => w.Project)
+            .Include(r => r.SourceWorkItem)
+                .ThenInclude(w => w.Relations) 
+            .FirstOrDefaultAsync(r =>
+                r.Id == relationId &&
+                r.SourceWorkItem.ProjectId == projectId &&
+                r.SourceWorkItem.Project.TenantId == tenantId, ct);
+
+        if (relationEntity is null) return false;
+
+        var sourceId = relationEntity.SourceWorkItemId;
+
+        var sourceDomain = WorkItemMapper.ToDomain(relationEntity.SourceWorkItem, includeChildren: true);
+        sourceDomain.RemoveRelation(relationEntity.TargetWorkItemId, relationEntity.RelationType);
+        _dbContext.WorkItemRelations.Remove(relationEntity);
+
+        await RemoveInverseRelation(relationEntity, ct);
+        await PersistRelationAsync(tenantId, projectId, sourceId, newTargetWorkItemId, newRelationType, ct);
+
+        WorkItemMapper.UpdateEntity(sourceDomain, relationEntity.SourceWorkItem);
+
+        return true;
     }
 }

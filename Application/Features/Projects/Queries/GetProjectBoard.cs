@@ -29,7 +29,7 @@ public class GetProjectBoard
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<BoardDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!string.IsNullOrWhiteSpace(request.SprintId) && !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
+            if (!string.IsNullOrWhiteSpace(request.SprintId) && !(await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId)))
                 return Result<BoardDto>.Failure("Sprint not found in this project.", HttpStatusCode.NotFound);
 
             var items = await workItemsReadModel.GetBoardItemsAsync(

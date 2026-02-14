@@ -19,7 +19,6 @@ public interface IWorkItemsReadModel
     Task<WorkItemRelationDto?> GetRelationByIdAsync(
        string projectId,
        string sourceWorkItemId,
-       string targetWorkItemId,
        string relationId,
        CancellationToken cancellationToken = default);
     Task<List<WorkItemListItemDto>> GetBoardItemsAsync(

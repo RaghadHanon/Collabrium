@@ -60,7 +60,7 @@ public sealed class CreateWorkItem
                         => new UserStory(request.Title, userId!, request.ProjectId, d.StoryPoints),
 
                     WorkItemType.Bug when request.Details is CreateBugDetails d
-                        => new Bug(request.Title, userId!, request.ProjectId, d.StepsToReproduce),
+                        => new Bug(request.Title, userId!, request.ProjectId, d.ActualResult, d.ExpectedResult, d.StepsToReproduce),
 
                     WorkItemType.TestCase when request.Details is CreateTestCaseDetails d
                         => new TestCase(request.Title, userId!, request.ProjectId,

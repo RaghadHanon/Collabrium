@@ -1,0 +1,75 @@
+﻿using Application.Common;
+using Application.Interfaces;
+using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
+using Domain.Enums;
+using MediatR;
+using System.Net;
+
+namespace Application.Features.WorkItems.Commands.Relations;
+
+public class UpdateWorkItemRelation
+{
+    public class Command : IRequest<Result<Unit>>
+    {
+        public required string ProjectId { get; set; }
+        public required string RelationId { get; set; }
+        public required string SourceWorkItemId { get; set; }
+        public required string NewTargetWorkItemId { get; set; }
+        public required WorkItemRelationType NewRelationType { get; set; }
+    }
+
+    public class Handler(
+        IWorkItemsRepository workItemsRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork,
+        ICurrentUserAccessor currentUserAccessor,
+        IProjectsRepository projectsRepository
+    ) : IRequestHandler<Command, Result<Unit>>
+    {
+        public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
+        {
+            var tenantId = tenantContext.CurrentTenant?.Id;
+
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+                return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
+
+            var sourceWorkItem = await workItemsRepository.GetByIdAsync(
+               tenantId,
+               request.ProjectId,
+               request.SourceWorkItemId,
+               includeChildren: true,
+               cancellationToken);
+
+            if (sourceWorkItem is null)
+                return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+
+            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
+            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
+
+            if ((sourceWorkItem.Type == WorkItemType.Epic || sourceWorkItem.Type == WorkItemType.UserStory)
+                && !isAdmin)
+                return Result<Unit>.Failure("Only admins can change relations of Epics and User Stories.", HttpStatusCode.Forbidden);
+
+            var updated = false;
+
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                updated = await workItemsRepository.UpdateRelationAsync(
+                    tenantId,
+                    request.ProjectId,
+                    request.RelationId,
+                    request.NewTargetWorkItemId,
+                    request.NewRelationType,
+                    ct);
+            }, cancellationToken);
+
+            return updated
+                ? Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent)
+                : Result<Unit>.Failure("Relation not found.", HttpStatusCode.NotFound);
+        }
+    }
+}

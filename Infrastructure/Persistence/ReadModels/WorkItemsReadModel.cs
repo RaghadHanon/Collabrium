@@ -77,63 +77,6 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             : new List<WorkItemStatus>();
     }
 
-    public async Task<WorkItemRelationDto?> GetRelationByIdAsync(
-       string projectId,
-       string sourceWorkItemId,
-       string targetWorkItemId,
-       string relationId,
-       CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(projectId) ||
-            string.IsNullOrWhiteSpace(sourceWorkItemId) ||
-            string.IsNullOrWhiteSpace(targetWorkItemId) ||
-            string.IsNullOrWhiteSpace(relationId))
-            return null;
-
-        var pId = projectId.Trim();
-        var swId = sourceWorkItemId.Trim();
-        var twId = targetWorkItemId.Trim();
-        var rId = relationId.Trim();
-
-        return await _dbContext.WorkItemRelations
-            .AsNoTracking()
-            .Where(r =>
-                r.Id == rId &&
-                r.SourceWorkItemId == swId &&
-                r.TargetWorkItemId == twId &&
-                r.SourceWorkItem.ProjectId == pId)
-            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    public async Task<List<WorkItemRelationDto>?> GetRelationsByTypeAsync(
-        string tenantId,
-        string projectId,
-        string workItemId,
-        WorkItemRelationType? relationType = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(workItemId))
-            return null;
-
-        var tId = tenantId.Trim();
-        var wId = workItemId.Trim();
-
-        var query = _dbContext.WorkItemRelations
-            .AsNoTracking()
-            .Where(r =>
-                r.SourceWorkItem.Project.TenantId == tId &&
-                r.SourceWorkItem.ProjectId == projectId &&
-                r.SourceWorkItemId == wId);
-
-        if (relationType.HasValue)
-            query = query.Where(r => r.RelationType == relationType.Value);
-
-        return await query
-            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
-
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
         string tenantId,
         string projectId,
@@ -364,5 +307,59 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             query = query.Where(x => x.CreatedAt <= parameters.CreatedBefore.Value);
 
         return query;
+    }
+
+    // relations
+    public async Task<WorkItemRelationDto?> GetRelationByIdAsync(
+       string projectId,
+       string sourceWorkItemId,
+       string relationId,
+       CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(sourceWorkItemId) ||
+            string.IsNullOrWhiteSpace(relationId))
+            return null;
+
+        var pId = projectId.Trim();
+        var swId = sourceWorkItemId.Trim();
+        var rId = relationId.Trim();
+
+        return await _dbContext.WorkItemRelations
+            .AsNoTracking()
+            .Where(r =>
+                r.Id == rId &&
+                r.SourceWorkItemId == swId &&
+                r.SourceWorkItem.ProjectId == pId)
+            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<WorkItemRelationDto>?> GetRelationsByTypeAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        WorkItemRelationType? relationType = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(workItemId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var wId = workItemId.Trim();
+
+        var query = _dbContext.WorkItemRelations
+            .AsNoTracking()
+            .Where(r =>
+                r.SourceWorkItem.Project.TenantId == tId &&
+                r.SourceWorkItem.ProjectId == projectId &&
+                r.SourceWorkItemId == wId);
+
+        if (relationType.HasValue)
+            query = query.Where(r => r.RelationType == relationType.Value);
+
+        return await query
+            .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
     }
 }

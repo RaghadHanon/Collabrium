@@ -3,19 +3,18 @@ using Application.Features.WorkItems.DTOs.Relations;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
-using Domain.Enums;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.WorkItems.Queries;
+namespace Application.Features.WorkItems.Queries.Relations;
 
-public class GetWorkItemRelations
+public class GetWorkItemRelation
 {
-    public class Command : IRequest<Result<List<WorkItemRelationDto>?>>
+    public class Query : IRequest<Result<WorkItemRelationDto>>
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
-        public WorkItemRelationType? RelationType { get; set; }
+        public required string RelationId { get; set; }
     }
 
     public class Handler(
@@ -23,16 +22,16 @@ public class GetWorkItemRelations
         ITenantContext tenantContext,
         IWorkItemsReadModel workItemsReadModel,
         IProjectsRepository projectsRepository
-    ) : IRequestHandler<Command, Result<List<WorkItemRelationDto>?>>
+    ) : IRequestHandler<Query, Result<WorkItemRelationDto>>
     {
-        public async Task<Result<List<WorkItemRelationDto>?>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<WorkItemRelationDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<List<WorkItemRelationDto>?>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                return Result<WorkItemRelationDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
-                return Result<List<WorkItemRelationDto>?>.Failure("Project not found.", HttpStatusCode.NotFound);
+                return Result<WorkItemRelationDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var sourceWorkItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
@@ -42,16 +41,17 @@ public class GetWorkItemRelations
                 cancellationToken);
 
             if (sourceWorkItem is null)
-                return Result<List<WorkItemRelationDto>?>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
+                return Result<WorkItemRelationDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            var dto = await workItemsReadModel.GetRelationsByTypeAsync(
-                    tenantId,
+            var dto = await workItemsReadModel.GetRelationByIdAsync(
                     request.ProjectId,
                     request.WorkItemId,
-                    request.RelationType,
+                    request.RelationId,
                     cancellationToken);
 
-            return Result<List<WorkItemRelationDto>?>.Success(dto, HttpStatusCode.OK);
+            return dto is null
+                ? Result<WorkItemRelationDto>.Failure("Work item not can't be loaded or does not belong to this workItem.", HttpStatusCode.InternalServerError)
+                : Result<WorkItemRelationDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

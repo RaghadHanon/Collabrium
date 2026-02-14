@@ -6,9 +6,9 @@ using Domain.Enums;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.WorkItems.Commands;
+namespace Application.Features.WorkItems.Commands.Relations;
 
-public class AddWorkItemsRelation
+public class AddWorkItemRelation
 {
     public class Command : IRequest<Result<Unit>>
     {

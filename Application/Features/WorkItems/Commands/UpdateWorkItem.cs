@@ -52,6 +52,10 @@ public partial class UpdateWorkItem
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
+            var currentUserId = currentUserAccessor.GetUserId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                return Result<WorkItemDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
                 request.ProjectId,
@@ -64,6 +68,15 @@ public partial class UpdateWorkItem
 
             if (request.Type != workItem.Type)
                 return Result<WorkItemDto>.Failure("Work item type mismatch.", HttpStatusCode.BadRequest);
+
+            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
+            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
+            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
+
+            if (!isManager && !isCurrentAssignee)
+                return Result<WorkItemDto>.Failure(
+                    "You can only update items assigned to you. Managers can update any item.",
+                    HttpStatusCode.Forbidden);
 
             var sprintDecision = PatchHelpers.DecideStringPatch(request.SprintId);
             if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)

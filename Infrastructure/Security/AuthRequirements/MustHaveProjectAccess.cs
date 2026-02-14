@@ -41,6 +41,24 @@ public class MustHaveProjectAccessHandler
             return;
         }
 
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            context.Fail();
+            return;
+        }
+
+        var projectIdString = _httpContextAccessor.HttpContext?.Request.RouteValues["projectId"]?.ToString();
+        if (string.IsNullOrEmpty(projectIdString) || !Guid.TryParse(projectIdString, out var projectId))
+        {
+            throw new BadRequestException("Project id is missing or wrongly formatted.");
+        }
+
+        if(!(await _projectsRepository.IsProjectExists(user!.TenantId!, projectIdString)))
+        {
+            throw new NotFoundException("Project not found.");
+        }
+
         if (context.User.IsInRole(nameof(UserRole.SuperAdmin)))
         {
             context.Fail();
@@ -52,25 +70,6 @@ public class MustHaveProjectAccessHandler
         {
             context.Succeed(requirement);
             return;
-        }
-
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-        {
-            context.Fail();
-            return;
-        }
-
-        var projectIdString = _httpContextAccessor.HttpContext?.Request.RouteValues["projectId"]?.ToString();
-        if (string.IsNullOrEmpty(projectIdString) || !Guid.TryParse(projectIdString, out var projectId))
-        {
-            context.Fail();
-            return;
-        }
-
-        if(!(await _projectsRepository.IsProjectExists(user!.TenantId!, projectIdString)))
-        {
-            throw new NotFoundException("Project not found.");
         }
 
         var hasAccess = await _projectsRepository.IsUserHasAccessToProjectAsync(user!.TenantId!, userId, projectIdString);

@@ -18,8 +18,7 @@ public class GetWorkItemStatusesByType
 
     public class Handler(
         ITenantContext tenantContext,
-        IWorkItemsReadModel workItemsReadModel,
-        IProjectsRepository projectsRepository
+        IWorkItemsReadModel workItemsReadModel
       ) : IRequestHandler<Query, Result<List<WorkItemStatus>>>
     {
         public async Task<Result<List<WorkItemStatus>>> Handle(Query request, CancellationToken cancellationToken)
@@ -27,9 +26,6 @@ public class GetWorkItemStatusesByType
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<List<WorkItemStatus>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
-
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
-                return Result<List<WorkItemStatus>>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var statuses = workItemsReadModel.GetAllowedStatusesByType(request.Type);
 

@@ -1,4 +1,4 @@
-﻿namespace API.Contracts.WorkItems.Create;
+﻿namespace API.Contracts.WorkItems.Relations;
 
 public class GetWorkItemRelationsRequest
 {

@@ -1,5 +1,4 @@
-﻿using API.Contracts.WorkItems;
-using API.Contracts.WorkItems.Create;
+﻿using API.Contracts.WorkItems.Relations;
 using API.SetupProgram;
 using Application.Features.WorkItems.Commands.Relations;
 using Application.Features.WorkItems.DTOs;

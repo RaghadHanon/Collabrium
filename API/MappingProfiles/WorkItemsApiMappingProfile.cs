@@ -1,5 +1,6 @@
 ﻿using API.Contracts.WorkItems;
 using API.Contracts.WorkItems.Create;
+using API.Contracts.WorkItems.Relations;
 using API.Contracts.WorkItems.Update;
 using Application.Features.WorkItems.Commands;
 using Application.Features.WorkItems.Commands.Relations;

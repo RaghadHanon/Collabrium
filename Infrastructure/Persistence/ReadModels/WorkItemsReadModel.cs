@@ -1,5 +1,7 @@
 ﻿using Application.Common;
+using Application.Common.DTOs;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
@@ -40,6 +42,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
         var entity = await _dbContext.WorkItems
             .Include(w => w.Relations)
+            .ThenInclude(r => r.TargetWorkItem)
             .AsNoTracking()
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);
@@ -162,7 +165,8 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
         var items = await query
             .OrderBy(x => x.CreatedAt)
-            .Where(x => x.Type == type).Select(w => new WorkItemListItemDto
+            .Where(x => x.Type == type)
+            .Select(w => new WorkItemListItemDto
             {
                 Id = w.Id,
                 Title = w.Title,
@@ -209,7 +213,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
 
         var items = await query
             .OrderByDescending(x => x.CreatedAt).Select(w => new WorkItemListItemDto
@@ -361,5 +365,42 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         return await query
             .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
+    }
+
+    // comments
+    public async Task<PagedList<CommentDto, DateTime?>> GetWorkItemComments(
+        CommentsQueryParametersDto parameters,
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var wId = workItemId.Trim();
+        var query = _dbContext.Comments
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Where(c => c.WorkItemId == wId)
+            .ProjectTo<CommentDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items[^1].CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<CommentDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
     }
 }

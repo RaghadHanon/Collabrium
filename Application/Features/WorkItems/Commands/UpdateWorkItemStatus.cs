@@ -54,10 +54,6 @@ public class UpdateWorkItemStatus
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 
-            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
-                && !isManager)
-                return Result<WorkItemDto>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
-           
             var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
 
             if (!isManager && !isCurrentAssignee)

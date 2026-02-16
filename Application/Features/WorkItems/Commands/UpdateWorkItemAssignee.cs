@@ -4,7 +4,6 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Enums;
 using MediatR;
 using System.Net;
 
@@ -53,7 +52,6 @@ public sealed class UpdateWorkItemAssignee
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var decision = PatchHelpers.DecideStringPatch(request.AssignedToUserId);
-
             if (decision.Action == PatchHelpers.PatchStringAction.Ignore)
             {
                 var currentDto = await workItemsReadModel.GetByIdAsync(tenantId, request.ProjectId, workItem.Id, cancellationToken);
@@ -63,14 +61,11 @@ public sealed class UpdateWorkItemAssignee
             }
 
             var role = await currentUserAccessor.GetUserRole(currentUserId, cancellationToken);
+
             var isManager = role is not null && Roles.ProjectsManagerRoles.Contains(role);
-
-            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
-                && !isManager)
-                return Result<WorkItemDto>.Failure("Only admins can change the assignee of Epics and User Stories.", HttpStatusCode.Forbidden);
-
             var isWorkItemUnassigned = string.IsNullOrWhiteSpace(workItem.AssignedToUserId);
             var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
+            var isCreator = string.Equals(workItem.CreatedByUserId, currentUserId, StringComparison.Ordinal);
 
             if (decision.Action == PatchHelpers.PatchStringAction.Set)
             {
@@ -88,23 +83,23 @@ public sealed class UpdateWorkItemAssignee
 
                 var assigningToSelf = string.Equals(targetUserId, currentUserId, StringComparison.Ordinal);
 
-                if (!CanSetAssignee(isManager, isWorkItemUnassigned, isCurrentAssignee, assigningToSelf))
+                if (!CanSetAssignee(isManager, isWorkItemUnassigned, isCreator, assigningToSelf))
                     return Result<WorkItemDto>.Failure(
-                        "You can only reassign items assigned to you, or take unassigned items for yourself. Managers can assign/reassign any item.",
+                        "You can only take unassigned items for yourself. Managers and workItem creator can assign/reassign any item.",
                         HttpStatusCode.Forbidden);
             }
             else if (decision.Action == PatchHelpers.PatchStringAction.Clear)
             {
-                if (!CanClearAssignee(isManager, isCurrentAssignee, isWorkItemUnassigned))
+                if (!CanClearAssignee(isManager, isCurrentAssignee, isCreator))
                     return Result<WorkItemDto>.Failure(
-                        "Only the current assignee (or managers) can unassign this work item.",
+                        "Only the current assignee, workItem creator or managers can unassign this work item.",
                         HttpStatusCode.Forbidden);
             }
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 if (decision.Action == PatchHelpers.PatchStringAction.Clear)
-                    workItem.AssignTo(null);           
+                    workItem.AssignTo(null);
                 else
                     workItem.AssignTo(decision.Value!);
 
@@ -122,22 +117,26 @@ public sealed class UpdateWorkItemAssignee
                 : Result<WorkItemDto>.Success(dto, HttpStatusCode.OK);
         }
 
-        private static bool CanSetAssignee(bool isManager, bool isWorkItemUnassigned, bool isCurrentAssignee, bool assigningToSelf)
+        private static bool CanSetAssignee(bool isManager, bool isWorkItemUnassigned, bool isCreator, bool assigningToSelf)
         {
             if (isManager) return true;
+
+            if (isCreator) return true;
 
             if (isWorkItemUnassigned) return assigningToSelf;
 
-            return isCurrentAssignee;                   
+            return false;
         }
 
-        private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isWorkItemUnassigned)
+        private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isCreator)
         {
             if (isManager) return true;
 
-            if (isWorkItemUnassigned) return true; 
+            if (isCreator) return true;
 
-            return isCurrentAssignee;
+            if (isCurrentAssignee) return true;
+
+            return false;
         }
     }
 }

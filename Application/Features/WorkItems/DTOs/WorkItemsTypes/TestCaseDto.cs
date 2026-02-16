@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace Application.Features.WorkItems.DTOs;
+namespace Application.Features.WorkItems.DTOs.WorkItemsTypes;
 
 public class TestCaseDto : WorkItemDto
 {

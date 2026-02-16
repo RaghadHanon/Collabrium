@@ -112,7 +112,7 @@ public sealed class ProjectsRepository : IProjectsRepository
             .Where(p => p.TenantId == tId);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(p => p.CreatedAt > parameters.Cursor.Value);
+            query = query.Where(p => p.CreatedAt >= parameters.Cursor.Value);
 
         var entities = await query
             .OrderBy(p => p.CreatedAt)

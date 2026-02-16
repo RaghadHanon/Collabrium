@@ -6,7 +6,7 @@ namespace Application.Interfaces.Repositories;
 
 public interface ISprintsRepository
 {
-    Task AddAsync(Sprint sprint, CancellationToken cancellationToken = default);
+    void Add(Sprint sprint, CancellationToken cancellationToken = default);
     Task UpdateAsync(Sprint sprint, CancellationToken cancellationToken = default);
     Task<bool> RemoveAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default);
     Task<bool> IsExistsAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default);

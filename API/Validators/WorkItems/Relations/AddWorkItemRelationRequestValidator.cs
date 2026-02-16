@@ -4,9 +4,9 @@ using FluentValidation;
 
 namespace API.Validators.WorkItems.Relations;
 
-public class AddWorkItemRelationValidator : AbstractValidator<AddWorkItemRelationRequest>
+public class AddWorkItemRelationRequestValidator : AbstractValidator<AddWorkItemRelationRequest>
 {
-    public AddWorkItemRelationValidator()
+    public AddWorkItemRelationRequestValidator()
     {
         RuleFor(x => x.TargetWorkItemId)
             .Must(x => !string.IsNullOrWhiteSpace(x))

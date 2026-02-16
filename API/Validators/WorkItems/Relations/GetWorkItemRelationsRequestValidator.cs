@@ -4,9 +4,9 @@ using FluentValidation;
 
 namespace API.Validators.WorkItems.Relations;
 
-public class GetWorkItemRelationsValidator : AbstractValidator<GetWorkItemRelationsRequest>
+public class GetWorkItemRelationsRequestValidator : AbstractValidator<GetWorkItemRelationsRequest>
 {
-    public GetWorkItemRelationsValidator()
+    public GetWorkItemRelationsRequestValidator()
     {
         RuleFor(x => x.RelationType)
             .Must(v => Enum.TryParse<WorkItemRelationType>(v, true, out _))

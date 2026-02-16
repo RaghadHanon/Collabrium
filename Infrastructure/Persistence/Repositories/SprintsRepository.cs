@@ -17,12 +17,11 @@ public class SprintsRepository : ISprintsRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public Task AddAsync(Sprint sprint, CancellationToken cancellationToken = default)
+    public void Add(Sprint sprint, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sprint);
 
         _dbContext.Sprints.Add(SprintMapper.ToEntity(sprint));
-        return Task.CompletedTask;
     }
 
     public async Task UpdateAsync(Sprint sprint, CancellationToken cancellationToken = default)

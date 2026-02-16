@@ -48,7 +48,7 @@ public class CreateSprint
                     start: request.StartDate,
                     end: request.EndDate);
 
-                await sprintsRepository.AddAsync(sprint, cancellationToken);
+                sprintsRepository.Add(sprint, cancellationToken);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

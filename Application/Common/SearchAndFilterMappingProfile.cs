@@ -8,7 +8,9 @@ using Application.Features.Tenants.DTOs;
 using Application.Features.Tenants.Queries;
 using Application.Features.Users.DTOs;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.Queries;
+using Application.Features.WorkItems.Queries.Comments;
 using AutoMapper;
 
 namespace Application.Common;
@@ -22,5 +24,6 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetSprints.Query, SprintsSearchAndFilterParametersDto>();
         CreateMap<GetProjects.Query, ProjectsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItems.Query, WorkItemsSearchAndFilterParametersDto>();
+        CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
     }
 }

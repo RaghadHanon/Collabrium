@@ -1,8 +1,10 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -22,8 +24,8 @@ public class AddWorkItemRelation
         IWorkItemsRepository workItemsRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
-        ICurrentUserAccessor currentUserAccessor,
-        IProjectsRepository projectsRepository
+        IProjectsRepository projectsRepository,
+        ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
@@ -34,6 +36,10 @@ public class AddWorkItemRelation
 
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
+
+            var currentUserId = currentUserAccessor.GetUserId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+                return Result<Unit>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
             var sourceWorkItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
@@ -55,12 +61,14 @@ public class AddWorkItemRelation
             if (targetWorkItem is null)
                 return Result<Unit>.Failure("Target Work item not found in this project.", HttpStatusCode.NotFound);
 
+            var isCurrentAssignee = string.Equals(sourceWorkItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
+            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 
-            if ((sourceWorkItem.Type == WorkItemType.Epic || sourceWorkItem.Type == WorkItemType.UserStory)
-                && !isAdmin)
-                return Result<Unit>.Failure("Only admins can change relations of Epics and User Stories.", HttpStatusCode.Forbidden);
+            if (!isManager && !isCurrentAssignee)
+                return Result<Unit>.Failure(
+                    "You can only update items assigned to you. Managers can update any item.",
+                    HttpStatusCode.Forbidden);
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {

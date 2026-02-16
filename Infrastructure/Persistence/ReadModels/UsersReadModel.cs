@@ -115,7 +115,7 @@ public class UsersReadModel : IUsersReadModel
         return await _dbContext.Users
             .AsNoTracking()
             .Where(u => u.TenantId == id)
-            .OrderBy(u => u.CreatedAt)
+            .OrderBy(u => u.FullName)
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }

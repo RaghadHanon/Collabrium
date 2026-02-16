@@ -47,7 +47,7 @@ public sealed class ProjectsReadModel : IProjectsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(p => p.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(p => p.CreatedAt <= parameters.Cursor.Value);
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)

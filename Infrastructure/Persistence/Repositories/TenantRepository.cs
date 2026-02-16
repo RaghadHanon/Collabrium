@@ -98,7 +98,7 @@ public class TenantRepository : ITenantRepository
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt > parameters.Cursor.Value);
+            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
 
         var entities = await query
             .OrderBy(t => t.CreatedAt)

@@ -289,13 +289,8 @@ public sealed class WorkItemsController : ApiBaseController
         string projectId,
         [FromQuery] GetWorkItemsRequest request)
     {
-        var parameters = Mapper.Map<WorkItemsSearchAndFilterParametersDto>(request);
-
-        var query = new GetWorkItems.Query
-        {
-            ProjectId = projectId,
-            Parameters = parameters
-        };
+        var query = Mapper.Map<GetWorkItems.Query>(request);
+        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -332,7 +327,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the work item does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
-    [Authorize(Policy = Policies.WorkItems_UpdatePlanning)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/epic")]
     public async Task<ActionResult<WorkItemDto>> UpdateEpic(string projectId, string workItemId, UpdateEpicRequest request)
     {
@@ -370,7 +365,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// <param name="workItemId">Work item identifier.</param>
     /// <param name="request">User Story update payload.</param>
     /// <returns>The updated work item.</returns>
-    [Authorize(Policy = Policies.WorkItems_UpdatePlanning)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/user-story")]
     public async Task<ActionResult<WorkItemDto>> UpdateUserStory(string projectId, string workItemId, UpdateUserStoryRequest request)
     {
@@ -403,7 +398,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/task")]
     public async Task<ActionResult<WorkItemDto>> UpdateTask(string projectId, string workItemId, UpdateTaskRequest request)
     {
@@ -439,7 +434,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/bug")]
     public async Task<ActionResult<WorkItemDto>> UpdateBug(string projectId, string workItemId, UpdateBugRequest request)
     {
@@ -479,7 +474,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    [Authorize(Policy = Policies.WorkItems_UpdateExecution)]
+    [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/test-case")]
     public async Task<ActionResult<WorkItemDto>> UpdateTestCase(string projectId, string workItemId, UpdateTestCaseRequest request)
     {

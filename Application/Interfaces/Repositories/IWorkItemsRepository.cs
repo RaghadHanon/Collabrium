@@ -10,7 +10,7 @@ public interface IWorkItemsRepository
     void Add(WorkItem workItem, CancellationToken cancellationToken = default);
     Task UpdateAsync(WorkItem workItem, CancellationToken cancellationToken = default);
     Task<bool> RemoveAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default);
-
+    Task<bool> IsExistAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default);
     Task<WorkItem?> GetByIdAsync(string tenantId, string projectId, string workItemId, bool includeChildren = true, CancellationToken cancellationToken = default);
 
     Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
@@ -25,16 +25,33 @@ public interface IWorkItemsRepository
         string targetWorkItemId,
         WorkItemRelationType relationType,
         CancellationToken ct = default);
-    Task<bool> UpdateRelationAsync(
-        string tenantId,
-        string projectId,
-        string relationId,
-        string newTargetWorkItemId,
-        WorkItemRelationType newRelationType,
-        CancellationToken ct = default);
+
     Task<bool> DeleteRelationAsync(
         string tenantId,
         string projectId,
         string relationId,
         CancellationToken ct = default);
+
+    // comments
+    Task AddCommentOnWorkItemAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        Comment comment,
+        CancellationToken cancellationToken = default);
+
+    Task<Comment?> GetCommentOnWorkItemByIdAsync(
+        string workItemId,
+        string commentId,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateCommentOfWorkItemAsync(
+        string workItemId,
+        Comment comment,
+        CancellationToken cancellationToken = default);
+
+    Task RemoveCommentFromWorkItemAsync(
+        string workItemId,
+        string commentId,
+        CancellationToken cancellationToken = default);
 }

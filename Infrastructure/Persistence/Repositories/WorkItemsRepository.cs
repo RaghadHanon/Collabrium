@@ -85,6 +85,18 @@ public class WorkItemsRepository : IWorkItemsRepository
         return entity is null ? null : WorkItemMapper.ToDomain(entity, includeChildren);
     }
 
+    public async Task<bool> IsExistAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(workItemId))
+            return false;
+
+        var tId = tenantId.Trim();
+        var wId = workItemId.Trim();
+
+        return await _dbContext.WorkItems
+            .AnyAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
+    }
+
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
@@ -96,7 +108,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
 
         var entities = await query
             .OrderByDescending(x => x.CreatedAt)
@@ -176,7 +188,6 @@ public class WorkItemsRepository : IWorkItemsRepository
         WorkItemRelationType relationType,
         CancellationToken ct = default)
     {
-
         var sourceWorkItemEntity = await _dbContext.WorkItems
             .Include(w => w.Relations)
             .FirstOrDefaultAsync(w =>
@@ -285,42 +296,90 @@ public class WorkItemsRepository : IWorkItemsRepository
                 _dbContext.WorkItemRelations.Remove(inverse);
         }
     }
-    public async Task<bool> UpdateRelationAsync(
+
+    // comments
+    public async Task AddCommentOnWorkItemAsync(
         string tenantId,
         string projectId,
-        string relationId,
-        string newTargetWorkItemId,
-        WorkItemRelationType newRelationType,
-        CancellationToken ct = default)
+        string workItemId,
+        Comment comment,
+        CancellationToken cancellationToken = default)
     {
         tenantId = tenantId.Trim();
         projectId = projectId.Trim();
-        relationId = relationId.Trim();
-        newTargetWorkItemId = newTargetWorkItemId.Trim();
+        workItemId = workItemId.Trim();
 
-        var relationEntity = await _dbContext.WorkItemRelations
-            .Include(r => r.SourceWorkItem)
-                .ThenInclude(w => w.Project)
-            .Include(r => r.SourceWorkItem)
-                .ThenInclude(w => w.Relations) 
-            .FirstOrDefaultAsync(r =>
-                r.Id == relationId &&
-                r.SourceWorkItem.ProjectId == projectId &&
-                r.SourceWorkItem.Project.TenantId == tenantId, ct);
+        var workItemEntity = await _dbContext.WorkItems
+            .Include(r => r.Comments)
+            .FirstOrDefaultAsync(
+            r => r.ProjectId == projectId &&
+                 r.Project.TenantId == tenantId &&
+                 r.Id == workItemId
+            );
+        if (workItemEntity == null)
+            return;
 
-        if (relationEntity is null) return false;
+        var commentEntity = CommentMapper.ToEntity(comment, workItemId);
+        workItemEntity.Comments.Add(commentEntity);
+    }
 
-        var sourceId = relationEntity.SourceWorkItemId;
+    public async Task UpdateCommentOfWorkItemAsync(
+        string workItemId,
+        Comment comment, 
+        CancellationToken cancellationToken = default)
+    {
+        workItemId = workItemId.Trim();
 
-        var sourceDomain = WorkItemMapper.ToDomain(relationEntity.SourceWorkItem, includeChildren: true);
-        sourceDomain.RemoveRelation(relationEntity.TargetWorkItemId, relationEntity.RelationType);
-        _dbContext.WorkItemRelations.Remove(relationEntity);
+        var commentEntity = await _dbContext.Comments
+            .Include(c => c.WorkItem)
+            .FirstOrDefaultAsync(
+                c => c.Id == comment.Id &&
+                     c.WorkItemId == workItemId
+            );
 
-        await RemoveInverseRelation(relationEntity, ct);
-        await PersistRelationAsync(tenantId, projectId, sourceId, newTargetWorkItemId, newRelationType, ct);
+        if (commentEntity == null)
+            return;
 
-        WorkItemMapper.UpdateEntity(sourceDomain, relationEntity.SourceWorkItem);
+        CommentMapper.UpdateEntity(comment, commentEntity);
+    }
 
-        return true;
+    public async Task RemoveCommentFromWorkItemAsync(
+        string workItemId,
+        string commentId,
+        CancellationToken cancellationToken = default)
+    {
+        commentId = commentId.Trim();
+        workItemId = workItemId.Trim();
+
+        var commentEntity = await _dbContext.Comments
+           .Include(c => c.WorkItem)
+           .FirstOrDefaultAsync(
+               c => c.Id == commentId &&
+                    c.WorkItemId == workItemId
+           );
+
+        if (commentEntity == null)
+            return;
+
+        _dbContext.Comments.Remove(commentEntity);
+    }
+
+    public async Task<Comment?> GetCommentOnWorkItemByIdAsync(
+        string workItemId,
+        string commentId,
+        CancellationToken cancellationToken = default)
+    {
+        commentId = commentId.Trim();
+        workItemId = workItemId.Trim();
+
+        var commentEntity = await _dbContext.Comments
+            .FirstOrDefaultAsync(
+            r => r.Id == commentId &&
+                 r.WorkItemId == workItemId
+            );
+        if (commentEntity == null)
+            return null;
+
+        return CommentMapper.ToDomain(commentEntity);
     }
 }

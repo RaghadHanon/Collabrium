@@ -2,7 +2,7 @@
 
 namespace Domain.Models;
 
-public sealed class Comment : Entity
+public class Comment : Entity
 {
     public string Content { get; private set; } = null!;
     public string CreatedByUserId { get; private set; } = null!;

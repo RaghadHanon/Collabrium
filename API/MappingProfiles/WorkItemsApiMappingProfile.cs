@@ -1,11 +1,15 @@
 ﻿using API.Contracts.WorkItems;
+using API.Contracts.WorkItems.Comments;
 using API.Contracts.WorkItems.Create;
 using API.Contracts.WorkItems.Relations;
 using API.Contracts.WorkItems.Update;
 using Application.Features.WorkItems.Commands;
+using Application.Features.WorkItems.Commands.Comments;
 using Application.Features.WorkItems.Commands.Relations;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
+using Application.Features.WorkItems.Queries;
+using Application.Features.WorkItems.Queries.Comments;
 using Application.Features.WorkItems.Queries.Relations;
 using Application.Interfaces;
 using AutoMapper;
@@ -17,14 +21,10 @@ public sealed class WorkItemsApiProfile : Profile
 {
     public WorkItemsApiProfile()
     {
-        CreateMap<GetWorkItemsRequest, WorkItemsSearchAndFilterParametersDto>();
+        CreateMap<GetWorkItemsRequest, GetWorkItems.Query>();
         CreateMap<UpdateWorkItemRequest, UpdateWorkItem.Command>();
         CreateMap<ChangeWorkItemStatusRequest, UpdateWorkItemStatus.Command>();
         CreateMap<UpdateWorkItemAssigneeRequest, UpdateWorkItemAssignee.Command>();
-
-        CreateMap<AddWorkItemRelationRequest, AddWorkItemRelation.Command>();
-        CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Query>();
-        CreateMap<UpdateWorkItemRelationRequest, UpdateWorkItemRelation.Command>();
 
         CreateMap<CreateEpicRequest, CreateWorkItem.Command>()
             .ForMember(d => d.Type, opt => opt.MapFrom(_ => WorkItemType.Epic))
@@ -96,5 +96,14 @@ public sealed class WorkItemsApiProfile : Profile
                 Result = string.IsNullOrWhiteSpace(s.Result) ? null : Enum.Parse<TestCaseResult>(s.Result, true),
                 TestEnvironment = string.IsNullOrWhiteSpace(s.TestEnvironment) ? null : Enum.Parse<TestEnvironment>(s.TestEnvironment, true),
             }));
+
+        // relations
+        CreateMap<AddWorkItemRelationRequest, AddWorkItemRelation.Command>();
+        CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Query>();
+
+        // comments
+        CreateMap<AddWorkItemCommentRequest, AddWorkItemComment.Command>();
+        CreateMap<UpdateWorkItemCommentRequest, UpdateWorkItemComment.Command>();
+        CreateMap<GetWorkItemCommentsRequest, GetWorkItemComments.Query>();
     }
 }

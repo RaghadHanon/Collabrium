@@ -17,7 +17,6 @@ public static class SwaggerExtensions
             var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
             options.IncludeXmlComments(xmlPath);
-            options.OperationFilter<TenantHeaderFilter>();
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {

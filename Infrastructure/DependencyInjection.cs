@@ -14,6 +14,7 @@ using Infrastructure.Persistence.Repositories;
 using Infrastructure.Persistence.Seeders;
 using Infrastructure.Security;
 using Infrastructure.Settings;
+using Infrastructure.SignalR;
 using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -52,6 +53,9 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
+        services.AddSignalR();
 
         return services;
     }

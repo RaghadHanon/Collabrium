@@ -40,7 +40,6 @@ public class TenantsController : ApiBaseController
     /// <response code="400">If the request data is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a SuperAdmin.</response>
-    [IgnoreTenantContext]
     [Authorize(Policy = Policies.SuperAdmin)]
     [HttpPost("tenant-with-admin")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantWithAdmin(RegisterTenantWithAdminRequest request)
@@ -157,7 +156,6 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user has not changed their initial password.</response>
     /// <response code="404">If the tenant with the specified ID was not found.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
-    [IgnoreTenantContext]
     [HttpGet("{id}")]
     public async Task<ActionResult<TenantDto>> GetTenant(string id)
     {
@@ -242,7 +240,6 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user is not a Super Admin.</response>
     /// <response code="404">If the tenant with the specified ID does not exist.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
-    [IgnoreTenantContext]
     [HttpGet("{id}/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetTenantUsers(string id, [FromQuery] GetTenantUsersRequest request)
     {
@@ -270,7 +267,6 @@ public class TenantsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Super Admin.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
-    [IgnoreTenantContext]
     [HttpGet]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetTenants([FromQuery] GetTenantsRequest request)
     {
@@ -298,7 +294,6 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user is not a Super Admin.</response>
     /// <response code="404">If the tenant with the specified ID does not exist.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
-    [IgnoreTenantContext]
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {

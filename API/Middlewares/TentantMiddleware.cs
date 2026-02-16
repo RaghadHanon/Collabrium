@@ -1,9 +1,8 @@
-﻿using API.Common.Attributes;
-using Application.Common.Exceptions;
+﻿using Application.Common.Exceptions;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Infrastructure.Persistence.Entities;
-using Microsoft.AspNetCore.Identity;
+using Domain.Enums;
+using System.Security.Claims;
 
 public class TenantMiddleware
 {
@@ -17,23 +16,12 @@ public class TenantMiddleware
     public async Task InvokeAsync(
         HttpContext context,
         ITenantContext tenantContext,
-        ITenantRepository tenantRepository,
-        UserManager<ApplicationUserEntity> userManager)
+        ITenantRepository tenantRepository)
     {
-        var endpoint = context.GetEndpoint();
-        if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)
-        {
-            await _next(context);
-            return;
-        }
-
         if (context.User.Identity?.IsAuthenticated != true)
             throw new UnauthorizedAccessException("User must be authenticated.");
 
-        var user = await userManager.GetUserAsync(context.User)
-            ?? throw new UnauthorizedAccessException("Authenticated user not found.");
-
-        if (await userManager.IsInRoleAsync(user, "SuperAdmin"))
+        if (context.User.IsInRole(UserRole.SuperAdmin.ToString()))
         {
             var globalTenant = await tenantContext.GetGlobalTenant()
                 ?? throw new Exception("Global tenant is not configured.");
@@ -45,12 +33,8 @@ public class TenantMiddleware
             return;
         }
 
-        if (!context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdValues))
-            throw new MissingTenantIdException("Tenant Id is missing in the request header.");
-
-        var tenantId = tenantIdValues.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(tenantId))
-            throw new UnauthorizedAccessException("X-Tenant-Id header is empty.");
+        var tenantId = context.User.FindFirstValue("tenantId")
+            ?? throw new UnauthorizedAccessException("Tenant claim (tenantId) is missing.");
 
         var tenant = await tenantRepository.GetByIdAsync(tenantId)
             ?? throw new TenantNotFoundException($"The tenant with id:{tenantId} does not exist.");
@@ -58,7 +42,7 @@ public class TenantMiddleware
         if (!tenant.IsActive)
             throw new TenantNotActiveException("The tenant is not active.");
 
-        if (user.TenantId != tenant.Id)
+        if (!string.Equals(tenantId, tenant.Id, StringComparison.Ordinal))
             throw new UnauthorizedAccessException("User does not belong to the specified tenant.");
 
         tenantContext.TenantId = tenant.Id;

@@ -1,4 +1,5 @@
 using API.SetupProgram;
+using Infrastructure.SignalR;
 
 namespace API;
 
@@ -17,7 +18,7 @@ public class Program
 
         await app.ApplyMigrationsAndSeedDataAsync();
 
-        app.UseApiMiddleware();
+        app.UseApiMiddleware(); 
 
         app.Run();
     }

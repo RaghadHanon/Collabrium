@@ -77,14 +77,14 @@ public sealed class Sprint : Entity
 
     public void Start()
     {
-        Guard.Against(Status != SprintStatus.Planned, "Only planned sprint can be started.");
+        Guard.Against(Status != SprintStatus.Planned && Status != SprintStatus.Active, "Only planned sprint can be started.");
         Status = SprintStatus.Active;
         Touch();
     }
 
     public void Complete()
     {
-        Guard.Against(Status != SprintStatus.Active, "Only active sprint can be completed.");
+        Guard.Against(Status != SprintStatus.Active && Status != SprintStatus.Completed, "Only active sprint can be completed.");
         Status = SprintStatus.Completed;
         Touch();
     }

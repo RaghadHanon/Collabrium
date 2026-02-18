@@ -14,4 +14,6 @@ public enum MetadataType
     Department = 9,
     CodeLinkType = 10,
     AttachmentType = 11,
+    WorkItemAllowedStatus = 12,
+    RelationRules = 13,
 }

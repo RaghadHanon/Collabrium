@@ -24,7 +24,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/{workItemId}/relation
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "targetWorkItemId": "cbc412e6-befa-46d8-8d5b-79c72b3acc7f",
@@ -65,7 +65,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     /// Sample request:
     ///
     ///     GET /api/projects/{projectId}/work-items/{workItemId}/relations
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "relationType": "Parent"

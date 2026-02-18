@@ -1,4 +1,5 @@
 ﻿using API.Common.Attributes;
+using Application.Features.Metadata.DTOs;
 using Application.Features.Metadata.Queries;
 using Application.Features.WorkItems.DTOs.Relations;
 using Domain.Enums;
@@ -14,7 +15,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("user-roles")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetUserRoleMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.UserRole,
         };
@@ -26,7 +27,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("workItem-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemTypeMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.WorkItemType,
         };
@@ -38,7 +39,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("workItem-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemStatusMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.WorkItemStatus,
         };
@@ -50,7 +51,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("workItem-relation-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemRelationTypeMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.WorkItemRelationType,
         };
@@ -62,7 +63,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("workItem-priority")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemPriorityMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.WorkItemPriority,
         };
@@ -74,7 +75,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("test-environment")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestEnvironmentMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.TestEnvironment,
         };
@@ -86,7 +87,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("testCase-result")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestCaseResultMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.TestCaseResult,
         };
@@ -98,7 +99,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("sprint-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetSprintStatusMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.SprintStatus,
         };
@@ -110,7 +111,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("project-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetProjectStatusMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.ProjectStatus,
         };
@@ -122,7 +123,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("department")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetDepartmentMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.Department,
         };
@@ -134,7 +135,7 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("codeLink-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetCodeLinkTypeMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.CodeLinkType,
         };
@@ -146,10 +147,28 @@ public sealed class MetadataController : ApiBaseController
     [HttpGet("attachment-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetAttachmentTypeMetadata()
     {
-        var query = new GetMetaData.Query
+        var query = new GetEnumMetaData.Query
         {
             MetadataType = MetadataType.AttachmentType,
         };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("workItems-relation-rules")]
+    public async Task<ActionResult<List<WorkItemsRelationRulesMetadataDto>>> GetWorkItemsRelationRulesMetadata()
+    {
+        var query = new GetWorkItemsRelationRulesMetadata.Query();
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("workItems-workflow")]
+    public async Task<ActionResult<List<WorkItemWorkflowDto>>> GetWorkItemWorkflow()
+    {
+        var query = new GetWorkItemsWorkFlowMetadata.Query();
 
         return HandleResult(await Mediator.Send(query));
     }

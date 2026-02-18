@@ -47,7 +47,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var allowedStatuses = GetAllowedStatuses(entity);
+        var allowedStatuses = GetAllowedStatusTransitions(entity);
         var parentRelation = GetParentAsync(entity);
         var dto = entity is null ? null : _mapper.Map<WorkItemDto>(entity);
 
@@ -69,7 +69,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 .FirstOrDefault();
     }
 
-    private static List<WorkItemStatus> GetAllowedStatuses(WorkItemEntity? entity)
+    private static List<WorkItemStatus> GetAllowedStatusTransitions(WorkItemEntity? entity)
     {
         if (entity is null)
             return new List<WorkItemStatus>();
@@ -137,9 +137,9 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         return items;
     }
 
-    public List<WorkItemStatus> GetAllowedStatusesByType(WorkItemType type)
+    public List<WorkItemStatus> GetWorkItemWorkflowByType(WorkItemType type)
     {
-        return WorkItemStatusRules.GetAllowedStatusesByType(type) ?? new List<WorkItemStatus>();
+        return WorkItemStatusRules.GetWorkItemWorkflowByType(type) ?? new List<WorkItemStatus>();
     }
 
     public async Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(

@@ -58,7 +58,7 @@ public class TenantsController : ApiBaseController
     /// Sample request:
     /// 
     ///     PUT /api/tenants/my-tenant
-    ///     Content-Type: multipart/form-data
+    ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
     ///     key: "name", value: "TechFusion Ltd", type: Text
@@ -174,7 +174,7 @@ public class TenantsController : ApiBaseController
     /// Sample request:
     /// 
     ///     POST /api/tenants/profile-image
-    ///     Content-Type: multipart/form-data
+    ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
     ///     key: "file", value: [Select image file], type: File

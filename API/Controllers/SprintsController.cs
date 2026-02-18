@@ -25,7 +25,7 @@ public sealed class SprintsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/project/{projectId}/sprints/sprint
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "name": "Sprint 1",
@@ -116,7 +116,7 @@ public sealed class SprintsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "name": "Sprint 1 - Updated",

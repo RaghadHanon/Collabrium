@@ -4,7 +4,7 @@ namespace Domain.Core;
 
 public static class WorkItemStatusRules
 {
-    public static List<WorkItemStatus>? GetAllowedStatusesByType(WorkItemType type)
+    public static List<WorkItemStatus>? GetWorkItemWorkflowByType(WorkItemType type)
     {
         return type switch
         {

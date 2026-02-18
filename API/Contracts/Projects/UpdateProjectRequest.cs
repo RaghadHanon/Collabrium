@@ -7,5 +7,4 @@ public sealed class UpdateProjectRequest
     public string? Status { get; init; }
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
-    public string? TeamId { get; init; }
 }

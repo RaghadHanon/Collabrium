@@ -28,7 +28,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/epics
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Authentication Module",
@@ -69,7 +69,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/user-stories
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "User can log in",
@@ -111,7 +111,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/tasks
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Refactor authentication service",
@@ -153,7 +153,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/bugs
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Login fails with expired token",
@@ -197,7 +197,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/test-cases
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Login with valid credentials",
@@ -271,7 +271,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items?Type=Bug&Status=InProgress&Priority=High&PageSize=10&Cursor=2026-02-01T00:00:00Z
+    ///     GET /api/projects/{projectId}/work-items?RelationType=Bug&Status=InProgress&Priority=High&PageSize=10&Cursor=2026-02-01T00:00:00Z
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -304,7 +304,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/epic
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Authentication Module (updated)",
@@ -347,7 +347,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/user-story
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "User can log in (updated)",
@@ -385,7 +385,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/task
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Refactor authentication service (updated)",
@@ -418,7 +418,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/bug
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Login fails with expired token (updated)",
@@ -455,7 +455,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/test-case
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "title": "Login with valid credentials (updated)",
@@ -528,7 +528,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/status
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "newStatus": "InProgress"
@@ -568,7 +568,7 @@ public sealed class WorkItemsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/assignee
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "assignedToUserId": "user-222"

@@ -18,7 +18,7 @@ public sealed class GetProjectsRequestValidator : AbstractValidator<GetProjectsR
             .WithMessage("TeamId cannot be empty.");
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.IsDefined(typeof(ProjectStatus), status))
+            .Must(status => Enum.TryParse<ProjectStatus>(status, true, out _))
             .When(x => !string.IsNullOrWhiteSpace(x.Status))
             .WithMessage("Status must be a valid ProjectStatus value.");
 

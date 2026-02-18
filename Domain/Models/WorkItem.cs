@@ -171,7 +171,7 @@ public abstract class WorkItem : Entity
 
     public List<WorkItemStatus> GetAllowedStatuses()
     {
-        return WorkItemStatusRules.GetAllowedStatusesByType(Type) ?? new List<WorkItemStatus>();
+        return WorkItemStatusRules.GetWorkItemWorkflowByType(Type) ?? new List<WorkItemStatus>();
     }
 
     public List<WorkItemStatus> GetAllowedStatusTransitions()

@@ -23,7 +23,7 @@ public class TeamsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/teams/team
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "teamLeadId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -89,7 +89,7 @@ public class TeamsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/teams/team/members
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -126,7 +126,7 @@ public class TeamsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/teams/team/members
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
@@ -192,7 +192,7 @@ public class TeamsController : ApiBaseController
     /// Sample request:
     ///
     ///     PUT /api/teams/team
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "teamLeadId": "11111111-1111-1111-1111-111111111111",

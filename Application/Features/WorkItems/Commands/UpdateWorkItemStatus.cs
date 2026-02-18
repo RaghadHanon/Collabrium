@@ -67,7 +67,7 @@ public class UpdateWorkItemStatus
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                //if(sourceWorkItem.Type == WorkItemType.UserStory)
+                //if(sourceWorkItem.RelationType == WorkItemType.UserStory)
                 //{
                 //    var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
                 //    ((UserStory) sourceWorkItem).ChangeStatusWithValidation(request.NewStatus, children!);

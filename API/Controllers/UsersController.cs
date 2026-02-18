@@ -101,7 +101,7 @@ public class UsersController : ApiBaseController
     /// Sample request:
     /// 
     ///     POST /api/users/profile-image
-    ///     Content-Type: multipart/form-data
+    ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
     ///     key: "file", value: [Select image file], type: File

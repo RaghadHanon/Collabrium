@@ -11,7 +11,7 @@ public class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsReques
         RuleFor(x => x.Type)
             .Must(type => Enum.IsDefined(typeof(WorkItemType), type))
             .When(x => !string.IsNullOrWhiteSpace(x.Type))
-            .WithMessage("Type must be a valid WorkItemType value.");
+            .WithMessage("RelationType must be a valid WorkItemType value.");
 
         RuleFor(x => x.Status)
             .Must(status => Enum.IsDefined(typeof(WorkItemStatus), status))

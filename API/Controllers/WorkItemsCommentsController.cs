@@ -24,7 +24,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "content": "This is a comment"
@@ -63,7 +63,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// Sample request:
     ///
     ///     GET /api/projects/{projectId}/work-items/{workItemId}/comments
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "pageSize": 5,
@@ -137,7 +137,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment
-    ///     Content-Type: application/json
+    ///     Content-RelationType: application/json
     ///
     ///     {
     ///       "content": "This is the new comment"

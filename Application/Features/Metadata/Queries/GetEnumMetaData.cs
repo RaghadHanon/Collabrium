@@ -4,7 +4,7 @@ using MediatR;
 using System.Net;
 
 namespace Application.Features.Metadata.Queries;
-public class GetMetaData
+public class GetEnumMetaData
 {
     public class Query : IRequest<Result<string[]>>
     {

@@ -10,6 +10,7 @@ namespace API.Controllers;
 [Route("api/metadata")]
 public sealed class MetadataController : ApiBaseController
 {
+    [IgnoreTenantContext]
     [HttpGet("user-roles")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetUserRoleMetadata()
     {
@@ -21,6 +22,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("workItem-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemTypeMetadata()
     {
@@ -32,6 +34,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("workItem-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemStatusMetadata()
     {
@@ -43,6 +46,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("workItem-relation-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemRelationTypeMetadata()
     {
@@ -54,6 +58,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("workItem-priority")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemPriorityMetadata()
     {
@@ -65,6 +70,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("test-environment")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestEnvironmentMetadata()
     {
@@ -76,6 +82,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("testCase-result")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestCaseResultMetadata()
     {
@@ -87,6 +94,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("sprint-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetSprintStatusMetadata()
     {
@@ -98,6 +106,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("project-status")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetProjectStatusMetadata()
     {
@@ -109,6 +118,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("department")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetDepartmentMetadata()
     {
@@ -120,6 +130,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("codeLink-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetCodeLinkTypeMetadata()
     {
@@ -131,6 +142,7 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
     [HttpGet("attachment-type")]
     public async Task<ActionResult<List<WorkItemRelationDto>>> GetAttachmentTypeMetadata()
     {

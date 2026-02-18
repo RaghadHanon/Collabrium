@@ -97,6 +97,7 @@ public class AuthController : ApiBaseController
     /// <returns>The token and the user Id</returns>
     /// <response code="200">If the user logged in successfully</response>
     /// <response code="400">If the request data is invalid.</response>
+    [IgnoreTenantContext]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequest loginRequest)
     {
@@ -123,6 +124,7 @@ public class AuthController : ApiBaseController
     /// <response code="200">If the email was confirmed successfully.</response>
     /// <response code="400">If the token is invalid or the request data is incorrect.</response>
     /// <response code="500">If an internal server error occurs.</response>
+    [IgnoreTenantContext]
     [HttpPost("confirmation-email")]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest confirmEmailRequest)
     {
@@ -137,6 +139,7 @@ public class AuthController : ApiBaseController
     /// <param name="reSendConfirmationEmailRequest">The email of the user who needs the confirmation email.</param>
     /// <returns code="200">Returns a success message if the email was sent.</returns>
     /// <returns code="500">Returns an internal server error if things goes wrong.</returns>
+    [IgnoreTenantContext]
     [HttpPost("resend-confirmation-email")]
     public async Task<IActionResult> ReSendConfirmationEmail(ReSendConfirmationEmailRequest reSendConfirmationEmailRequest)
     {
@@ -161,6 +164,7 @@ public class AuthController : ApiBaseController
     /// <returns>A success message if the email was sent.</returns>
     /// <response code="200">If the email was sent successfully.</response>
     /// <response code="400">If the email does not exist.</response>
+    [IgnoreTenantContext]
     [HttpPost("password-reset-email")]
     public async Task<IActionResult> SendPasswordResetEmail(SendPasswordResetEmailRequest sendPasswordResetEmailRequest)
     {
@@ -187,6 +191,7 @@ public class AuthController : ApiBaseController
     /// <returns>A success message if the password was reset successfully.</returns>
     /// <response code="200">If the password was reset successfully.</response>
     /// <response code="400">If the reset token is invalid or the request data is incorrect.</response>
+    [IgnoreTenantContext]
     [HttpPost("password-reset")]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequest)
     {

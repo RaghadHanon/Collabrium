@@ -1,4 +1,5 @@
-﻿using Application.Common.Exceptions;
+﻿using API.Common.Attributes;
+using Application.Common.Exceptions;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Domain.Enums;
@@ -18,6 +19,13 @@ public class TenantMiddleware
         ITenantContext tenantContext,
         ITenantRepository tenantRepository)
     {
+        var endpoint = context.GetEndpoint();
+        if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)
+        {
+            await _next(context);
+            return;
+        }
+
         if (context.User.Identity?.IsAuthenticated != true)
             throw new UnauthorizedAccessException("User must be authenticated.");
 

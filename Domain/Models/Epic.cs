@@ -42,6 +42,9 @@ public sealed class Epic : WorkItem
         return e;
     }
 
+
+    protected override bool CanReopenFromDone => true;
+
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
         // Epic workflow: ToDo -> InProgress  -> Done

@@ -23,6 +23,8 @@ public sealed class UserStory : WorkItem
         Estimate(storyPoints);
     }
 
+    protected override bool CanReopenFromDone => true;
+
     public void Estimate(int points)
     {
         Guard.Against(points < 0, "StoryPoints cannot be negative.");
@@ -59,7 +61,6 @@ public sealed class UserStory : WorkItem
             testCases.All(x => x.Status == WorkItemStatus.Done &&
                                x.TestCaseResult == TestCaseResult.Passed);
 
-        // ---- InTesting gate ----
         if (target == WorkItemStatus.InTesting)
         {
             Guard.Against(!allTasksDone,
@@ -71,7 +72,6 @@ public sealed class UserStory : WorkItem
             return;
         }
 
-        // ---- ReadyForRelease gate ----
         if (target == WorkItemStatus.ReadyForRelease)
         {
             Guard.Against(!allTasksDone,
@@ -99,11 +99,6 @@ public sealed class UserStory : WorkItem
                 "Cannot complete UserStory until all linked TestCases are Passed.");
         }
     }
-
-    protected override bool CanReopenFromDone => true;
-
-    // Optional: إذا بدك تمنعي transitions مختلفة للقصة، خليها زي base أو خصصيها هون.
-    // إذا ما عندك اختلاف، خليه بدون override.
 
     public static UserStory Rehydrate(
         string id,

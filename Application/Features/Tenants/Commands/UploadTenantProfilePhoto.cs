@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;
@@ -16,7 +17,7 @@ public class UploadTenantProfilePhoto
     }
 
     public class Handler(
-        IPhotoService photoService,
+        IAttachmentStorageFactory storageFactory,
         ITenantContext tenantContext,
         ITenantRepository tenantRepository,
         IUnitOfWork unitOfWork
@@ -28,17 +29,27 @@ public class UploadTenantProfilePhoto
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Current tenant not found.", HttpStatusCode.NotFound);
 
-            var upload = await photoService.UploadPhoto(request.File);
-            if (upload is null)
-                return Result<Unit>.Failure("Failed to upload the photo.", HttpStatusCode.BadRequest);
+            if (request.File is null || request.File.Length == 0)
+                return Result<Unit>.Failure("No file uploaded.", HttpStatusCode.BadRequest);
 
             var tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
             if (tenant is null)
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+            var storage = storageFactory.Get(AttachmentType.Image);
+
+            var stored = await storage.UploadAsync(
+                request.File,
+                AttachmentType.Image,
+                folder: "Collabrium/TenantProfileImages",
+                ct: cancellationToken);
+
+            if (stored is null)
+                return Result<Unit>.Failure("Failed to upload the photo.", HttpStatusCode.BadRequest);
+
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                tenant.SetProfileImage(upload.Url, upload.PublicId);
+                tenant.SetProfileImage(stored.Url, stored.StoragePath);
 
                 await tenantRepository.UpdateAsync(tenant, ct);
                 await unitOfWork.SaveChangesAsync(ct);

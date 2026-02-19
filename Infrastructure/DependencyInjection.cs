@@ -5,8 +5,8 @@ using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
+using Infrastructure.FilesStorage.Factory;
 using Infrastructure.Identity;
-using Infrastructure.Images;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.ReadModels;
@@ -15,6 +15,7 @@ using Infrastructure.Persistence.Seeders;
 using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.SignalR;
+using Infrastructure.Storage;
 using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -48,8 +49,7 @@ public static class DependencyInjection
         AddEmailServices(services, configuration);
         AddAuthorizationHandlers(services);
 
-        services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
-        services.AddScoped<IPhotoService, PhotoService>();
+        AddStorageServices(services, configuration);
 
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -58,6 +58,18 @@ public static class DependencyInjection
         services.AddSignalR();
 
         return services;
+    }
+
+    private static void AddStorageServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+        services.AddSingleton<ICloudinaryClientFactory, CloudinaryClientFactory>();
+
+        services.AddScoped<CloudinaryImageStorage>();
+        services.AddScoped<CloudinaryFileStorage>();
+        services.AddScoped<CloudinaryVideoStorage>();
+
+        services.AddScoped<IAttachmentStorageFactory, AttachmentStorageFactory>();
     }
 
     private static void AddRepositories(IServiceCollection services)

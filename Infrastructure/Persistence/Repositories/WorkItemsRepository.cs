@@ -382,4 +382,90 @@ public class WorkItemsRepository : IWorkItemsRepository
 
         return CommentMapper.ToDomain(commentEntity);
     }
+
+    // codeLinkes
+    public async Task AddCodeLinkOnWorkItemAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CodeLink codeLink,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = tenantId.Trim();
+        projectId = projectId.Trim();
+        workItemId = workItemId.Trim();
+
+        var workItemEntity = await _dbContext.WorkItems
+            .Include(r => r.CodeLinks)
+            .FirstOrDefaultAsync(
+            r => r.ProjectId == projectId &&
+                 r.Project.TenantId == tenantId &&
+                 r.Id == workItemId
+            );
+        if (workItemEntity == null)
+            return;
+
+        var codeLinkEntity = CodeLinkMapper.ToEntity(codeLink, workItemId);
+        workItemEntity.CodeLinks.Add(codeLinkEntity);
+    }
+
+    public async Task UpdateCodeLinkOfWorkItemAsync(
+        string workItemId,
+        CodeLink codeLink,
+        CancellationToken cancellationToken = default)
+    {
+        workItemId = workItemId.Trim();
+
+        var codeLinkEntity = await _dbContext.CodeLinks
+            .Include(c => c.WorkItem)
+            .FirstOrDefaultAsync(
+                c => c.Id == codeLink.Id &&
+                     c.WorkItemId == workItemId
+            );
+
+        if (codeLinkEntity == null)
+            return;
+
+        CodeLinkMapper.UpdateEntity(codeLink, codeLinkEntity);
+    }
+
+    public async Task RemoveCodeLinkFromWorkItemAsync(
+        string workItemId,
+        string codeLinkId,
+        CancellationToken cancellationToken = default)
+    {
+        codeLinkId = codeLinkId.Trim();
+        workItemId = workItemId.Trim();
+
+        var codeLinkEntity = await _dbContext.CodeLinks
+           .Include(c => c.WorkItem)
+           .FirstOrDefaultAsync(
+               c => c.Id == codeLinkId &&
+                    c.WorkItemId == workItemId
+           );
+
+        if (codeLinkEntity == null)
+            return;
+
+        _dbContext.CodeLinks.Remove(codeLinkEntity);
+    }
+
+    public async Task<CodeLink?> GetCodeLinkOnWorkItemByIdAsync(
+        string workItemId,
+        string codeLinkId,
+        CancellationToken cancellationToken = default)
+    {
+        codeLinkId = codeLinkId.Trim();
+        workItemId = workItemId.Trim();
+
+        var codeLinkEntity = await _dbContext.CodeLinks
+            .FirstOrDefaultAsync(
+                 r => r.Id == codeLinkId &&
+                 r.WorkItemId == workItemId
+            );
+        if (codeLinkEntity == null)
+            return null;
+
+        return CodeLinkMapper.ToDomain(codeLinkEntity);
+    }
 }

@@ -170,7 +170,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = resetUrl
+            ["newUrl"] = resetUrl
         };
 
         var message = new EmailMessageBuilder()
@@ -267,7 +267,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = confirmationUrl
+            ["newUrl"] = confirmationUrl
         };
 
         var message = new EmailMessageBuilder()

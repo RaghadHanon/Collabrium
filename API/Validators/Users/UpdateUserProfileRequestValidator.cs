@@ -55,7 +55,7 @@ public sealed class UpdateUserProfileRequestValidator : AbstractValidator<Update
 
         RuleFor(x => x)
            .Must(HasAnyField)
-           .WithMessage("At least one field must be provided to update the project.");
+           .WithMessage("At least one field must be provided to update the user profile.");
     }
 
     private static bool HasAnyField(UpdateUserProfileRequest r)

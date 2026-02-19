@@ -10,7 +10,7 @@ namespace Application.Features.WorkItems.Commands.Comments;
 
 public class AddWorkItemComment
 {
-    public class Command : IRequest<Result<Unit>>
+    public class Command : IRequest<Result<string>>
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
@@ -23,28 +23,29 @@ public class AddWorkItemComment
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
         IProjectsRepository projectsRepository
-    ) : IRequestHandler<Command, Result<Unit>>
+    ) : IRequestHandler<Command, Result<string>>
     {
-        public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
-                return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
+                return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var isExist = await workItemsRepository.IsExistAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
             if (!isExist)
-                return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+                return Result<string>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
-                return Result<Unit>.Failure("Current User not found", HttpStatusCode.NotFound);
+                return Result<string>.Failure("Current User not found", HttpStatusCode.NotFound);
 
+            Comment? comment = null;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                var comment = new Comment(currentUserId, request.Content);
+                comment = new Comment(currentUserId, request.Content);
 
                 await workItemsRepository.AddCommentOnWorkItemAsync(
                     tenantId,
@@ -54,7 +55,7 @@ public class AddWorkItemComment
                     cancellationToken);
             }, cancellationToken);
 
-            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
+            return Result<string>.Success(comment?.Id, HttpStatusCode.OK);
         }
     }
 }

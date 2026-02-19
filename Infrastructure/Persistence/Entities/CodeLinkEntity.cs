@@ -10,4 +10,7 @@ public class CodeLinkEntity : DbEntity
     public string Url { get; set; } = null!;
     public CodeLinkType LinkType { get; set; }
     public string? DisplayName { get; set; }
+
+    public string CreatedByUserId { get; set; } = null!;
+    public ApplicationUserEntity CreatedByUser { get; set; } = null!;
 }

@@ -43,7 +43,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// <response code="500">If an unexpected error occurred.</response>
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPost("{workItemId}/comment")]
-    public async Task<ActionResult<WorkItemDto>> AddWorkItemComment(
+    public async Task<ActionResult<string>> AddWorkItemComment(
        string projectId,
        string workItemId,
        AddWorkItemCommentRequest request)
@@ -94,7 +94,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get a specific WorkItem Relations (optionally with a specific relation type).
+    /// Delete a specific WorkItem CodeLinkes.
     /// </summary>
     /// <remarks>
     ///
@@ -114,7 +114,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// <response code="500">If an unexpected error occurred.</response>
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpDelete("{workItemId}/comment/{commentId}")]
-    public async Task<ActionResult<WorkItemDto>> DeleteWorkItemComment(
+    public async Task<IActionResult> DeleteWorkItemComment(
       string projectId,
       string workItemId,
       string commentId)
@@ -136,7 +136,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment
+    ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment/{commentId}
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -157,7 +157,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// <response code="500">If an unexpected error occurred.</response>
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/comment/{commentId}")]
-    public async Task<ActionResult<WorkItemDto>> UpdateWorkItemComment(
+    public async Task<IActionResult> UpdateWorkItemComment(
        string projectId,
        string workItemId,
        string commentId,

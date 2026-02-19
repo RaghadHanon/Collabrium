@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;
@@ -16,7 +17,7 @@ public class UploadUserProfileImage
     }
 
     public class Handler(
-        IPhotoService photoService,
+        IAttachmentStorageFactory storageFactory,
         ICurrentUserAccessor currentUserAccessor,
         IUsersRepository usersRepository,
         IUnitOfWork unitOfWork)
@@ -29,17 +30,24 @@ public class UploadUserProfileImage
                 return Result<Unit>.Failure("User not found.", HttpStatusCode.NotFound);
 
             var user = await usersRepository.GetByIdAsync(userId, cancellationToken);
-            if (user == null)
+            if (user is null)
                 return Result<Unit>.Failure("User not found.", HttpStatusCode.NotFound);
 
-            if (request.File == null || request.File.Length == 0)
+            if (request.File is null || request.File.Length == 0)
                 return Result<Unit>.Failure("No file uploaded.", HttpStatusCode.BadRequest);
 
-            var uploadResult = await photoService.UploadPhoto(request.File);
-            if (uploadResult == null)
-                return Result<Unit>.Failure("Failed to upload the photo", HttpStatusCode.BadRequest);
+            var storage = storageFactory.Get(AttachmentType.Image);
 
-            user.SetProfileImage(uploadResult.Url, uploadResult.PublicId);
+            var stored = await storage.UploadAsync(
+                request.File,
+                AttachmentType.Image,
+                folder: "Collabrium/ProfileImages",
+                ct: cancellationToken);
+
+            if (stored is null)
+                return Result<Unit>.Failure("Failed to upload the photo.", HttpStatusCode.BadRequest);
+
+            user.SetProfileImage(stored.Url, stored.StoragePath);
 
             await usersRepository.UpdateAsync(user, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);

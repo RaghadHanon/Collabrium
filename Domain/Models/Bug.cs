@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-public sealed class Bug : WorkItem
+public class Bug : WorkItem
 {
     public string StepsToReproduce { get; private set; } = null!;
     public string? ActualResult { get; private set; }

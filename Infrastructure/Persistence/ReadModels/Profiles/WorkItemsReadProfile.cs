@@ -1,4 +1,5 @@
 ﻿using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.CodeLinkes;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Application.Features.WorkItems.DTOs.WorkItemsTypes;
@@ -43,5 +44,8 @@ public sealed class WorkItemsReadProfile : Profile
 
         // comments
         CreateMap<CommentEntity, CommentDto>();
+
+        // code links
+        CreateMap<CodeLinkEntity, CodeLinkDto>();
     }
 }

@@ -785,7 +785,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");
@@ -995,7 +995,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");

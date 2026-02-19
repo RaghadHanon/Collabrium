@@ -22,8 +22,8 @@ public sealed class UpdateBugRequestValidator : AbstractValidator<UpdateBugReque
             .When(x => !(x.ActualResult is null));
 
         RuleFor(x => x)
-    .Must(HasAnyField)
-    .WithMessage("At least one field must be provided to update the work item.");
+            .Must(HasAnyField)
+            .WithMessage("At least one field must be provided to update the work item.");
     }
 
     private static bool HasAnyField(UpdateBugRequest r)

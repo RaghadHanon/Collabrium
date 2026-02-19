@@ -1,4 +1,5 @@
-﻿using Application.Features.WorkItems.DTOs.Relations;
+﻿using Application.Features.WorkItems.DTOs.CodeLinkes;
+using Application.Features.WorkItems.DTOs.Relations;
 using Domain.Enums;
 
 namespace Application.Features.WorkItems.DTOs;
@@ -31,4 +32,5 @@ public class WorkItemDto
 
     public WorkItemRelationDto? Parent { get; set; }
     public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
+    public List<CodeLinkDto>? CodeLinks { get; set; } = new List<CodeLinkDto>();
 }

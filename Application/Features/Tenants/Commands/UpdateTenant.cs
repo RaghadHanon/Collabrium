@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;
@@ -28,7 +29,7 @@ public class UpdateTenant
     }
 
     public class Handler(
-        IPhotoService photoService,
+        IAttachmentStorageFactory storageFactory,
         ITenantRepository tenantRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
@@ -48,11 +49,21 @@ public class UpdateTenant
             {
                 if (request.File is not null)
                 {
-                    var upload = await photoService.UploadPhoto(request.File);
-                    if (upload is null)
+                    if (request.File.Length == 0)
+                        throw new InvalidOperationException("No file uploaded.");
+
+                    var storage = storageFactory.Get(AttachmentType.Image);
+
+                    var stored = await storage.UploadAsync(
+                        request.File,
+                        AttachmentType.Image,
+                        folder: "Collabrium/TenantProfileImages",
+                        ct: ct);
+
+                    if (stored is null)
                         throw new InvalidOperationException("Photo upload failed.");
 
-                    tenant.SetProfileImage(upload.Url, upload.PublicId);
+                    tenant.SetProfileImage(stored.Url, stored.StoragePath);
                 }
 
                 tenant.UpdateProfile(
@@ -70,7 +81,8 @@ public class UpdateTenant
                     youTube: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.YouTube, request.YouTube)
                 );
 
-                await tenantRepository.UpdateAsync(tenant, cancellationToken);
+                await tenantRepository.UpdateAsync(tenant, ct);
+                await unitOfWork.SaveChangesAsync(ct);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

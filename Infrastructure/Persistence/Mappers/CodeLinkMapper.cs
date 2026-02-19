@@ -15,6 +15,7 @@ public static class CodeLinkMapper
             updatedAt: entity.UpdatedAt,
             url: entity.Url,
             linkType: entity.LinkType,
+            createdByUserId: entity.CreatedByUserId,
             displayName: entity.DisplayName
         );
     }
@@ -29,6 +30,7 @@ public static class CodeLinkMapper
                 WorkItemId = workItemId,
                 Url = domain.Url,
                 LinkType = domain.LinkType,
+                CreatedByUserId = domain.CreatedByUserId,
                 DisplayName = domain.DisplayName,
                 CreatedAt = domain.CreatedAt,
                 UpdatedAt = domain.UpdatedAt
@@ -42,6 +44,7 @@ public static class CodeLinkMapper
 
         entity.Url = domain.Url;
         entity.LinkType = domain.LinkType;
+        entity.CreatedByUserId = domain.CreatedByUserId;
         entity.DisplayName = domain.DisplayName;
         entity.UpdatedAt = domain.UpdatedAt;
     }

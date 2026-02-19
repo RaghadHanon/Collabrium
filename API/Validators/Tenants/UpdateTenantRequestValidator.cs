@@ -72,7 +72,7 @@ public sealed class UpdateTenantRequestValidator : AbstractValidator<UpdateTenan
 
         RuleFor(x => x)
            .Must(HasAnyField)
-           .WithMessage("At least one field must be provided to update the project.");
+           .WithMessage("At least one field must be provided to update the Tenant.");
     }
 
     private static bool HasAnyField(UpdateTenantRequest r)

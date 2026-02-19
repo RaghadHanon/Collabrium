@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
@@ -43,6 +42,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var entity = await _dbContext.WorkItems
             .Include(w => w.Relations)
             .ThenInclude(r => r.TargetWorkItem)
+            .Include(w => w.CodeLinks)
             .AsNoTracking()
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);

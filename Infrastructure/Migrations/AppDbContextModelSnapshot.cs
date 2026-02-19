@@ -140,7 +140,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RelationType")
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -161,7 +161,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("WorkItemId");
 
-                    b.ToTable("Attachments");
+                    b.ToTable("Attachments", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CodeLinkEntity", b =>
@@ -171,6 +171,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -183,7 +187,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
@@ -191,9 +196,11 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("WorkItemId");
 
-                    b.ToTable("CodeLinks");
+                    b.ToTable("CodeLinks", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
@@ -226,7 +233,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("WorkItemId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -276,7 +283,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Projects");
+                    b.ToTable("Projects", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
@@ -313,7 +320,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("ProjectHistories");
+                    b.ToTable("ProjectHistories", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
@@ -357,7 +364,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("Sprints");
+                    b.ToTable("Sprints", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
@@ -406,7 +413,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamMemberEntity", b =>
@@ -424,7 +431,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TeamMembers");
+                    b.ToTable("TeamMembers", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TenantEntity", b =>
@@ -475,7 +482,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("TenantAdminId");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
@@ -529,7 +536,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<int>("RelationType")
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -545,9 +552,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SprintId");
 
-                    b.ToTable("WorkItems");
+                    b.ToTable("WorkItems", (string)null);
 
-                    b.HasDiscriminator<int>("RelationType").HasValue(0);
+                    b.HasDiscriminator<int>("Type").HasValue(0);
 
                     b.UseTphMappingStrategy();
                 });
@@ -582,7 +589,7 @@ namespace Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_WorkItemRelation_Unique");
 
-                    b.ToTable("WorkItemRelations");
+                    b.ToTable("WorkItemRelations", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -732,7 +739,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("WorkItems", t =>
+                    b.ToTable("WorkItems", null, t =>
                         {
                             t.Property("ActualResult")
                                 .HasColumnName("BugEntity_ActualResult");
@@ -803,7 +810,7 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Entities.ApplicationUserEntity.ContactDetails#Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
                         {
                             b1.Property<string>("ApplicationUserEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -820,12 +827,12 @@ namespace Infrastructure.Migrations
 
                             b1.HasKey("ApplicationUserEntityId");
 
-                            b1.ToTable("AspNetUsers");
+                            b1.ToTable("AspNetUsers", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ApplicationUserEntityId");
 
-                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                            b1.OwnsOne("Infrastructure.Persistence.Entities.ApplicationUserEntity.ContactDetails#Infrastructure.Persistence.Entities.ContactDetailsOwned.Socials#Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
                                 {
                                     b2.Property<string>("ContactDetailsOwnedApplicationUserEntityId")
                                         .HasColumnType("nvarchar(450)");
@@ -857,7 +864,7 @@ namespace Infrastructure.Migrations
 
                                     b2.HasKey("ContactDetailsOwnedApplicationUserEntityId");
 
-                                    b2.ToTable("AspNetUsers");
+                                    b2.ToTable("AspNetUsers", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("ContactDetailsOwnedApplicationUserEntityId");
@@ -867,7 +874,7 @@ namespace Infrastructure.Migrations
                                 .IsRequired();
                         });
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Entities.ApplicationUserEntity.ProfileImage#Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
                         {
                             b1.Property<string>("ApplicationUserEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -884,7 +891,7 @@ namespace Infrastructure.Migrations
 
                             b1.HasKey("ApplicationUserEntityId");
 
-                            b1.ToTable("AspNetUsers");
+                            b1.ToTable("AspNetUsers", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ApplicationUserEntityId");
@@ -911,11 +918,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CodeLinkEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("CodeLinks")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("WorkItem");
                 });
@@ -1040,7 +1055,7 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("TenantAdminId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Entities.TenantEntity.ContactDetails#Infrastructure.Persistence.Entities.ContactDetailsOwned", "ContactDetails", b1 =>
                         {
                             b1.Property<string>("TenantEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -1057,12 +1072,12 @@ namespace Infrastructure.Migrations
 
                             b1.HasKey("TenantEntityId");
 
-                            b1.ToTable("Tenants");
+                            b1.ToTable("Tenants", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantEntityId");
 
-                            b1.OwnsOne("Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
+                            b1.OwnsOne("Infrastructure.Persistence.Entities.TenantEntity.ContactDetails#Infrastructure.Persistence.Entities.ContactDetailsOwned.Socials#Infrastructure.Persistence.Entities.SocialLinksOwned", "Socials", b2 =>
                                 {
                                     b2.Property<string>("ContactDetailsOwnedTenantEntityId")
                                         .HasColumnType("nvarchar(450)");
@@ -1093,7 +1108,7 @@ namespace Infrastructure.Migrations
 
                                     b2.HasKey("ContactDetailsOwnedTenantEntityId");
 
-                                    b2.ToTable("Tenants");
+                                    b2.ToTable("Tenants", (string)null);
 
                                     b2.WithOwner()
                                         .HasForeignKey("ContactDetailsOwnedTenantEntityId");
@@ -1103,7 +1118,7 @@ namespace Infrastructure.Migrations
                                 .IsRequired();
                         });
 
-                    b.OwnsOne("Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
+                    b.OwnsOne("Infrastructure.Persistence.Entities.TenantEntity.ProfileImage#Infrastructure.Persistence.Entities.StoredImageOwned", "ProfileImage", b1 =>
                         {
                             b1.Property<string>("TenantEntityId")
                                 .HasColumnType("nvarchar(450)");
@@ -1120,7 +1135,7 @@ namespace Infrastructure.Migrations
 
                             b1.HasKey("TenantEntityId");
 
-                            b1.ToTable("Tenants");
+                            b1.ToTable("Tenants", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantEntityId");
@@ -1170,15 +1185,15 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("OutgoingRelations")
+                        .WithMany("Relations")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "TargetWorkItem")
-                        .WithMany("IncomingRelations")
+                        .WithMany()
                         .HasForeignKey("TargetWorkItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SourceWorkItem");
@@ -1284,9 +1299,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("IncomingRelations");
-
-                    b.Navigation("OutgoingRelations");
+                    b.Navigation("Relations");
                 });
 #pragma warning restore 612, 618
         }

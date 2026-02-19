@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-public sealed class Attachment : Entity
+public class Attachment : Entity
 {
     public string FileName { get; private set; } = null!;
     public string StoragePath { get; private set; } = null!;

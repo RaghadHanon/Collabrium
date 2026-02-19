@@ -54,4 +54,24 @@ public interface IWorkItemsRepository
         string workItemId,
         string commentId,
         CancellationToken cancellationToken = default);
+
+    //code links
+    Task RemoveCodeLinkFromWorkItemAsync(
+        string workItemId,
+        string codeLinkId,
+        CancellationToken cancellationToken = default);
+    Task<CodeLink?> GetCodeLinkOnWorkItemByIdAsync(
+            string workItemId,
+            string codeLinkId,
+            CancellationToken cancellationToken = default);
+    Task UpdateCodeLinkOfWorkItemAsync(
+        string workItemId,
+        CodeLink codeLink,
+        CancellationToken cancellationToken = default);
+    Task AddCodeLinkOnWorkItemAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CodeLink codeLink,
+        CancellationToken cancellationToken = default);
 }

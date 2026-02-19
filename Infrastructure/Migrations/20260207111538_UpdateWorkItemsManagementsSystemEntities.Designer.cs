@@ -178,13 +178,13 @@ namespace Infrastructure.Migrations
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("LinkType")
+                    b.Property<int>("NewLinkType")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Url")
+                    b.Property<string>("newUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -880,7 +880,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");
@@ -1116,7 +1116,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");

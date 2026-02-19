@@ -46,7 +46,7 @@ public class UpdateWorkItemComment
             if (comment == null)
                 return Result<Unit>.Failure("Comment not found.", HttpStatusCode.NotFound);
 
-            if(currentUserId != comment.CreatedByUserId)
+            if (currentUserId != comment.CreatedByUserId)
                 return Result<Unit>.Failure("You don't own this comment to update it.", HttpStatusCode.Forbidden);
 
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>

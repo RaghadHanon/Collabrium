@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -37,14 +38,22 @@ public class AddWorkItemCodeLink
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var isExist = await workItemsRepository.IsExistAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
-            if (!isExist)
-                return Result<string>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
+            if (workItem is null)
+                return Result<string>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
                 return Result<string>.Failure("Current User not found", HttpStatusCode.NotFound);
 
+            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
+            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
+            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
+
+            if (!isManager && !isCurrentAssignee)
+                return Result<string>.Failure(
+                    "You can only update items assigned to you. Managers can update any item.",
+                    HttpStatusCode.Forbidden);
 
             CodeLink? codeLink = null;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>

@@ -9,6 +9,7 @@ public class AttachmentEntity : DbEntity
 
     public string FileName { get; set; } = null!;
     public string StoragePath { get; set; } = null!;
+    public string Url { get; set; } = null!;
     public string ContentType { get; set; } = null!;
     public AttachmentType Type { get; set; }
 

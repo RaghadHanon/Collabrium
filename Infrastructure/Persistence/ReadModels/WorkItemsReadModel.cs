@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Application.Interfaces.ReadModels;
@@ -402,5 +403,20 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             Items = items,
             NextCursor = nextCursor
         };
+    }
+
+    // attachments
+    public async Task<List<AttachmentDto>> GetWorkItemAttachments(
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        var wId = workItemId.Trim();
+
+        return await _dbContext.Attachments
+            .AsNoTracking()
+            .OrderByDescending(x => x.CreatedAt)
+            .Where(c => c.WorkItemId == wId)
+            .ProjectTo<AttachmentDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
     }
 }

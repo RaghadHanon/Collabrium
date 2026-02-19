@@ -63,7 +63,7 @@ public sealed class WorkItemsCodeLinkesController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/code-links/{CodeLinkId}
+    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/code-links/{AttachmentId}
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -99,7 +99,7 @@ public sealed class WorkItemsCodeLinkesController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/code-links/{CodeLinkId}
+    ///     POST /api/projects/{projectId}/work-items/{workItemId}/code-links/{AttachmentId}
     ///     Content-RelationType: application/json
     ///
     ///     {

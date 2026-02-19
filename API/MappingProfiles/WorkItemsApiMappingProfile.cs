@@ -1,10 +1,12 @@
 ﻿using API.Contracts.WorkItems;
+using API.Contracts.WorkItems.Attachments;
 using API.Contracts.WorkItems.CodeLinkes;
 using API.Contracts.WorkItems.Comments;
 using API.Contracts.WorkItems.Create;
 using API.Contracts.WorkItems.Relations;
 using API.Contracts.WorkItems.Update;
 using Application.Features.WorkItems.Commands;
+using Application.Features.WorkItems.Commands.Attachments;
 using Application.Features.WorkItems.Commands.CodeLinks;
 using Application.Features.WorkItems.Commands.Comments;
 using Application.Features.WorkItems.Commands.Relations;
@@ -111,5 +113,8 @@ public sealed class WorkItemsApiProfile : Profile
         // code links
         CreateMap<AddWorkItemCodeLinkRequest, AddWorkItemCodeLink.Command>();
         CreateMap<UpdateWorkItemCodeLinkRequest, UpdateWorkItemCodeLink.Command>();
+
+        // attachments
+        CreateMap<AddWorkItemAttachmentRequest, AddWorkItemAttachment.Command>();
     }
 }

@@ -7,6 +7,7 @@ public class Attachment : Entity
 {
     public string FileName { get; private set; } = null!;
     public string StoragePath { get; private set; } = null!;
+    public string Url { get; private set; } = null!;
     public string ContentType { get; private set; } = null!;
     public AttachmentType Type { get; private set; }
 
@@ -19,12 +20,14 @@ public class Attachment : Entity
         string id,
         string fileName,
         string storagePath,
+        string url, 
         string contentType,
         AttachmentType type,
         string uploadedByUserId) : base(id)
     {
         FileName = Guard.NotNullOrWhiteSpace(fileName, nameof(fileName)).Trim();
         StoragePath = Guard.NotNullOrWhiteSpace(storagePath, nameof(storagePath)).Trim();
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
         ContentType = Guard.NotNullOrWhiteSpace(contentType, nameof(contentType)).Trim();
         Type = type;
 
@@ -35,12 +38,14 @@ public class Attachment : Entity
     public Attachment(
         string fileName,
         string storagePath,
+        string url,
         string contentType,
         AttachmentType type,
         string uploadedByUserId)
     {
         FileName = Guard.NotNullOrWhiteSpace(fileName, nameof(fileName)).Trim();
         StoragePath = Guard.NotNullOrWhiteSpace(storagePath, nameof(storagePath)).Trim();
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
         ContentType = Guard.NotNullOrWhiteSpace(contentType, nameof(contentType)).Trim();
         Type = type;
 
@@ -54,12 +59,13 @@ public class Attachment : Entity
         DateTime? updatedAt,
         string fileName,
         string storagePath,
+        string url,
         string contentType,
         AttachmentType type,
         string uploadedByUserId,
         DateTime uploadedAt)
     {
-        var att = new Attachment(id, fileName, storagePath, contentType, type, uploadedByUserId);
+        var att = new Attachment(id, fileName, storagePath, url, contentType, type, uploadedByUserId);
         att.UploadedAt = uploadedAt;
         att.SetTimestamps(createdAt, updatedAt);
         return att;

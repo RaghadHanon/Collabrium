@@ -15,6 +15,7 @@ public static class AttachmentMapper
             updatedAt: entity.UpdatedAt,
             fileName: entity.FileName,
             storagePath: entity.StoragePath,
+            url: entity.Url,
             contentType: entity.ContentType,
             type: entity.Type,
             uploadedByUserId: entity.UploadedByUserId,
@@ -32,6 +33,7 @@ public static class AttachmentMapper
                 WorkItemId = workItemId,
                 FileName = domain.FileName,
                 StoragePath = domain.StoragePath,
+                Url = domain.Url,
                 ContentType = domain.ContentType,
                 Type = domain.Type,
                 UploadedByUserId = domain.UploadedByUserId,
@@ -46,9 +48,9 @@ public static class AttachmentMapper
         if (domain is null) throw new ArgumentNullException(nameof(domain));
         if (entity is null) throw new ArgumentNullException(nameof(entity));
 
-        // عادةً الـ Attachment immutable بعد الإضافة؛ إذا بدك تسمحي بالتعديل، خلّيها محدثة:
         entity.FileName = domain.FileName;
         entity.StoragePath = domain.StoragePath;
+        entity.Url = domain.Url;
         entity.ContentType = domain.ContentType;
         entity.Type = domain.Type;
         entity.UploadedByUserId = domain.UploadedByUserId;

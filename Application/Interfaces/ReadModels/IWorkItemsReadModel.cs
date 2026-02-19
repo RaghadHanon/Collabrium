@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Common.DTOs;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Domain.Enums;
@@ -44,6 +45,11 @@ public interface IWorkItemsReadModel
     // comments
     Task<PagedList<CommentDto, DateTime?>> GetWorkItemComments(
         CommentsQueryParametersDto parameters,
+        string workItemId,
+        CancellationToken cancellationToken = default);
+
+    // attachments
+    Task<List<AttachmentDto>> GetWorkItemAttachments(
         string workItemId,
         CancellationToken cancellationToken = default);
 }

@@ -468,4 +468,70 @@ public class WorkItemsRepository : IWorkItemsRepository
 
         return CodeLinkMapper.ToDomain(codeLinkEntity);
     }
+
+    // attachments
+    public async Task AddAttachmentOnWorkItemAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        Attachment attachment,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = tenantId.Trim();
+        projectId = projectId.Trim();
+        workItemId = workItemId.Trim();
+
+        var workItemEntity = await _dbContext.WorkItems
+            .Include(r => r.Attachments)
+            .FirstOrDefaultAsync(
+            r => r.ProjectId == projectId &&
+                 r.Project.TenantId == tenantId &&
+                 r.Id == workItemId
+            );
+        if (workItemEntity == null)
+            return;
+
+        var attachmentEntity = AttachmentMapper.ToEntity(attachment, workItemId);
+        workItemEntity.Attachments.Add(attachmentEntity);
+    }
+
+    public async Task RemoveAttachmentFromWorkItemAsync(
+        string workItemId,
+        string attachmentId,
+        CancellationToken cancellationToken = default)
+    {
+        attachmentId = attachmentId.Trim();
+        workItemId = workItemId.Trim();
+
+        var attachmentEntity = await _dbContext.Attachments
+           .Include(c => c.WorkItem)
+           .FirstOrDefaultAsync(
+               c => c.Id == attachmentId &&
+                    c.WorkItemId == workItemId
+           );
+
+        if (attachmentEntity == null)
+            return;
+
+        _dbContext.Attachments.Remove(attachmentEntity);
+    }
+
+    public async Task<Attachment?> GetAttachmentOnWorkItemByIdAsync(
+        string workItemId,
+        string attachmentId,
+        CancellationToken cancellationToken = default)
+    {
+        attachmentId = attachmentId.Trim();
+        workItemId = workItemId.Trim();
+
+        var attachmentEntity = await _dbContext.Attachments
+            .FirstOrDefaultAsync(
+                 r => r.Id == attachmentId &&
+                 r.WorkItemId == workItemId
+            );
+        if (attachmentEntity == null)
+            return null;
+
+        return AttachmentMapper.ToDomain(attachmentEntity);
+    }
 }

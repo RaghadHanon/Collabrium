@@ -74,4 +74,21 @@ public interface IWorkItemsRepository
         string workItemId,
         CodeLink codeLink,
         CancellationToken cancellationToken = default);
+
+    // attachments
+    Task AddAttachmentOnWorkItemAsync(
+            string tenantId,
+            string projectId,
+            string workItemId,
+            Attachment attachment,
+            CancellationToken cancellationToken = default);
+    Task RemoveAttachmentFromWorkItemAsync(
+        string workItemId,
+        string attachmentId,
+        CancellationToken cancellationToken = default);
+    Task<Attachment?> GetAttachmentOnWorkItemByIdAsync(
+        string workItemId,
+        string attachmentId,
+        CancellationToken cancellationToken = default);
+
 }

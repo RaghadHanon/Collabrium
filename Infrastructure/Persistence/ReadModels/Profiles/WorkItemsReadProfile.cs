@@ -1,4 +1,5 @@
 ﻿using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.CodeLinkes;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
@@ -47,5 +48,8 @@ public sealed class WorkItemsReadProfile : Profile
 
         // code links
         CreateMap<CodeLinkEntity, CodeLinkDto>();
+
+        // attachments
+        CreateMap<AttachmentEntity, AttachmentDto>();
     }
 }

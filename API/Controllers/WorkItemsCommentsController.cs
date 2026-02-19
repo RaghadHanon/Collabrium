@@ -2,7 +2,6 @@
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.WorkItems.Commands.Comments;
-using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.Queries.Comments;
 using Microsoft.AspNetCore.Authorization;

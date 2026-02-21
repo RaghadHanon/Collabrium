@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence.Entities
         public string? Description { get; set; }
 
         public DateTime? PublishedAt { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool IsVisible { get; set; } = true;
 
         public string TenantId { get; set; } = null!;
         public TenantEntity Tenant { get; set; } = null!;

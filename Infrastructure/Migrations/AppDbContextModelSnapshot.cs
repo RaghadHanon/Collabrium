@@ -295,7 +295,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<int>("Level")

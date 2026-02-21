@@ -12,7 +12,7 @@ namespace Domain.Models
         public string? Description { get; private set; }
 
         public DateTime? PublishedAt { get; private set; }
-        public bool IsActive { get; private set; } = true;
+        public bool IsVisible { get; private set; } = true;
 
         public string TenantId { get; private set; } = null!;
         public string? CreatedByUserId { get; private set; }
@@ -29,7 +29,7 @@ namespace Domain.Models
             string tenantId,
             string? description = null,
             string? createdByUserId = null,
-            bool isActive = true)
+            bool IsVisible = true)
         {
             Path = path;
             Level = level;
@@ -39,7 +39,7 @@ namespace Domain.Models
 
             Description = description?.Trim();
             CreatedByUserId = string.IsNullOrWhiteSpace(createdByUserId) ? null : createdByUserId.Trim();
-            IsActive = isActive;
+            IsVisible = IsVisible;
 
             Touch();
         }
@@ -51,8 +51,8 @@ namespace Domain.Models
             string title,
             string tenantId,
             string? createdByUserId = null,
-            bool isActive = true)
-            : this(path, level, title, tenantId, null, createdByUserId, isActive)
+            bool isVisible = true)
+            : this(path, level, title, tenantId, null, createdByUserId, isVisible)
         {
             Id = id;
         }
@@ -66,17 +66,17 @@ namespace Domain.Models
             string title,
             string? description,
             DateTime? publishedAt,
-            bool isActive,
+            bool IsVisible,
             string tenantId,
             string? createdByUserId,
             IEnumerable<string>? tagIds)
         {
-            var r = new Roadmap(id, path, level, title, tenantId, createdByUserId, isActive);
+            var r = new Roadmap(id, path, level, title, tenantId, createdByUserId, IsVisible);
             r.SetTimestamps(createdAt, updatedAt);
 
             r.Description = description?.Trim();
             r.PublishedAt = publishedAt;
-            r.IsActive = isActive;
+            r.IsVisible = IsVisible;
 
             r._tagIds.Clear();
             if (tagIds is not null)
@@ -91,13 +91,21 @@ namespace Domain.Models
             return r;
         }
 
-        public void UpdateDetails(string title, string? description, RoadmapLevel? level = null)
+        public void UpdateDetails(
+    string title,
+    string? description = null,
+    RoadmapLevel? level = null,
+    bool? isVisible = null
+)
         {
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Description = description?.Trim();
 
             if (level.HasValue)
                 Level = level.Value;
+
+            if (isVisible.HasValue)
+                IsVisible = isVisible.Value;
 
             Touch();
         }
@@ -111,7 +119,6 @@ namespace Domain.Models
         // ---------- Tags ----------
         public void AddTag(string tagId)
         {
-            Guard.Against(!IsActive, "Cannot modify tags for an inactive roadmap.");
 
             tagId = Guard.NotNullOrWhiteSpace(tagId, nameof(tagId)).Trim();
 
@@ -121,7 +128,6 @@ namespace Domain.Models
 
         public void RemoveTag(string tagId)
         {
-            Guard.Against(!IsActive, "Cannot modify tags for an inactive roadmap.");
 
             tagId = Guard.NotNullOrWhiteSpace(tagId, nameof(tagId)).Trim();
             Guard.Against(!_tagIds.Remove(tagId), "Tag does not exist on this roadmap.");
@@ -130,7 +136,6 @@ namespace Domain.Models
 
         public void SetTags(IEnumerable<string> tagIds)
         {
-            Guard.Against(!IsActive, "Cannot modify tags for an inactive roadmap.");
             Guard.Against(tagIds is null, "Tag list cannot be null.");
 
             _tagIds.Clear();
@@ -151,7 +156,7 @@ namespace Domain.Models
             Touch();
         }
 
-        public void Activate() { IsActive = true; Touch(); }
-        public void Deactivate() { IsActive = false; Touch(); }
+        public void Show() { IsVisible = true; Touch(); }
+        public void Hide() { IsVisible = false; Touch(); }
     }
 }

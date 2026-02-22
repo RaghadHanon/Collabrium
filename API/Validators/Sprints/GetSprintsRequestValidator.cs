@@ -9,7 +9,8 @@ public sealed class GetSprintsRequestValidator : AbstractValidator<GetSprintsReq
     public GetSprintsRequestValidator()
     {
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
+            .InclusiveBetween(1, 100)
+            .WithMessage("PageSize must be between 1 and 100.");
 
         RuleFor(x => x.Status)
             .Must(status => string.IsNullOrEmpty(status) || Enum.TryParse<SprintStatus>(status, true, out _))

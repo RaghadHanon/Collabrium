@@ -93,7 +93,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     }
 
     /// <summary>
-    /// Delete a specific WorkItem CodeLinkes.
+    /// Delete a specific WorkItem comment.
     /// </summary>
     /// <remarks>
     ///
@@ -129,7 +129,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     }
 
     /// <summary>
-    /// Creates a new WorkItem Comment.
+    /// Update WorkItem Comment.
     /// </summary>
     /// <remarks>
     ///

@@ -38,7 +38,8 @@ public class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsReques
             .When(x => !string.IsNullOrWhiteSpace(x.TitleContains));
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
+            .InclusiveBetween(1, 100)
+            .WithMessage("PageSize must be between 1 and 100.");
 
         RuleFor(x => x)
             .Must(r => !(r.CreatedAfter.HasValue && r.CreatedBefore.HasValue) || r.CreatedAfter <= r.CreatedBefore)

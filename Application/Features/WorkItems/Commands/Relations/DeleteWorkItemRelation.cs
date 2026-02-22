@@ -65,13 +65,14 @@ public class DeleteWorkItemRelation
                 deleted = await workItemsRepository.DeleteRelationAsync(
                     tenantId,
                     request.ProjectId,
+                    request.SourceWorkItemId,
                     request.RelationId,
                     ct);
             }, cancellationToken);
 
             return deleted
                 ? Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent)
-                : Result<Unit>.Failure("Relation not found.", HttpStatusCode.NotFound);
+                : Result<Unit>.Failure("Relation not found in this workItem.", HttpStatusCode.NotFound);
         }
     }
 }

@@ -248,6 +248,7 @@ public class WorkItemsRepository : IWorkItemsRepository
     public async Task<bool> DeleteRelationAsync(
         string tenantId,
         string projectId,
+        string sourceWorkItemId,
         string relationId,
         CancellationToken ct = default)
     {
@@ -263,7 +264,9 @@ public class WorkItemsRepository : IWorkItemsRepository
             .FirstOrDefaultAsync(r =>
                 r.Id == relationId &&
                 r.SourceWorkItem.ProjectId == projectId &&
-                r.SourceWorkItem.Project.TenantId == tenantId, ct);
+                r.SourceWorkItem.Project.TenantId == tenantId &&
+                r.SourceWorkItemId == sourceWorkItemId
+                , ct);
 
         if (relationEntity is null) return false;
 

@@ -233,7 +233,20 @@ public abstract class WorkItem : Entity
         {
             Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent),
                 "WorkItem can have only one parent.");
+            Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Child
+                                            && r.SourceWorkItemId == Id
+                                            && r.TargetWorkItemId == targetWorkItemId),
+                                            "Circular Parent/Child relationship between work items are not allowed.");
         }
+
+        if (type == WorkItemRelationType.Child)
+        {
+            Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent
+                                            && r.SourceWorkItemId == Id
+                                            && r.TargetWorkItemId == targetWorkItemId),
+                                            "Circular Parent/Child relationship between work items are not allowed.");
+        }
+
         var relation = new WorkItemRelation(Id, targetWorkItemId, type);
         _relations.Add(relation);
         Touch();

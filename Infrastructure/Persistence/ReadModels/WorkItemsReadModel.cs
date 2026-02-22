@@ -121,6 +121,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)
                     .Select(r => new WorkItemRelationDto
                     {
+                        Id = r.Id,
                         RelationType = r.RelationType,
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {
@@ -184,6 +185,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)
                     .Select(r => new WorkItemRelationDto
                     {
+                        Id = r.Id,
                         RelationType = r.RelationType,
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {
@@ -234,6 +236,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)
                     .Select(r => new WorkItemRelationDto
                     {
+                        Id = r.Id,
                         RelationType = r.RelationType,
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {

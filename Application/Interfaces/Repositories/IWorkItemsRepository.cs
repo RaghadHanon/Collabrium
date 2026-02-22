@@ -29,6 +29,7 @@ public interface IWorkItemsRepository
     Task<bool> DeleteRelationAsync(
         string tenantId,
         string projectId,
+        string sourceWorkItemId,
         string relationId,
         CancellationToken ct = default);
 

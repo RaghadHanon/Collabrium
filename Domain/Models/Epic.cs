@@ -49,14 +49,12 @@ public sealed class Epic : WorkItem
     {
         // Epic workflow: ToDo -> InProgress  -> Done
         // Allow Done -> InProgress (Reopen)
-        return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
-            ? true
-            : from == to
+        return from == to
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.InProgress,
                 WorkItemStatus.InProgress => to is WorkItemStatus.Done or WorkItemStatus.ToDo,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.InProgress,
                 _ => false
             };
     }

@@ -28,7 +28,7 @@ public sealed class TaskItem : WorkItem
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.ReadyForDev,
                 WorkItemStatus.InReview => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.InReview or WorkItemStatus.InProgress,
                 _ => false
             };
     }

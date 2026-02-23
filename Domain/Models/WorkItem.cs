@@ -116,6 +116,7 @@ public abstract class WorkItem : Entity
 
     public void UpdateDetails(string title, string? description, string? acceptanceCriteria, int effortPoints)
     {
+        Guard.Against(IsDone, "Cannot update a completed work item.");
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         EffortPoints = Guard.NonNegative(effortPoints, nameof(effortPoints));
 
@@ -124,7 +125,7 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    protected virtual bool CanReopenFromDone => false;
+    protected virtual bool CanReopenFromDone => true;
 
     protected virtual bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
@@ -137,7 +138,7 @@ public abstract class WorkItem : Entity
                 WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
                 WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 _ => false
             };
     }
@@ -146,11 +147,6 @@ public abstract class WorkItem : Entity
     {
         Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
             "Blocked work item cannot be moved to InProgress.");
-
-        if (Status == WorkItemStatus.Done && newStatus != WorkItemStatus.Done)
-        {
-            Guard.Against(!CanReopenFromDone, "Done work item cannot be reopened.");
-        }
 
         Guard.Against(!IsValidTransition(Status, newStatus),
             $"Invalid status transition: {Status} -> {newStatus}");
@@ -341,6 +337,7 @@ public abstract class WorkItem : Entity
 
     public CodeLink AddCodeLink(string linkId, string url, CodeLinkType type, string? displayName = null)
     {
+        Guard.Against(IsDone, "Cannot add code links to a completed work item.");
         url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
 
         Guard.Against(_codeLinks.Any(l => l.Url.Equals(url, StringComparison.OrdinalIgnoreCase)),
@@ -354,6 +351,7 @@ public abstract class WorkItem : Entity
 
     public void RemoveCodeLink(string linkId)
     {
+        Guard.Against(IsDone, "Cannot remove code links from a completed work item.");
         linkId = Guard.NotNullOrWhiteSpace(linkId, nameof(linkId));
         var link = _codeLinks.FirstOrDefault(x => x.Id == linkId);
         Guard.Against(link is null, "Code link not found.");
@@ -372,7 +370,7 @@ public abstract class WorkItem : Entity
         string uploadedByUserId,
         string? checksum = null)
     {
-        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); // optional rule
+        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); 
 
         var att = new Attachment(
             attachmentId, fileName, storagePath, contentType, type, uploadedByUserId);
@@ -384,6 +382,7 @@ public abstract class WorkItem : Entity
 
     public void RemoveAttachment(string attachmentId)
     {
+        Guard.Against(IsDone, "Cannot remove attachments from a completed work item.");
         attachmentId = Guard.NotNullOrWhiteSpace(attachmentId, nameof(attachmentId));
         var att = _attachments.FirstOrDefault(x => x.Id == attachmentId);
         Guard.Against(att is null, "Attachment not found.");

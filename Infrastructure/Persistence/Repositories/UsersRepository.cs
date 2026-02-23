@@ -113,6 +113,39 @@ public sealed class UsersRepository : IUsersRepository
             throw new InvalidOperationException($"Failed to update user: {JoinErrors(result)}");
     }
 
+    public async Task<bool> ReplaceUserRoleAsync(
+        string userId,
+        string newRole,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(userId, out var id))
+            return false;
+
+        if (!TryNormalize(newRole, out var role))
+            throw new ArgumentNullException(nameof(newRole));
+
+        var user = await _userManager.Users
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+        if (user is null)
+            throw new InvalidOperationException($"User '{id}' was not found.");
+
+        var currentRoles = await _userManager.GetRolesAsync(user);
+
+        if (currentRoles.Any())
+        {
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded)
+                throw new InvalidOperationException($"Failed to remove old roles: {JoinErrors(removeResult)}");
+        }
+
+        var addResult = await _userManager.AddToRoleAsync(user, role);
+        if (!addResult.Succeeded)
+            throw new InvalidOperationException($"Failed to assign new role: {JoinErrors(addResult)}");
+
+        return true;
+    }
+
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
         return !TryNormalize(email, out var normalized)

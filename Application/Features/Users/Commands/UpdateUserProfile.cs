@@ -63,7 +63,9 @@ public class UpdateUserProfile
 
             var newDob = request.DateOfBirth ?? user.DateOfBirth;
 
-            user.UpdateIdentity(
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            {
+                user.UpdateIdentity(
                 fullName: newFullName,
                 email: user.Email,
                 userName: user.UserName,
@@ -81,7 +83,7 @@ public class UpdateUserProfile
             );
 
             await usersRepository.UpdateAsync(user, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }

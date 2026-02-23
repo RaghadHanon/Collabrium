@@ -4,6 +4,7 @@ using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -15,7 +16,7 @@ public class UsersReadModel : IUsersReadModel
 
     public UsersReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContext = dbContext;
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -120,7 +121,7 @@ public class UsersReadModel : IUsersReadModel
             .ToListAsync(cancellationToken);
     }
 
-    private static IQueryable<ApplicationUserEntity> ApplyFilters(
+    private IQueryable<ApplicationUserEntity> ApplyFilters(
         IQueryable<ApplicationUserEntity> query,
         UsersSearchAndFilterParametersDto parameters)
     {
@@ -156,6 +157,18 @@ public class UsersReadModel : IUsersReadModel
             var phone = parameters.PhoneNumber.Trim();
 
             query = query.Where(u => u.ContactDetails.PhoneNumber == phone);
+        }
+
+        if (parameters.Role.HasValue)
+        {
+            var roleName = parameters.Role.Value.ToString();
+
+            query =
+                from user in query
+                join ur in _dbContext.UserRoles on user.Id equals ur.UserId
+                join r in _dbContext.Roles on ur.RoleId equals r.Id
+                where r.Name == roleName
+                select user;
         }
 
         return query;

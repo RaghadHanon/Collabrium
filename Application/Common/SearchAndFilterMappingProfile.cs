@@ -18,7 +18,7 @@ public class SearchAndFilterMappingProfile : Profile
 {
     public SearchAndFilterMappingProfile()
     {
-        CreateMap<GetTenantUsers, UsersSearchAndFilterParametersDto>();
+        CreateMap<GetTenantUsers.Query, UsersSearchAndFilterParametersDto>();
         CreateMap<GetTenants.Query, TenantsSearchAndFilterParametersDto>();
         CreateMap<GetTeams.Query, TeamsSearchAndFilterParametersDto>();
         CreateMap<GetSprints.Query, SprintsSearchAndFilterParametersDto>();

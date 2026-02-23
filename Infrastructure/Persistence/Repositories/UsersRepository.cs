@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -79,10 +79,7 @@ public sealed class UsersRepository : IUsersRepository
         var entity = UserMapper.ToEntity(user);
 
         var result = await _userManager.CreateAsync(entity, password);
-        if (!result.Succeeded)
-            throw new InvalidOperationException($"Failed to create user: {JoinErrors(result)}");
-
-        return true;
+        return !result.Succeeded ? throw new InvalidOperationException($"Failed to create user: {JoinErrors(result)}") : true;
     }
 
     public async Task<bool> DeleteUserAsync(string userId, CancellationToken cancellationToken = default)
@@ -96,10 +93,7 @@ public sealed class UsersRepository : IUsersRepository
         if (entity is null) return false;
 
         var result = await _userManager.DeleteAsync(entity);
-        if (!result.Succeeded)
-            throw new InvalidOperationException($"Failed to delete user: {JoinErrors(result)}");
-
-        return true;
+        return !result.Succeeded ? throw new InvalidOperationException($"Failed to delete user: {JoinErrors(result)}") : true;
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
@@ -121,26 +115,26 @@ public sealed class UsersRepository : IUsersRepository
 
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
-        if (!TryNormalize(email, out var normalized))
-            return false;
-
-        return !await _dbContext.Users
+        return !TryNormalize(email, out var normalized)
+            ? false
+            : !await _dbContext.Users
             .AsNoTracking()
             .AnyAsync(u => u.Email == normalized, cancellationToken);
     }
 
     public async Task<bool> IsUserNameUniqueAsync(string username, CancellationToken cancellationToken = default)
     {
-        if (!TryNormalize(username, out var normalized))
-            return false;
-
-        return !await _dbContext.Users
+        return !TryNormalize(username, out var normalized)
+            ? false
+            : !await _dbContext.Users
             .AsNoTracking()
             .AnyAsync(u => u.UserName == normalized, cancellationToken);
     }
 
     private IQueryable<ApplicationUserEntity> ReadOnlyQuery()
-        => _dbContext.Users.AsNoTracking();
+    {
+        return _dbContext.Users.AsNoTracking();
+    }
 
     private static bool TryNormalize(string? value, out string normalized)
     {
@@ -149,5 +143,7 @@ public sealed class UsersRepository : IUsersRepository
     }
 
     private static string JoinErrors(IdentityResult result)
-        => string.Join("; ", result.Errors.Select(e => e.Description));
+    {
+        return string.Join("; ", result.Errors.Select(e => e.Description));
+    }
 }

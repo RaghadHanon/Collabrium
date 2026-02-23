@@ -82,7 +82,7 @@ public sealed class Team : Entity
         Touch();
     }
 
-    public void ChangeLead(string newLeadId)
+    public void ChangeLead(string? newLeadId)
     {
         newLeadId = Guard.NotNullOrWhiteSpace(newLeadId, nameof(newLeadId));
         _memberIds.Add(newLeadId);

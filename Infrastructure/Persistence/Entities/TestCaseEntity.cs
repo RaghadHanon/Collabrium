@@ -9,4 +9,5 @@ public class TestCaseEntity : WorkItemEntity
     public TestEnvironment TestEnvironment { get; set; }
     public string ExpectedResult { get; set; } = null!;
     public string? ActualResult { get; set; }
+    public TestCaseResult Result { get; set; } = TestCaseResult.NotRun;
 }

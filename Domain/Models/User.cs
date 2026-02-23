@@ -18,17 +18,6 @@ public sealed class User : Entity
     public bool MustChangePassword { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
 
-    public int Age
-    {
-        get
-        {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var age = today.Year - DateOfBirth.Year;
-            if (DateOfBirth > today.AddYears(-age)) age--;
-            return age;
-        }
-    }
-
     public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
     public StoredImage? ProfileImage { get; private set; }
 
@@ -45,7 +34,7 @@ public sealed class User : Entity
         : base(id)
     {
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
-        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "DateOfBirth cannot be in the future.");
+        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "dateOfBirth cannot be in the future.");
 
         DateOfBirth = dateOfBirth;
         Email = email?.Trim() ?? "";
@@ -82,11 +71,13 @@ public sealed class User : Entity
         return u;
     }
 
-    public void UpdateIdentity(string fullName, string email, string userName)
+    public void UpdateIdentity(string fullName, string email, string userName, DateOnly dateOfBirth)
     {
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
         Email = (email ?? "").Trim();
         UserName = (userName ?? "").Trim();
+        Guard.Against(dateOfBirth <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18),
+            "User Must be at least 18.");
         Touch();
     }
 

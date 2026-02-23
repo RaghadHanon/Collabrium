@@ -12,7 +12,7 @@ public class ConfirmationEmailTemplate : IEmailTemplate
     public string GetPlainTextBody(Dictionary<string, string> data)
     {
         var fullName = data["FullName"];
-        var url = data["Url"];
+        var url = data["newUrl"];
 
         return $@"Hi {fullName},
 
@@ -24,7 +24,7 @@ If you did not request this, you can safely ignore this email.";
     public string GetHtmlBody(Dictionary<string, string> data)
     {
         var fullName = data["FullName"];
-        var url = data["Url"];
+        var url = data["newUrl"];
 
         return $@"
 <html>

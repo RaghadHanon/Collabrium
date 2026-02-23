@@ -9,7 +9,7 @@ namespace Application.Features.Tenants.Queries;
 
 public class GetTenant
 {
-    public class Query : IRequest<Result<TenantWithAdminDto>>
+    public class Query : IRequest<Result<TenantDto>>
     {
         public string? TenantId { get; set; }
     }
@@ -17,19 +17,19 @@ public class GetTenant
     public class Handler(
         ITenantsReadModel tenantsReadModel,
         ITenantContext tenantContext
-        ) : IRequestHandler<Query, Result<TenantWithAdminDto>>
+        ) : IRequestHandler<Query, Result<TenantDto>>
     {
-        public async Task<Result<TenantWithAdminDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<Result<TenantDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var tenantId = request.TenantId ?? tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                return Result<TenantDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var dto = await tenantsReadModel.GetWithAdminAsync(tenantId, cancellationToken);
+            var dto = await tenantsReadModel.GetByIdAsync(tenantId, cancellationToken);
 
             return dto is null
-                ? Result<TenantWithAdminDto>.Failure("Tenant not found.", HttpStatusCode.NotFound)
-                : Result<TenantWithAdminDto>.Success(dto, HttpStatusCode.OK);
+                ? Result<TenantDto>.Failure("Tenant not found.", HttpStatusCode.NotFound)
+                : Result<TenantDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

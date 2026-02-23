@@ -16,6 +16,9 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<SprintEntity> Sprints => Set<SprintEntity>();
 
     public DbSet<WorkItemEntity> WorkItems => Set<WorkItemEntity>();
+    public DbSet<AttachmentEntity> Attachments => Set<AttachmentEntity>();
+    public DbSet<CodeLinkEntity> CodeLinks => Set<CodeLinkEntity>();
+
     public DbSet<TaskItemEntity> Tasks => Set<TaskItemEntity>();
     public DbSet<TestCaseEntity> TestCases => Set<TestCaseEntity>();
     public DbSet<EpicEntity> Epics => Set<EpicEntity>();

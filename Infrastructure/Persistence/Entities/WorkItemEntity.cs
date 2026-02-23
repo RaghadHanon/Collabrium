@@ -14,7 +14,6 @@ public class WorkItemEntity : DbEntity
     public WorkItemPriority Priority { get; set; }
 
     public bool IsBlocked { get; set; }
-    public DateTime? UpdatedDate { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
 
@@ -29,9 +28,8 @@ public class WorkItemEntity : DbEntity
 
     public string? SprintId { get; set; }
     public SprintEntity? Sprint { get; set; }
-
     public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
-
-    public ICollection<WorkItemRelationEntity> OutgoingRelations { get; set; } = new List<WorkItemRelationEntity>();
-    public ICollection<WorkItemRelationEntity> IncomingRelations { get; set; } = new List<WorkItemRelationEntity>();
+    public ICollection<WorkItemRelationEntity> Relations { get; set; } = new List<WorkItemRelationEntity>();
+    public ICollection<CodeLinkEntity> CodeLinks { get; set; } = new List<CodeLinkEntity>();
+    public ICollection<AttachmentEntity> Attachments { get; set; } = new List<AttachmentEntity>();
 }

@@ -1,6 +1,6 @@
-using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Seeders;
+using Infrastructure.SignalR.Hubs;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.SetupProgram;
@@ -20,10 +20,13 @@ public static class ApplicationBuilderExtensions
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        app.UseHttpsRedirection(); 
+        app.UseRouting();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseMiddleware<TenantMiddleware>();
+        app.MapHub<PresenceHub>("/hubs/presence");
+        app.MapHub<CommentHub>("/hubs/comments");
         app.MapControllers();
 
         return app;

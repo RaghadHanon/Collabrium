@@ -12,7 +12,7 @@ public interface IProjectsReadModel
         ProjectsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<WorkItemDto>> GetBacklogAsync(
+    Task<IReadOnlyList<WorkItemListItemDto>> GetBacklogAsync(
         string tenantId,
         string projectId,
         CancellationToken cancellationToken = default);

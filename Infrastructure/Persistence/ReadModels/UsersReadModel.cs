@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
 
-public sealed class UsersReadModel : IUsersReadModel
+public class UsersReadModel : IUsersReadModel
 {
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
@@ -33,6 +33,33 @@ public sealed class UsersReadModel : IUsersReadModel
             .Where(u => u.Id == id)
             .ProjectTo<UserWithTenantDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<UserDto?> GetUserByIdAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return null;
+        var id = userId.Trim();
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> UserExistsAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        var id = userId.Trim();
+        return await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<PagedList<UserDto, DateTime?>> GetUsersAsync(
@@ -88,7 +115,7 @@ public sealed class UsersReadModel : IUsersReadModel
         return await _dbContext.Users
             .AsNoTracking()
             .Where(u => u.TenantId == id)
-            .OrderBy(u => u.CreatedAt)
+            .OrderBy(u => u.FullName)
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }

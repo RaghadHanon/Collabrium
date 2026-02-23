@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Net;
@@ -28,7 +29,7 @@ public class UpdateTenant
     }
 
     public class Handler(
-        IPhotoService photoService,
+        IAttachmentStorageFactory storageFactory,
         ITenantRepository tenantRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
@@ -44,44 +45,47 @@ public class UpdateTenant
             if (tenant is null)
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            try
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                if (request.File is not null)
                 {
-                    if (request.File is not null)
-                    {
-                        var upload = await photoService.UploadPhoto(request.File);
-                        if (upload is null)
-                            throw new InvalidOperationException("Photo upload failed.");
+                    if (request.File.Length == 0)
+                        throw new InvalidOperationException("No file uploaded.");
 
-                        tenant.SetProfileImage(upload.Url, upload.PublicId);
-                    }
+                    var storage = storageFactory.Get(AttachmentType.Image);
 
-                    tenant.UpdateProfile(
-                        description: request.Description ?? tenant.Description,
-                        country: request.Country ?? tenant.Country,
-                        websiteUrl: request.WebsiteUrl ?? tenant.WebsiteUrl
-                    );
+                    var stored = await storage.UploadAsync(
+                        request.File,
+                        AttachmentType.Image,
+                        folder: "Collabrium/TenantProfileImages",
+                        ct: ct);
 
-                    tenant.SetContactInfo(
-                        email: request.Email ?? tenant.ContactInfo.Email,
-                        phone: request.PhoneNumber ?? tenant.ContactInfo.PhoneNumber,
-                        linkedIn: request.LinkedIn ?? tenant.ContactInfo.Socials.LinkedIn,
-                        facebook: request.Facebook ?? tenant.ContactInfo.Socials.Facebook,
-                        instagram: request.Instagram ?? tenant.ContactInfo.Socials.Instagram,
-                        youTube: request.YouTube ?? tenant.ContactInfo.Socials.YouTube
-                    );
+                    if (stored is null)
+                        throw new InvalidOperationException("Photo upload failed.");
 
-                    await tenantRepository.UpdateAsync(tenant, ct);
-                    await unitOfWork.SaveChangesAsync(ct);
-                }, cancellationToken);
+                    tenant.SetProfileImage(stored.Url, stored.StoragePath);
+                }
 
-                return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Photo upload failed"))
-            {
-                return Result<Unit>.Failure("Photo upload failed.", HttpStatusCode.BadRequest);
-            }
+                tenant.UpdateProfile(
+                    description: PatchHelpers.ApplyStringPatch(tenant.Description, request.Description),
+                    country: PatchHelpers.ApplyStringPatch(tenant.Country, request.Country),
+                    websiteUrl: PatchHelpers.ApplyStringPatch(tenant.WebsiteUrl, request.WebsiteUrl)
+                );
+
+                tenant.SetContactInfo(
+                    email: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Email, request.Email),
+                    phone: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.PhoneNumber, request.PhoneNumber),
+                    linkedIn: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.LinkedIn, request.LinkedIn),
+                    facebook: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.Facebook, request.Facebook),
+                    instagram: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.Instagram, request.Instagram),
+                    youTube: PatchHelpers.ApplyStringPatch(tenant.ContactInfo.Socials.YouTube, request.YouTube)
+                );
+
+                await tenantRepository.UpdateAsync(tenant, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+            }, cancellationToken);
+
+            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }
     }
 }

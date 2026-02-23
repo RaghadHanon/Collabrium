@@ -38,29 +38,39 @@ public class UpdateProject
 
             var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
             if (project is null)
-                return Result<ProjectDto>.Failure("Project not found.", HttpStatusCode.NotFound);
+                return Result<ProjectDto>.Failure("Project not found in this tenant.", HttpStatusCode.NotFound);
 
-            if (!string.IsNullOrWhiteSpace(request.Name) &&
-                !string.Equals(project.Name, request.Name, StringComparison.OrdinalIgnoreCase))
+            var nameDecision = PatchHelpers.DecideStringPatch(request.Name);
+            
+            if (nameDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
-                var isUnique = await projectsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
-                if (!isUnique)
-                    return Result<ProjectDto>.Failure("A project with this name already exists.", HttpStatusCode.BadRequest);
+                var newName = nameDecision.Value!;
+                if (!string.Equals(project.Name, newName, StringComparison.OrdinalIgnoreCase))
+                {
+                    var isUnique = await projectsRepository.IsNameUniqueAsync(tenantId, newName, cancellationToken);
+                    if (!isUnique)
+                        return Result<ProjectDto>.Failure("A project with this name already exists.", HttpStatusCode.BadRequest);
+                }
             }
 
             var newStart = request.StartDate ?? project.StartDate;
             var newEnd = request.EndDate ?? project.EndDate;
 
-            project.UpdateDetails(
-                name: request.Name ?? project.Name,
-                description: request.Description ?? project.Description,
-                status: request.Status ?? project.Status,
-                startDate: newStart,
-                endDate: newEnd
-            );
+            if (newStart.HasValue && newEnd.HasValue && newEnd.Value < newStart.Value)
+                return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
 
-            await projectsRepository.UpdateAsync(project, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            {
+                project.UpdateDetails(
+                    name: PatchHelpers.ApplyStringPatch(project.Name, request.Name) ?? project.Name,
+                    description: PatchHelpers.ApplyStringPatch(project.Description, request.Description),
+                    status: request.Status ?? project.Status,
+                    startDate: newStart,
+                    endDate: newEnd
+                );
+
+                await projectsRepository.UpdateAsync(project, cancellationToken);
+            }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
 

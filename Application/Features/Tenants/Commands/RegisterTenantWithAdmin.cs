@@ -4,8 +4,8 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 

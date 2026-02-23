@@ -3,17 +3,19 @@ using Application.Features.Tenants.DTOs;
 using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public sealed class TenantRepository : ITenantRepository
+public class TenantRepository : ITenantRepository
 {
     private readonly AppDbContext _dbContext;
 
     public TenantRepository(AppDbContext dbContext)
-        => _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    {
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
     public Task AddAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
@@ -62,6 +64,15 @@ public sealed class TenantRepository : ITenantRepository
         return entity is null ? null : TenantMapper.ToDomain(entity);
     }
 
+    public async Task<bool> IsExistAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(tenantId, out var id))
+            return false;
+
+        return await _dbContext.Tenants
+            .AnyAsync(t => t.Id ==  tenantId, cancellationToken);   
+    }
+
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)
     {
         if (!TryNormalize(domain, out var normalized))
@@ -83,11 +94,11 @@ public sealed class TenantRepository : ITenantRepository
         parameters ??= new TenantsSearchAndFilterParametersDto();
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<TenantEntity> query = _dbContext.Tenants.AsNoTracking();
+        var query = _dbContext.Tenants.AsNoTracking();
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt > parameters.Cursor.Value);
+            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
 
         var entities = await query
             .OrderBy(t => t.CreatedAt)

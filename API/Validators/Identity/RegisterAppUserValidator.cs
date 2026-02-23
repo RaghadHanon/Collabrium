@@ -35,8 +35,8 @@ public class RegisterAppUserValidator<T> : AbstractValidator<T> where T : Regist
             .Equal(x => x.Password).WithMessage("Passwords do not match.");
 
         RuleFor(x => x.DateOfBirth)
-            .LessThan(DateOnly.FromDateTime(DateTime.UtcNow))
-            .WithMessage("Date of Birth must be in the past.");
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18))
+            .WithMessage("User must be at least 18 years old.");
 
         RuleFor(x => x.PhoneNumber)
            .NotEmpty().WithMessage("Phone number is required.")

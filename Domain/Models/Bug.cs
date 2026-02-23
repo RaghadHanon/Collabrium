@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-public sealed class Bug : WorkItem
+public class Bug : WorkItem
 {
     public string StepsToReproduce { get; private set; } = null!;
     public string? ActualResult { get; private set; }
@@ -16,6 +16,48 @@ public sealed class Bug : WorkItem
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+    }
+
+    public Bug(string title, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
+           : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+        UpdateRepro(stepsToReproduce, actualResult, expectedResult);
+    }
+
+    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
+       : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+    }
+    protected override bool CanReopenFromDone => true;
+
+    protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Allow Done -> InProgress (Reopen)
+        return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
+            ? true
+            : from == to
+            || from switch
+            {
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
+    }
+
+    public void Reopen(string reopenedByUserId, string? note = null)
+    {
+        Guard.Against(!IsDone, "Only Done bug can be reopened.");
+        ChangeStatus(WorkItemStatus.InProgress);
+        if (!string.IsNullOrWhiteSpace(note))
+            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
     }
 
     public static Bug Rehydrate(

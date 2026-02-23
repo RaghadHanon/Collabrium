@@ -4,6 +4,6 @@ public enum WorkItemRelationType
 {
     Parent = 0,
     Child = 1,
-    TestedBy = 2,
-    Testing = 3,
+    RelatesTo = 2,
+    FoundByTestCase = 3,
 }

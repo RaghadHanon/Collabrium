@@ -440,7 +440,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("RelationType")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -461,7 +461,7 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("WorkItems");
 
-                    b.HasDiscriminator<int>("Type").HasValue(0);
+                    b.HasDiscriminator<int>("RelationType").HasValue(0);
 
                     b.UseTphMappingStrategy();
                 });
@@ -787,7 +787,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");
@@ -1001,7 +1001,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");

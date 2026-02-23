@@ -4,6 +4,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,12 +42,12 @@ public sealed class ProjectsReadModel : IProjectsReadModel
     {
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        IQueryable<ProjectEntity> query = _dbContext.Projects.AsNoTracking();
+        var query = _dbContext.Projects.AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(p => p.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(p => p.CreatedAt <= parameters.Cursor.Value);
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
@@ -68,22 +69,22 @@ public sealed class ProjectsReadModel : IProjectsReadModel
         };
     }
 
-    public async Task<IReadOnlyList<WorkItemDto>> GetBacklogAsync(
+    public async Task<IReadOnlyList<WorkItemListItemDto>> GetBacklogAsync(
         string tenantId,
         string projectId,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return Array.Empty<WorkItemDto>();
+            return Array.Empty<WorkItemListItemDto>();
 
         var tId = tenantId.Trim();
         var pId = projectId.Trim();
 
         return await _dbContext.WorkItems
             .AsNoTracking()
-            .Where(w => w.ProjectId == pId && w.SprintId == null)
+            .Where(w => w.ProjectId == pId && w.SprintId == null && w.Status == WorkItemStatus.ToDo)
             .OrderBy(w => w.CreatedAt)
-            .ProjectTo<WorkItemDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
 

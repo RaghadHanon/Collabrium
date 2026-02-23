@@ -12,6 +12,27 @@ public sealed class TaskItem : WorkItem
         Type = WorkItemType.TaskItem;
     }
 
+    public TaskItem(string title, string createdByUserId, string projectId)
+        : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.TaskItem;
+    }
+
+    protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        // Task workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> Done
+        return from == to
+            || from switch
+            {
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.ReadyForDev,
+                WorkItemStatus.InReview => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
+                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                _ => false
+            };
+    }
+
     public static TaskItem Rehydrate(
         string id,
         DateTime createdAt,

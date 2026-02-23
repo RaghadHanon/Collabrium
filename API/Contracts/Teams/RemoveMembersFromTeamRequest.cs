@@ -3,5 +3,5 @@
 public class RemoveMembersFromTeamRequest
 {
     public required string TeamId { get; set; }
-    public required string[] MemberIds { get; set; } = Array.Empty<string>();
+    public required string[] MembersIds { get; set; } = Array.Empty<string>();
 }

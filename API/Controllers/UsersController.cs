@@ -1,5 +1,6 @@
-﻿using API.Contracts.Identity;
+﻿using API.Common.Attributes;
 using API.Contracts.Tenants;
+using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Features.Users.Commands;
 using Application.Features.Users.DTOs;
@@ -65,6 +66,9 @@ public class UsersController : ApiBaseController
     ///
     ///     PUT /api/users/user-profile
     ///     {
+    ///         "firstName": "John",
+    ///         "lastName": "Doe",
+    ///         "dateOfBirth": "1990-01-01",
     ///         "phoneNumber": "0597612345",
     ///         "linkedIn": "https://linkedin.com/in/johndoe",
     ///         "facebook": "https://facebook.com/johndoe",
@@ -83,7 +87,7 @@ public class UsersController : ApiBaseController
     [HttpPatch("user-profile")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateUserProfile(UpdateUserProfileRequest request)
     {
-        var command = Mapper.Map<UpdateUserContactDetails.Command>(request);
+        var command = Mapper.Map<UpdateUserProfile.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -97,7 +101,7 @@ public class UsersController : ApiBaseController
     /// Sample request:
     /// 
     ///     POST /api/users/profile-image
-    ///     Content-Type: multipart/form-data
+    ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
     ///     key: "file", value: [Select image file], type: File
@@ -109,8 +113,9 @@ public class UsersController : ApiBaseController
     /// <response code="400">If no file is provided or the file format is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
+    [RejectUnknownFormFields(typeof(UploadImageRequest), allowEmptyRequest: false)]
     [HttpPost("profile-image")]
-    public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
+    public async Task<ActionResult> UploadProfileImage([FromForm] UploadImageRequest request)
     {
         var command = Mapper.Map<UploadUserProfileImage.Command>(request);
 

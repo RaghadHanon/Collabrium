@@ -1,0 +1,61 @@
+﻿using Application.Common;
+using Application.Features.Sprints.DTOs;
+using Application.Interfaces;
+using Application.Interfaces.ReadModels;
+using Application.Interfaces.Repositories;
+using Domain.Models;
+using MediatR;
+using System.Net;
+
+namespace Application.Features.Sprints.Commands;
+
+public class CreateSprint
+{
+    public class Command : IRequest<Result<SprintDto>>
+    {
+        public required string ProjectId { get; set; }
+        public required string Name { get; set; }
+        public required string Goal { get; set; }
+        public required DateTime StartDate { get; set; }
+        public required DateTime EndDate { get; set; }
+    }
+
+    public class Handler(
+        ISprintsRepository sprintsRepository,
+        ISprintsReadModel sprintsReadModel,
+        IProjectsRepository projectsRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<SprintDto>>
+    {
+        public async Task<Result<SprintDto>> Handle(Command request, CancellationToken cancellationToken)
+        {
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+                return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
+
+            Sprint sprint = null!;
+
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            {
+                sprint = new Sprint(
+                    tenantId: tenantId,
+                    projectId: request.ProjectId,
+                    name: request.Name,
+                    goal: request.Goal,
+                    start: request.StartDate,
+                    end: request.EndDate);
+
+                sprintsRepository.Add(sprint, cancellationToken);
+            }, cancellationToken);
+
+            var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
+
+            return dto is null
+                ? Result<SprintDto>.Failure("Sprint created but could not be loaded.", HttpStatusCode.InternalServerError)
+                : Result<SprintDto>.Success(dto, HttpStatusCode.Created);
+        }
+    }
+}

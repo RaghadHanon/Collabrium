@@ -2,12 +2,12 @@
 using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Services;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Email;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -170,7 +170,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = resetUrl
+            ["newUrl"] = resetUrl
         };
 
         var message = new EmailMessageBuilder()
@@ -267,7 +267,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = confirmationUrl
+            ["newUrl"] = confirmationUrl
         };
 
         var message = new EmailMessageBuilder()
@@ -296,7 +296,6 @@ public sealed class IdentityService : IIdentityService
             Department = department,
             TenantId = string.IsNullOrWhiteSpace(tenantId) ? null : tenantId.Trim(),
             DateOfBirth = dateOfBirth,
-            PhoneNumber = phoneNumber?.Trim()
         };
 
         user.ContactDetails = new ContactDetailsOwned

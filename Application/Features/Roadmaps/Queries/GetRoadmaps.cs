@@ -19,7 +19,7 @@ namespace Application.Features.Roadmaps.Queries
             public RoadmapPath? Path { get; set; }
             public RoadmapLevel? Level { get; set; }
 
-
+            public bool? IsPublished { get; set; }
             public bool? IsVisible { get; set; }
 
             public DateTime? PublishedAfter { get; set; }

@@ -80,10 +80,20 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <response code="200">Returns paged list of roadmaps.</response>
-        [Authorize(Policy = Policies.Roadmaps_Read)]
-        [HttpGet]
 
-        public async Task<ActionResult<PagedList<RoadmapDto, DateTime?>>> GetRoadmaps([FromQuery] GetRoadmapsRequest request)
+        [Authorize(Policy = Policies.Roadmaps_Read)]
+        [HttpGet("public")]
+        public async Task<ActionResult<PagedList<RoadmapDto, DateTime?>>> GetPublicRoadmaps([FromQuery] GetPublicRoadmapsRequest request)
+        {
+            var query = Mapper.Map<GetRoadmaps.Query>(request);
+            query.IsPublished = true;
+            query.IsVisible = true;
+            return HandleResult(await Mediator.Send(query));
+        }
+
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
+        [HttpGet("Manager")]
+        public async Task<ActionResult<PagedList<RoadmapDto, DateTime?>>> GetManagerRoadmaps([FromQuery] GetManagerRoadmapsRequest request)
         {
             var query = Mapper.Map<GetRoadmaps.Query>(request);
             return HandleResult(await Mediator.Send(query));

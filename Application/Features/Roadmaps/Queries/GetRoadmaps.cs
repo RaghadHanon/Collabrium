@@ -33,6 +33,9 @@ namespace Application.Features.Roadmaps.Queries
 
             public DateTime? Cursor { get; set; }
             public int PageSize { get; set; } = 10;
+
+            public IReadOnlyCollection<string>? TagIdsAny { get; set; }
+            public IReadOnlyCollection<string>? TagIdsAll { get; set; }
         }
         public class Handler(
     IRoadmapsReadModel roadmapsReadModel,

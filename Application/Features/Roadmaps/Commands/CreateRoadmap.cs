@@ -47,18 +47,16 @@ namespace Application.Features.Roadmaps.Commands
                         HttpStatusCode.NotFound
                     );
 
-                var isUnique = await roadmapsRepository
-                    .IsTitleUniqueAsync(tenantId, createdByUserId, cancellationToken);
+                //var isUnique = await roadmapsRepository
+                //    .IsTitleUniqueAsync(tenantId, createdByUserId, cancellationToken);
 
-                if (!isUnique)
-                {
-                    return Result<RoadmapDto>.Failure(
-                        "A roadmap with this title already exists.",
-                        HttpStatusCode.BadRequest
-                    );
-                }
-
-
+                //if (!isUnique)
+                //{
+                //    return Result<RoadmapDto>.Failure(
+                //        "A roadmap with this title already exists.",
+                //        HttpStatusCode.BadRequest
+                //    );
+                //}
                 var roadmap = new Roadmap(
                     title: request.Title,
                     path: request.Path,

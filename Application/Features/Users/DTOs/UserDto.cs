@@ -6,6 +6,7 @@ public class UserDto
 {
     public required string Id { get; set; }
     public string FullName { get; set; } = null!;
+    public string JobTitle { get; set; } = null!;
     public string Email { get; set; } = null!;
     public Department Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -33,12 +33,15 @@ public class UpdateUserRole
                 return Result<Unit>.Failure("User not found in this tenant.", HttpStatusCode.Forbidden);
             }
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 await usersRepository.ReplaceUserRoleAsync(
                     request.UserId,
                     request.NewRole,
-                    ct);
+                    cancellationToken);
+                user.ChangeJobTitle(request.NewRole);
+
+                await usersRepository.UpdateAsync(user, cancellationToken);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

@@ -104,23 +104,6 @@ public class UsersReadModel : IUsersReadModel
         };
     }
 
-    public async Task<List<UserDto>> GetUsersByTenantAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return new List<UserDto>();
-
-        var id = tenantId.Trim();
-
-        return await _dbContext.Users
-            .AsNoTracking()
-            .Where(u => u.TenantId == id)
-            .OrderBy(u => u.FullName)
-            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
-
     private IQueryable<ApplicationUserEntity> ApplyFilters(
         IQueryable<ApplicationUserEntity> query,
         UsersSearchAndFilterParametersDto parameters)
@@ -159,16 +142,9 @@ public class UsersReadModel : IUsersReadModel
             query = query.Where(u => u.ContactDetails.PhoneNumber == phone);
         }
 
-        if (parameters.Role.HasValue)
+        if (!string.IsNullOrWhiteSpace(parameters.JobTitle.ToString()))
         {
-            var roleName = parameters.Role.Value.ToString();
-
-            query =
-                from user in query
-                join ur in _dbContext.UserRoles on user.Id equals ur.UserId
-                join r in _dbContext.Roles on ur.RoleId equals r.Id
-                where r.Name == roleName
-                select user;
+            query = query.Where(u => u.JobTitle == parameters.JobTitle.ToString());
         }
 
         return query;

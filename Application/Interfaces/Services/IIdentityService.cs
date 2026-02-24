@@ -7,6 +7,7 @@ public interface IIdentityService
 {
     Task<User> RegisterUserAsync(
         string fullName,
+        string jobTitle,
         Department department,
         string password,
         DateOnly dateOfBirth,

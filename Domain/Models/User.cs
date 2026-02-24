@@ -10,7 +10,7 @@ public sealed class User : Entity
 
     public string Email { get; private set; } = string.Empty;
     public string UserName { get; private set; } = string.Empty;
-
+    public string JobTitle { get; set; } = null!;
     public string FullName { get; private set; } = null!;
     public Department? Department { get; private set; }
 
@@ -26,6 +26,7 @@ public sealed class User : Entity
     public User(
         string id,
         string fullName,
+        string jobTitle,
         DateOnly dateOfBirth,
         string email = "",
         string userName = "",
@@ -35,6 +36,7 @@ public sealed class User : Entity
     {
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
         Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "dateOfBirth cannot be in the future.");
+        JobTitle = Guard.NotNullOrWhiteSpace(jobTitle, nameof(jobTitle));
 
         DateOfBirth = dateOfBirth;
         Email = email?.Trim() ?? "";
@@ -50,6 +52,7 @@ public sealed class User : Entity
         DateTime createdAt,
         DateTime? updatedAt,
         string fullName,
+        string jobTitle,
         DateOnly dateOfBirth,
         string email,
         string userName,
@@ -60,7 +63,7 @@ public sealed class User : Entity
         ContactDetails contactInfo,
         StoredImage? profileImage)
     {
-        var u = new User(id, fullName, dateOfBirth, email, userName, tenantId, department);
+        var u = new User(id, fullName, jobTitle, dateOfBirth, email, userName, tenantId, department);
         u.SetTimestamps(createdAt, updatedAt);
 
         u.LastLoginAt = lastLoginAt;
@@ -99,6 +102,12 @@ public sealed class User : Entity
     public void ChangeDepartment(Department? department)
     {
         Department = department;
+        Touch();
+    }
+
+    public void ChangeJobTitle(string? jobTitle)
+    {
+        JobTitle = jobTitle;
         Touch();
     }
 

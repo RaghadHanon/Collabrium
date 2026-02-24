@@ -43,6 +43,7 @@ public class RegisterAppUser
 
             var user = await identityService.RegisterUserAsync(
                 request.FullName,
+                request.UserRole.ToString(),
                 request.Department,
                 request.Password,
                 request.DateOfBirth,

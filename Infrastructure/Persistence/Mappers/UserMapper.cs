@@ -14,6 +14,7 @@ public static class UserMapper
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
             fullName: entity.FullName,
+            jobTitle: entity.JobTitle,
             dateOfBirth: entity.DateOfBirth,
             email: entity.Email ?? string.Empty,
             userName: entity.UserName ?? string.Empty,
@@ -38,6 +39,7 @@ public static class UserMapper
 
                 TenantId = domain.TenantId,
                 FullName = domain.FullName,
+                JobTitle = domain.JobTitle,
                 Department = domain.Department,
 
                 DateOfBirth = domain.DateOfBirth,
@@ -60,6 +62,7 @@ public static class UserMapper
         entity.TenantId = domain.TenantId;
 
         entity.FullName = domain.FullName;
+        entity.JobTitle = domain.JobTitle;
         entity.Department = domain.Department;
 
         entity.DateOfBirth = domain.DateOfBirth;

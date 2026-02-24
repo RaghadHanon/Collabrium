@@ -12,6 +12,6 @@ public class UsersSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
     public DateTime? CreatedBefore { get; set; }
     public DateTime? LastLoginAfter { get; set; }
     public DateOnly? DateOfBirth { get; set; }
-    public UserRole? Role { get; set; }
+    public UserRole? JobTitle { get; set; }
     public string? PhoneNumber { get; set; }
 }

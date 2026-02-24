@@ -165,6 +165,13 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public virtual void ChangeStatusWithValidation(
+        WorkItemStatus newStatus,
+        IEnumerable<WorkItemSnapshot>? linked = null)
+    {
+        ChangeStatus(newStatus);
+    }
+
     public List<WorkItemStatus> GetAllowedStatuses()
     {
         return WorkItemStatusRules.GetWorkItemWorkflowByType(Type) ?? new List<WorkItemStatus>();

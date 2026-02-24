@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -33,11 +34,14 @@ public class CreateSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project is null)
                 return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
+            if (project.Status == ProjectStatus.Completed || project.Status == ProjectStatus.Cancelled)
+                return Result<SprintDto>.Failure($"Cannot create a sprint for an {project.Status} project.", HttpStatusCode.BadRequest);
+            
             Sprint sprint = null!;
-
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint = new Sprint(

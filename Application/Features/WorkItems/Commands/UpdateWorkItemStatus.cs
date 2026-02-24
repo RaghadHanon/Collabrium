@@ -5,6 +5,7 @@ using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -67,13 +68,10 @@ public class UpdateWorkItemStatus
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                //if(sourceWorkItem.RelationType == WorkItemType.UserStory)
-                //{
-                //    var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
-                //    ((UserStory) sourceWorkItem).ChangeStatusWithValidation(request.NewStatus, children!);
-                //}
-                //else
-                workItem.ChangeStatus(request.NewStatus);
+                var children = await workItemsReadModel
+                    .GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
+
+                workItem.ChangeStatusWithValidation(request.NewStatus, children);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
             }, cancellationToken);

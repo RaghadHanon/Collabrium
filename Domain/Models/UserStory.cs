@@ -33,7 +33,9 @@ public sealed class UserStory : WorkItem
         Touch();
     }
 
-    public void ChangeStatusWithValidation(WorkItemStatus newStatus, IEnumerable<WorkItemSnapshot>? linked)
+    public override void ChangeStatusWithValidation(
+         WorkItemStatus newStatus,
+         IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateStatusGate(newStatus, linked);
         base.ChangeStatus(newStatus);
@@ -86,7 +88,6 @@ public sealed class UserStory : WorkItem
             return;
         }
 
-        // ---- Done gate ----
         if (target == WorkItemStatus.Done)
         {
             Guard.Against(!allTasksDone,

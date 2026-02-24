@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Models;
 
@@ -57,5 +58,30 @@ public sealed class Epic : WorkItem
                 WorkItemStatus.Done => to is WorkItemStatus.InProgress,
                 _ => false
             };
+    }
+
+    public override void ChangeStatusWithValidation(
+    WorkItemStatus newStatus,
+    IEnumerable<WorkItemSnapshot>? linked)
+    {
+        ValidateEpicGate(newStatus, linked);
+        base.ChangeStatus(newStatus);
+    }
+
+    private void ValidateEpicGate(
+        WorkItemStatus target,
+        IEnumerable<WorkItemSnapshot>? linked)
+    {
+        if (target != WorkItemStatus.Done)
+            return;
+
+        var items = linked?.ToList() ?? new List<WorkItemSnapshot>();
+
+        bool allUserStoriesDone =
+            items.Where(x => x.Type == WorkItemType.UserStory)
+                 .All(x => x.Status == WorkItemStatus.Done);
+
+        Guard.Against(!allUserStoriesDone,
+            "Cannot complete Epic until all linked UserStories are Done.");
     }
 }

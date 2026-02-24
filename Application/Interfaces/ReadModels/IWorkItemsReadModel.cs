@@ -5,6 +5,7 @@ using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Domain.Enums;
+using Domain.Models;
 
 namespace Application.Interfaces.ReadModels;
 
@@ -35,6 +36,12 @@ public interface IWorkItemsReadModel
          string workItemId,
          WorkItemRelationType? relationType = null,
          CancellationToken cancellationToken = default);
+
+    Task<List<WorkItemSnapshot>> GetChildrenAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default);
 
     Task<WorkItemRelationDto?> GetRelationByIdAsync(
        string projectId,

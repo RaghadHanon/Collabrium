@@ -70,8 +70,8 @@ namespace Application.Features.Roadmaps.Commands
 
                    );
 
-                roadmapsRepository.AddAsync(roadmap, cancellationToken);
-                unitOfWork.SaveChangesAsync(cancellationToken);
+                await roadmapsRepository.AddAsync(roadmap, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
 
                 var dto = await roadmapsReadModel.GetByIdAsync(
                  tenantId,

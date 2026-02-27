@@ -35,10 +35,11 @@ namespace API.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="201">Returns the created roadmap.</response>
-        /// <response code="400">If validation fails.</response>
-        /// <response code="401">If user not authenticated.</response>
-        /// <response code="403">If user not authorized.</response>
+        /// <response code="201">Roadmap created successfully.</response>
+        /// <response code="400">If the request data is invalid.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant is not found.</response>
         public async Task<ActionResult<RoadmapDto>> CreateRoadmap(CreateRoadmapRequest request)
         {
             var command = Mapper.Map<CreateRoadmap.Command>(request);
@@ -54,9 +55,10 @@ namespace API.Controllers
         ///
         ///     GET /api/roadmaps/roadmap/{roadmapId}
         ///
-        /// </remarks>
-        /// <response code="200">Returns roadmap successfully.</response>
-        /// <response code="404">If roadmap not found.</response>
+        /// <response code="200">Roadmap retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read roadmaps.</response>
+        /// <response code="404">If the current tenant is not found or the roadmap does not exist.</response>
 
         [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet("roadmap/{roadmapId}")]
@@ -79,8 +81,10 @@ namespace API.Controllers
         ///     GET /api/roadmaps?cursor=2026-01-01T00:00:00Z&pageSize=10
         ///
         /// </remarks>
-        /// <response code="200">Returns paged list of roadmaps.</response>
-
+        /// <response code="200">Roadmaps retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read roadmaps.</response>
+        /// <response code="404">If the current tenant is not found.</response>
         [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet("public")]
         public async Task<ActionResult<PagedList<RoadmapDto, DateTime?>>> GetPublicRoadmaps([FromQuery] GetPublicRoadmapsRequest request)
@@ -90,6 +94,16 @@ namespace API.Controllers
             query.IsVisible = true;
             return HandleResult(await Mediator.Send(query));
         }
+        /// <summary>
+        /// Retrieves all roadmaps (including unpublished) with filtering and cursor-based pagination.
+        /// </summary>
+        /// <remarks>
+        /// Requires <c>Roadmaps_Manage</c> policy.
+        /// </remarks>
+        /// <response code="200">Roadmaps retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant is not found.</response>
 
         [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpGet("Manager")]
@@ -114,8 +128,11 @@ namespace API.Controllers
         ///     }
         ///
         /// </remarks>
-        /// <response code="200">Returns updated roadmap.</response>
-        /// <response code="404">If roadmap not found.</response>
+        /// <response code="200">Roadmap updated successfully.</response>
+        /// <response code="400">If the request data is invalid.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant is not found or the roadmap does not exist.</response>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPatch("roadmap/{roadmapId}")]
         public async Task<ActionResult<RoadmapDto>> UpdateRoadmap(string roadmapId, UpdateRoadmapRequest request)
@@ -135,7 +152,9 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <response code="200">Roadmap published successfully.</response>
-        /// <response code="404">If roadmap not found.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant is not found or the roadmap does not exist.</response>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPatch("roadmap/{roadmapId}/publish")]
         public async Task<ActionResult> PublishRoadmap(string roadmapId)
@@ -153,8 +172,11 @@ namespace API.Controllers
         ///     PATCH /api/roadmaps/roadmap/{roadmapId}/visibility
         ///
         /// </remarks>
-        /// <response code="200">Visibility updated successfully.</response>
-        [Authorize(Policy = Policies.Roadmaps_Manage)]
+        /// <response code="200">Roadmap visibility updated successfully.</response>
+        /// <response code="400">If the request data is invalid.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant is not found or the roadmap does not exist.</response>        [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPatch("roadmap/{roadmapId}/visibility")]
         public async Task<ActionResult> ToggleRoadmapVisibility(string roadmapId, ToggleRoadmapVisibleRequest request)
         {
@@ -179,6 +201,11 @@ namespace API.Controllers
         ///     }
         ///
         /// </remarks>
+        /// /// <response code="200">Tags updated successfully.</response>
+        /// <response code="400">If the request data is invalid.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to manage roadmaps.</response>
+        /// <response code="404">If the current tenant, roadmap, or one of the tags does not exist.</response>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPut("roadmap/{roadmapId}/tags")]
         public async Task<ActionResult> SetTags(string roadmapId, SetTagsRequest request)

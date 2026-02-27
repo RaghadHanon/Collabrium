@@ -39,6 +39,27 @@ namespace Infrastructure.Persistence.Repositories
             return entity is null ? null : TagMapper.ToDomain(entity);
         }
 
+        public async Task<bool> IsNameUniqueAsync(
+            string tenantId,
+            string name,
+            CancellationToken cancellationToken,
+            string? excludeTagId = null)
+        {
+            var query = _dbContext.Tags
+                .Where(t =>
+                    t.TenantId == tenantId &&
+                    t.Name.ToLower() == name.ToLower());
+
+            if (!string.IsNullOrWhiteSpace(excludeTagId))
+            {
+                query = query.Where(t => t.Id != excludeTagId);
+            }
+
+            var exists = await query.AnyAsync(cancellationToken);
+
+            return !exists;
+        }
+
         public async Task<bool> RemoveAsync(string tenantId, string tagId, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(tagId))
@@ -75,8 +96,6 @@ namespace Infrastructure.Persistence.Repositories
                     throw new InvalidOperationException($"Another tag with name '{tag.Name}' already exists for this tenant.");
             }
             TagMapper.UpdateEntity(tag, entity);
-
-
         }
     }
 }

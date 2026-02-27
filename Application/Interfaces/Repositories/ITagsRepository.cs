@@ -8,5 +8,6 @@ namespace Application.Interfaces.Repositories
         Task UpdateAsync(Tag tag, CancellationToken cancellationToken = default);
         Task<bool> RemoveAsync(string tenantId, string tagId, CancellationToken cancellationToken = default);
         Task<Tag?> GetByIdAsync(string tenantId, string tagId, CancellationToken cancellationToken = default);
+        Task<bool> IsNameUniqueAsync(string tenantId, string name, CancellationToken cancellationToken, string? excludeTagId = null);
     }
 }

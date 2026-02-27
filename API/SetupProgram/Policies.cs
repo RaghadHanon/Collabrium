@@ -55,4 +55,8 @@ public static class Policies
     // Roadmaps
     public const string Roadmaps_Read = "Roadmaps.Read";
     public const string Roadmaps_Manage = "Roadmaps.Manage";
+
+    //Tags
+    public const string Tags_Read = "Tags.Read";
+    public const string Tags_Manage = "Tags.Manage";
 }

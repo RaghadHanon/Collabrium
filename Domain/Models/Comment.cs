@@ -2,7 +2,7 @@
 
 namespace Domain.Models;
 
-public sealed class Comment : Entity
+public class Comment : Entity
 {
     public string Content { get; private set; } = null!;
     public string CreatedByUserId { get; private set; } = null!;
@@ -15,11 +15,28 @@ public sealed class Comment : Entity
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
     }
 
+    public Comment(string createdByUserId, string content)
+    {
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
+    }
+
     public static Comment Rehydrate(string id, DateTime createdAt, DateTime? updatedAt, string createdByUserId, string content)
     {
         var c = new Comment(id, createdByUserId, content);
         c.SetTimestamps(createdAt, updatedAt);
         return c;
+    }
+
+    public Comment Clone()
+    {
+        return Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            CreatedByUserId,
+            Content
+        );
     }
 
     public void Edit(string content)

@@ -4,8 +4,8 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -57,6 +57,7 @@ public class RegisterTenantWithAdmin
 
                 var admin = await identityService.RegisterUserAsync(
                     fullName: request.FullName,
+                    jobTitle: UserRole.TenantAdmin.ToString(),
                     department: Department.ITSupport,
                     password: request.Password,
                     dateOfBirth: request.DateOfBirth,

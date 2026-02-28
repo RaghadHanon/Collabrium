@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
@@ -78,7 +78,7 @@ public sealed class TeamsRepository : ITeamsRepository
         if (ids.Count == 0) return;
 
         var teamEntity = await _dbContext.Teams
-            .Include(t => t.Members) 
+            .Include(t => t.Members)
             .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
 
         if (teamEntity is null)
@@ -124,7 +124,7 @@ public sealed class TeamsRepository : ITeamsRepository
 
         var teamDomain = TeamMapper.ToDomain(teamEntity);
         foreach (var id in ids)
-            teamDomain.RemoveMember(id); 
+            teamDomain.RemoveMember(id);
 
         var toRemove = teamEntity.Members
             .Where(m => ids.Contains(m.UserId, StringComparer.Ordinal))
@@ -149,13 +149,15 @@ public sealed class TeamsRepository : ITeamsRepository
             .AnyAsync(t => t.TenantId == tId && t.Name.ToLower() == normalized, cancellationToken);
     }
 
-    private static TeamMemberEntity CreateMemberRow(string teamId, string userId) =>
-        new()
+    private static TeamMemberEntity CreateMemberRow(string teamId, string userId)
+    {
+        return new()
         {
             TeamId = teamId,
             UserId = userId,
             JoinedAt = DateTime.UtcNow
         };
+    }
 
     private static bool TryNormalize(string tenantId, string teamId, out string tId, out string tmId)
     {
@@ -166,9 +168,9 @@ public sealed class TeamsRepository : ITeamsRepository
 
     private static List<string> NormalizeIds(IReadOnlyCollection<string>? ids)
     {
-        if (ids is null || ids.Count == 0) return new();
-
-        return ids
+        return ids is null || ids.Count == 0
+            ? new()
+            : ids
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x.Trim())
             .Distinct(StringComparer.Ordinal)

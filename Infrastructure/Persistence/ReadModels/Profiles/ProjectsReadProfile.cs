@@ -1,5 +1,4 @@
 ﻿using Application.Features.Projects.DTOs;
-using Application.Features.WorkItems.DTOs;
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 

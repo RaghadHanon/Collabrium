@@ -1,5 +1,5 @@
-﻿using Domain.Models;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Domain.Models;
 
 namespace Application.Interfaces.Services;
 
@@ -7,6 +7,7 @@ public interface IIdentityService
 {
     Task<User> RegisterUserAsync(
         string fullName,
+        string jobTitle,
         Department department,
         string password,
         DateOnly dateOfBirth,

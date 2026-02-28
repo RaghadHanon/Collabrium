@@ -1,9 +1,11 @@
 using API.Middlewares;
 using Application;
+using Application.Common;
 using Domain.Enums;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure;
+using Infrastructure.Persistence.Serialization;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -20,6 +22,8 @@ public static class ServiceCollectionExtensions
             .AddJsonOptions(opts =>
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                opts.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+                opts.JsonSerializerOptions.Converters.Add(new DateTimeConverterUsingIso8601());
             });
 
         // Validation
@@ -39,49 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
         // Authorization policies
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(Policies.SuperAdmin, p => p.RequireRole(nameof(UserRole.SuperAdmin)));
-            options.AddPolicy(Policies.TenantAdmin, p => p.RequireRole(nameof(UserRole.TenantAdmin)));
-            options.AddPolicy(Policies.IT, p => p.RequireRole(nameof(UserRole.IT)));
-            options.AddPolicy(Policies.CEO, p => p.RequireRole(nameof(UserRole.CEO)));
-            options.AddPolicy(Policies.HR, p => p.RequireRole(nameof(UserRole.HR)));
-            options.AddPolicy(Policies.ProductOwner, p => p.RequireRole(nameof(UserRole.ProductOwner)));
-            options.AddPolicy(Policies.TeamLead, p => p.RequireRole(nameof(UserRole.TeamLead)));
-            options.AddPolicy(Policies.BackendDev, p => p.RequireRole(nameof(UserRole.BackendDev)));
-            options.AddPolicy(Policies.FrontendDev, p => p.RequireRole(nameof(UserRole.FrontendDev)));
-            options.AddPolicy(Policies.FullStackDev, p => p.RequireRole(nameof(UserRole.FullStackDev)));
-            options.AddPolicy(Policies.QA, p => p.RequireRole(nameof(UserRole.QA)));
-            options.AddPolicy(Policies.BusinessAnalyst, p => p.RequireRole(nameof(UserRole.BusinessAnalyst)));
-            options.AddPolicy(Policies.Designer, p => p.RequireRole(nameof(UserRole.Designer)));
-            options.AddPolicy(Policies.PasswordChanged, policy =>
-                    policy.Requirements.Add(new IsPasswordChangedRequirement()));
-            options.AddPolicy(Policies.ProductTeamManager, p =>
-                     p.RequireRole(
-                         nameof(UserRole.ProductOwner),
-                         nameof(UserRole.TeamLead),
-                         nameof(UserRole.BusinessAnalyst)
-                     ));
-            options.AddPolicy(Policies.ProductOwnerTeamLeadTenantAdmin, p =>
-                     p.RequireRole(
-                         nameof(UserRole.ProductOwner),
-                         nameof(UserRole.TeamLead),
-                         nameof(UserRole.TenantAdmin)
-                     ));
-            options.AddPolicy(Policies.ProductTeamMember, p =>
-                    p.RequireRole(
-                        nameof(UserRole.BackendDev),
-                        nameof(UserRole.QA),
-                        nameof(UserRole.FrontendDev)
-                    ));
-            options.AddPolicy(Policies.ProductTeamManagerTenantAdmin, p =>
-                    p.RequireRole(
-                        nameof(UserRole.ProductOwner),
-                        nameof(UserRole.TeamLead),
-                        nameof(UserRole.BusinessAnalyst),
-                        nameof(UserRole.TenantAdmin)
-                    ));
-        });
+        services.AddAppAuthorization();
 
         services.AddCors(options =>
         {

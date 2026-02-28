@@ -1,4 +1,5 @@
-﻿using API.Contracts.Tenants;
+﻿using API.Common.Attributes;
+using API.Contracts.Tenants;
 using API.Contracts.Users;
 using API.SetupProgram;
 using Application.Features.Users.Commands;
@@ -19,14 +20,14 @@ public class UsersController : ApiBaseController
     /// <remarks>
     /// Sample request:
     /// 
-    ///     GET /api/users/me
+    ///     GET /api/users/user/me
     /// 
     /// </remarks>
     /// <returns>The details of the current user.</returns>
     /// <response code="200">Returns the user details successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user has not changed their initial password.</response>
-    [HttpGet("users/me")]
+    [HttpGet("user/me")]
     public async Task<IActionResult> GetCurrentUser()
     {
         var query = new GetUser.Query();
@@ -40,7 +41,7 @@ public class UsersController : ApiBaseController
     /// <remarks>
     /// Sample request:
     /// 
-    ///     GET /api/users/3fa85f64-5717-4562-b3fc-2c963f66afa6
+    ///     GET /api/users/user/3fa85f64-5717-4562-b3fc-2c963f66afa6
     /// 
     /// </remarks>
     /// <param name="id">The unique identifier of the user to retrieve.</param>
@@ -48,7 +49,7 @@ public class UsersController : ApiBaseController
     /// <response code="200">Returns the user details successfully.</response>
     /// <response code="404">If the user with the specified ID was not found.</response>
     /// <response code="403">If the requesting user has not changed their initial password.</response>
-    [HttpGet("users/{id}")]
+    [HttpGet("user/{id}")]
     public async Task<IActionResult> GetUser(string id)
     {
         var query = new GetUser.Query();
@@ -63,8 +64,11 @@ public class UsersController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PUT /api/users/user-profile
+    ///     PATCH /api/users/user-profile
     ///     {
+    ///         "firstName": "John",
+    ///         "lastName": "Doe",
+    ///         "dateOfBirth": "1990-01-01",
     ///         "phoneNumber": "0597612345",
     ///         "linkedIn": "https://linkedin.com/in/johndoe",
     ///         "facebook": "https://facebook.com/johndoe",
@@ -83,7 +87,7 @@ public class UsersController : ApiBaseController
     [HttpPatch("user-profile")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateUserProfile(UpdateUserProfileRequest request)
     {
-        var command = Mapper.Map<UpdateUserContactDetails.Command>(request);
+        var command = Mapper.Map<UpdateUserProfile.Command>(request);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -97,7 +101,7 @@ public class UsersController : ApiBaseController
     /// Sample request:
     /// 
     ///     POST /api/users/profile-image
-    ///     Content-Type: multipart/form-data
+    ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
     ///     key: "file", value: [Select image file], type: File
@@ -109,10 +113,43 @@ public class UsersController : ApiBaseController
     /// <response code="400">If no file is provided or the file format is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized.</response>
+    [RejectUnknownFormFields(typeof(UploadImageRequest), allowEmptyRequest: false)]
     [HttpPost("profile-image")]
-    public async Task<ActionResult> UploadProfileImage([FromForm] UploadFileRequest request)
+    public async Task<ActionResult> UploadProfileImage([FromForm] UploadImageRequest request)
     {
         var command = Mapper.Map<UploadUserProfileImage.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Updates the role of a specific user.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows an authorized administrator to replace the user's current role
+    /// with a new one. The user can only have one role at a time.
+    ///
+    /// Sample request:
+    ///
+    ///     PATCH /api/users/{id}/user-role
+    ///     {
+    ///         "newRole": "TeamLead"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="request">The target user ID and the new role to assign.</param>
+    /// <returns>No[[ content if the role was updated successfully.</returns>
+    /// <response code="204">User role updated successfully.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized to update roles.</response>
+    /// <response code="404">If the target user was not found.</response>
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [HttpPatch("{id}/user-role")]
+    public async Task<IActionResult> UpdateUserRole(string id, UpdateUserRoleRequest request)
+    {
+        var command = Mapper.Map<UpdateUserRole.Command>(request);
+        command.UserId = id;
 
         return HandleResult(await Mediator.Send(command));
     }

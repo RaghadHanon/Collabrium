@@ -1,8 +1,9 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Models;
+using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -23,7 +24,8 @@ public class CreateTeam
         ITeamsRepository teamRepository,
         ITenantContext tenantContext,
         IUsersRepository usersRepository,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<string>>
     {
         public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
@@ -35,6 +37,9 @@ public class CreateTeam
             var leader = await usersRepository.GetByIdAsync(request.TeamLeadId, cancellationToken);
             if (leader is null || leader.TenantId != tenant.Id)
                 return Result<string>.Failure("Team lead not found in the tenant.", HttpStatusCode.NotFound);
+
+            if (await currentUserAccessor.GetUserRole(leader.Id, cancellationToken) != UserRole.TeamLead)
+                return Result<string>.Failure("Only team leaders can be assigned to lead the team.", HttpStatusCode.BadRequest);
 
             var isNameUnique = await teamRepository.IsNameUniqueAsync(tenant.Id, request.Name, cancellationToken);
             if (!isNameUnique)

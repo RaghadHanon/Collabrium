@@ -24,6 +24,7 @@ public class CreateProject
 
     public class Handler(
         IProjectsRepository projectsRepository,
+        IProjectHistoryRecorder historyRecorder,
         IProjectsReadModel projectsReadModel,
         ITeamsRepository teamsRepository,
         ITenantContext tenantContext,
@@ -58,7 +59,10 @@ public class CreateProject
                     return Result<ProjectDto>.Failure("Cannot assign project to an inactive team.", HttpStatusCode.BadRequest);
             }
 
-            var project = new Project(
+            Project? project = null;
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                project = new Project(
                     name: request.Name,
                     createdByUserId: createdByUserId,
                     teamId: request.TeamId,
@@ -72,10 +76,11 @@ public class CreateProject
                 startDate: request.StartDate,
                 endDate: request.EndDate
             );
+                await projectsRepository.AddAsync(project, cancellationToken);
 
-            await projectsRepository.AddAsync(project, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
+                historyRecorder.RecordCreationChanges<Project>(project.Id, project.Id, project.Name);
+            }, cancellationToken);
+          
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
 
             return dto is null

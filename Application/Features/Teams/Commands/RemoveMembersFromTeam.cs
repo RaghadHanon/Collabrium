@@ -11,7 +11,7 @@ public sealed class RemoveMembersFromTeam
     public sealed class Command : IRequest<Result<string>>
     {
         public required string TeamId { get; init; }
-        public required string[] MemberIds { get; init; } = Array.Empty<string>();
+        public required string[] MembersIds { get; init; } = Array.Empty<string>();
     }
 
     public sealed class Handler(
@@ -29,15 +29,15 @@ public sealed class RemoveMembersFromTeam
             if (string.IsNullOrWhiteSpace(request.TeamId))
                 return Result<string>.Failure("TeamId is required.", HttpStatusCode.BadRequest);
 
-            if (request.MemberIds is null || request.MemberIds.Length == 0)
-                return Result<string>.Failure("MemberIds is required.", HttpStatusCode.BadRequest);
+            if (request.MembersIds is null || request.MembersIds.Length == 0)
+                return Result<string>.Failure("MembersIds is required.", HttpStatusCode.BadRequest);
 
             try
             {
                 await teamsRepository.RemoveMembersAsync(
                     tenantId: tenantId,
                     teamId: request.TeamId,
-                    memberIds: request.MemberIds,
+                    memberIds: request.MembersIds,
                     cancellationToken: cancellationToken);
 
                 await unitOfWork.SaveChangesAsync(cancellationToken);

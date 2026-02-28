@@ -80,6 +80,26 @@ public sealed class Project : Entity
         return p;
     }
 
+    public Project Clone()
+    {
+        return new Project(
+            id: this.Id,
+            name: this.Name,
+            createdByUserId: this.CreatedByUserId,
+            tenantId: this.TenantId,
+            teamId: this.TeamId
+        )
+        {
+            CreatedAt = this.CreatedAt,
+            UpdatedAt = this.UpdatedAt,
+            Description = this.Description,
+            Status = this.Status,
+            StartDate = this.StartDate,
+            EndDate = this.EndDate,
+            CreatedByUserId = this.CreatedByUserId
+        };
+    }
+
     public void UpdateDetails(string name, string? description, ProjectStatus? status,
         DateTime? startDate, DateTime? endDate)
     {
@@ -127,7 +147,7 @@ public sealed class Project : Entity
     private void SetStatus(ProjectStatus status)
     {
         if (status == ProjectStatus.Completed && EndDate is null)
-            throw new DomainException("Cannot mark project as Completed without an EndDate.");
+            EndDate = DateTime.UtcNow;
 
         Status = status;
     }

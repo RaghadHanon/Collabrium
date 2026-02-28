@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-public sealed class Bug : WorkItem
+public class Bug : WorkItem
 {
     public string StepsToReproduce { get; private set; } = null!;
     public string? ActualResult { get; private set; }
@@ -18,6 +18,46 @@ public sealed class Bug : WorkItem
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
+    public Bug(string title, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
+           : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+        UpdateRepro(stepsToReproduce, actualResult, expectedResult);
+    }
+
+    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
+       : base(title, createdByUserId, projectId)
+    {
+        Type = WorkItemType.Bug;
+        StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
+    }
+    protected override bool CanReopenFromDone => true;
+
+    protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
+    {
+        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Allow Done -> InProgress (Reopen)
+        return from == to
+            || from switch
+            {
+                WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
+                WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
+                WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
+                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                _ => false
+            };
+    }
+
+    public void Reopen(string reopenedByUserId, string? note = null)
+    {
+        Guard.Against(!IsDone, "Only Done bug can be reopened.");
+        ChangeStatus(WorkItemStatus.InProgress);
+        if (!string.IsNullOrWhiteSpace(note))
+            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
+    }
+
     public static Bug Rehydrate(
         string id,
         DateTime createdAt,
@@ -25,6 +65,7 @@ public sealed class Bug : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -40,13 +81,41 @@ public sealed class Bug : WorkItem
         string? actualResult)
     {
         var b = new Bug(id, title, createdByUserId, projectId, stepsToReproduce);
-        b.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
         b.ActualResult = actualResult;
 
         return b;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            StepsToReproduce,
+            ExpectedResult,
+            ActualResult
+        );
+
+        return clone;
     }
 
     public void UpdateRepro(string steps, string? expected, string? actual)

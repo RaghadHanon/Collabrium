@@ -203,7 +203,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ChangedByUserId")
+                    b.Property<string>("MadeByUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -228,7 +228,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChangedByUserId");
+                    b.HasIndex("MadeByUserId");
 
                     b.HasIndex("ProjectId");
 
@@ -440,7 +440,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<int>("Type")
+                    b.Property<int>("RelationType")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -461,7 +461,7 @@ namespace Infrastructure.Migrations
 
                     b.ToTable("WorkItems");
 
-                    b.HasDiscriminator<int>("Type").HasValue(0);
+                    b.HasDiscriminator<int>("RelationType").HasValue(0);
 
                     b.UseTphMappingStrategy();
                 });
@@ -787,7 +787,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");
@@ -856,9 +856,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Models.ProjectHistoryEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "ChangedByUser")
+                    b.HasOne("Infrastructure.Persistence.Models.ApplicationUserEntity", "MadeByUser")
                         .WithMany()
-                        .HasForeignKey("ChangedByUserId")
+                        .HasForeignKey("MadeByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -868,7 +868,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ChangedByUser");
+                    b.Navigation("MadeByUser");
 
                     b.Navigation("Project");
                 });
@@ -1001,7 +1001,7 @@ namespace Infrastructure.Migrations
                                 .HasMaxLength(300)
                                 .HasColumnType("nvarchar(300)");
 
-                            b1.Property<string>("Url")
+                            b1.Property<string>("newUrl")
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("nvarchar(1000)");

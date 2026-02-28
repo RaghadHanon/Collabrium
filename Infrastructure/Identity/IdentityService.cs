@@ -2,12 +2,12 @@
 using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.Services;
-using Domain.Models;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Email;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
-using Infrastructure.Persistence.Mapping;
+using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -44,6 +44,7 @@ public sealed class IdentityService : IIdentityService
 
     public async Task<User> RegisterUserAsync(
     string fullName,
+    string jobTitle,
     Department department,
     string password,
     DateOnly dateOfBirth,
@@ -53,7 +54,7 @@ public sealed class IdentityService : IIdentityService
     string phoneNumber,
     CancellationToken cancellationToken = default)
     {
-        var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
+        var userEntity = CreateApplicationUserEntity(fullName, jobTitle, department, dateOfBirth, tenantId, email, phoneNumber);
         userEntity.MustChangePassword = role != UserRole.SuperAdmin;
 
         await CreateUserAsync(userEntity, password);
@@ -170,7 +171,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = resetUrl
+            ["newUrl"] = resetUrl
         };
 
         var message = new EmailMessageBuilder()
@@ -242,7 +243,7 @@ public sealed class IdentityService : IIdentityService
         var roleName = role.ToString();
 
         if (!await _roleManager.RoleExistsAsync(roleName))
-            throw new BadRequestException($"Role '{roleName}' does not exist.");
+            throw new BadRequestException($"JobTitle '{roleName}' does not exist.");
 
         var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
@@ -267,7 +268,7 @@ public sealed class IdentityService : IIdentityService
         var data = new Dictionary<string, string>
         {
             ["FullName"] = user.FullName,
-            ["Url"] = confirmationUrl
+            ["newUrl"] = confirmationUrl
         };
 
         var message = new EmailMessageBuilder()
@@ -282,6 +283,7 @@ public sealed class IdentityService : IIdentityService
 
     private static ApplicationUserEntity CreateApplicationUserEntity(
         string fullName,
+        string jobTitle,
         Department department,
         DateOnly dateOfBirth,
         string tenantId,
@@ -291,12 +293,12 @@ public sealed class IdentityService : IIdentityService
         var user = new ApplicationUserEntity
         {
             FullName = fullName.Trim(),
+            JobTitle = jobTitle.Trim(),
             Email = email.Trim(),
             UserName = email.Trim(),
             Department = department,
             TenantId = string.IsNullOrWhiteSpace(tenantId) ? null : tenantId.Trim(),
             DateOfBirth = dateOfBirth,
-            PhoneNumber = phoneNumber?.Trim()
         };
 
         user.ContactDetails = new ContactDetailsOwned

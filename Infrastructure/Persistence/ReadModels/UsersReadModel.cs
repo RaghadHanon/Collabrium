@@ -4,18 +4,19 @@ using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
 
-public sealed class UsersReadModel : IUsersReadModel
+public class UsersReadModel : IUsersReadModel
 {
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
 
     public UsersReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContext = dbContext;
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -33,6 +34,33 @@ public sealed class UsersReadModel : IUsersReadModel
             .Where(u => u.Id == id)
             .ProjectTo<UserWithTenantDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<UserDto?> GetUserByIdAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return null;
+        var id = userId.Trim();
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> UserExistsAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        var id = userId.Trim();
+        return await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<PagedList<UserDto, DateTime?>> GetUsersAsync(
@@ -76,24 +104,7 @@ public sealed class UsersReadModel : IUsersReadModel
         };
     }
 
-    public async Task<List<UserDto>> GetUsersByTenantAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return new List<UserDto>();
-
-        var id = tenantId.Trim();
-
-        return await _dbContext.Users
-            .AsNoTracking()
-            .Where(u => u.TenantId == id)
-            .OrderBy(u => u.CreatedAt)
-            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
-
-    private static IQueryable<ApplicationUserEntity> ApplyFilters(
+    private IQueryable<ApplicationUserEntity> ApplyFilters(
         IQueryable<ApplicationUserEntity> query,
         UsersSearchAndFilterParametersDto parameters)
     {
@@ -129,6 +140,11 @@ public sealed class UsersReadModel : IUsersReadModel
             var phone = parameters.PhoneNumber.Trim();
 
             query = query.Where(u => u.ContactDetails.PhoneNumber == phone);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.JobTitle.ToString()))
+        {
+            query = query.Where(u => u.JobTitle == parameters.JobTitle.ToString());
         }
 
         return query;

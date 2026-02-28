@@ -20,6 +20,7 @@ public class GetTenantUsers
         public DateTime? LastLoginAfter { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; }
+        public UserRole? JobTitle { get; set; }
         public DateTime? Cursor { get; set; }
         public int PageSize { get; set; }
     }

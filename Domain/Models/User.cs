@@ -10,24 +10,13 @@ public sealed class User : Entity
 
     public string Email { get; private set; } = string.Empty;
     public string UserName { get; private set; } = string.Empty;
-
+    public string JobTitle { get; set; } = null!;
     public string FullName { get; private set; } = null!;
     public Department? Department { get; private set; }
 
     public DateTime? LastLoginAt { get; private set; }
     public bool MustChangePassword { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
-
-    public int Age
-    {
-        get
-        {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var age = today.Year - DateOfBirth.Year;
-            if (DateOfBirth > today.AddYears(-age)) age--;
-            return age;
-        }
-    }
 
     public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
     public StoredImage? ProfileImage { get; private set; }
@@ -37,6 +26,7 @@ public sealed class User : Entity
     public User(
         string id,
         string fullName,
+        string jobTitle,
         DateOnly dateOfBirth,
         string email = "",
         string userName = "",
@@ -45,7 +35,8 @@ public sealed class User : Entity
         : base(id)
     {
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
-        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "DateOfBirth cannot be in the future.");
+        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow), "dateOfBirth cannot be in the future.");
+        JobTitle = Guard.NotNullOrWhiteSpace(jobTitle, nameof(jobTitle));
 
         DateOfBirth = dateOfBirth;
         Email = email?.Trim() ?? "";
@@ -61,6 +52,7 @@ public sealed class User : Entity
         DateTime createdAt,
         DateTime? updatedAt,
         string fullName,
+        string jobTitle,
         DateOnly dateOfBirth,
         string email,
         string userName,
@@ -71,7 +63,7 @@ public sealed class User : Entity
         ContactDetails contactInfo,
         StoredImage? profileImage)
     {
-        var u = new User(id, fullName, dateOfBirth, email, userName, tenantId, department);
+        var u = new User(id, fullName, jobTitle, dateOfBirth, email, userName, tenantId, department);
         u.SetTimestamps(createdAt, updatedAt);
 
         u.LastLoginAt = lastLoginAt;
@@ -82,11 +74,15 @@ public sealed class User : Entity
         return u;
     }
 
-    public void UpdateIdentity(string fullName, string email, string userName)
+    public void UpdateIdentity(string fullName, string email, string userName, DateOnly dateOfBirth)
     {
         FullName = Guard.NotNullOrWhiteSpace(fullName, nameof(fullName));
         Email = (email ?? "").Trim();
         UserName = (userName ?? "").Trim();
+        Guard.Against(dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18),
+            "User Must be at least 18.");
+        DateOfBirth = dateOfBirth;
+
         Touch();
     }
 
@@ -106,6 +102,12 @@ public sealed class User : Entity
     public void ChangeDepartment(Department? department)
     {
         Department = department;
+        Touch();
+    }
+
+    public void ChangeJobTitle(string? jobTitle)
+    {
+        JobTitle = jobTitle;
         Touch();
     }
 

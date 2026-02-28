@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Persistence;
 
@@ -16,6 +17,9 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<SprintEntity> Sprints => Set<SprintEntity>();
 
     public DbSet<WorkItemEntity> WorkItems => Set<WorkItemEntity>();
+    public DbSet<AttachmentEntity> Attachments => Set<AttachmentEntity>();
+    public DbSet<CodeLinkEntity> CodeLinks => Set<CodeLinkEntity>();
+
     public DbSet<TaskItemEntity> Tasks => Set<TaskItemEntity>();
     public DbSet<TestCaseEntity> TestCases => Set<TestCaseEntity>();
     public DbSet<EpicEntity> Epics => Set<EpicEntity>();
@@ -29,5 +33,25 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        TimeConverter(builder);
+    }
+
+    private static void TimeConverter(ModelBuilder builder)
+    {
+        var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+            v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+        );
+
+        foreach (var entityType in builder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(dateTimeConverter);
+                }
+            }
+        }
     }
 }

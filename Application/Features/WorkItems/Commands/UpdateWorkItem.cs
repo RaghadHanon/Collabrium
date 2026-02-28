@@ -35,6 +35,7 @@ public partial class UpdateWorkItem
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
@@ -98,6 +99,7 @@ public partial class UpdateWorkItem
 
             var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
 
+            var oldWorkItemState = workItem.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 var patchedTitle = PatchHelpers.ApplyStringPatch(workItem.Title, request.Title);
@@ -132,6 +134,8 @@ public partial class UpdateWorkItem
                 ApplyTypeSpecificPatch(workItem, request);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
+
+                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemState, workItem);
             }, cancellationToken);
 
             var dto = await workItemsReadModel.GetByIdAsync(

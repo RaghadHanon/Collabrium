@@ -534,7 +534,7 @@ public partial class RefactorCode : Migration
         migrationBuilder.CreateIndex(
             name: "IX_ProjectHistories_ChangedByUserId",
             table: "ProjectHistories",
-            column: "ChangedByUserId");
+            column: "MadeByUserId");
 
         migrationBuilder.CreateIndex(
             name: "IX_ProjectHistories_ProjectId",

@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -18,6 +19,7 @@ public class StartSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
@@ -40,10 +42,13 @@ public class StartSprint
             if (hasActive)
                 return Result<SprintDto>.Failure("This project already has an active sprint.", HttpStatusCode.BadRequest);
 
+            var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint.Start();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

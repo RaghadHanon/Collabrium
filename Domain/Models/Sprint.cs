@@ -64,6 +64,24 @@ public sealed class Sprint : Entity
         return sprint;
     }
 
+    public Sprint Clone()
+    {
+        return new Sprint(
+            id: this.Id,
+            tenantId: this.TenantId,
+            projectId: this.ProjectId,
+            name: this.Name,
+            goal: this.Goal,
+            start: this.StartDate,
+            end: this.EndDate
+        )
+        {
+            CreatedAt = this.CreatedAt,
+            UpdatedAt = this.UpdatedAt,
+            Status = this.Status
+        };
+    }
+
     public void UpdateDetails(string name, string goal, DateTime start, DateTime end)
     {
         Guard.Against(Status == SprintStatus.Completed, "Cannot update a completed sprint.");

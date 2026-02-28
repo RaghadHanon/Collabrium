@@ -5,6 +5,7 @@ using Domain.Enums;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure;
+using Infrastructure.Persistence.Serialization;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 opts.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+                opts.JsonSerializerOptions.Converters.Add(new DateTimeConverterUsingIso8601());
             });
 
         // Validation

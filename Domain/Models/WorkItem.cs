@@ -61,17 +61,23 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public abstract WorkItem Clone();
+
     protected void RehydrateCommon(
         DateTime createdAt,
-        DateTime? updatedAt,
+        DateTime? updatedAt, 
+        WorkItemType Type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
         int effortPoints,
+        string title,
         string? description,
         string? acceptanceCriteria,
         string? assignedToUserId,
+        string createdByUserId,
         string? sprintId,
+        string projectId,
         DateTime? startDate,
         DateTime? endDate)
     {
@@ -82,11 +88,14 @@ public abstract class WorkItem : Entity
         IsBlocked = isBlocked;
 
         EffortPoints = effortPoints;
+        Title = title;
         Description = description;
         AcceptanceCriteria = acceptanceCriteria;
 
         AssignedToUserId = assignedToUserId;
+        CreatedByUserId = createdByUserId;
         SprintId = sprintId;
+        ProjectId = projectId;
 
         StartDate = startDate;
         EndDate = endDate;

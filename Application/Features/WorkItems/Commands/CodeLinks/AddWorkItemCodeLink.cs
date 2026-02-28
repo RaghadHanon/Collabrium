@@ -23,6 +23,7 @@ public class AddWorkItemCodeLink
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -66,6 +67,8 @@ public class AddWorkItemCodeLink
                     request.WorkItemId,
                     codeLink,
                     cancellationToken);
+
+                historyRecorder.RecordCreationChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<string>.Success(codeLink?.Id, HttpStatusCode.OK);

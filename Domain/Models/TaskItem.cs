@@ -40,6 +40,7 @@ public sealed class TaskItem : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -52,8 +53,33 @@ public sealed class TaskItem : WorkItem
         DateTime? endDate)
     {
         var t = new TaskItem(id, title, createdByUserId, projectId);
-        t.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        t.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         return t;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate
+        );
+
+        return clone;
     }
 }

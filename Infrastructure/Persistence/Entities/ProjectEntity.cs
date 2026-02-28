@@ -22,4 +22,5 @@ public class ProjectEntity : DbEntity
 
     public ICollection<SprintEntity> Sprints { get; set; } = new List<SprintEntity>();
     public ICollection<WorkItemEntity> WorkItems { get; set; } = new List<WorkItemEntity>();
+    public ICollection<ProjectHistoryEntity> ProjectHistories { get; set; } = new List<ProjectHistoryEntity>();
 }

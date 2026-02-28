@@ -24,6 +24,7 @@ public class UpdateWorkItemCodeLink
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -52,13 +53,6 @@ public class UpdateWorkItemCodeLink
                 return Result<Unit>.Failure("CodeLink not found.", HttpStatusCode.NotFound);
 
             var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
-            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
-
-            if (!isManager && !isCurrentAssignee)
-                return Result<Unit>.Failure(
-                    "You can only update items assigned to you. Managers can update any item.",
-                    HttpStatusCode.Forbidden);
 
             if (currentUserId != codeLink.CreatedByUserId)
                 return Result<Unit>.Failure("You don't own this codeLink to update it.", HttpStatusCode.Forbidden);
@@ -67,6 +61,7 @@ public class UpdateWorkItemCodeLink
             if (UrlDesision.Action == PatchHelpers.PatchStringAction.Clear)
                 return Result<Unit>.Failure("Url can't be empty.", HttpStatusCode.BadRequest);
 
+            var oldWorkItemCodeLinkState = codeLink.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 codeLink.Update(
@@ -78,6 +73,8 @@ public class UpdateWorkItemCodeLink
                     request.WorkItemId,
                     codeLink,
                     cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemCodeLinkState, codeLink);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

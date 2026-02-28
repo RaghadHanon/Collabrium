@@ -6,11 +6,12 @@ using System.Net;
 
 namespace Application.Features.Tenants.Commands;
 
-public class DeactivateTenant
+public class ToggleTenantActiveStatus
 {
     public class Command : IRequest<Result<bool>>
     {
         public string? TenantId { get; set; }
+        public bool IsSuper { get; set; }
     }
 
     public class Handler(
@@ -29,7 +30,11 @@ public class DeactivateTenant
             if (tenant is null)
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            tenant.Deactivate();
+            if(tenant.IsActive)
+                tenant.Deactivate();
+            else if(request.IsSuper)
+                tenant.Activate();
+
             await tenantRepository.UpdateAsync(tenant, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

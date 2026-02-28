@@ -10,7 +10,7 @@ public interface ITenantsReadModel
 
     Task<TenantWithAdminDto?> GetWithAdminAsync(string tenantId, CancellationToken cancellationToken = default);
 
-    Task<PagedList<TenantDto, DateTime?>> GetTenantsAsync(
+    Task<PagedList<TenantWithAdminDto, DateTime?>> GetTenantsAsync(
         TenantsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
 }

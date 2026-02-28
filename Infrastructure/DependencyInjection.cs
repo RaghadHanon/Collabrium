@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectsRepository, ProjectsRepository>();
         services.AddScoped<ISprintsRepository, SprintsRepository>();
         services.AddScoped<IWorkItemsRepository, WorkItemsRepository>();
+        services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -90,6 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectsReadModel, ProjectsReadModel>();
         services.AddScoped<ISprintsReadModel, SprintsReadModel>();
         services.AddScoped<IWorkItemsReadModel, WorkItemsReadModel>();
+        services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
     }
 
     private static void AddAutoMapper(IServiceCollection services)

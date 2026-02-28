@@ -16,6 +16,7 @@ public static class BugMapper
             title: entity.Title,
             createdByUserId: entity.CreatedByUserId,
             projectId: entity.ProjectId,
+            type: entity.Type,
             status: entity.Status,
             priority: entity.Priority,
             isBlocked: entity.IsBlocked,

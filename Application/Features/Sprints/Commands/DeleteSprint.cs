@@ -2,6 +2,7 @@
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -17,6 +18,7 @@ public class DeleteSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
@@ -38,10 +40,10 @@ public class DeleteSprint
             if (hasItems)
                 return Result<Unit>.Failure("Cannot delete a sprint that has work items.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync(async trxCt =>
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                await sprintsRepository.RemoveAsync(tenantId, request.SprintId, trxCt);
-                await unitOfWork.SaveChangesAsync(trxCt);
+                await sprintsRepository.RemoveAsync(tenantId, request.SprintId, ct);
+                historyRecorder.RecordDeletionChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

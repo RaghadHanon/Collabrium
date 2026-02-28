@@ -211,7 +211,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ChangedByUserId")
+                    b.Property<string>("MadeByUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -236,7 +236,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChangedByUserId");
+                    b.HasIndex("MadeByUserId");
 
                     b.HasIndex("ProjectId");
 
@@ -872,9 +872,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ChangedByUser")
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "MadeByUser")
                         .WithMany()
-                        .HasForeignKey("ChangedByUserId")
+                        .HasForeignKey("MadeByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -884,7 +884,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ChangedByUser");
+                    b.Navigation("MadeByUser");
 
                     b.Navigation("Project");
                 });

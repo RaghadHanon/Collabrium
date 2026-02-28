@@ -108,6 +108,7 @@ public sealed class UserStory : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -123,13 +124,39 @@ public sealed class UserStory : WorkItem
         var us = new UserStory(id, title, createdByUserId, projectId, storyPoints);
 
         us.RehydrateCommon(
-            createdAt, updatedAt,
+            createdAt, updatedAt, type,
             status, priority, isBlocked, effortPoints,
-            description, acceptanceCriteria,
-            assignedToUserId, sprintId,
+            title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId,
             startDate, endDate);
 
         us.StoryPoints = storyPoints;
         return us;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            StoryPoints
+        );
+
+        return clone;
     }
 }

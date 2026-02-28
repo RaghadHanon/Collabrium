@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -18,6 +19,7 @@ public class CancelSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
@@ -36,10 +38,12 @@ public class CancelSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
+            var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

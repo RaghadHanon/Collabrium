@@ -3,6 +3,8 @@ using Application.Features.Projects.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -18,6 +20,7 @@ public class UnassignProjectFromTeam
     public class Handler(
         IProjectsRepository projectsRepository,
         IProjectsReadModel projectsReadModel,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<ProjectDto>>
@@ -32,11 +35,13 @@ public class UnassignProjectFromTeam
             if (project is null)
                 return Result<ProjectDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
+            var oldProjectState = project.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 project.UnassignFromTeam();
                 await projectsRepository.UpdateAsync(project, ct);
-                await unitOfWork.SaveChangesAsync(ct);
+
+                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

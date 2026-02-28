@@ -35,14 +35,14 @@ public sealed class TestCase : WorkItem
     }
 
     public TestCase(
-    string title,
-    string createdByUserId,
-    string projectId,
-    string preconditions,
-    string steps,
-    TestEnvironment env,
-    string expectedResult)
-    : base(title, createdByUserId, projectId)
+        string title,
+        string createdByUserId,
+        string projectId,
+        string preconditions,
+        string steps,
+        TestEnvironment env,
+        string expectedResult)
+        : base(title, createdByUserId, projectId)
     {
         Type = WorkItemType.TestCase;
         Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
@@ -95,6 +95,7 @@ public sealed class TestCase : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -113,11 +114,42 @@ public sealed class TestCase : WorkItem
         TestCaseResult result)
     {
         var tc = new TestCase(id, title, createdByUserId, projectId, preconditions, steps, env, expectedResult);
-        tc.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        tc.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         tc.ActualResult = actualResult;
         tc.Result = result;
         return tc;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            Preconditions,
+            Steps,
+            TestEnvironment,
+            ExpectedResult,
+            ActualResult,
+            Result
+        );
+
+        return clone;
     }
 
     public void UpdateDefinition(string preconditions, string steps, TestEnvironment env, string expectedResult)

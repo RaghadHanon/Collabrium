@@ -23,6 +23,7 @@ public class CreateSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         IProjectsRepository projectsRepository,
         ITenantContext tenantContext,
@@ -40,7 +41,7 @@ public class CreateSprint
 
             if (project.Status == ProjectStatus.Completed || project.Status == ProjectStatus.Cancelled)
                 return Result<SprintDto>.Failure($"Cannot create a sprint for an {project.Status} project.", HttpStatusCode.BadRequest);
-            
+
             Sprint sprint = null!;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
@@ -53,6 +54,8 @@ public class CreateSprint
                     end: request.EndDate);
 
                 sprintsRepository.Add(sprint, cancellationToken);
+
+                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,sprint.Name);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

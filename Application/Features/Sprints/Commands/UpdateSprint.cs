@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -22,6 +23,7 @@ public class UpdateSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
@@ -48,6 +50,7 @@ public class UpdateSprint
             if (newEnd < newStart)
                 return Result<SprintDto>.Failure("Sprint end date must be >= start date.", HttpStatusCode.BadRequest);
 
+            var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint.UpdateDetails(
@@ -57,6 +60,8 @@ public class UpdateSprint
                     end: newEnd);
 
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(

@@ -29,6 +29,7 @@ public sealed class CreateWorkItem
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
         IProjectsRepository projectsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<string>>
@@ -46,11 +47,11 @@ public sealed class CreateWorkItem
             if (string.IsNullOrWhiteSpace(userId))
                 return Result<string>.Failure("User not found.", HttpStatusCode.Unauthorized);
 
-            WorkItem? item = null;
+            WorkItem? workItem = null;
 
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                item = request.Type switch
+                workItem = request.Type switch
                 {
                     WorkItemType.Epic => new Epic(request.Title, userId!, request.ProjectId),
 
@@ -70,18 +71,20 @@ public sealed class CreateWorkItem
                     WorkItemType.Bug => throw new InvalidOperationException("Bug details are missing or invalid."),
                     WorkItemType.TestCase => throw new InvalidOperationException("TestCase details are missing or invalid."),
 
-                    _ => throw new InvalidOperationException("Unsupported work item type.")
+                    _ => throw new InvalidOperationException("Unsupported work workItem type.")
                 };
 
-                item.UpdateDetails(request.Title, request.Description, request.AcceptanceCriteria, request.EffortPoints);
-                item.SetPriority(request.Priority);
+                workItem.UpdateDetails(request.Title, request.Description, request.AcceptanceCriteria, request.EffortPoints);
+                workItem.SetPriority(request.Priority);
 
-                workItemsRepository.Add(item, cancellationToken);
+                workItemsRepository.Add(workItem, cancellationToken);
+
+                historyRecorder.RecordCreationChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
-            return item is null
-                ? Result<string>.Failure("Work item could not be created.", HttpStatusCode.InternalServerError)
-                : Result<string>.Success(item.Id, HttpStatusCode.Created);
+            return workItem is null
+                ? Result<string>.Failure("Work workItem could not be created.", HttpStatusCode.InternalServerError)
+                : Result<string>.Success(workItem.Id, HttpStatusCode.Created);
         }
     }
 }

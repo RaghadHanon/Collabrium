@@ -26,6 +26,7 @@ public sealed class Epic : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -38,11 +39,35 @@ public sealed class Epic : WorkItem
         DateTime? endDate)
     {
         var e = new Epic(id, title, createdByUserId, projectId);
-        e.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints,title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         return e;
     }
 
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate
+        );
+
+        return clone;
+    }
 
     protected override bool CanReopenFromDone => true;
 

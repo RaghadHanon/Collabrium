@@ -65,6 +65,7 @@ public class Bug : WorkItem
         string title,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -80,13 +81,41 @@ public class Bug : WorkItem
         string? actualResult)
     {
         var b = new Bug(id, title, createdByUserId, projectId, stepsToReproduce);
-        b.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
         b.ActualResult = actualResult;
 
         return b;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            StepsToReproduce,
+            ExpectedResult,
+            ActualResult
+        );
+
+        return clone;
     }
 
     public void UpdateRepro(string steps, string? expected, string? actual)

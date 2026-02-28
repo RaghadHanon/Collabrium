@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -20,6 +21,7 @@ public class AddWorkItemRelation
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         IProjectsRepository projectsRepository,
@@ -77,6 +79,8 @@ public class AddWorkItemRelation
                     request.TargetWorkItemId,
                     request.RelationType,
                     ct);
+
+                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

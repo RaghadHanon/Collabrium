@@ -41,4 +41,5 @@ public class ApplicationUserEntity : IdentityUser
 
     public ICollection<WorkItemEntity> AssignedWorkItems { get; set; } = new List<WorkItemEntity>();
     public ICollection<WorkItemEntity> CreatedWorkItems { get; set; } = new List<WorkItemEntity>();
+    public ICollection<ProjectHistoryEntity> ProjectsHistories { get; set; } = new List<ProjectHistoryEntity>();
 }

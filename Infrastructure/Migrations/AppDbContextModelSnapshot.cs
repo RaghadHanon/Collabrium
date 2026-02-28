@@ -299,12 +299,19 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ChangedByUserId")
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChangeByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("MadeByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");
@@ -317,16 +324,28 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("PropertyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RelatedEntityId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedEntityTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChangedByUserId");
+                    b.HasIndex("MadeByUserId");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId", "CreatedAt");
 
                     b.ToTable("ProjectHistories");
                 });
@@ -990,19 +1009,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("ChangedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "MadeByUser")
+                        .WithMany("ProjectsHistories")
+                        .HasForeignKey("MadeByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
-                        .WithMany()
+                        .WithMany("ProjectHistories")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ChangedByUser");
+                    b.Navigation("MadeByUser");
 
                     b.Navigation("Project");
                 });
@@ -1268,11 +1287,15 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Projects");
 
+                    b.Navigation("ProjectsHistories");
+
                     b.Navigation("TeamMemberships");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
+                    b.Navigation("ProjectHistories");
+
                     b.Navigation("Sprints");
 
                     b.Navigation("WorkItems");

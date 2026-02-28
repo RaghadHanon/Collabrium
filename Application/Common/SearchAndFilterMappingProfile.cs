@@ -1,5 +1,7 @@
-﻿using Application.Features.Projects.DTOs;
+﻿using Application.Features.ProjectHistories.DTOs;
+using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
+using Application.Features.ProjectsHistories.Queries;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
 using Application.Features.Teams.DTOs;
@@ -25,5 +27,6 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetProjects.Query, ProjectsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItems.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
+        CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>();
     }
 }

@@ -1,9 +1,12 @@
-﻿using API.Contracts.Projects;
+﻿using API.Contracts.ProjectHistory;
+using API.Contracts.Projects;
 using API.SetupProgram;
 using Application.Common;
+using Application.Features.ProjectHistories.DTOs;
 using Application.Features.Projects.Commands;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
+using Application.Features.ProjectsHistories.Queries;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Boards;
 using Application.Features.WorkItems.Queries;
@@ -267,8 +270,8 @@ public sealed class ProjectsController : ApiBaseController
     [HttpGet("project/{projectId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
     {
-        var query = new GetWorkItemsByType.Query { 
-            ProjectId = projectId, 
+        var query = new GetWorkItemsByType.Query {
+            ProjectId = projectId,
             Type = WorkItemType.UserStory
         };
 
@@ -301,6 +304,19 @@ public sealed class ProjectsController : ApiBaseController
             ProjectId = projectId,
             Type = WorkItemType.Epic
         };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/project-history")]
+    public async Task<ActionResult<PagedList<ProjectHistoryDto, DateTime?>>> GetProjectHistory(
+        string projectId, 
+        [FromQuery] GetProjectHistoryRequest request)
+    {
+        var query = Mapper.Map<GetProjectHistory.Query>(request);
+        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }

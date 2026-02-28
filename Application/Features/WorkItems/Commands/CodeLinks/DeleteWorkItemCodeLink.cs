@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -7,7 +6,7 @@ using Domain.Models;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.WorkItems.Commands.Comments;
+namespace Application.Features.WorkItems.Commands.CodeLinks;
 
 public class DeleteWorkItemCodeLink
 {
@@ -20,6 +19,7 @@ public class DeleteWorkItemCodeLink
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -65,6 +65,8 @@ public class DeleteWorkItemCodeLink
                     request.WorkItemId,
                     request.CodeLinkId,
                     cancellationToken);
+
+                historyRecorder.RecordDeletionChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

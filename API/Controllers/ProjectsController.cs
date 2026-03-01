@@ -308,6 +308,23 @@ public sealed class ProjectsController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    /// <summary>
+    /// Retrieves the projects list of history actions.
+    /// </summary>
+    /// <remarks>
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/project-history
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <param name="request">Filtering and pagination parameters.</param>
+    /// <returns>The list of project history actions of a project.</returns>
+    /// <response code="200">Project history loaded successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/project-history")]

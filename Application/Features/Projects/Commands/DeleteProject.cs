@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
-using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -16,7 +15,6 @@ public class DeleteProject
 
     public class Handler(
         IProjectsRepository projectsRepository,
-        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<Unit>>
@@ -34,8 +32,6 @@ public class DeleteProject
             var removed = await projectsRepository.RemoveAsync(tenantId, request.ProjectId, cancellationToken);
             if (!removed)
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
-
-            historyRecorder.RecordDeletionChanges<Project>(project.Id, project.Id, project.Name);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

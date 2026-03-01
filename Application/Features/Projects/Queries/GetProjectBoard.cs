@@ -4,6 +4,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using AutoMapper;
 using Domain.Enums;
 using MediatR;
 using System.Net;
@@ -16,12 +17,24 @@ public class GetProjectBoard
     {
         public required string ProjectId { get; set; }
         public string? SprintId { get; set; }
+
+        public WorkItemType? Type { get; set; }
+        public WorkItemStatus? Status { get; set; }
+        public WorkItemPriority? Priority { get; set; }
+
+        public string? AssignedToUserId { get; set; }
+        public string? TitleContains { get; set; }
+
+        public DateTime? CreatedAfter { get; set; }
+        public DateTime? CreatedBefore { get; set; }
     }
 
     public class Handler(
         IWorkItemsReadModel workItemsReadModel,
         ISprintsRepository sprintsRepository,
-        ITenantContext tenantContext) : IRequestHandler<Query, Result<BoardDto>>
+        ITenantContext tenantContext,
+        IMapper mapper)
+        : IRequestHandler<Query, Result<BoardDto>>
     {
         public async Task<Result<BoardDto>> Handle(Query request, CancellationToken cancellationToken)
         {
@@ -29,86 +42,112 @@ public class GetProjectBoard
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<BoardDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!string.IsNullOrWhiteSpace(request.SprintId) && !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
+            if (!string.IsNullOrWhiteSpace(request.SprintId) &&
+                !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
                 return Result<BoardDto>.Failure("Sprint not found in this project.", HttpStatusCode.NotFound);
 
-            var items = await workItemsReadModel.GetBoardItemsAsync(
-                tenantId: tenantId,
-                projectId: request.ProjectId,
-                sprintId: request.SprintId,
-                cancellationToken: cancellationToken);
+            if (request.Type.HasValue &&
+                request.Type != WorkItemType.Bug &&
+                request.Type != WorkItemType.TaskItem &&
+                request.Type != WorkItemType.TestCase)
+                return Result<BoardDto>.Failure("Invalid work item type for board. Only Bug, Task and Test Case are allowed.", HttpStatusCode.BadRequest);
 
-            var userStories = await workItemsReadModel.GetBoardUserStoriesAsync(
-                tenantId: tenantId,
-                projectId: request.ProjectId,
-                sprintId: request.SprintId,
-                cancellationToken: cancellationToken);
+            var parameters = mapper.Map<WorkItemsSearchAndFilterParametersDto>(request);
+            parameters.TenantId = tenantId;
+
+            var allItems = await workItemsReadModel.GetBoardItemsAsync(
+                parameters,
+                cancellationToken);
+
+            var userStories = allItems
+                .Where(x => x.Type == WorkItemType.UserStory)
+                .ToList();
+
+            var nonUserStoryItemsWithParents = allItems
+                .Where(x => x.Type != WorkItemType.UserStory && x.Parent != null)
+                .ToList();
+
+            var orphanNonUserStoryItems = allItems
+                .Where(x => x.Type != WorkItemType.UserStory && x.Parent == null)
+                .ToList();
+
+            var itemsByParent = nonUserStoryItemsWithParents
+                .GroupBy(i => i.Parent!.TargetWorkItem!.Id)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             var dto = new BoardDto
             {
                 ProjectId = request.ProjectId,
                 SprintId = request.SprintId,
-                UserStoryRows = BuildUserStoryGroups(items, userStories),
-                OrphanRow = BuildOrphanGroups(items),
+                UserStoryRows = BuildUserStoryRows(userStories, itemsByParent),
+                OrphanRow = BuildOrphanRow(orphanNonUserStoryItems),
             };
 
             return Result<BoardDto>.Success(dto, HttpStatusCode.OK);
         }
 
-        private static List<UserStoryBoardGroupDto> BuildUserStoryGroups(
-            List<WorkItemListItemDto> items,
-            List<WorkItemListItemDto> userStories)
+        private static readonly WorkItemStatus[] BoardStatuses =
         {
-            var statuses = new[]
-            {
-                WorkItemStatus.ToDo,
-                WorkItemStatus.ReadyForDev,
-                WorkItemStatus.InProgress,
-                WorkItemStatus.InReview,
-                WorkItemStatus.InTesting,
-                WorkItemStatus.ReadyForRelease,
-                WorkItemStatus.Done
-            };
+            WorkItemStatus.ToDo,
+            WorkItemStatus.ReadyForDev,
+            WorkItemStatus.InProgress,
+            WorkItemStatus.InReview,
+            WorkItemStatus.InTesting,
+            WorkItemStatus.ReadyForRelease,
+            WorkItemStatus.Done
+        };
 
-            return userStories.Select(us => new UserStoryBoardGroupDto
-            {
-                ParentUserStory = us,
+        private List<UserStoryBoardGroupDto> BuildUserStoryRows(
+            List<WorkItemListItemDto> userStories,
+            Dictionary<string, List<WorkItemListItemDto>> itemsByParent)
+        {
+            var rows = new List<UserStoryBoardGroupDto>();
 
-                Columns = statuses.Select(s => new BoardColumnDto
+            foreach (var us in userStories)
+            {
+                itemsByParent.TryGetValue(us.Id, out var children);
+                children ??= new List<WorkItemListItemDto>();
+
+                var columns = children.Count != 0 ? BoardStatuses
+                    .Select(status =>
+                    {
+                        var items = children
+                            .Where(i => i.Status == status)
+                            .ToList();
+
+                        return new BoardColumnDto
+                        {
+                            Status = status,
+                            Title = status.ToString(),
+                            Count = items.Count,
+                            Items = items
+                        };
+                    })
+                    .ToList() : null;
+
+                rows.Add(new UserStoryBoardGroupDto
                 {
-                    Status = s,
-                    Title = s.ToString(),
-                    Items = items
-                        .Where(i => i.Parent?.TargetWorkItem?.Id == us.Id && i.Status == s)
-                        .ToList()
-                }).ToList()
-            }).ToList();
+                    ParentUserStory = us,
+                    Columns = columns
+                });
+            }
+
+            return rows;
         }
 
-        private static OrphanBoardGroupDto BuildOrphanGroups(
+        private static OrphanBoardGroupDto BuildOrphanRow(
             List<WorkItemListItemDto> items)
         {
-            var statuses = new[]
-            {
-                WorkItemStatus.ToDo,
-                WorkItemStatus.ReadyForDev,
-                WorkItemStatus.InProgress,
-                WorkItemStatus.InReview,
-                WorkItemStatus.InTesting,
-                WorkItemStatus.ReadyForRelease,
-                WorkItemStatus.Done
-            };
-
             return new OrphanBoardGroupDto
             {
-                Columns = statuses.Select(s => new BoardColumnDto
+                Columns = items.Count !=0 ? BoardStatuses.Select(s => new BoardColumnDto
                 {
                     Status = s,
                     Title = s.ToString(),
                     Items = items
                         .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == s)
                         .ToList()
-                }).ToList()
+                }).ToList() : null
             };
         }
     }

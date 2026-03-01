@@ -13,14 +13,7 @@ public interface IWorkItemsReadModel
     Task<WorkItemDto?> GetByIdAsync(string tenantId, string projectId, string workItemId, CancellationToken ct = default);
 
     Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
-        string tenantId,
-        string projectId,
-        string? sprintId,
-        CancellationToken cancellationToken = default);
-    Task<List<WorkItemListItemDto>> GetBoardUserStoriesAsync(
-        string tenantId,
-        string projectId,
-        string? sprintId,
+        WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
     Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(
             string tenantId,

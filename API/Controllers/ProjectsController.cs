@@ -243,9 +243,11 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("project/{projectId}/board")]
-    public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId)
+    public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId, [FromQuery] GetProjectBoardRequest request)
     {
-        var query = new GetProjectBoard.Query { ProjectId = projectId };
+        var query = Mapper.Map<GetProjectBoard.Query>(request);
+        query.ProjectId = projectId;
+
         return HandleResult(await Mediator.Send(query));
     }
 

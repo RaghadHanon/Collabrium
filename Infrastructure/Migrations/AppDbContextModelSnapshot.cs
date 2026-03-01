@@ -571,9 +571,19 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("SprintId");
+
+                    b.HasIndex("ProjectId", "AssignedToUserId");
+
+                    b.HasIndex("ProjectId", "CreatedAt");
+
+                    b.HasIndex("ProjectId", "Priority");
+
+                    b.HasIndex("ProjectId", "Status");
+
+                    b.HasIndex("ProjectId", "Type");
+
+                    b.HasIndex("ProjectId", "SprintId", "CreatedAt");
 
                     b.ToTable("WorkItems");
 

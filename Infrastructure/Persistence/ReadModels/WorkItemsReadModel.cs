@@ -114,27 +114,26 @@ public class WorkItemsReadModel : IWorkItemsReadModel
     }
 
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
-        string tenantId,
-        string projectId,
-        string? sprintId,
+        WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return new List<WorkItemListItemDto>();
-
-        var tId = tenantId.Trim();
-        var pId = projectId.Trim();
-        var sId = sprintId?.Trim();
-
         var query = _dbContext.WorkItems
-            .AsNoTracking()
-            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
+            .Include(i => i.Project)
+            .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(sId))
-            query = query.Where(w => w.SprintId == sId);
+        var typeFilterApplied = parameters.Type;
+        if (parameters.Type.HasValue)
+        {
+            query = query.Where(i => i.Type == typeFilterApplied || i.Type == WorkItemType.UserStory);
+            parameters.Type = null;
+        }
+
+        query = ApplyFilters(query, parameters);
 
         var items = await query
-            .Where(w => w.Type != WorkItemType.UserStory && w.Type != WorkItemType.Epic && w.SprintId != null)
+            .Where(w =>
+                w.Type != WorkItemType.Epic &&
+                w.SprintId != null)
             .OrderBy(w => w.CreatedAt)
             .Select(w => new WorkItemListItemDto
             {
@@ -162,66 +161,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                             Type = r.TargetWorkItem.Type,
                             Status = r.TargetWorkItem.Status,
                         }
-                    }
-                    )
-                    .FirstOrDefault()
-            })
-            .ToListAsync(cancellationToken);
-
-        return items;
-    }
-
-    public async Task<List<WorkItemListItemDto>> GetBoardUserStoriesAsync(
-        string tenantId,
-        string projectId,
-        string? sprintId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return new List<WorkItemListItemDto>();
-
-        var tId = tenantId.Trim();
-        var pId = projectId.Trim();
-        var sId = sprintId?.Trim();
-
-        var query = _dbContext.WorkItems
-            .AsNoTracking()
-            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
-
-        if (!string.IsNullOrWhiteSpace(sId))
-            query = query.Where(w => w.SprintId == sId);
-
-        var items = await query
-            .Where(w => w.Type == WorkItemType.UserStory && w.SprintId != null)
-            .OrderBy(w => w.CreatedAt)
-            .Select(w => new WorkItemListItemDto
-            {
-                Id = w.Id,
-                Title = w.Title,
-                Type = w.Type,
-                Status = w.Status,
-                Priority = w.Priority,
-                SprintId = w.SprintId,
-                ProjectId = w.ProjectId,
-                IsBlocked = w.IsBlocked,
-                AssignedToUserId = w.AssignedToUserId,
-                CreatedAt = w.CreatedAt,
-
-                Parent = w.Relations
-                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
-                    .Select(r => new WorkItemRelationDto
-                    {
-                        Id = r.Id,
-                        RelationType = r.RelationType,
-                        TargetWorkItem = new RelationParticipantWorkItemDto
-                        {
-                            Id = r.TargetWorkItem.Id,
-                            Title = r.TargetWorkItem.Title,
-                            Type = r.TargetWorkItem.Type,
-                            Status = r.TargetWorkItem.Status,
-                        }
-                    }
-                    )
+                    })
                     .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);

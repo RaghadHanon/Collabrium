@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents filtering and pagination parameters for retrieving work items.
 /// </summary>
-public sealed class GetWorkItemsRequest
+public class GetWorkItemsRequest
 {
     /// <summary>
     /// Filters work items by type.

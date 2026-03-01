@@ -266,37 +266,6 @@ public sealed class SprintsController : ApiBaseController
     }
 
     /// <summary>
-    /// Retrieves the sprint board (workflow columns) scoped to a specific sprint.
-    /// </summary>
-    /// <remarks>
-    /// Same as project board, but returns only items assigned to the provided sprint.
-    ///
-    /// Sample request:
-    ///
-    ///     GET /api/projects/{projectId}/sprints/sprint/{sprintId}/board
-    ///
-    /// </remarks>
-    /// <param name="projectId">Project identifier.</param>
-    /// <param name="sprintId">Sprint identifier.</param>
-    /// <returns>The sprint board data grouped by workflow status.</returns>
-    /// <response code="200">Board loaded successfully.</response>
-    /// <response code="401">If the user is not authenticated.</response>
-    /// <response code="403">If the user does not have access to the project.</response>
-    /// <response code="404">If tenant/project not found.</response>
-    [Authorize(Policy = Policies.Sprints_Read)]
-    [HttpGet("sprint/{sprintId}/board")]
-    public async Task<ActionResult<BoardDto>> GetSprintBoard(string projectId, string sprintId)
-    {
-        var query = new GetProjectBoard.Query
-        {
-            ProjectId = projectId,
-            SprintId = sprintId
-        };
-
-        return HandleResult(await Mediator.Send(query));
-    }
-
-    /// <summary>
     /// Retrieves the list of user stories for a sprint.
     /// </summary>
     /// <remarks>

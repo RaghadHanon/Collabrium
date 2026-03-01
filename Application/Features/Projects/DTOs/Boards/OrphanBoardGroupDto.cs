@@ -2,5 +2,5 @@
 
 public class OrphanBoardGroupDto
 {
-    public required List<BoardColumnDto> Columns { get; init; }
+    public required List<BoardColumnDto>? Columns { get; init; }
 }

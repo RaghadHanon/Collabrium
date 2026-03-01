@@ -14,5 +14,5 @@ public class GetProjectHistoryRequest
     public DateTime? CreatedBefore { get; set; }
 
     public DateTime? Cursor { get; set; }
-    public int PageSize { get; set; }
+    public int PageSize { get; set; } = 10;
 }

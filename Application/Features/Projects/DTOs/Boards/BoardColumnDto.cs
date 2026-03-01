@@ -1,6 +1,7 @@
-﻿using Domain.Enums;
+﻿using Application.Features.WorkItems.DTOs;
+using Domain.Enums;
 
-namespace Application.Features.WorkItems.DTOs.Boards;
+namespace Application.Features.Projects.DTOs.Boards;
 
 public class BoardColumnDto
 {

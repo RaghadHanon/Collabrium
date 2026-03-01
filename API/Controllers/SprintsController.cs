@@ -1,11 +1,11 @@
 ﻿using API.Contracts.Sprints;
 using API.SetupProgram;
 using Application.Common;
+using Application.Features.Projects.DTOs.Boards;
 using Application.Features.Projects.Queries;
 using Application.Features.Sprints.Commands;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
-using Application.Features.WorkItems.DTOs.Boards;
 using Application.Features.WorkItems.Queries;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;

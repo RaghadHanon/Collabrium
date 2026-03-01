@@ -1,6 +1,6 @@
 ﻿using Application.Common;
+using Application.Features.Projects.DTOs.Boards;
 using Application.Features.WorkItems.DTOs;
-using Application.Features.WorkItems.DTOs.Boards;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -29,10 +29,16 @@ public class GetProjectBoard
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<BoardDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!string.IsNullOrWhiteSpace(request.SprintId) && !(await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId)))
+            if (!string.IsNullOrWhiteSpace(request.SprintId) && !await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId))
                 return Result<BoardDto>.Failure("Sprint not found in this project.", HttpStatusCode.NotFound);
 
             var items = await workItemsReadModel.GetBoardItemsAsync(
+                tenantId: tenantId,
+                projectId: request.ProjectId,
+                sprintId: request.SprintId,
+                cancellationToken: cancellationToken);
+
+            var userStories = await workItemsReadModel.GetBoardUserStoriesAsync(
                 tenantId: tenantId,
                 projectId: request.ProjectId,
                 sprintId: request.SprintId,
@@ -42,13 +48,16 @@ public class GetProjectBoard
             {
                 ProjectId = request.ProjectId,
                 SprintId = request.SprintId,
-                Columns = BuildColumns(items)
+                UserStoryRows = BuildUserStoryGroups(items, userStories),
+                OrphanRow = BuildOrphanGroups(items),
             };
 
             return Result<BoardDto>.Success(dto, HttpStatusCode.OK);
         }
 
-        private static List<BoardColumnDto> BuildColumns(List<WorkItemListItemDto> items)
+        private static List<UserStoryBoardGroupDto> BuildUserStoryGroups(
+            List<WorkItemListItemDto> items,
+            List<WorkItemListItemDto> userStories)
         {
             var statuses = new[]
             {
@@ -61,12 +70,46 @@ public class GetProjectBoard
                 WorkItemStatus.Done
             };
 
-            return statuses.Select(s => new BoardColumnDto
+            return userStories.Select(us => new UserStoryBoardGroupDto
             {
-                Status = s,
-                Title = s.ToString(),
-                Items = items.Where(x => x.Status == s).ToList()
+                ParentUserStory = us,
+
+                Columns = statuses.Select(s => new BoardColumnDto
+                {
+                    Status = s,
+                    Title = s.ToString(),
+                    Items = items
+                        .Where(i => i.Parent?.TargetWorkItem?.Id == us.Id && i.Status == s)
+                        .ToList()
+                }).ToList()
             }).ToList();
+        }
+
+        private static OrphanBoardGroupDto BuildOrphanGroups(
+            List<WorkItemListItemDto> items)
+        {
+            var statuses = new[]
+            {
+                WorkItemStatus.ToDo,
+                WorkItemStatus.ReadyForDev,
+                WorkItemStatus.InProgress,
+                WorkItemStatus.InReview,
+                WorkItemStatus.InTesting,
+                WorkItemStatus.ReadyForRelease,
+                WorkItemStatus.Done
+            };
+
+            return new OrphanBoardGroupDto
+            {
+                Columns = statuses.Select(s => new BoardColumnDto
+                {
+                    Status = s,
+                    Title = s.ToString(),
+                    Items = items
+                        .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == s)
+                        .ToList()
+                }).ToList()
+            };
         }
     }
 }

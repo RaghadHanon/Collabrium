@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Common.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
@@ -14,6 +13,11 @@ public interface IWorkItemsReadModel
     Task<WorkItemDto?> GetByIdAsync(string tenantId, string projectId, string workItemId, CancellationToken ct = default);
 
     Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
+        string tenantId,
+        string projectId,
+        string? sprintId,
+        CancellationToken cancellationToken = default);
+    Task<List<WorkItemListItemDto>> GetBoardUserStoriesAsync(
         string tenantId,
         string projectId,
         string? sprintId,

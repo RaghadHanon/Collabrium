@@ -31,11 +31,10 @@ namespace Infrastructure.Persistence.Repositories
                 return false;
 
             var entity = await _dbContext.Set<RoadmapNodeEntity>()
-          .Include(n => n.Roadmap)
           .FirstOrDefaultAsync(n =>
               n.Id == nId &&
               n.RoadmapId == rId &&
-              n.Roadmap.TenantId == tId, ct);
+              n.TenantId == tId, ct);
 
             if (entity is null) return false;
 
@@ -47,7 +46,7 @@ namespace Infrastructure.Persistence.Repositories
         {
             ArgumentNullException.ThrowIfNull(node);
             var entity = await _dbContext.Set<RoadmapNodeEntity>()
-                .FirstOrDefaultAsync(n => n.Id == node.Id && n.RoadmapId == node.RoadmapId, ct);
+                .FirstOrDefaultAsync(n => n.Id == node.Id && n.RoadmapId == node.RoadmapId && n.TenantId == node.TenantId, ct);
             if (entity is null)
                 throw new InvalidOperationException("Node not found.");
 
@@ -80,7 +79,7 @@ namespace Infrastructure.Persistence.Repositories
 
             var entities = await _dbContext.Set<RoadmapNodeEntity>()
                 .AsNoTracking()
-                .Where(n => n.RoadmapId == rId && n.Roadmap.TenantId == tId)
+                .Where(n => n.RoadmapId == rId && n.TenantId == tId)
                 .OrderBy(n => n.Order)
                 .ToListAsync(ct);
 

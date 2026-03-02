@@ -9,40 +9,43 @@ namespace Domain.Models
         private ReferenceNode() { } // EF
 
         public ReferenceNode(
+             string tenantId,
             string roadmapId,
             string title,
             int order,
             string refRoadmapId,
             string? description = null)
-            : base(roadmapId, title, order, description)
+            : base(tenantId, roadmapId, title, order, description)
         {
             SetReference(roadmapId, refRoadmapId);
             Touch();
         }
 
         public ReferenceNode(
-            string id,
-            string roadmapId,
-            string title,
-            int order,
-            string refRoadmapId,
-            string? description = null)
-            : base(id, roadmapId, title, order, description)
+             string id,
+             string tenantId,
+             string roadmapId,
+             string title,
+             int order,
+             string refRoadmapId,
+             string? description = null)
+             : base(id, tenantId, roadmapId, title, order, description)
         {
             SetReference(roadmapId, refRoadmapId);
         }
 
         public static ReferenceNode Rehydrate(
-            string id,
-            DateTime createdAt,
-            DateTime? updatedAt,
-            string roadmapId,
-            string title,
-            string? description,
-            int order,
-            string refRoadmapId)
+           string id,
+           DateTime createdAt,
+           DateTime? updatedAt,
+           string tenantId,
+           string roadmapId,
+           string title,
+           string? description,
+           int order,
+           string refRoadmapId)
         {
-            var n = new ReferenceNode(id, roadmapId, title, order, refRoadmapId, description);
+            var n = new ReferenceNode(id, tenantId, roadmapId, title, order, refRoadmapId, description);
             n.SetTimestamps(createdAt, updatedAt);
             return n;
         }

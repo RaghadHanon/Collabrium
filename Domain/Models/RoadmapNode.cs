@@ -5,7 +5,7 @@ namespace Domain.Models
     public abstract class RoadmapNode : Entity
     {
         public string RoadmapId { get; protected set; } = null!;
-
+        public string TenantId { get; private set; } = null!;
         public string Title { get; protected set; } = null!;
         public string? Description { get; protected set; }
 
@@ -14,11 +14,13 @@ namespace Domain.Models
         protected RoadmapNode() { } // EF
 
         protected RoadmapNode(
+            string tenantId,
             string roadmapId,
             string title,
             int order,
             string? description = null)
         {
+            TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId)).Trim();
             RoadmapId = Guard.NotNullOrWhiteSpace(roadmapId, nameof(roadmapId)).Trim();
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Description = description?.Trim();
@@ -28,13 +30,15 @@ namespace Domain.Models
         }
 
         protected RoadmapNode(
-            string id,
-            string roadmapId,
-            string title,
-            int order,
-            string? description = null)
-            : base(id)
+           string id,
+           string tenantId,
+           string roadmapId,
+           string title,
+           int order,
+           string? description = null)
+           : base(id)
         {
+            TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId)).Trim();
             RoadmapId = Guard.NotNullOrWhiteSpace(roadmapId, nameof(roadmapId)).Trim();
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Description = description?.Trim();

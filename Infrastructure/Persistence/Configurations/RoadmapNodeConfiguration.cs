@@ -13,6 +13,9 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(n => n.Title)
                 .IsRequired()
                 .HasMaxLength(200);
+            builder.Property(r => r.TenantId)
+           .IsRequired()
+           .HasMaxLength(50);
 
             builder.Property(n => n.Description)
                 .HasMaxLength(2000);

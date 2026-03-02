@@ -9,7 +9,7 @@ namespace Application.Interfaces.Repositories
         Task UpdateAsync(RoadmapNode node, CancellationToken ct = default);
 
         Task<bool> RemoveAsync(string tenantId, string roadmapId, string nodeId, CancellationToken ct = default);
-        public Task<List<RoadmapNode>> GetByRoadmapIdAsync(string tenantId, string roadmapId, CancellationToken ct = default)
+        public Task<List<RoadmapNode>> GetByRoadmapIdAsync(string tenantId, string roadmapId, CancellationToken ct = default);
 
         Task<RoadmapNode?> GetByIdAsync(string tenantId, string roadmapId, string nodeId, CancellationToken ct = default);
     }

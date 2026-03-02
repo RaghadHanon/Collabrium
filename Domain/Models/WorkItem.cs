@@ -143,7 +143,8 @@ public abstract class WorkItem : Entity
 
     protected virtual bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        return from == to
+        return from == to 
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,

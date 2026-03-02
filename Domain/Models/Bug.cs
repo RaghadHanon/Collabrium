@@ -39,6 +39,7 @@ public class Bug : WorkItem
         // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
         return from == to
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,

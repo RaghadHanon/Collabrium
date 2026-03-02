@@ -258,7 +258,7 @@ public class TenantsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/tenants?NameContains=example&Country=US&PageSize=10
+    ///     GET /api/tenants?Name=example&Country=US&PageSize=10
     ///
     /// </remarks>
     /// <param name="request">The pagination and filtering parameters for tenants.</param>

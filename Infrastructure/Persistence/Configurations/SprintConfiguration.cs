@@ -23,5 +23,7 @@ public class SprintConfiguration : IEntityTypeConfiguration<SprintEntity>
             .WithOne(w => w.Sprint)
             .HasForeignKey(w => w.SprintId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(s => s.Name).IsUnique();
     }
 }

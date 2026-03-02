@@ -28,7 +28,7 @@ public sealed class UserStory : WorkItem
     public void Estimate(int points)
     {
         Guard.Against(points < 0, "StoryPoints cannot be negative.");
-        Guard.Against(points > 100, "StoryPoints is too high.");
+        Guard.Against(!(new[] { 1, 2, 3, 5, 8, 13 }.Contains(points)), "StoryPoints must one of these values [1, 2, 3, 5, 8, 13].");
         StoryPoints = points;
         Touch();
     }

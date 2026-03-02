@@ -97,6 +97,26 @@ public class WorkItemsRepository : IWorkItemsRepository
             .AnyAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
     }
 
+    public async Task MoveWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId) || string.IsNullOrWhiteSpace(projectId))
+            return;
+
+        var sId = sprintId.Trim();
+
+        var list = await _dbContext.WorkItems
+                .Where(w => w.SprintId == sId && tenantId == w.Project.TenantId && w.ProjectId == projectId && w.Status != WorkItemStatus.Done)
+                .ToListAsync(cancellationToken);
+
+        foreach (var workItem in list)
+        {
+            workItem.SprintId = null;
+            workItem.Status = WorkItemStatus.ToDo;
+        }
+
+        return;
+    }
+
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

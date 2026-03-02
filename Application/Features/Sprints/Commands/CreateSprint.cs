@@ -15,10 +15,6 @@ public class CreateSprint
     public class Command : IRequest<Result<SprintDto>>
     {
         public required string ProjectId { get; set; }
-        public required string Name { get; set; }
-        public required string Goal { get; set; }
-        public required DateTime StartDate { get; set; }
-        public required DateTime EndDate { get; set; }
     }
 
     public class Handler(
@@ -42,24 +38,16 @@ public class CreateSprint
             if (project.Status == ProjectStatus.Completed || project.Status == ProjectStatus.Cancelled)
                 return Result<SprintDto>.Failure($"Cannot create a sprint for an {project.Status} project.", HttpStatusCode.BadRequest);
 
-            if (project.StartDate.HasValue && request.StartDate < project.StartDate.Value)
-                return Result<SprintDto>.Failure("Sprint start date cannot be before the project start date.", HttpStatusCode.BadRequest);
-
-            if (project.EndDate.HasValue && request.EndDate > project.EndDate.Value)
-                return Result<SprintDto>.Failure("Sprint end date cannot be after the project end date.", HttpStatusCode.BadRequest);
-
             Sprint sprint = null!;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 sprint = new Sprint(
                     tenantId: tenantId,
-                    projectId: request.ProjectId,
-                    name: request.Name,
-                    goal: request.Goal,
-                    start: request.StartDate,
-                    end: request.EndDate);
+                    projectId: project.Id,
+                    name: project.GenerateNextSprintName());
 
                 sprintsRepository.Add(sprint, cancellationToken);
+                await projectsRepository.UpdateAsync(project, cancellationToken);
 
                 historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,sprint.Name);
             }, cancellationToken);

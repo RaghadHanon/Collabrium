@@ -15,6 +15,8 @@ public class StartSprint
     {
         public required string SprintId { get; set; }
         public required string ProjectId { get; set; }
+        public required DateTime StartDate { get; set; }
+        public required DateTime EndDate { get; set; }
     }
 
     public class Handler(
@@ -38,14 +40,17 @@ public class StartSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
-            var hasActive = await sprintsRepository.HasActiveSprintAsync(tenantId, sprint.ProjectId, cancellationToken);
+            if (!(await sprintsRepository.SprintHasWorkItemsAsync(tenantId, request.SprintId, cancellationToken)))
+                return Result<SprintDto>.Failure("Cannot start a sprint for a project without work items.", HttpStatusCode.BadRequest);
+
+            var hasActive = await sprintsRepository.ProjectHasActiveSprintAsync(tenantId, sprint.ProjectId, cancellationToken);
             if (hasActive)
                 return Result<SprintDto>.Failure("This project already has an active sprint.", HttpStatusCode.BadRequest);
 
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                sprint.Start();
+                sprint.Start(request.StartDate, request.EndDate);
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 
                 historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);

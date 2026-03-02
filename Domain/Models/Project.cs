@@ -16,6 +16,7 @@ public sealed class Project : Entity
     public DateTime? EndDate { get; private set; }
 
     public int LastWorkItemNumber { get; set; } = 0;
+    public int LastSprintNumber { get; set; } = 0;
 
     public string CreatedByUserId { get; private set; } = null!;
     public string? TeamId { get; private set; }
@@ -56,6 +57,7 @@ public sealed class Project : Entity
         string name,
         string key,
         int lastWorkItemNumber,
+        int lastSprintNumber,
         string createdByUserId,
         string tenantId,
         string? teamId = null)
@@ -67,6 +69,7 @@ public sealed class Project : Entity
         Key = Guard.NotNullOrWhiteSpace(key, nameof(key));
 
         LastWorkItemNumber = lastWorkItemNumber;
+        LastSprintNumber = lastSprintNumber;
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
         TeamId = string.IsNullOrWhiteSpace(teamId) ? null : teamId.Trim();
@@ -79,6 +82,7 @@ public sealed class Project : Entity
         string name,
         string key,
         int lastWorkItemNumber,
+        int lastSprintNumber,
         string? description,
         ProjectStatus status,
         DateTime? startDate,
@@ -87,7 +91,7 @@ public sealed class Project : Entity
         string? teamId,
         string tenantId)
     {
-        var p = new Project(id, name, key, lastWorkItemNumber, createdByUserId, tenantId, teamId);
+        var p = new Project(id, name, key, lastWorkItemNumber, lastSprintNumber, createdByUserId, tenantId, teamId);
 
         p.SetTimestamps(createdAt, updatedAt);
 
@@ -105,6 +109,7 @@ public sealed class Project : Entity
             name: this.Name,
             key: this.Key,
             lastWorkItemNumber: this.LastWorkItemNumber,
+            lastSprintNumber: this.LastSprintNumber,
             createdByUserId: this.CreatedByUserId,
             tenantId: this.TenantId,
             teamId: this.TeamId
@@ -124,6 +129,12 @@ public sealed class Project : Entity
     {
         LastWorkItemNumber++;
         return $"{Key}-{LastWorkItemNumber}";
+    }
+
+    public string GenerateNextSprintName()
+    {
+        LastSprintNumber++;
+        return $"{Key} Sprint {LastSprintNumber}";
     }
 
     public void UpdateDetails(string name, string? description, ProjectStatus? status,

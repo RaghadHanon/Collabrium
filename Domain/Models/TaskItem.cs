@@ -22,6 +22,7 @@ public sealed class TaskItem : WorkItem
     {
         // Task workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> Done
         return from == to
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,

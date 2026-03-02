@@ -36,7 +36,7 @@ public class DeleteSprint
             if (sprint is null)
                 return Result<Unit>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
-            var hasItems = await sprintsRepository.HasWorkItemsAsync(tenantId, request.SprintId, cancellationToken);
+            var hasItems = await sprintsRepository.SprintHasWorkItemsAsync(tenantId, request.SprintId, cancellationToken);
             if (hasItems)
                 return Result<Unit>.Failure("Cannot delete a sprint that has work items.", HttpStatusCode.BadRequest);
 

@@ -7,13 +7,6 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
 {
     public UpdateSprintRequestValidator()
     {
-        When(x => x.Name is not null, () =>
-        {
-            RuleFor(x => x.Name!)
-                .NotEmpty().WithMessage("Name cannot be empty.")
-                .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
-        });
-
         When(x => x.StartDate.HasValue, () =>
         {
             RuleFor(x => x.StartDate!.Value)
@@ -34,9 +27,7 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
 
     private static bool HasAnyField(UpdateSprintRequest r)
     {
-        return r.Name is not null
-               || r.Goal is not null
-               || r.StartDate.HasValue
+        return r.StartDate.HasValue
                || r.EndDate.HasValue;
     }
 }

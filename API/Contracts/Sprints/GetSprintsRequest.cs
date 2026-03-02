@@ -2,7 +2,7 @@
 
 public sealed class GetSprintsRequest
 {
-    public string? NameContains { get; init; }
+    public string? Name { get; init; }
     public string? Status { get; init; }
 
     public DateTime? StartAfter { get; init; }

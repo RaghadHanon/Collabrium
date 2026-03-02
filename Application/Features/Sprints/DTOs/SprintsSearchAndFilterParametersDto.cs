@@ -8,7 +8,7 @@ public sealed class SprintsSearchAndFilterParametersDto : QueryParametersDto<Dat
     public string? TenantId { get; set; }
     public string? ProjectId { get; set; }
 
-    public string? NameContains { get; set; }
+    public string? Name { get; set; }
     public SprintStatus? Status { get; set; }
 
     public DateTime? StartAfter { get; set; }

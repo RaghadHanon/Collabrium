@@ -20,6 +20,7 @@ public class CompleteSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IWorkItemsRepository workItemsRepository,
         IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
@@ -42,6 +43,7 @@ public class CompleteSprint
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
+                await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Complete();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 

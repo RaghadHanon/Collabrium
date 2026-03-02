@@ -60,6 +60,7 @@ public sealed class TestCase : WorkItem
         // TestCase: ToDo -> InTesting -> Done
         // Allow Done -> InTesting (re-run)
         return from == to
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.InTesting,

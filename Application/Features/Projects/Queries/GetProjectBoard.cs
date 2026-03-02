@@ -55,6 +55,16 @@ public class GetProjectBoard
                 request.Type != WorkItemType.TestCase)
                 return Result<BoardDto>.Failure("Invalid work item type for board. Only Bug, Task and Test Case are allowed.", HttpStatusCode.BadRequest);
 
+            if(request.SprintId is not null)
+            {
+                var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId);
+                if (sprint is null)
+                    return Result<BoardDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
+
+                if (sprint.Status != SprintStatus.Active)
+                    return Result<BoardDto>.Failure("Only active sprints can be viewed on the board.", HttpStatusCode.BadRequest);
+            }
+
             var parameters = mapper.Map<WorkItemsSearchAndFilterParametersDto>(request);
             parameters.TenantId = tenantId;
 

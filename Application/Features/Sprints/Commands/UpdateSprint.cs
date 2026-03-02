@@ -15,8 +15,6 @@ public class UpdateSprint
     {
         public required string SprintId { get; set; }
         public required string ProjectId { get; set; }
-        public string? Name { get; set; }
-        public string? Goal { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
@@ -60,9 +58,7 @@ public class UpdateSprint
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                sprint.UpdateDetails(
-                    name: PatchHelpers.ApplyStringPatch(sprint.Name, request.Name) ?? sprint.Name,
-                    goal: PatchHelpers.ApplyStringPatch(sprint.Goal, request.Goal) ?? sprint.Goal,
+                sprint.Schedule(
                     start: newStart,
                     end: newEnd);
 

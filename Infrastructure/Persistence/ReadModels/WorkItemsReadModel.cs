@@ -119,6 +119,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
     {
         var query = _dbContext.WorkItems
             .Include(i => i.Project)
+            .Include(i => i.Sprint)
             .AsNoTracking();
 
         var typeFilterApplied = parameters.Type;
@@ -133,7 +134,8 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var items = await query
             .Where(w =>
                 w.Type != WorkItemType.Epic &&
-                w.SprintId != null)
+                w.Sprint != null &&
+                w.Sprint.Status == SprintStatus.Active)
             .OrderBy(w => w.CreatedAt)
             .Select(w => new WorkItemListItemDto
             {

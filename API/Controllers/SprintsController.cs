@@ -2,7 +2,6 @@
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Projects.DTOs.Boards;
-using Application.Features.Projects.Queries;
 using Application.Features.Sprints.Commands;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
@@ -25,17 +24,8 @@ public sealed class SprintsController : ApiBaseController
     /// Sample request:
     ///
     ///     POST /api/projects/project/{projectId}/sprints/sprint
-    ///     Content-RelationType: application/json
-    ///
-    ///     {
-    ///       "name": "Sprint 1",
-    ///       "goal": "Complete initial features",
-    ///       "startDate": "2026-02-01T00:00:00Z",
-    ///       "endDate": "2026-02-14T23:59:59Z"
-    ///     }
     ///
     /// </remarks>
-    /// <param name="request">Sprint creation details.</param>
     /// <param name="projectId">The project id to which the sprint belongs (from route).</param>
     /// <returns>The created sprint.</returns>
     /// <response code="201">Returns the created sprint.</response>
@@ -45,10 +35,12 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="404">If tenant or project not found.</response>
     [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPost("sprint")]
-    public async Task<ActionResult<SprintDto>> CreateSprint(string projectId, CreateSprintRequest request)
+    public async Task<ActionResult<SprintDto>> CreateSprint(string projectId)
     {
-        var command = Mapper.Map<CreateSprint.Command>(request);
-        command.ProjectId = projectId;
+        var command = new CreateSprint.Command()
+        {
+            ProjectId = projectId
+        };
 
         return HandleResult(await Mediator.Send(command), "GetSprint", "Sprints");
     }
@@ -72,10 +64,10 @@ public sealed class SprintsController : ApiBaseController
     [HttpGet("sprint/{sprintId}")]
     public async Task<ActionResult<SprintDto>> GetSprint(string projectId, string sprintId)
     {
-        var query = new GetSprint.Query 
+        var query = new GetSprint.Query
         {
-            SprintId = sprintId, 
-            ProjectId = projectId 
+            SprintId = sprintId,
+            ProjectId = projectId
         };
 
         return HandleResult(await Mediator.Send(query));
@@ -87,7 +79,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/projects/project/{projectId}/sprints?amp;nameContains=Sprint&amp;status=Active&amp;pageSize=10
+    ///     GET /api/projects/project/{projectId}/sprints?amp;name=COL Sprint 1&amp;status=Active&amp;pageSize=10
     ///
     /// Cursor pagination:
     ///
@@ -119,8 +111,6 @@ public sealed class SprintsController : ApiBaseController
     ///     Content-RelationType: application/json
     ///
     ///     {
-    ///       "name": "Sprint 1 - Updated",
-    ///       "goal": "Updated goal",
     ///       "startDate": "2026-02-02T00:00:00Z",
     ///       "endDate": "2026-02-15T23:59:59Z"
     ///     }
@@ -166,7 +156,7 @@ public sealed class SprintsController : ApiBaseController
     [HttpDelete("sprint/{sprintId}")]
     public async Task<ActionResult> DeleteSprint(string projectId, string sprintId)
     {
-        var command = new DeleteSprint.Command 
+        var command = new DeleteSprint.Command
         {
             SprintId = sprintId,
             ProjectId = projectId
@@ -183,10 +173,17 @@ public sealed class SprintsController : ApiBaseController
     /// Sample request:
     ///
     ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}/start
+    ///     Content-RelationType: application/json
     ///
+    ///     {
+    ///       "startDate": "2026-02-01T00:00:00Z",
+    ///       "endDate": "2026-02-14T23:59:59Z"
+    ///     }
+    ///     
     /// </remarks>
     /// <param name="sprintId">The sprint id.</param>
     /// <param name="projectId">The project id to which the sprint belongs (from route).</param>
+    /// <param name="request">Sprint schedule details.</param>
     /// <returns>The updated sprint.</returns>
     /// <response code="200">Returns started sprint.</response>
     /// <response code="400">If another active sprint already exists in the project.</response>
@@ -195,13 +192,11 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="404">If sprint not found.</response>
     [Authorize(Policy = Policies.Sprints_Manage)]
     [HttpPatch("sprint/{sprintId}/start")]
-    public async Task<ActionResult<SprintDto>> StartSprint(string projectId, string sprintId)
+    public async Task<ActionResult<SprintDto>> StartSprint(string projectId, string sprintId, StartSprintRequest request)
     {
-        var command = new StartSprint.Command 
-        {
-            SprintId = sprintId,
-            ProjectId = projectId
-        };
+        var command = Mapper.Map<StartSprint.Command>(request);
+        command.SprintId = sprintId;
+        command.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -256,7 +251,7 @@ public sealed class SprintsController : ApiBaseController
     [HttpPatch("sprint/{sprintId}/complete")]
     public async Task<ActionResult<SprintDto>> CompleteSprint(string projectId, string sprintId)
     {
-        var command = new CompleteSprint.Command 
+        var command = new CompleteSprint.Command
         {
             SprintId = sprintId,
             ProjectId = projectId

@@ -14,6 +14,7 @@ public static class TaskItemMapper
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
             title: entity.Title,
+            code: entity.Code,
             createdByUserId: entity.CreatedByUserId,
             projectId: entity.ProjectId,
             type: entity.Type,

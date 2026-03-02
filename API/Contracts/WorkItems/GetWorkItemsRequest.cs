@@ -34,6 +34,10 @@ public class GetWorkItemsRequest
     /// Filters work items whose title contains the specified text.
     /// </summary>
     public string? TitleContains { get; init; }
+    /// <summary>
+    /// Filters work items by their unique code.
+    /// </summary>
+    public string? Code { get; set; }
 
     /// <summary>
     /// Filters work items created after the specified date.

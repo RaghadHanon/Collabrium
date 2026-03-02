@@ -16,6 +16,7 @@ public class CreateProject
     public class Command : IRequest<Result<ProjectDto>>
     {
         public required string Name { get; set; }
+        public required string Key { get; set; }
         public string? Description { get; set; }
         public string? TeamId { get; set; }
         public DateTime? StartDate { get; set; }
@@ -45,9 +46,13 @@ public class CreateProject
             if (request.StartDate.HasValue && request.EndDate.HasValue && request.EndDate < request.StartDate)
                 return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
 
-            var isUnique = await projectsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
-            if (!isUnique)
+            var isNameUnique = await projectsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
+            if (!isNameUnique)
                 return Result<ProjectDto>.Failure("A project with this name already exists.", HttpStatusCode.BadRequest);
+            
+            var isKeyUnique = await projectsRepository.IsKeyUniqueAsync(tenantId, request.Key, cancellationToken);
+            if (!isKeyUnique)
+                return Result<ProjectDto>.Failure("Project Key must be unique.", HttpStatusCode.BadRequest);
 
             if (!string.IsNullOrWhiteSpace(request.TeamId))
             {
@@ -64,23 +69,24 @@ public class CreateProject
             {
                 project = new Project(
                     name: request.Name,
+                    key: request.Key,
                     createdByUserId: createdByUserId,
                     teamId: request.TeamId,
                     tenantId: tenantId
                 );
 
-            project.UpdateDetails(
-                name: request.Name,
-                description: request.Description,
-                status: ProjectStatus.NotStarted,
-                startDate: request.StartDate,
-                endDate: request.EndDate
-            );
+                project.UpdateDetails(
+                    name: request.Name,
+                    description: request.Description,
+                    status: ProjectStatus.NotStarted,
+                    startDate: request.StartDate,
+                    endDate: request.EndDate
+                );
                 await projectsRepository.AddAsync(project, cancellationToken);
 
                 historyRecorder.RecordCreationChanges<Project>(project.Id, project.Id, project.Name);
             }, cancellationToken);
-          
+
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
 
             return dto is null

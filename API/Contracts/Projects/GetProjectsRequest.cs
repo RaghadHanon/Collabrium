@@ -6,6 +6,7 @@ public class GetProjectsRequest
     public string? NameContains { get; set; }
     public bool AssignedToTeam { get; set; }
 
+    public string? Key { get; set; }
     public string? Status { get; set; }
 
     public DateTime? StartAfter { get; set; }

@@ -15,6 +15,8 @@ public static class ProjectMapper
             updatedAt: entity.UpdatedAt,
 
             name: entity.Name,
+            key: entity.Key,
+            lastWorkItemNumber: entity.LastWorkItemNumber,
             description: entity.Description,
 
             status: entity.Status,
@@ -38,6 +40,8 @@ public static class ProjectMapper
             UpdatedAt = domain.UpdatedAt,
 
             Name = domain.Name,
+            Key = domain.Key,
+            LastWorkItemNumber = domain.LastWorkItemNumber,
             Description = domain.Description,
 
             Status = domain.Status,
@@ -58,6 +62,8 @@ public static class ProjectMapper
         entity.Name = domain.Name;
         entity.Description = domain.Description;
 
+        entity.Key = domain.Key;
+        entity.LastWorkItemNumber = domain.LastWorkItemNumber;
         entity.Status = domain.Status;
         entity.StartDate = domain.StartDate;
         entity.EndDate = domain.EndDate;

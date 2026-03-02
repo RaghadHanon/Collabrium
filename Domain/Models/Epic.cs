@@ -7,14 +7,14 @@ public sealed class Epic : WorkItem
 {
     private Epic() { }
 
-    public Epic(string id, string title, string createdByUserId, string projectId)
-        : base(id, title, createdByUserId, projectId)
+    public Epic(string id, string title, string code, string createdByUserId, string projectId)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Epic;
     }
 
-    public Epic(string title, string createdByUserId, string projectId)
-           : base(title, createdByUserId, projectId)
+    public Epic(string title, string code, string createdByUserId, string projectId)
+           : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Epic;
     }
@@ -24,6 +24,7 @@ public sealed class Epic : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         WorkItemType type,
@@ -38,8 +39,8 @@ public sealed class Epic : WorkItem
         DateTime? startDate,
         DateTime? endDate)
     {
-        var e = new Epic(id, title, createdByUserId, projectId);
-        e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints,title, description, acceptanceCriteria,
+        var e = new Epic(id, title, code, createdByUserId, projectId);
+        e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints,title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         return e;
     }
@@ -51,6 +52,7 @@ public sealed class Epic : WorkItem
             CreatedAt,
             UpdatedAt,
             Title,
+            Code,
             CreatedByUserId,
             ProjectId,
             Type,

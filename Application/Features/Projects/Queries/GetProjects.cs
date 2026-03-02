@@ -15,6 +15,7 @@ public class GetProjects
         public string? TeamId { get; set; }
         public string? NameContains { get; set; }
         public bool AssignedToTeam { get; set; }
+        public string? Key { get; set; }
 
         public ProjectStatus? Status { get; set; }
 

@@ -40,7 +40,8 @@ public sealed class CreateWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project is null)
                 return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var userId = currentUserAccessor.GetUserId();
@@ -51,20 +52,21 @@ public sealed class CreateWorkItem
 
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
+                var code = project.GenerateNextWorkItemCode();
                 workItem = request.Type switch
                 {
-                    WorkItemType.Epic => new Epic(request.Title, userId!, request.ProjectId),
+                    WorkItemType.Epic => new Epic(request.Title, code, userId!, request.ProjectId),
 
-                    WorkItemType.TaskItem => new TaskItem(request.Title, userId!, request.ProjectId),
+                    WorkItemType.TaskItem => new TaskItem(request.Title, code, userId!, request.ProjectId),
 
                     WorkItemType.UserStory when request.Details is CreateUserStoryDetails d
-                        => new UserStory(request.Title, userId!, request.ProjectId, d.StoryPoints),
+                        => new UserStory(request.Title, code, userId!, request.ProjectId, d.StoryPoints),
 
                     WorkItemType.Bug when request.Details is CreateBugDetails d
-                        => new Bug(request.Title, userId!, request.ProjectId, d.ActualResult, d.ExpectedResult, d.StepsToReproduce),
+                        => new Bug(request.Title, code, userId!, request.ProjectId, d.ActualResult, d.ExpectedResult, d.StepsToReproduce),
 
                     WorkItemType.TestCase when request.Details is CreateTestCaseDetails d
-                        => new TestCase(request.Title, userId!, request.ProjectId,
+                        => new TestCase(request.Title, code, userId!, request.ProjectId,
                             d.Preconditions, d.Steps, d.TestEnvironment, d.ExpectedResult),
 
                     WorkItemType.UserStory => throw new InvalidOperationException("UserStory details are missing or invalid."),
@@ -78,6 +80,7 @@ public sealed class CreateWorkItem
                 workItem.SetPriority(request.Priority);
 
                 workItemsRepository.Add(workItem, cancellationToken);
+                await projectsRepository.UpdateAsync(project, cancellationToken);
 
                 historyRecorder.RecordCreationChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);

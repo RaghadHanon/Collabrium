@@ -9,15 +9,15 @@ public sealed class UserStory : WorkItem
 
     private UserStory() { } // EF
 
-    public UserStory(string id, string title, string createdByUserId, string projectId, int storyPoints)
-        : base(id, title, createdByUserId, projectId)
+    public UserStory(string id, string title, string code, string createdByUserId, string projectId, int storyPoints)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.UserStory;
         Estimate(storyPoints);
     }
 
-    public UserStory(string title, string createdByUserId, string projectId, int storyPoints)
-        : base(title, createdByUserId, projectId)
+    public UserStory(string title, string code, string createdByUserId, string projectId, int storyPoints)
+        : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.UserStory;
         Estimate(storyPoints);
@@ -106,6 +106,7 @@ public sealed class UserStory : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         WorkItemType type,
@@ -121,12 +122,12 @@ public sealed class UserStory : WorkItem
         DateTime? endDate,
         int storyPoints)
     {
-        var us = new UserStory(id, title, createdByUserId, projectId, storyPoints);
+        var us = new UserStory(id, title, code, createdByUserId, projectId, storyPoints);
 
         us.RehydrateCommon(
             createdAt, updatedAt, type,
             status, priority, isBlocked, effortPoints,
-            title, description, acceptanceCriteria,
+            title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, projectId,
             startDate, endDate);
 
@@ -141,6 +142,7 @@ public sealed class UserStory : WorkItem
             CreatedAt,
             UpdatedAt,
             Title,
+            Code,
             CreatedByUserId,
             ProjectId,
             Type,

@@ -13,6 +13,7 @@ public sealed class ProjectDto
     public required string CreatedByUserId { get; init; }
 
     public required string Name { get; init; }
+    public required string Key { get; init; }
     public string? Description { get; init; }
 
     public ProjectStatus Status { get; init; }

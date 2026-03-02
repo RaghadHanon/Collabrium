@@ -41,6 +41,7 @@ internal static class WorkItemMappingHelpers
         entity.UpdatedAt = domain.UpdatedAt;
 
         entity.Title = domain.Title;
+        entity.Code = domain.Code;
         entity.Description = domain.Description;
         entity.AcceptanceCriteria = domain.AcceptanceCriteria;
         entity.EffortPoints = domain.EffortPoints;

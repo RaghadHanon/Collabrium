@@ -7,7 +7,9 @@ using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
+using Newtonsoft.Json.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Application.Features.Projects.Queries;
 
@@ -21,6 +23,7 @@ public class GetProjectBoard
         public WorkItemType? Type { get; set; }
         public WorkItemStatus? Status { get; set; }
         public WorkItemPriority? Priority { get; set; }
+        public string? Code { get; set; }
 
         public string? AssignedToUserId { get; set; }
         public string? TitleContains { get; set; }
@@ -118,7 +121,7 @@ public class GetProjectBoard
                         return new BoardColumnDto
                         {
                             Status = status,
-                            Title = status.ToString(),
+                            Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
                             Count = items.Count,
                             Items = items
                         };
@@ -138,14 +141,15 @@ public class GetProjectBoard
         private static OrphanBoardGroupDto BuildOrphanRow(
             List<WorkItemListItemDto> items)
         {
+
             return new OrphanBoardGroupDto
             {
-                Columns = items.Count !=0 ? BoardStatuses.Select(s => new BoardColumnDto
+                Columns = items.Count !=0 ? BoardStatuses.Select(status => new BoardColumnDto
                 {
-                    Status = s,
-                    Title = s.ToString(),
+                    Status = status,
+                    Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
                     Items = items
-                        .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == s)
+                        .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == status)
                         .ToList()
                 }).ToList() : null
             };

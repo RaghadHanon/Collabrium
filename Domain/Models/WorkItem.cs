@@ -7,6 +7,7 @@ namespace Domain.Models;
 public abstract class WorkItem : Entity
 {
     public string Title { get; private set; } = null!;
+    public string Code { get; set; } = null!;
     public string? AcceptanceCriteria { get; private set; }
     public string? Description { get; private set; }
 
@@ -39,9 +40,10 @@ public abstract class WorkItem : Entity
 
     protected WorkItem() { } // EF
 
-    protected WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
+    protected WorkItem(string id, string title, string code, string createdByUserId, string projectId) : base(id)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        Code = Guard.NotNullOrWhiteSpace(code, nameof(code));
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
@@ -50,9 +52,10 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    protected WorkItem(string title, string createdByUserId, string projectId)
+    protected WorkItem(string title, string code, string createdByUserId, string projectId)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        Code = Guard.NotNullOrWhiteSpace(code, nameof(code));
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
@@ -72,6 +75,7 @@ public abstract class WorkItem : Entity
         bool isBlocked,
         int effortPoints,
         string title,
+        string code,
         string? description,
         string? acceptanceCriteria,
         string? assignedToUserId,
@@ -89,6 +93,7 @@ public abstract class WorkItem : Entity
 
         EffortPoints = effortPoints;
         Title = title;
+        Code = code;
         Description = description;
         AcceptanceCriteria = acceptanceCriteria;
 

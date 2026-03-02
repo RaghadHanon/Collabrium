@@ -19,13 +19,14 @@ public sealed class TestCase : WorkItem
     public TestCase(
         string id,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         string preconditions,
         string steps,
         TestEnvironment env,
         string expectedResult)
-        : base(id, title, createdByUserId, projectId)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TestCase;
         Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
@@ -36,13 +37,14 @@ public sealed class TestCase : WorkItem
 
     public TestCase(
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         string preconditions,
         string steps,
         TestEnvironment env,
         string expectedResult)
-        : base(title, createdByUserId, projectId)
+        : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TestCase;
         Preconditions = Guard.NotNullOrWhiteSpace(preconditions, nameof(preconditions));
@@ -93,6 +95,7 @@ public sealed class TestCase : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         WorkItemType type,
@@ -113,8 +116,8 @@ public sealed class TestCase : WorkItem
         string? actualResult,
         TestCaseResult result)
     {
-        var tc = new TestCase(id, title, createdByUserId, projectId, preconditions, steps, env, expectedResult);
-        tc.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+        var tc = new TestCase(id, title, code, createdByUserId, projectId, preconditions, steps, env, expectedResult);
+        tc.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         tc.ActualResult = actualResult;
         tc.Result = result;
@@ -128,6 +131,7 @@ public sealed class TestCase : WorkItem
             CreatedAt,
             UpdatedAt,
             Title,
+            Code,
             CreatedByUserId,
             ProjectId,
             Type,

@@ -6,14 +6,14 @@ public sealed class TaskItem : WorkItem
 {
     private TaskItem() { }
 
-    public TaskItem(string id, string title, string createdByUserId, string projectId)
-        : base(id, title, createdByUserId, projectId)
+    public TaskItem(string id, string title, string code, string createdByUserId, string projectId)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TaskItem;
     }
 
-    public TaskItem(string title, string createdByUserId, string projectId)
-        : base(title, createdByUserId, projectId)
+    public TaskItem(string title, string code, string createdByUserId, string projectId)
+        : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TaskItem;
     }
@@ -38,6 +38,7 @@ public sealed class TaskItem : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         WorkItemType type,
@@ -52,8 +53,8 @@ public sealed class TaskItem : WorkItem
         DateTime? startDate,
         DateTime? endDate)
     {
-        var t = new TaskItem(id, title, createdByUserId, projectId);
-        t.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+        var t = new TaskItem(id, title, code, createdByUserId, projectId);
+        t.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         return t;
     }
@@ -65,6 +66,7 @@ public sealed class TaskItem : WorkItem
             CreatedAt,
             UpdatedAt,
             Title,
+            Code,
             CreatedByUserId,
             ProjectId,
             Type,

@@ -18,6 +18,10 @@ public class GetProjectBoardRequest
     /// Filters work items by priority.
     /// </summary>
     public string? Priority { get; init; }
+    /// <summary>
+    /// Filters work items by their unique code.
+    /// </summary>
+    public string? Code { get; set; }
 
     /// <summary>
     /// Filters work items by sprint identifier.

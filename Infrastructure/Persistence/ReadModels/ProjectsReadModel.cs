@@ -107,6 +107,9 @@ public sealed class ProjectsReadModel : IProjectsReadModel
             query = query.Where(x => x.Name.Contains(term));
         }
 
+        if (!string.IsNullOrWhiteSpace(p.Key))
+            query = query.Where(x => x.Key == p.Key);
+
         if (p.Status.HasValue)
             query = query.Where(x => x.Status == p.Status.Value);
 

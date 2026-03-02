@@ -1,17 +1,21 @@
 ﻿using Domain.Common;
 using Domain.Enums;
+using System.Text.RegularExpressions;
 
 namespace Domain.Models;
 
 public sealed class Project : Entity
 {
     public string Name { get; private set; } = null!;
+    public string Key { get; private set; } = null!;
     public string? Description { get; private set; }
 
     public ProjectStatus Status { get; private set; } = ProjectStatus.NotStarted;
 
     public DateTime? StartDate { get; private set; }
     public DateTime? EndDate { get; private set; }
+
+    public int LastWorkItemNumber { get; set; } = 0;
 
     public string CreatedByUserId { get; private set; } = null!;
     public string? TeamId { get; private set; }
@@ -21,6 +25,7 @@ public sealed class Project : Entity
 
     public Project(
         string name,
+        string key,
         string createdByUserId,
         string tenantId,
         string? teamId = null,
@@ -30,6 +35,10 @@ public sealed class Project : Entity
         DateTime? endDate = null)
     {
         Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+
+        Guard.Against(!Regex.IsMatch(key, "^[A-Z]{2,10}$"), "Project key must be 2-10 uppercase letters only.");
+        Key = Guard.NotNullOrWhiteSpace(key, nameof(key));
+
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
 
@@ -45,12 +54,19 @@ public sealed class Project : Entity
     public Project(
         string id,
         string name,
+        string key,
+        int lastWorkItemNumber,
         string createdByUserId,
         string tenantId,
         string? teamId = null)
         : base(id)
     {
         Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+
+        Guard.Against(!Regex.IsMatch(key, "^[A-Z]{2,10}$"), "Project key must be 2-10 uppercase letters only.");
+        Key = Guard.NotNullOrWhiteSpace(key, nameof(key));
+
+        LastWorkItemNumber = lastWorkItemNumber;
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
         TeamId = string.IsNullOrWhiteSpace(teamId) ? null : teamId.Trim();
@@ -61,6 +77,8 @@ public sealed class Project : Entity
         DateTime createdAt,
         DateTime? updatedAt,
         string name,
+        string key,
+        int lastWorkItemNumber,
         string? description,
         ProjectStatus status,
         DateTime? startDate,
@@ -69,7 +87,7 @@ public sealed class Project : Entity
         string? teamId,
         string tenantId)
     {
-        var p = new Project(id, name, createdByUserId, tenantId, teamId);
+        var p = new Project(id, name, key, lastWorkItemNumber, createdByUserId, tenantId, teamId);
 
         p.SetTimestamps(createdAt, updatedAt);
 
@@ -85,6 +103,8 @@ public sealed class Project : Entity
         return new Project(
             id: this.Id,
             name: this.Name,
+            key: this.Key,
+            lastWorkItemNumber: this.LastWorkItemNumber,
             createdByUserId: this.CreatedByUserId,
             tenantId: this.TenantId,
             teamId: this.TeamId
@@ -98,6 +118,12 @@ public sealed class Project : Entity
             EndDate = this.EndDate,
             CreatedByUserId = this.CreatedByUserId
         };
+    }
+
+    public string GenerateNextWorkItemCode()
+    {
+        LastWorkItemNumber++;
+        return $"{Key}-{LastWorkItemNumber}";
     }
 
     public void UpdateDetails(string name, string? description, ProjectStatus? status,

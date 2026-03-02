@@ -32,6 +32,7 @@ public sealed class ProjectsController : ApiBaseController
     ///     {
     ///       "name": "Collabrium",
     ///       "description": "Project management platform",
+    ///       "key": "COLLAB",
     ///       "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     ///       "startDate": "2026-02-01T00:00:00Z",
     ///       "endDate": "2026-05-01T00:00:00Z"

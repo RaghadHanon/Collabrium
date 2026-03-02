@@ -61,6 +61,7 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
         builder.HasIndex(w => new { w.ProjectId, w.AssignedToUserId });
         builder.HasIndex(w => new { w.ProjectId, w.Priority });
         builder.HasIndex(w => new { w.ProjectId, w.CreatedAt });
+        builder.HasIndex(w => w.Code).IsUnique();
 
         builder
             .HasDiscriminator(w => w.Type)

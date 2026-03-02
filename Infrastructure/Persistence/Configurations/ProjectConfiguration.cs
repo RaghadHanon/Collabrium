@@ -43,5 +43,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntity>
             .WithOne(ph => ph.Project)
             .HasForeignKey(ph => ph.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(w => w.Key).IsUnique();
     }
 }

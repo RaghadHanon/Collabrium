@@ -8,6 +8,7 @@ public sealed class WorkItemsSearchAndFilterParametersDto : QueryParametersDto<D
     public string? TenantId { get; set; }
     public string? ProjectId { get; set; }
 
+    public string? Code { get; set; }
     public WorkItemType? Type { get; set; }
     public WorkItemStatus? Status { get; set; }
     public WorkItemPriority? Priority { get; set; }

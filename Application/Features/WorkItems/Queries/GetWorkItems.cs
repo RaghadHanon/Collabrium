@@ -22,6 +22,7 @@ public sealed class GetWorkItems
         public WorkItemType? Type { get; set; }
         public WorkItemStatus? Status { get; set; }
         public WorkItemPriority? Priority { get; set; }
+        public string? Code { get; set; }
 
         public string? SprintId { get; set; }
         public string? AssignedToUserId { get; set; }

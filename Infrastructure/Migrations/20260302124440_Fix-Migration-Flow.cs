@@ -5,7 +5,7 @@
 namespace Infrastructure.Migrations;
 
 /// <inheritdoc />
-public partial class RefactorCode : Migration
+public partial class FixMigrationFlow : Migration
 {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,35 +22,6 @@ public partial class RefactorCode : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_AspNetRoles", x => x.Id);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "Tenants",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                Domain = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                IsActive = table.Column<bool>(type: "bit", nullable: false),
-                TenantAdminId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                WebsiteUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ContactDetails_Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                ContactDetails_PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                ContactDetails_Socials_LinkedIn = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                ContactDetails_Socials_Facebook = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                ContactDetails_Socials_Instagram = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                ContactDetails_Socials_YouTube = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                ProfileImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                ProfileImage_PublicId = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Tenants", x => x.Id);
             });
 
         migrationBuilder.CreateTable(
@@ -75,12 +46,60 @@ public partial class RefactorCode : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "AspNetUserClaims",
+            columns: table => new
+            {
+                Id = table.Column<int>(type: "int", nullable: false)
+                    .Annotation("SqlServer:Identity", "1, 1"),
+                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "AspNetUserLogins",
+            columns: table => new
+            {
+                LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+            });
+
+        migrationBuilder.CreateTable(
+            name: "AspNetUserRoles",
+            columns: table => new
+            {
+                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
+                table.ForeignKey(
+                    name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
+                    column: x => x.RoleId,
+                    principalTable: "AspNetRoles",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
             name: "AspNetUsers",
             columns: table => new
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 TenantId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                 FullName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Department = table.Column<int>(type: "int", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -93,7 +112,7 @@ public partial class RefactorCode : Migration
                 ContactDetails_Socials_Facebook = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                 ContactDetails_Socials_Instagram = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                 ContactDetails_Socials_YouTube = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                 ProfileImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                 ProfileImage_PublicId = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
                 UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -114,77 +133,6 @@ public partial class RefactorCode : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_AspNetUsers_Tenants_TenantId",
-                    column: x => x.TenantId,
-                    principalTable: "Tenants",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Restrict);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "AspNetUserClaims",
-            columns: table => new
-            {
-                Id = table.Column<int>(type: "int", nullable: false)
-                    .Annotation("SqlServer:Identity", "1, 1"),
-                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_AspNetUserClaims_AspNetUsers_UserId",
-                    column: x => x.UserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "AspNetUserLogins",
-            columns: table => new
-            {
-                LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
-                table.ForeignKey(
-                    name: "FK_AspNetUserLogins_AspNetUsers_UserId",
-                    column: x => x.UserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            });
-
-        migrationBuilder.CreateTable(
-            name: "AspNetUserRoles",
-            columns: table => new
-            {
-                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
-                table.ForeignKey(
-                    name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
-                    column: x => x.RoleId,
-                    principalTable: "AspNetRoles",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-                table.ForeignKey(
-                    name: "FK_AspNetUserRoles_AspNetUsers_UserId",
-                    column: x => x.UserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
             });
 
         migrationBuilder.CreateTable(
@@ -205,6 +153,41 @@ public partial class RefactorCode : Migration
                     principalTable: "AspNetUsers",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "Tenants",
+            columns: table => new
+            {
+                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                Domain = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                IsActive = table.Column<bool>(type: "bit", nullable: false),
+                TenantAdminId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                WebsiteUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ContactDetails_Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                ContactDetails_PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                ContactDetails_Socials_LinkedIn = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Facebook = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Instagram = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_YouTube = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                ContactDetails_Socials_Github = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                ProfileImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                ProfileImage_PublicId = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Tenants", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Tenants_AspNetUsers_TenantAdminId",
+                    column: x => x.TenantAdminId,
+                    principalTable: "AspNetUsers",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
             });
 
         migrationBuilder.CreateTable(
@@ -245,9 +228,14 @@ public partial class RefactorCode : Migration
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                Key = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Status = table.Column<int>(type: "int", nullable: false),
+                StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                LastWorkItemNumber = table.Column<int>(type: "int", nullable: false),
                 CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                TeamId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                TeamId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                 TenantId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -306,8 +294,12 @@ public partial class RefactorCode : Migration
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ChangedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                PropertyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ActionType = table.Column<int>(type: "int", nullable: false),
+                Scope = table.Column<int>(type: "int", nullable: false),
+                RelatedEntityId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                RelatedEntityTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                MadeByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                PropertyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                 OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 NewValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -317,11 +309,11 @@ public partial class RefactorCode : Migration
             {
                 table.PrimaryKey("PK_ProjectHistories", x => x.Id);
                 table.ForeignKey(
-                    name: "FK_ProjectHistories_AspNetUsers_ChangedByUserId",
-                    column: x => x.ChangedByUserId,
+                    name: "FK_ProjectHistories_AspNetUsers_MadeByUserId",
+                    column: x => x.MadeByUserId,
                     principalTable: "AspNetUsers",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Restrict);
                 table.ForeignKey(
                     name: "FK_ProjectHistories_Projects_ProjectId",
                     column: x => x.ProjectId,
@@ -335,7 +327,9 @@ public partial class RefactorCode : Migration
             columns: table => new
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                TenantId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                Goal = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                 EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                 Status = table.Column<int>(type: "int", nullable: false),
@@ -360,6 +354,7 @@ public partial class RefactorCode : Migration
             {
                 Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Title = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                Code = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 AcceptanceCriteria = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 EffortPoints = table.Column<int>(type: "int", nullable: false),
@@ -367,7 +362,6 @@ public partial class RefactorCode : Migration
                 Status = table.Column<int>(type: "int", nullable: false),
                 Priority = table.Column<int>(type: "int", nullable: false),
                 IsBlocked = table.Column<bool>(type: "bit", nullable: false),
-                UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                 StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                 EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                 AssignedToUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
@@ -382,6 +376,7 @@ public partial class RefactorCode : Migration
                 TestEnvironment = table.Column<int>(type: "int", nullable: true),
                 ExpectedResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 ActualResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Result = table.Column<int>(type: "int", nullable: true),
                 StoryPoints = table.Column<int>(type: "int", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -412,6 +407,63 @@ public partial class RefactorCode : Migration
                     column: x => x.SprintId,
                     principalTable: "Sprints",
                     principalColumn: "Id");
+            });
+
+        migrationBuilder.CreateTable(
+            name: "Attachments",
+            columns: table => new
+            {
+                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                StoragePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Type = table.Column<int>(type: "int", nullable: false),
+                UploadedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Attachments", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Attachments_WorkItems_WorkItemId",
+                    column: x => x.WorkItemId,
+                    principalTable: "WorkItems",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "CodeLinks",
+            columns: table => new
+            {
+                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                LinkType = table.Column<int>(type: "int", nullable: false),
+                DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_CodeLinks", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_CodeLinks_AspNetUsers_CreatedByUserId",
+                    column: x => x.CreatedByUserId,
+                    principalTable: "AspNetUsers",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
+                table.ForeignKey(
+                    name: "FK_CodeLinks_WorkItems_WorkItemId",
+                    column: x => x.WorkItemId,
+                    principalTable: "WorkItems",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
             });
 
         migrationBuilder.CreateTable(
@@ -467,7 +519,7 @@ public partial class RefactorCode : Migration
                     column: x => x.TargetWorkItemId,
                     principalTable: "WorkItems",
                     principalColumn: "Id",
-                    onDelete: ReferentialAction.Restrict);
+                    onDelete: ReferentialAction.Cascade);
             });
 
         migrationBuilder.CreateIndex(
@@ -522,6 +574,21 @@ public partial class RefactorCode : Migration
             filter: "[NormalizedUserName] IS NOT NULL");
 
         migrationBuilder.CreateIndex(
+            name: "IX_Attachments_WorkItemId",
+            table: "Attachments",
+            column: "WorkItemId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_CodeLinks_CreatedByUserId",
+            table: "CodeLinks",
+            column: "CreatedByUserId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_CodeLinks_WorkItemId",
+            table: "CodeLinks",
+            column: "WorkItemId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Comments_CreatedByUserId",
             table: "Comments",
             column: "CreatedByUserId");
@@ -532,19 +599,25 @@ public partial class RefactorCode : Migration
             column: "WorkItemId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_ProjectHistories_ChangedByUserId",
+            name: "IX_ProjectHistories_MadeByUserId",
             table: "ProjectHistories",
             column: "MadeByUserId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_ProjectHistories_ProjectId",
+            name: "IX_ProjectHistories_ProjectId_CreatedAt",
             table: "ProjectHistories",
-            column: "ProjectId");
+            columns: new[] { "ProjectId", "CreatedAt" });
 
         migrationBuilder.CreateIndex(
             name: "IX_Projects_CreatedByUserId",
             table: "Projects",
             column: "CreatedByUserId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Projects_Key",
+            table: "Projects",
+            column: "Key",
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_Projects_TeamId",
@@ -595,6 +668,11 @@ public partial class RefactorCode : Migration
             unique: true);
 
         migrationBuilder.CreateIndex(
+            name: "IX_Tenants_TenantAdminId",
+            table: "Tenants",
+            column: "TenantAdminId");
+
+        migrationBuilder.CreateIndex(
             name: "IX_WorkItemRelations_TargetWorkItemId",
             table: "WorkItemRelations",
             column: "TargetWorkItemId");
@@ -611,24 +689,91 @@ public partial class RefactorCode : Migration
             column: "AssignedToUserId");
 
         migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_Code",
+            table: "WorkItems",
+            column: "Code",
+            unique: true);
+
+        migrationBuilder.CreateIndex(
             name: "IX_WorkItems_CreatedByUserId",
             table: "WorkItems",
             column: "CreatedByUserId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_WorkItems_ProjectId",
+            name: "IX_WorkItems_ProjectId_AssignedToUserId",
             table: "WorkItems",
-            column: "ProjectId");
+            columns: new[] { "ProjectId", "AssignedToUserId" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_ProjectId_CreatedAt",
+            table: "WorkItems",
+            columns: new[] { "ProjectId", "CreatedAt" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_ProjectId_Priority",
+            table: "WorkItems",
+            columns: new[] { "ProjectId", "Priority" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_ProjectId_SprintId_CreatedAt",
+            table: "WorkItems",
+            columns: new[] { "ProjectId", "SprintId", "CreatedAt" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_ProjectId_Status",
+            table: "WorkItems",
+            columns: new[] { "ProjectId", "Status" });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_WorkItems_ProjectId_Type",
+            table: "WorkItems",
+            columns: new[] { "ProjectId", "Type" });
 
         migrationBuilder.CreateIndex(
             name: "IX_WorkItems_SprintId",
             table: "WorkItems",
             column: "SprintId");
+
+        migrationBuilder.AddForeignKey(
+            name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+            table: "AspNetUserClaims",
+            column: "UserId",
+            principalTable: "AspNetUsers",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.Cascade);
+
+        migrationBuilder.AddForeignKey(
+            name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+            table: "AspNetUserLogins",
+            column: "UserId",
+            principalTable: "AspNetUsers",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.Cascade);
+
+        migrationBuilder.AddForeignKey(
+            name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+            table: "AspNetUserRoles",
+            column: "UserId",
+            principalTable: "AspNetUsers",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.Cascade);
+
+        migrationBuilder.AddForeignKey(
+            name: "FK_AspNetUsers_Tenants_TenantId",
+            table: "AspNetUsers",
+            column: "TenantId",
+            principalTable: "Tenants",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.Restrict);
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
+        migrationBuilder.DropForeignKey(
+            name: "FK_Tenants_AspNetUsers_TenantAdminId",
+            table: "Tenants");
+
         migrationBuilder.DropTable(
             name: "AspNetRoleClaims");
 
@@ -643,6 +788,12 @@ public partial class RefactorCode : Migration
 
         migrationBuilder.DropTable(
             name: "AspNetUserTokens");
+
+        migrationBuilder.DropTable(
+            name: "Attachments");
+
+        migrationBuilder.DropTable(
+            name: "CodeLinks");
 
         migrationBuilder.DropTable(
             name: "Comments");

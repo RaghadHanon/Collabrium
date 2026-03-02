@@ -11,23 +11,23 @@ public class Bug : WorkItem
 
     private Bug() { }
 
-    public Bug(string id, string title, string createdByUserId, string projectId, string stepsToReproduce)
-        : base(id, title, createdByUserId, projectId)
+    public Bug(string id, string title, string code, string createdByUserId, string projectId, string stepsToReproduce)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
-    public Bug(string title, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
-           : base(title, createdByUserId, projectId)
+    public Bug(string title, string code, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
+           : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
         UpdateRepro(stepsToReproduce, actualResult, expectedResult);
     }
 
-    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
-       : base(title, createdByUserId, projectId)
+    public Bug(string title, string code, string createdByUserId, string projectId, string stepsToReproduce)
+       : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
@@ -63,6 +63,7 @@ public class Bug : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
         WorkItemType type,
@@ -80,8 +81,8 @@ public class Bug : WorkItem
         string? expectedResult,
         string? actualResult)
     {
-        var b = new Bug(id, title, createdByUserId, projectId, stepsToReproduce);
-        b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, description, acceptanceCriteria,
+        var b = new Bug(id, title, code, createdByUserId, projectId, stepsToReproduce);
+        b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
@@ -97,6 +98,7 @@ public class Bug : WorkItem
             CreatedAt,
             UpdatedAt,
             Title,
+            Code,
             CreatedByUserId,
             ProjectId,
             Type,

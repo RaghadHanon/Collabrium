@@ -20,6 +20,11 @@ public sealed class CreateProjectRequestValidator : AbstractValidator<CreateProj
             .When(x => x.TeamId is not null)
             .WithMessage("TeamId cannot be empty.");
 
+        RuleFor(x => x.Key)
+            .NotEmpty()
+            .Matches("^[A-Z]{2,10}$")
+            .WithMessage("Project key must be 2-10 uppercase letters only.");
+
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate!.Value)
             .When(x => x.StartDate.HasValue && x.EndDate.HasValue)

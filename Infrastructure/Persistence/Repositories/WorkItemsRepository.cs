@@ -143,6 +143,12 @@ public class WorkItemsRepository : IWorkItemsRepository
             query = query.Where(x => x.ProjectId == prId);
         }
 
+        if (!string.IsNullOrWhiteSpace(p.Code))
+        {
+            var code = p.Code.Trim();
+            query = query.Where(x => x.Code == code);
+        }
+
         if (p.Type.HasValue)
             query = query.Where(x => x.Type == p.Type.Value);
 

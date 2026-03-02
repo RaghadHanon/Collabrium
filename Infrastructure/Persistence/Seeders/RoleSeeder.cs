@@ -9,7 +9,7 @@ public class RoleSeeder
     public static async Task SeedRoles(IServiceProvider serviceProvider)
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var allStatuses = Enum.GetValues<WorkItemStatus>();
+        var allStatuses = Enum.GetValues<UserRole>();
         var roles = allStatuses.Select(status => status.ToString()).ToList();
 
         foreach (var role in roles)
@@ -21,4 +21,3 @@ public class RoleSeeder
         }
     }
 }
-

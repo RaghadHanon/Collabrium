@@ -139,6 +139,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -202,6 +203,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -253,6 +255,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -309,6 +312,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         {
             var prId = parameters.ProjectId.Trim();
             query = query.Where(x => x.ProjectId == prId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Code))
+        {
+            var code = parameters.Code.Trim();
+            query = query.Where(x => x.Code == code);
         }
 
         if (parameters.Type.HasValue)

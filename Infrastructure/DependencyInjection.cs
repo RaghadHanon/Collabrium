@@ -82,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<ISprintsRepository, SprintsRepository>();
         services.AddScoped<IWorkItemsRepository, WorkItemsRepository>();
         services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IRoadmapNodesRepository, RoadmapNodesRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -94,6 +95,7 @@ public static class DependencyInjection
         services.AddScoped<ISprintsReadModel, SprintsReadModel>();
         services.AddScoped<IWorkItemsReadModel, WorkItemsReadModel>();
         services.AddScoped<ITagsReadModel, TagsReadModel>();
+        services.AddScoped<IRoadmapNodesReadModel, RoadmapNodesReadModel>();
 
     }
 

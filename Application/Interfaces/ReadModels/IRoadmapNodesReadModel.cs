@@ -33,5 +33,11 @@ namespace Application.Interfaces.ReadModels
             string roadmapId,
             string referenceNodeId,
             CancellationToken ct = default);
+
+        Task<RoadmapNodeDto?> GetByIdAsync(
+            string tenantId,
+            string roadmapId,
+            string nodeId,
+            CancellationToken ct = default);
     }
 }

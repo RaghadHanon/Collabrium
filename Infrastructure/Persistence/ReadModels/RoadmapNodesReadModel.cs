@@ -89,5 +89,26 @@ namespace Infrastructure.Persistence.ReadModels
                .ProjectTo<TopicNodeDetailsDto>(_mapper.ConfigurationProvider)
                .FirstOrDefaultAsync(ct);
         }
+
+        public async Task<RoadmapNodeDto?> GetByIdAsync(
+            string tenantId,
+            string roadmapId,
+            string nodeId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) ||
+                string.IsNullOrWhiteSpace(roadmapId) ||
+                string.IsNullOrWhiteSpace(nodeId))
+                return null;
+
+            return await _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .Where(n =>
+                    n.TenantId == tenantId &&
+                    n.RoadmapId == roadmapId &&
+                    n.Id == nodeId)
+                .ProjectTo<RoadmapNodeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+        }
     }
 }

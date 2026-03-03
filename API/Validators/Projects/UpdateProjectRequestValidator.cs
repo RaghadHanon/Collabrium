@@ -9,7 +9,7 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     public UpdateProjectRequestValidator()
     {
         RuleFor(x => x.Name)
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.")
+            .MaximumLength(100).WithMessage("Code cannot exceed 100 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.Name));
 
         RuleFor(x => x.Description)

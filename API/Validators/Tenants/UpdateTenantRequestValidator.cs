@@ -10,7 +10,7 @@ public sealed class UpdateTenantRequestValidator : AbstractValidator<UpdateTenan
         RuleFor(x => x.Name)
             .MaximumLength(100)
             .When(x => !(x.Name is null))
-            .WithMessage("Name cannot exceed 100 characters.");
+            .WithMessage("Code cannot exceed 100 characters.");
 
         RuleFor(x => x.Domain)
             .MaximumLength(100)

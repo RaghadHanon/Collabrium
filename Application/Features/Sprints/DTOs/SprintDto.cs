@@ -8,7 +8,9 @@ public class SprintDto
     public required string TenantId { get; set; }
     public required string ProjectId { get; set; }
 
-    public required string Name { get; set; }
+    public required string Code { get; set; }
+    public string? Name { get; set; }
+    public string? Goal { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public SprintStatus Status { get; set; }

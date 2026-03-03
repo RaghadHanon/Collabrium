@@ -20,6 +20,17 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
                 .WithMessage("EndDate must be >= StartDate.");
         });
 
+
+        RuleFor(x => x.Name)
+            .MaximumLength(250)
+            .When(x => !string.IsNullOrEmpty(x.Name))
+            .WithMessage("Name cannot exceed 100 characters.");
+
+        RuleFor(x => x.Goal)
+            .MaximumLength(500)
+            .When(x => !string.IsNullOrEmpty(x.Goal))
+            .WithMessage("Goal cannot exceed 500 characters.");
+
         RuleFor(x => x)
             .Must(HasAnyField)
             .WithMessage("At least one field must be provided to update the sprint.");
@@ -28,6 +39,8 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
     private static bool HasAnyField(UpdateSprintRequest r)
     {
         return r.StartDate.HasValue
-               || r.EndDate.HasValue;
+                || r.Name != null
+                || r.Goal != null
+                || r.EndDate.HasValue;
     }
 }

@@ -15,6 +15,8 @@ public class StartSprint
     {
         public required string SprintId { get; set; }
         public required string ProjectId { get; set; }
+        public string? Name { get; set; }
+        public string? Goal { get; set; }
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
     }
@@ -43,18 +45,19 @@ public class StartSprint
             if (!(await sprintsRepository.SprintHasWorkItemsAsync(tenantId, request.SprintId, cancellationToken)))
                 return Result<SprintDto>.Failure("Cannot start a sprint for a project without work items.", HttpStatusCode.BadRequest);
 
-            var hasActive = await sprintsRepository.ProjectHasActiveSprintAsync(tenantId, sprint.ProjectId, cancellationToken);
-            if (hasActive)
-                return Result<SprintDto>.Failure("This project already has an active sprint.", HttpStatusCode.BadRequest);
-
             var oldSprintState = sprint.Clone();
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
-                sprint.Start(request.StartDate, request.EndDate);
+                sprint.Start(
+                    request.StartDate, 
+                    request.EndDate,
+                    PatchHelpers.ApplyStringPatch(sprint.Name, request.Name),
+                    PatchHelpers.ApplyStringPatch(sprint.Goal, request.Goal)
+                    );
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
-            }, cancellationToken);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

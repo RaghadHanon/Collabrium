@@ -642,7 +642,7 @@ public partial class FixMigrationFlow : Migration
         migrationBuilder.CreateIndex(
             name: "IX_Team_Name",
             table: "Teams",
-            column: "Name",
+            column: "Code",
             unique: true);
 
         migrationBuilder.CreateIndex(
@@ -664,7 +664,7 @@ public partial class FixMigrationFlow : Migration
         migrationBuilder.CreateIndex(
             name: "IX_Tenant_Name",
             table: "Tenants",
-            column: "Name",
+            column: "Code",
             unique: true);
 
         migrationBuilder.CreateIndex(

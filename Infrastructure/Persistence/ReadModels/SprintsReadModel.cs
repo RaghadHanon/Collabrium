@@ -83,10 +83,15 @@ public sealed class SprintsReadModel : ISprintsReadModel
             query = query.Where(x => x.ProjectId == prId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.Name))
+        if (!string.IsNullOrWhiteSpace(p.NameContains))
         {
-            var term = p.Name.Trim();
-            query = query.Where(x => x.Name.Contains(term));
+            var term = p.NameContains.Trim();
+            query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && x.Name.Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(p.Code))
+        {
+            query = query.Where(x => x.Code == p.Code);
         }
 
         if (p.Status.HasValue)

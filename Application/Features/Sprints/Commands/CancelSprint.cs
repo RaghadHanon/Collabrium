@@ -40,13 +40,13 @@ public class CancelSprint
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
             var oldSprintState = sprint.Clone();
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
                 await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
-            }, cancellationToken);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

@@ -13,7 +13,7 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Sprints_Name",
                 table: "Sprints",
-                column: "Name",
+                column: "Code",
                 unique: true);
         }
 

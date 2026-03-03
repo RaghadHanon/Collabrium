@@ -39,18 +39,18 @@ public class CreateSprint
                 return Result<SprintDto>.Failure($"Cannot create a sprint for an {project.Status} project.", HttpStatusCode.BadRequest);
 
             Sprint sprint = null!;
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
                 sprint = new Sprint(
                     tenantId: tenantId,
                     projectId: project.Id,
-                    name: project.GenerateNextSprintName());
+                    code: project.GenerateNextSprintName());
 
                 sprintsRepository.Add(sprint, cancellationToken);
                 await projectsRepository.UpdateAsync(project, cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,sprint.Name);
-            }, cancellationToken);
+                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,(string) sprint.Code);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

@@ -15,7 +15,8 @@ public class GetSprints
     public class Query : IRequest<Result<PagedList<SprintDto, DateTime?>>>
     {
         public required string ProjectId { get; set; }
-        public string? Name { get; set; }
+        public string? Code { get; set; }
+        public string? NameContains { get; set; }
         public SprintStatus? Status { get; set; }
 
         public DateTime? StartAfter { get; set; }

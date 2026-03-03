@@ -7,7 +7,6 @@ using Application.Interfaces.Repositories;
 using AutoMapper;
 using Domain.Enums;
 using MediatR;
-using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -55,7 +54,7 @@ public class GetProjectBoard
                 request.Type != WorkItemType.TestCase)
                 return Result<BoardDto>.Failure("Invalid work item type for board. Only Bug, Task and Test Case are allowed.", HttpStatusCode.BadRequest);
 
-            if(request.SprintId is not null)
+            if (request.SprintId is not null)
             {
                 var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId);
                 if (sprint is null)
@@ -154,7 +153,7 @@ public class GetProjectBoard
 
             return new OrphanBoardGroupDto
             {
-                Columns = items.Count !=0 ? BoardStatuses.Select(status => new BoardColumnDto
+                Columns = items.Count != 0 ? BoardStatuses.Select(status => new BoardColumnDto
                 {
                     Status = status,
                     Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),

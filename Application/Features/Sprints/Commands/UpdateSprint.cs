@@ -15,6 +15,8 @@ public class UpdateSprint
     {
         public required string SprintId { get; set; }
         public required string ProjectId { get; set; }
+        public string? Name { get; set; }
+        public string? Goal { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
@@ -58,13 +60,16 @@ public class UpdateSprint
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                sprint.Schedule(
+                sprint.Update(
                     start: newStart,
-                    end: newEnd);
+                    end: newEnd,
+                    PatchHelpers.ApplyStringPatch(sprint.Name, request.Name),
+                    PatchHelpers.ApplyStringPatch(sprint.Goal, request.Goal)
+                    );
 
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name, oldSprintState, sprint);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Code, oldSprintState, sprint);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(

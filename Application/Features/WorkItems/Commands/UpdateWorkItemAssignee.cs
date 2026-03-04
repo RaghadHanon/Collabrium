@@ -108,7 +108,7 @@ public sealed class UpdateWorkItemAssignee
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
-                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemState, workItem);
+                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);
             }, cancellationToken);
 
             var dto = await workItemsReadModel.GetByIdAsync(

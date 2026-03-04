@@ -57,7 +57,7 @@ public class DeleteWorkItemComment
                     request.CommentId,
                     cancellationToken);
 
-                historyRecorder.RecordDeletionChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordDeletionChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

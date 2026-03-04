@@ -336,6 +336,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("RelatedEntityCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RelatedEntityId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

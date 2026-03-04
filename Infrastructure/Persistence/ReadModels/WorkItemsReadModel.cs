@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.Projects.DTOs.Boards;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
@@ -12,6 +13,7 @@ using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels;
 
@@ -19,6 +21,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 {
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
+    private static readonly List<WorkItemStatus> _boardStatuses = Enum.GetValues<WorkItemStatus>().ToList();
 
     public WorkItemsReadModel(AppDbContext dbContext, IMapper mapper)
     {
@@ -113,7 +116,40 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             : new List<WorkItemStatus>();
     }
 
-    public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
+    public async Task<BoardDto> GetBoardItemsAsync(
+       WorkItemsSearchAndFilterParametersDto parameters,
+       CancellationToken cancellationToken = default)
+    {
+        var allItems = await GetBoardItemsQueryResultAsync(
+                   parameters,
+                   cancellationToken);
+
+        var userStories = allItems
+            .Where(x => x.Type == WorkItemType.UserStory)
+            .ToList();
+
+        var nonUserStoryItemsWithParents = allItems
+            .Where(x => x.Type != WorkItemType.UserStory && x.Parent != null)
+            .ToList();
+
+        var orphanNonUserStoryItems = allItems
+            .Where(x => x.Type != WorkItemType.UserStory && x.Parent == null)
+            .ToList();
+
+        var itemsByParent = nonUserStoryItemsWithParents
+            .GroupBy(i => i.Parent!.TargetWorkItem!.Id)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return new BoardDto
+        {
+            ProjectId = parameters.ProjectId!,
+            SprintId = parameters.SprintId,
+            UserStoryRows = BuildUserStoryRows(userStories, itemsByParent),
+            OrphanRow = BuildOrphanRow(orphanNonUserStoryItems),
+        };
+    }
+
+    private async Task<List<WorkItemListItemDto>> GetBoardItemsQueryResultAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
@@ -170,6 +206,61 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .ToListAsync(cancellationToken);
 
         return items;
+    }
+
+    private List<UserStoryBoardGroupDto> BuildUserStoryRows(
+        List<WorkItemListItemDto> userStories,
+        Dictionary<string, List<WorkItemListItemDto>> itemsByParent)
+    {
+        var rows = new List<UserStoryBoardGroupDto>();
+
+        foreach (var us in userStories)
+        {
+            itemsByParent.TryGetValue(us.Id, out var children);
+            children ??= new List<WorkItemListItemDto>();
+
+            var columns = children.Count != 0 ? _boardStatuses
+                .Select(status =>
+                {
+                    var items = children
+                        .Where(i => i.Status == status)
+                        .ToList();
+
+                    return new BoardColumnDto
+                    {
+                        Status = status,
+                        Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
+                        Count = items.Count,
+                        Items = items
+                    };
+                })
+                .ToList() : null;
+
+            rows.Add(new UserStoryBoardGroupDto
+            {
+                ParentUserStory = us,
+                Columns = columns
+            });
+        }
+
+        return rows;
+    }
+
+    private static OrphanBoardGroupDto BuildOrphanRow(
+        List<WorkItemListItemDto> items)
+    {
+
+        return new OrphanBoardGroupDto
+        {
+            Columns = items.Count != 0 ? _boardStatuses.Select(status => new BoardColumnDto
+            {
+                Status = status,
+                Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
+                Items = items
+                    .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == status)
+                    .ToList()
+            }).ToList() : null
+        };
     }
 
     public List<WorkItemStatus> GetWorkItemWorkflowByType(WorkItemType type)

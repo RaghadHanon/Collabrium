@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<ISprintsReadModel, SprintsReadModel>();
         services.AddScoped<IWorkItemsReadModel, WorkItemsReadModel>();
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
+        services.AddScoped<IReportsReadModel, ReportsReadModel>();
     }
 
     private static void AddAutoMapper(IServiceCollection services)

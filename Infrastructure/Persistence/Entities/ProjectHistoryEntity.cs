@@ -12,6 +12,7 @@ public class ProjectHistoryEntity : DbEntity
     public ProjectHistoryScope Scope { get; set; }
     public string RelatedEntityId { get; set; } = null!;
     public string RelatedEntityTitle { get; set; } = null!;
+    public string RelatedEntityCode { get; set; } = null!;
 
     public string MadeByUserId { get; set; } = null!;
     public ApplicationUserEntity MadeByUser { get; set; } = null!;

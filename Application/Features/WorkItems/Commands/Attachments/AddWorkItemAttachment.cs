@@ -90,7 +90,7 @@ public class AddWorkItemAttachment
                     attachment: attachment,
                     cancellationToken: cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordCreationChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

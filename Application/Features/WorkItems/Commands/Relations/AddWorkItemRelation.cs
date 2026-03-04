@@ -80,7 +80,7 @@ public class AddWorkItemRelation
                     request.RelationType,
                     ct);
 
-                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title);
+                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

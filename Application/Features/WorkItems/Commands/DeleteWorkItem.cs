@@ -51,7 +51,7 @@ public sealed class DeleteWorkItem
             {
                 removed = await workItemsRepository.RemoveAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
 
-                historyRecorder.RecordDeletionChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordDeletionChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return removed

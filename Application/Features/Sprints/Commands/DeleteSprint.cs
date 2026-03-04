@@ -40,10 +40,10 @@ public class DeleteSprint
             if (hasItems)
                 return Result<Unit>.Failure("Cannot delete a sprint that has work items.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async ct =>
+            await unitOfWork.ExecuteInTransactionAsync((async ct =>
             {
                 await sprintsRepository.RemoveAsync(tenantId, request.SprintId, ct);
-                historyRecorder.RecordDeletionChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code);
+                historyRecorder.RecordDeletionChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code);
             }), cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

@@ -46,10 +46,6 @@ If you did not request this, you can safely ignore this email.";
               Confirm Email
             </a>
           </p>
-          <p style=""color: #999; font-size: 14px;"">
-            If the button above doesn’t work, copy and paste this link into your browser:<br/>
-            <a href=""{url}"" style=""color: #ECBF28;"">{url}</a>
-          </p>
           <hr style=""margin: 30px 0; border: none; border-top: 1px solid #eee;"" />
           <p style=""color: #aaa; font-size: 12px;"">
             If you didn’t create an account, you can safely ignore this email.

@@ -14,7 +14,7 @@ public sealed class CreateWorkItemRequestValidator : AbstractValidator<CreateWor
 
         RuleFor(x => x.Priority)
             .NotEmpty().WithMessage("Priority is required.")
-            .Must(p => Enum.TryParse<WorkItemPriority>(p, true, out _))
+            .IsInEnum()
             .WithMessage("Priority must be a valid WorkItemPriority value.");
 
         RuleFor(x => x.Description)

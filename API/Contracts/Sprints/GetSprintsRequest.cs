@@ -1,10 +1,12 @@
-﻿namespace API.Contracts.Sprints;
+﻿using Domain.Enums;
+
+namespace API.Contracts.Sprints;
 
 public sealed class GetSprintsRequest
 {
     public string? Code { get; init; }
     public string? NameContains { get; init; }
-    public string? Status { get; init; }
+    public SprintStatus? Status { get; init; }
 
     public DateTime? StartAfter { get; init; }
     public DateTime? StartBefore { get; init; }

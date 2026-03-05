@@ -3,6 +3,7 @@ using Application.Features.Tenants.DTOs;
 using Application.Features.Users.DTOs;
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels.Profiles;
 
@@ -11,11 +12,13 @@ public sealed class UsersReadProfile : Profile
     public UsersReadProfile()
     {
         CreateMap<ApplicationUserEntity, UserDto>()
-            .ForMember(d => d.ProfileImageUrl, o => o.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null));
+            .ForMember(d => d.ProfileImageUrl, o => o.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null))
+            .ForMember(d => d.JobTitle, o => o.MapFrom(s => s.JobTitle.Length > 3 ? Regex.Replace(s.JobTitle, "(\\B[A-Z])", " $1") : s.JobTitle));
 
         CreateMap<ApplicationUserEntity, TenantAdminDto>();
         CreateMap<ContactDetailsOwned, ContactDetailsDto>();
         CreateMap<SocialLinksOwned, SocialLinksDto>();
-        CreateMap<ApplicationUserEntity, UserWithTenantDto>();
+        CreateMap<ApplicationUserEntity, UserWithTenantDto>()
+            .IncludeBase<ApplicationUserEntity, UserDto>();
     }
 }

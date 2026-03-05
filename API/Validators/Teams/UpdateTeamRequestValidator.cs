@@ -22,7 +22,7 @@ public sealed class UpdateTeamRequestValidator : AbstractValidator<UpdateTeamReq
             .When(x => !(x.Description is null));
 
         RuleFor(x => x.Department)
-            .Must(BeValidDepartment)
+            .IsInEnum()
             .When(x => !(x.Department is null))
             .WithMessage("Department must be a valid value.");
 
@@ -36,18 +36,12 @@ public sealed class UpdateTeamRequestValidator : AbstractValidator<UpdateTeamReq
             .WithMessage("At least one field must be provided to update the team.");
     }
 
-    private static bool BeValidDepartment(string? value)
-    {
-        return !string.IsNullOrWhiteSpace(value)
-               && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
-    }
-
     private static bool HasAnyField(UpdateTeamRequest r)
     {
         return !string.IsNullOrWhiteSpace(r.TeamLeadId)
                || !(r.Name is null)
                || !(r.Description is null)
-               || !string.IsNullOrWhiteSpace(r.Department)
+               || !r.Department.HasValue
                || r.Capacity.HasValue;
     }
 }

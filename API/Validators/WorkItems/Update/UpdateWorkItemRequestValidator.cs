@@ -25,7 +25,7 @@ public sealed class UpdateWorkItemRequestValidator : AbstractValidator<UpdateWor
             .When(x => x.EffortPoints.HasValue);
 
         RuleFor(x => x.Priority)
-            .Must(p => Enum.TryParse<WorkItemPriority>(p, true, out _))
+            .IsInEnum()
             .WithMessage("Priority must be a valid WorkItemPriority value.")
             .When(x => !(x.Priority is null));
     }

@@ -1,5 +1,7 @@
 ﻿using Application.Common.DTOs;
+using Domain.Core;
 using Domain.Enums;
+using System.Text.Json.Serialization;
 
 namespace Application.Features.Users.DTOs;
 public class UserDto

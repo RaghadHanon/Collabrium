@@ -13,7 +13,9 @@ public sealed class TenantsReadProfile : Profile
             .ForMember(d => d.ProfileImageUrl,
                 o => o.MapFrom(s => s.ProfileImage != null ? s.ProfileImage.Url : null));
 
-        CreateMap<TenantEntity, TenantWithAdminDto>();
+        CreateMap<TenantEntity, TenantWithAdminDto>()
+            .IncludeBase<TenantEntity, TenantDto>();
+
         CreateMap<ApplicationUserEntity, TenantAdminDto>();
         CreateMap<ContactDetailsOwned, ContactDetailsDto>();
         CreateMap<SocialLinksOwned, SocialLinksDto>();

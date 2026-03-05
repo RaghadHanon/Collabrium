@@ -17,8 +17,8 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
             .When(x => !(x.Description is null));
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.TryParse<ProjectStatus>(status, true, out _))
-            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .IsInEnum()
+            .When(x => x.Status.HasValue)
             .WithMessage("Status must be a valid ProjectStatus value.");
 
         RuleFor(x => x.EndDate)
@@ -35,7 +35,7 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     {
         return !string.IsNullOrWhiteSpace(r.Name)
                || !(r.Description is null)
-               || !string.IsNullOrWhiteSpace(r.Status)
+               || r.Status.HasValue
                || r.StartDate.HasValue
                || r.EndDate.HasValue;
     }

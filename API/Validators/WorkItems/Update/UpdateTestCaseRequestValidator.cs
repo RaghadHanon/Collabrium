@@ -27,12 +27,12 @@ public sealed class UpdateTestCaseRequestValidator : AbstractValidator<UpdateTes
             .When(x => !(x.ActualResult is null));
 
         RuleFor(x => x.TestEnvironment)
-            .Must(v => Enum.TryParse<TestEnvironment>(v, true, out _))
+            .IsInEnum()
             .WithMessage("TestEnvironment must be a valid TestEnvironment value.")
             .When(x => !(x.TestEnvironment is null));
 
         RuleFor(x => x.Result)
-            .Must(v => Enum.TryParse<TestCaseResult>(v, true, out _))
+            .IsInEnum()
             .WithMessage("Result must be a valid Result value.")
             .When(x => !(x.Result is null));
 

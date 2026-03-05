@@ -1,4 +1,6 @@
-﻿namespace API.Contracts.WorkItems.Create;
+﻿using Domain.Enums;
+
+namespace API.Contracts.WorkItems.Create;
 
 /// <summary>
 /// Request payload for creating a Test Case work item.
@@ -18,7 +20,7 @@ public class CreateTestCaseRequest : CreateWorkItemRequest
     /// <summary>
     /// The environment in which the test case should be executed.
     /// </summary>
-    public required string TestEnvironment { get; init; }
+    public required TestEnvironment TestEnvironment { get; init; }
 
     /// <summary>
     /// The expected result after executing the test case.

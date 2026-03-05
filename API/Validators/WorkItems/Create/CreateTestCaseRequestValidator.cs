@@ -24,7 +24,7 @@ public sealed class CreateTestCaseRequestValidator : AbstractValidator<CreateTes
 
         RuleFor(x => x.TestEnvironment)
             .NotEmpty().WithMessage("TestEnvironment is required.")
-            .Must(v => Enum.TryParse<TestEnvironment>(v, true, out _))
+            .IsInEnum()
             .WithMessage("TestEnvironment must be a valid TestEnvironment value.");
     }
 }

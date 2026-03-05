@@ -15,7 +15,7 @@ public class AddWorkItemCodeLinkRequestValidator : AbstractValidator<AddWorkItem
             .WithMessage("Url must be a valid.");
 
         RuleFor(x => x.LinkType)
-            .Must(v => Enum.TryParse<CodeLinkType>(v, true, out _))
+            .IsInEnum()
             .WithMessage("Invalid LinkType value.");
 
     }

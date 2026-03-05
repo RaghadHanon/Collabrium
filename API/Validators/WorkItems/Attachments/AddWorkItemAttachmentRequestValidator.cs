@@ -11,7 +11,7 @@ public class AddWorkItemAttachmentRequestValidator
     {
         RuleFor(x => x.Type)
             .NotEmpty()
-            .Must( v => Enum.TryParse<AttachmentType>(v, true, out _))
+            .IsInEnum()
             .WithMessage("Invalid attachment type.");
 
         RuleFor(x => x.File)
@@ -23,12 +23,12 @@ public class AddWorkItemAttachmentRequestValidator
 
     private static bool BeAllowedFile(AddWorkItemAttachmentRequest request, IFormFile file)
     {
-        if (!Enum.TryParse<AttachmentType>(request.Type, true, out var attachmentType))
+        if (!Enum.IsDefined(request.Type))
             return false;
 
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-        return attachmentType switch
+        return request.Type switch
         {
             AttachmentType.Image =>
                 new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" }

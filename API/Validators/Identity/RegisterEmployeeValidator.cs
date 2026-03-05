@@ -15,21 +15,13 @@ public class RegisterEmployeeValidator : RegisterAppUserValidator<RegisterEmploy
     public RegisterEmployeeValidator()
     {
         RuleFor(x => x.UserRole)
-            .NotEmpty().WithMessage("User JobTitle is required.")
-            .Must(value => Enum.TryParse<UserRole>(value, true, out _))
-            .WithMessage("User JobTitle is invalid.")
-            .Must(value =>
-            {
-                if (!Enum.TryParse<UserRole>(value, true, out var role))
-                    return false;
-
-                return role is not (UserRole.TenantAdmin or UserRole.SuperAdmin);
-            })
+            .IsInEnum()
+            .WithMessage("User Role is required.")
+            .Must(value => value is not (UserRole.TenantAdmin or UserRole.SuperAdmin))
             .WithMessage("This role is not allowed for registration.");
 
         RuleFor(x => x.Department)
-           .NotEmpty().WithMessage("Department  is required.")
-           .Must(value => Enum.TryParse<Department>(value, true, out _))
-           .WithMessage("Department is invalid.");
+           .IsInEnum()
+           .WithMessage("Department  is required.");
     }
 }

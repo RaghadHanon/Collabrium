@@ -21,17 +21,11 @@ public sealed class CreateTeamRequestValidator : AbstractValidator<CreateTeamReq
 
         RuleFor(x => x.Department)
             .NotEmpty().WithMessage("Department is required.")
-            .Must(BeValidDepartment)
+            .IsInEnum()
             .WithMessage("Department must be a valid value.");
 
         RuleFor(x => x.Capacity)
             .GreaterThanOrEqualTo(1)
             .WithMessage("Capacity must be >= 1.");
-    }
-
-    private static bool BeValidDepartment(string? value)
-    {
-        return !string.IsNullOrWhiteSpace(value)
-               && Enum.TryParse<Department>(value.Trim(), ignoreCase: true, out _);
     }
 }

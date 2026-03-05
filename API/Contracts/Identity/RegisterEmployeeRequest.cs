@@ -1,13 +1,17 @@
-﻿namespace API.Contracts.Identity;
+﻿using API.Common;
+using Domain.Enums;
+using System.Text.Json.Serialization;
+
+namespace API.Contracts.Identity;
 
 public class RegisterEmployeeRequest : RegisterAppUserRequest
 {
     /// <summary>
     /// Gets or sets the role assigned to the user.
     /// </summary>
-    public required string UserRole { get; set; }
+    public required UserRole UserRole { get; set; }
     /// <summary>
     /// Gets or sets the department associated with the current entity.
     /// </summary>
-    public required string Department { get; set; }
+    public required Department Department { get; set; }
 }

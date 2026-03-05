@@ -8,6 +8,5 @@ namespace API.Contracts.Roadmaps
         public string? Description { get; init; }
         public RoadmapPath Path { get; init; }
         public RoadmapLevel Level { get; init; }
-        public DateTime? PublishedAt { get; init; }
     }
 }

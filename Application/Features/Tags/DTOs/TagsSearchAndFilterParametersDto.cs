@@ -2,7 +2,7 @@
 
 namespace Application.Features.Tags.DTOs
 {
-    public sealed class TagsSearchParametersDto
+    public sealed class TagsSearchAndFilterParametersDto
          : QueryParametersDto<DateTime?>
     {
         public string? TenantId { get; set; }

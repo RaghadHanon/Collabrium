@@ -97,7 +97,7 @@ namespace Infrastructure.Persistence.ReadModels
                     ResourcesCount = s.Resources.Count,
                     Resources = s.Resources
                         .OrderBy(r => r.Order)
-                        .Select(r => new ResourceDto
+                        .Select(r => new RoadmapResourceDto
                         {
                             Id = r.Id,
                             SubTopicId = r.SubTopicId,

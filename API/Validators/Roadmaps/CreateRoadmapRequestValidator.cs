@@ -18,10 +18,7 @@ namespace API.Validators.Roadmaps
                 .WithMessage("Description cannot exceed 2000 characters.")
                 .When(x => !string.IsNullOrWhiteSpace(x.Description));
 
-            RuleFor(x => x.PublishedAt)
-                .LessThanOrEqualTo(DateTime.UtcNow)
-                .When(x => x.PublishedAt.HasValue)
-                .WithMessage("PublishedAt cannot be in the future.");
+
         }
     }
 }

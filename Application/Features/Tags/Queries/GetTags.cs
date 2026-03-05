@@ -19,6 +19,7 @@ namespace Application.Features.Tags.Queries
 
             public DateTime? Cursor { get; set; }
             public int PageSize { get; set; }
+
         }
 
         public sealed class Handler(
@@ -28,7 +29,7 @@ namespace Application.Features.Tags.Queries
         {
             public async Task<Result<PagedList<TagDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var parameters = mapper.Map<TagsSearchParametersDto>(request);
+                var parameters = mapper.Map<TagsSearchAndFilterParametersDto>(request);
 
                 var list = await tagsReadModel.GetAsync(parameters, cancellationToken);
 

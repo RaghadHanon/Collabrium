@@ -6,7 +6,7 @@ namespace Application.Interfaces.ReadModels
     public interface ITagsReadModel
     {
         Task<PagedList<TagDto, DateTime?>> GetAsync(
-        TagsSearchParametersDto parameters,
+        TagsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
 
         Task<TagDto?> GetByIdAsync(

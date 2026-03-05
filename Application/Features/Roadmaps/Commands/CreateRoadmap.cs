@@ -63,8 +63,7 @@ namespace Application.Features.Roadmaps.Commands
                     level: request.Level,
                     tenantId: tenantId,
                    createdByUserId: createdByUserId,
-                   description: request.Description,
-                   IsVisible: false
+                   description: request.Description
 
                    );
 

@@ -15,8 +15,8 @@
         public DateTime? UpdatedAt { get; set; }
         public DateTime? CreatedAt { get; set; }
 
-        public IReadOnlyCollection<ResourceDto> Resources { get; set; }
-            = Array.Empty<ResourceDto>();
+        public IReadOnlyCollection<RoadmapResourceDto> Resources { get; set; }
+            = Array.Empty<RoadmapResourceDto>();
     }
 }
 

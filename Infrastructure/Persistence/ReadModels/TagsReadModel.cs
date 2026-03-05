@@ -18,10 +18,10 @@ namespace Infrastructure.Persistence.ReadModels
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
-        public async Task<PagedList<TagDto, DateTime?>> GetAsync(TagsSearchParametersDto parameters,
+        public async Task<PagedList<TagDto, DateTime?>> GetAsync(TagsSearchAndFilterParametersDto parameters,
             CancellationToken cancellationToken = default)
         {
-            parameters ??= new TagsSearchParametersDto();
+            parameters ??= new TagsSearchAndFilterParametersDto();
             var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
             IQueryable<TagEntity> query = _dbContext.Tags.AsNoTracking();
             // Tenant filter

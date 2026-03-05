@@ -33,7 +33,7 @@ namespace Application.Features.Roadmaps.Commands
                 if (roadmap is null)
                     return Result<RoadmapDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
-                if (request.IsVisible)
+                if (!request.IsVisible)
                     roadmap.Show();
                 else
                     roadmap.Hide();

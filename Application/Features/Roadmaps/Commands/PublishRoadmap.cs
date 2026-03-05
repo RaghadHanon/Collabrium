@@ -31,12 +31,13 @@ namespace Application.Features.Roadmaps.Commands
                         "Tenant not found.",
                         HttpStatusCode.NotFound
                     );
-                var roadmap = await roadmapsRepository.GetByIdAsync(request.RoadmapId, tenantId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
                 if (roadmap == null)
                     return Result<RoadmapDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
                 roadmap.Publish(DateTime.UtcNow);
                 roadmap.Show(); // IsVisible = true
+                await roadmapsRepository.UpdateAsync(roadmap, cancellationToken);
 
                 await unitOfWork.SaveChangesAsync(cancellationToken);
 

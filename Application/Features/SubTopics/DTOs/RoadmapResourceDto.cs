@@ -2,7 +2,7 @@
 
 namespace Application.Features.SubTopics.DTOs
 {
-    public sealed class ResourceDto
+    public sealed class RoadmapResourceDto
     {
         public required string Id { get; set; }
         public required string SubTopicId { get; set; }

@@ -13,6 +13,7 @@ namespace API.MappingProfiles
             CreateMap<UpdateTagRequest, UpdateTag.Command>();
             CreateMap<GetTagsRequest, GetTags.Query>();
 
+
         }
     }
 }

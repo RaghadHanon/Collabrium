@@ -29,7 +29,7 @@ namespace Domain.Models
             string tenantId,
             string? description = null,
             string? createdByUserId = null,
-            bool IsVisible = true)
+            bool isVisible = false)
         {
             Path = path;
             Level = level;
@@ -39,7 +39,7 @@ namespace Domain.Models
 
             Description = description?.Trim();
             CreatedByUserId = string.IsNullOrWhiteSpace(createdByUserId) ? null : createdByUserId.Trim();
-            IsVisible = IsVisible;
+            IsVisible = isVisible;
 
             Touch();
         }
@@ -51,7 +51,7 @@ namespace Domain.Models
             string title,
             string tenantId,
             string? createdByUserId = null,
-            bool isVisible = true)
+            bool isVisible = false)
             : this(path, level, title, tenantId, null, createdByUserId, isVisible)
         {
             Id = id;
@@ -148,7 +148,7 @@ namespace Domain.Models
             Touch();
         }
 
-        // ---------- Publish / Active ----------
+        // ---------- Publish 
         public void Publish(DateTime publishedAt)
         {
             Guard.Against(publishedAt < CreatedAt, "PublishedAt cannot be earlier than CreatedAt.");

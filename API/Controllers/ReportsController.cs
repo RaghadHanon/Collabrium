@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Projects;
+using API.Contracts.Reports;
 using API.SetupProgram;
 using Application.Features.Projects.Commands;
 using Application.Features.Projects.DTOs;
@@ -54,6 +55,29 @@ public sealed class ReportsController : ApiBaseController
         {
             TenantId = tenantId
         };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves Project Cycle Time report.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/tenants/my-tenant/{projectId}/cycle-time-report
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]   
+    [HttpGet("{projectId}/cycle-time-report")]
+    public async Task<ActionResult<ProjectDto>> GetCycleTimeReport(string projectId, [FromQuery] GetCycleTimeReportRequest request)
+    {
+        var query = Mapper.Map<GetCycleTimeReport.Query>(request);
+        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }

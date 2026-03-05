@@ -40,6 +40,7 @@ public class ReportsReadModel : IReportsReadModel
     private async Task<TeamsSummary> GenerateTeamsSummary(string tenantId)
     {
         var teamsSnapshot = await _dbContext.Teams
+            .AsNoTracking()
             .Where(t => t.TenantId == tenantId)
             .Select(t => new { t.Id, t.IsActive })
             .ToListAsync();
@@ -55,6 +56,7 @@ public class ReportsReadModel : IReportsReadModel
     private async Task<ProjectsSummary> GenerateProjectsSummary(string tenantId)
     {
         var projectsSnapshot = await _dbContext.Projects
+            .AsNoTracking()
             .Where(t => t.TenantId == tenantId)
             .Select(p => new { p.Id, p.Status })
             .ToListAsync();
@@ -77,6 +79,7 @@ public class ReportsReadModel : IReportsReadModel
     private async Task<SprintsSummary> GenerateSprintsSummary(string tenantId)
     {
         var sprintsSnapshot = await _dbContext.Sprints
+            .AsNoTracking()
             .Where(t => t.TenantId == tenantId)
             .Select(p => new { p.Id, p.Status })
             .ToListAsync();
@@ -98,6 +101,7 @@ public class ReportsReadModel : IReportsReadModel
     private async Task<WorkItemsSummary> GenerateWorkItemsSummary(string tenantId)
     {
         var workItemsSnapshot = await _dbContext.WorkItems
+            .AsNoTracking()
             .Where(t => t.Project.TenantId == tenantId)
             .Select(p => new { p.Id, p.Type })
             .ToListAsync();
@@ -120,6 +124,7 @@ public class ReportsReadModel : IReportsReadModel
     private async Task<UsersSummary> GenerateUsersSummary(string tenantId)
     {
         var usersSnapshot = await _dbContext.Users
+            .AsNoTracking()
             .Where(t => t.TenantId == tenantId)
             .Select(p => p.Id)
             .ToListAsync();
@@ -127,6 +132,49 @@ public class ReportsReadModel : IReportsReadModel
         return new UsersSummary
         {
             TotalUsersCount = usersSnapshot.Count
+        };
+    }
+    public async Task<CycleTimeReport> GenerateCycleTimeReportAsync(string tenantId, string projectId, DateTime from, DateTime to, string? sprintId = null)
+    {
+        var query = _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(wi => wi.ProjectId == projectId
+                         && wi.Project.TenantId == tenantId
+                         && wi.EndDate.HasValue
+                         && wi.EndDate.Value >= from
+                         && wi.EndDate.Value <= to
+                         && wi.Status == WorkItemStatus.Done)
+            .AsQueryable();
+
+        if(!string.IsNullOrEmpty(sprintId))
+            query = query.Where(wi => wi.SprintId == sprintId);
+
+        var workItemsSnapshot = await query
+            .Select(wi => new { 
+                        Id = wi.Id,
+                        Code = wi.Code,
+                        CreatedAt = wi.CreatedAt,
+                        EndDate = wi.EndDate 
+            })
+            .ToListAsync();
+
+        var items = workItemsSnapshot.Select(wi => new WorkItemCycleTime
+        {
+            WorkItemId = wi.Id,
+            Code = wi.Code,
+            CycleTimeDays = (wi.EndDate!.Value - wi.CreatedAt).Days
+        }).ToList();
+
+        return new CycleTimeReport
+        {
+            ProjectId = projectId,
+            GeneratedAt = DateTime.UtcNow,
+            AverageCycleTimeDays = items.Any() ? items.Average(i => i.CycleTimeDays) : 0,
+            MedianCycleTimeDays = items.Any() ? items.OrderBy(i => i.CycleTimeDays).ElementAt(items.Count / 2).CycleTimeDays : 0,
+            MinCycleTimeDays = items.Any() ? items.Min(i => i.CycleTimeDays) : 0,
+            MaxCycleTimeDays = items.Any() ? items.Max(i => i.CycleTimeDays) : 0,
+            TotalItemsAnalyzed = items.Count,
+            Items = items
         };
     }
 }

@@ -20,10 +20,10 @@ public class GetTenantInfoReport
     {
         public async Task<Result<TenantInfoReport>> Handle(Query request, CancellationToken cancellationToken)
         {
-            if(request.TenantId is null)
+            if (request.TenantId is null)
             {
                 request.TenantId = tenantContext.TenantId;
-                if(request.TenantId is null)
+                if (request.TenantId is null)
                 {
                     return Result<TenantInfoReport>.Failure("TenantId is not found.", HttpStatusCode.BadRequest);
                 }

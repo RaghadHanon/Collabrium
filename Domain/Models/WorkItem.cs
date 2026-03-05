@@ -151,7 +151,7 @@ public abstract class WorkItem : Entity
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
                 WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
-                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress or WorkItemStatus.InReview,
                 WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
                 WorkItemStatus.Done => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 _ => false

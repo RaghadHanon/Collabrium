@@ -2,8 +2,10 @@
 using Domain.Enums;
 using MediatR;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Application.Features.Metadata.Queries;
+
 public class GetEnumMetaData
 {
     public class Query : IRequest<Result<string[]>>
@@ -15,22 +17,64 @@ public class GetEnumMetaData
     {
         public async Task<Result<string[]>> Handle(Query request, CancellationToken cancellationToken)
         {
-            return (request.MetadataType) switch
+            return request.MetadataType switch
             {
-                MetadataType.UserRole => Result<string[]>.Success(Enum.GetNames(typeof(UserRole)), HttpStatusCode.OK),
-                MetadataType.Department => Result<string[]>.Success(Enum.GetNames(typeof(Department)), HttpStatusCode.OK),
-                MetadataType.TestEnvironment => Result<string[]>.Success(Enum.GetNames(typeof(TestEnvironment)), HttpStatusCode.OK),
-                MetadataType.AttachmentType => Result<string[]>.Success(Enum.GetNames(typeof(AttachmentType)), HttpStatusCode.OK),
-                MetadataType.SprintStatus => Result<string[]>.Success(Enum.GetNames(typeof(SprintStatus)), HttpStatusCode.OK),
-                MetadataType.ProjectStatus => Result<string[]>.Success(Enum.GetNames(typeof(ProjectStatus)), HttpStatusCode.OK),
-                MetadataType.CodeLinkType => Result<string[]>.Success(Enum.GetNames(typeof(CodeLinkType)), HttpStatusCode.OK),
-                MetadataType.TestCaseResult => Result<string[]>.Success(Enum.GetNames(typeof(TestCaseResult)), HttpStatusCode.OK),
-                MetadataType.WorkItemStatus => Result<string[]>.Success(Enum.GetNames(typeof(WorkItemStatus)), HttpStatusCode.OK),
-                MetadataType.WorkItemPriority => Result<string[]>.Success(Enum.GetNames(typeof(WorkItemPriority)), HttpStatusCode.OK),
-                MetadataType.WorkItemRelationType => Result<string[]>.Success(Enum.GetNames(typeof(WorkItemRelationType)), HttpStatusCode.OK),
-                MetadataType.WorkItemType => Result<string[]>.Success(Enum.GetNames(typeof(WorkItemType)), HttpStatusCode.OK),
+                MetadataType.UserRole => Result<string[]>.Success(
+                    Enum.GetNames(typeof(UserRole)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.Department => Result<string[]>.Success(
+                    Enum.GetNames(typeof(Department)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.TestEnvironment => Result<string[]>.Success(
+                    Enum.GetNames(typeof(TestEnvironment)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.AttachmentType => Result<string[]>.Success(
+                    Enum.GetNames(typeof(AttachmentType)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.SprintStatus => Result<string[]>.Success(
+                    Enum.GetNames(typeof(SprintStatus)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.ProjectStatus => Result<string[]>.Success(
+                    Enum.GetNames(typeof(ProjectStatus)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.CodeLinkType => Result<string[]>.Success(
+                    Enum.GetNames(typeof(CodeLinkType)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.TestCaseResult => Result<string[]>.Success(
+                    Enum.GetNames(typeof(TestCaseResult)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.WorkItemStatus => Result<string[]>.Success(
+                    Enum.GetNames(typeof(WorkItemStatus)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.WorkItemPriority => Result<string[]>.Success(
+                    Enum.GetNames(typeof(WorkItemPriority)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.WorkItemRelationType => Result<string[]>.Success(
+                    Enum.GetNames(typeof(WorkItemRelationType)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
+                MetadataType.WorkItemType => Result<string[]>.Success(
+                    Enum.GetNames(typeof(WorkItemType)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
+
                 _ => throw new NotImplementedException()
             };
+        }
+
+        private static string AddSpace(string value)
+        {
+            var spaced = Regex.Replace(value, "(\\B[A-Z])", " $1");
+            return value.Length > 3 ? spaced : value;
         }
     }
 }

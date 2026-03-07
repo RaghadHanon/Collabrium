@@ -34,7 +34,10 @@ If you did not request a password reset, you can safely ignore this email.";
                   box-shadow: 0 2px 6px rgba(0,0,0,0.1);"">
       <tr>
         <td style=""padding: 30px; text-align: center;"">    
-          <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" alt=""Collabrium logo"" width=""150px"" height=""150px""/>
+          <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" 
+                   alt=""Collabrium logo""  
+                   style=""display: block; margin: 0 auto; width: 150px; height: 150px; 
+                         border-radius: 50%; object-fit: cover; -webkit-border-radius: 50%; -moz-border-radius: 50%;""/>
           <h2 style=""color: #333;"">Reset Your Password</h2>
           <p style=""color: #555; font-size: 16px;"">
             Hi {fullName},<br/><br/>

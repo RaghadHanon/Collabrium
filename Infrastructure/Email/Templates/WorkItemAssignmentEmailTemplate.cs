@@ -15,6 +15,7 @@ public class WorkItemAssignmentEmailTemplate : IEmailTemplate
         var assignerFullName = data["AssignerFullName"];
         var workItemCode = data["WorkItemCode"];
         var workItemTitle = data["WorkItemTitle"];
+        var workItemType = data["WorkItemType"];
         var url = data["Url"];
 
         return $@"Hi {assigneeFullName},
@@ -24,6 +25,7 @@ A new work item has been assigned to you by {assignerFullName}.
 Details:
 - Code: {workItemCode}
 - Title: {workItemTitle}
+- Type: {workItemType}
 
 You can view the details here: {url}
 
@@ -37,6 +39,8 @@ Collabrium Team";
         var assignerFullName = data["AssignerFullName"];
         var workItemCode = data["WorkItemCode"];
         var workItemTitle = data["WorkItemTitle"];
+        var workItemType = data["WorkItemType"];
+        var workItemPriority = data["WorkItemPriority"];
         var url = data["Url"];
 
         return $@"
@@ -48,7 +52,7 @@ Collabrium Team";
       <tr>
         <td style=""text-align: center; padding: 10px 0px"">
            <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" 
-                alt=""Collabrium Logo"" width=""150px"" height=""150px""/>
+                alt=""Collabrium Logo"" width=""120px"" height=""120px""/>
           <h2 style=""color: #2a3f58; margin-top: 0;"">New Work Item Assigned</h2>
         </td>
       </tr>
@@ -63,7 +67,9 @@ Collabrium Team";
           
           <div style=""background: #f9f9f9; border-left: 4px solid #ECBF28; padding: 15px; margin: 25px 0;"">
             <p style=""margin: 5px 0; color: #333;""><strong>Code:</strong> #{workItemCode}</p>
+            <p style=""margin: 5px 0; color: #333;""><strong>Type:</strong> {workItemType}</p>
             <p style=""margin: 5px 0; color: #333;""><strong>Title:</strong> {workItemTitle}</p>
+            <p style=""margin: 5px 0; color: #333;""><strong>Priority:</strong> {workItemPriority}</p>
           </div>
 
           <p style=""text-align: center; margin: 35px 0;"">

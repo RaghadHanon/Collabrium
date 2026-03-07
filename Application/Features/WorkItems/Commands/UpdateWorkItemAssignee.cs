@@ -6,6 +6,7 @@ using Application.Interfaces.Emails;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Events;
 using Domain.Models;
 using MediatR;
 using Microsoft.Extensions.Options;
@@ -31,9 +32,7 @@ public sealed class UpdateWorkItemAssignee
         IUsersReadModel usersReadModel,
         IProjectsRepository projectsRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService,
-        IOptions<WebAppSettings> webAppSettings,
-        IEmailTemplateFactory emailTemplateFactory)
+        IMediator mediator)
         : IRequestHandler<Command, Result<WorkItemDto>>
     {
         public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -59,8 +58,8 @@ public sealed class UpdateWorkItemAssignee
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            var decision = PatchHelpers.DecideStringPatch(request.AssignedToUserId);
-            if (decision.Action == PatchHelpers.PatchStringAction.Ignore)
+            var isAsigneeUpdated = PatchHelpers.DecideStringPatch(request.AssignedToUserId);
+            if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Ignore)
             {
                 var currentDto = await workItemsReadModel.GetByIdAsync(tenantId, request.ProjectId, workItem.Id, cancellationToken);
                 return currentDto is null
@@ -76,9 +75,9 @@ public sealed class UpdateWorkItemAssignee
             var isCreator = string.Equals(workItem.CreatedByUserId, currentUser.Id, StringComparison.Ordinal);
 
             UserDto? asigneeUser = null;
-            if (decision.Action == PatchHelpers.PatchStringAction.Set)
+            if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Set)
             {
-                var targetUserId = decision.Value!;
+                var targetUserId = isAsigneeUpdated.Value!;
 
                 asigneeUser = await usersReadModel.GetUserByIdAsync(targetUserId, cancellationToken);
                 if (asigneeUser is null)
@@ -97,7 +96,7 @@ public sealed class UpdateWorkItemAssignee
                         "You can only take unassigned items for yourself. Managers and workItem creator can assign/reassign any item.",
                         HttpStatusCode.Forbidden);
             }
-            else if (decision.Action == PatchHelpers.PatchStringAction.Clear)
+            else if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Clear)
             {
                 if (!CanClearAssignee(isManager, isCurrentAssignee, isCreator))
                     return Result<WorkItemDto>.Failure(
@@ -108,31 +107,23 @@ public sealed class UpdateWorkItemAssignee
             var oldWorkItemState = workItem.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                if (decision.Action == PatchHelpers.PatchStringAction.Clear)
+                if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Clear)
                     workItem.AssignTo(null);
-                else
+                else if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Set)
                 {
-                    workItem.AssignTo(decision.Value!);
-                    var workItemUrl = $"{webAppSettings.Value.BaseUrl.TrimEnd('/')}/api/projects/{request.ProjectId}/work-items/{workItem.Id}";
-                    var template = emailTemplateFactory.GetTemplate("WorkItemAssignment");
-
-                    var data = new Dictionary<string, string>
-                    {
-                        ["AssigneeFullName"] = asigneeUser!.FullName,
-                        ["AssignerFullName"] = currentUser.FullName,
-                        ["WorkItemCode"] = workItem.Code,
-                        ["WorkItemTitle"] = workItem.Title,
-                        ["Url"] = workItemUrl
-                    };
-
-                    var message = new EmailMessageBuilder()
-                        .To(asigneeUser!.Email)
-                        .Subject(template.GetSubject())
-                        .PlainTextBody(template.GetPlainTextBody(data))
-                        .HtmlBody(template.GetHtmlBody(data))
-                        .Build();
-
-                    await emailService.SendAsync(message, cancellationToken);
+                    workItem.AssignTo(isAsigneeUpdated.Value!);
+                    await mediator.Publish(new WorkItemAssignedEvent(
+                        request.ProjectId,
+                        workItem.Id,
+                        workItem.Title,
+                        workItem.Code,
+                        workItem.Type.ToString(),
+                        workItem.Priority.ToString(),
+                        asigneeUser!.Id,
+                        asigneeUser.Email,
+                        asigneeUser.FullName,
+                        currentUser.FullName
+                    ), cancellationToken);
                 }
 
                 await workItemsRepository.UpdateAsync(workItem, ct);

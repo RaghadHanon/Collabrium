@@ -34,6 +34,7 @@ If you did not request this, you can safely ignore this email.";
                   box-shadow: 0 2px 6px rgba(0,0,0,0.1);"">
       <tr>
         <td style=""padding: 30px; text-align: center;"">
+          <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" alt=""Confirm Email"" width=""150px"" height=""150px""/>
           <h2 style=""color: #333;"">Confirm Your Email</h2>
           <p style=""color: #555; font-size: 16px;"">
             Hi {fullName},<br/><br/>

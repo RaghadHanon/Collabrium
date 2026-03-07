@@ -44,7 +44,11 @@ public sealed class WorkItemsReadProfile : Profile
         CreateMap<WorkItemRelationEntity, WorkItemRelationDto>();
 
         // comments
-        CreateMap<CommentEntity, CommentDto>();
+        CreateMap<CommentEntity, CommentDto>()
+            .ForMember(w => w.CreatedByUserName, opt => opt.MapFrom(w => w.CreatedByUser.FullName))
+            .ForMember(w => w.CreatedByUserImage, opt => opt.MapFrom(w => 
+                        w.CreatedByUser.ProfileImage == null ? 
+                        null : w.CreatedByUser.ProfileImage.Url));
 
         // code links
         CreateMap<CodeLinkEntity, CodeLinkDto>();

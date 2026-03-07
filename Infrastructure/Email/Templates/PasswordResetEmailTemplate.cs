@@ -33,7 +33,8 @@ If you did not request a password reset, you can safely ignore this email.";
            style=""max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; 
                   box-shadow: 0 2px 6px rgba(0,0,0,0.1);"">
       <tr>
-        <td style=""padding: 30px; text-align: center;"">
+        <td style=""padding: 30px; text-align: center;"">    
+          <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" alt=""Confirm Email"" width=""150px"" height=""150px""/>
           <h2 style=""color: #333;"">Reset Your Password</h2>
           <p style=""color: #555; font-size: 16px;"">
             Hi {fullName},<br/><br/>
@@ -45,10 +46,6 @@ If you did not request a password reset, you can safely ignore this email.";
                       padding: 12px 24px; border-radius: 6px; font-weight: bold;"">
               Reset Password
             </a>
-          </p>
-          <p style=""color: #999; font-size: 14px;"">
-            If the button above doesn’t work, copy and paste this link into your browser:<br/>
-            <a href=""{url}"" style=""color: #ECBF28;"">{url}</a>
           </p>
           <hr style=""margin: 30px 0; border: none; border-top: 1px solid #eee;"" />
           <p style=""color: #aaa; font-size: 12px;"">

@@ -43,6 +43,15 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
             v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
         );
 
+        var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+            v => v.HasValue
+                ? (v.Value.Kind == DateTimeKind.Utc ? v.Value : v.Value.ToUniversalTime())
+                : v,
+            v => v.HasValue
+                ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
+                : v
+        );
+
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
@@ -50,6 +59,10 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
                 if (property.ClrType == typeof(DateTime))
                 {
                     property.SetValueConverter(dateTimeConverter);
+                }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableDateTimeConverter);
                 }
             }
         }

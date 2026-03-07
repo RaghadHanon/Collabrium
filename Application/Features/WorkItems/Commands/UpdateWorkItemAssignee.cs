@@ -1,11 +1,14 @@
 ﻿using Application.Common;
+using Application.Features.Users.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.Emails;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Models;
 using MediatR;
+using Microsoft.Extensions.Options;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
@@ -27,7 +30,10 @@ public sealed class UpdateWorkItemAssignee
         ICurrentUserAccessor currentUserAccessor,
         IUsersReadModel usersReadModel,
         IProjectsRepository projectsRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        IOptions<WebAppSettings> webAppSettings,
+        IEmailTemplateFactory emailTemplateFactory)
         : IRequestHandler<Command, Result<WorkItemDto>>
     {
         public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -39,8 +45,8 @@ public sealed class UpdateWorkItemAssignee
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var currentUserId = currentUserAccessor.GetUserId();
-            if (string.IsNullOrWhiteSpace(currentUserId))
+            var currentUser = await currentUserAccessor.GetCurrentUserAsync(cancellationToken);
+            if (currentUser is null)
                 return Result<WorkItemDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
             var workItem = await workItemsRepository.GetByIdAsync(
@@ -62,19 +68,20 @@ public sealed class UpdateWorkItemAssignee
                     : Result<WorkItemDto>.Success(currentDto, HttpStatusCode.OK);
             }
 
-            var role = await currentUserAccessor.GetUserRole(currentUserId, cancellationToken);
+            var role = await currentUserAccessor.GetUserRole(currentUser.Id, cancellationToken);
 
             var isManager = role is not null && Roles.ProjectsManagerRoles.Contains(role);
             var isWorkItemUnassigned = string.IsNullOrWhiteSpace(workItem.AssignedToUserId);
-            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
-            var isCreator = string.Equals(workItem.CreatedByUserId, currentUserId, StringComparison.Ordinal);
+            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUser.Id, StringComparison.Ordinal);
+            var isCreator = string.Equals(workItem.CreatedByUserId, currentUser.Id, StringComparison.Ordinal);
 
+            UserDto? asigneeUser = null;
             if (decision.Action == PatchHelpers.PatchStringAction.Set)
             {
                 var targetUserId = decision.Value!;
 
-                var userExists = await usersReadModel.UserExistsAsync(targetUserId, cancellationToken);
-                if (!userExists)
+                asigneeUser = await usersReadModel.GetUserByIdAsync(targetUserId, cancellationToken);
+                if (asigneeUser is null)
                     return Result<WorkItemDto>.Failure("Assigned user not found.", HttpStatusCode.BadRequest);
 
                 var isUserToAssignHasAccess = await projectsRepository.IsUserHasAccessToProjectAsync(
@@ -83,7 +90,7 @@ public sealed class UpdateWorkItemAssignee
                 if (!isUserToAssignHasAccess)
                     return Result<WorkItemDto>.Failure("Assigned user does not have access to the project.", HttpStatusCode.BadRequest);
 
-                var assigningToSelf = string.Equals(targetUserId, currentUserId, StringComparison.Ordinal);
+                var assigningToSelf = string.Equals(targetUserId, currentUser.Id, StringComparison.Ordinal);
 
                 if (!CanSetAssignee(isManager, isWorkItemUnassigned, isCreator, assigningToSelf))
                     return Result<WorkItemDto>.Failure(
@@ -104,7 +111,29 @@ public sealed class UpdateWorkItemAssignee
                 if (decision.Action == PatchHelpers.PatchStringAction.Clear)
                     workItem.AssignTo(null);
                 else
+                {
                     workItem.AssignTo(decision.Value!);
+                    var workItemUrl = $"{webAppSettings.Value.BaseUrl.TrimEnd('/')}/api/projects/{request.ProjectId}/work-items/{workItem.Id}";
+                    var template = emailTemplateFactory.GetTemplate("WorkItemAssignment");
+
+                    var data = new Dictionary<string, string>
+                    {
+                        ["AssigneeFullName"] = asigneeUser!.FullName,
+                        ["AssignerFullName"] = currentUser.FullName,
+                        ["WorkItemCode"] = workItem.Code,
+                        ["WorkItemTitle"] = workItem.Title,
+                        ["Url"] = workItemUrl
+                    };
+
+                    var message = new EmailMessageBuilder()
+                        .To(asigneeUser!.Email)
+                        .Subject(template.GetSubject())
+                        .PlainTextBody(template.GetPlainTextBody(data))
+                        .HtmlBody(template.GetHtmlBody(data))
+                        .Build();
+
+                    await emailService.SendAsync(message, cancellationToken);
+                }
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
@@ -128,9 +157,7 @@ public sealed class UpdateWorkItemAssignee
 
             if (isCreator) return true;
 
-            if (isWorkItemUnassigned) return assigningToSelf;
-
-            return false;
+            return isWorkItemUnassigned ? assigningToSelf : false;
         }
 
         private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isCreator)
@@ -139,9 +166,7 @@ public sealed class UpdateWorkItemAssignee
 
             if (isCreator) return true;
 
-            if (isCurrentAssignee) return true;
-
-            return false;
+            return isCurrentAssignee;
         }
     }
 }

@@ -155,17 +155,20 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("UploadedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.HasIndex("WorkItemId");
 
@@ -969,11 +972,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("Attachments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("UploadedByUser");
 
                     b.Navigation("WorkItem");
                 });

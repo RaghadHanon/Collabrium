@@ -1,6 +1,6 @@
 ﻿using Domain.Models;
 
-namespace Infrastructure.Email;
+namespace Application.Common;
 
 public class EmailMessageBuilder
 {

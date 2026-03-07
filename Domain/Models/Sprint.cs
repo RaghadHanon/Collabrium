@@ -95,8 +95,6 @@ public class Sprint : Entity
         Guard.Against(Status != SprintStatus.Planned && Status != SprintStatus.Active, "Only planned sprint can be started.");
         Schedule(start, end);
         Status = SprintStatus.Active;
-        StartDate = start;
-        EndDate = end;
         Name = name;
         Goal = goal;
         Touch();
@@ -106,8 +104,10 @@ public class Sprint : Entity
     {
         Guard.Against(start != StartDate && DateTime.UtcNow >= StartDate && Status == SprintStatus.Active,
             "Cannot update start date for a sprint that has already started.");
-        Guard.Against(start != StartDate && DateTime.UtcNow < start, "Start date must be in the future.");
+        Guard.Against(start != StartDate && DateTime.UtcNow.AddMinutes(5) < start, "Start date must be in the future.");
         Guard.Against(end < start, "Sprint end date must be >= start date.");
+        StartDate = start;
+        EndDate = end;
     }
 
     public void Complete()

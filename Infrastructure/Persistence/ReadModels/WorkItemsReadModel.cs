@@ -196,6 +196,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {
                             Id = r.TargetWorkItem.Id,
+                            Code = r.TargetWorkItem.Code,
                             Title = r.TargetWorkItem.Title,
                             Type = r.TargetWorkItem.Type,
                             Status = r.TargetWorkItem.Status,
@@ -315,6 +316,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {
                             Id = r.TargetWorkItem.Id,
+                            Code = r.TargetWorkItem.Code,
                             Title = r.TargetWorkItem.Title,
                             Type = r.TargetWorkItem.Type,
                             Status = r.TargetWorkItem.Status,
@@ -367,6 +369,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                         TargetWorkItem = new RelationParticipantWorkItemDto
                         {
                             Id = r.TargetWorkItem.Id,
+                            Code = r.TargetWorkItem.Code,
                             Title = r.TargetWorkItem.Title,
                             Type = r.TargetWorkItem.Type,
                             Status = r.TargetWorkItem.Status,

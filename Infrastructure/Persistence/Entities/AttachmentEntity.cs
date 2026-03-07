@@ -15,4 +15,6 @@ public class AttachmentEntity : DbEntity
 
     public string UploadedByUserId { get; set; } = null!;
     public DateTime UploadedAt { get; set; }
+    public ApplicationUserEntity UploadedByUser { get; set; } = null!;
+
 }

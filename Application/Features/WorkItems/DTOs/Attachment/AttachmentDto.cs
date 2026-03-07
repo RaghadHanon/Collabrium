@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Application.Features.WorkItems.DTOs.Comments;
+using Domain.Enums;
 
 namespace Application.Features.WorkItems.DTOs.Attachment;
 public class AttachmentDto
@@ -10,7 +11,6 @@ public class AttachmentDto
     public required string Url { get; set; }
     public required string ContentType { get; set; }
     public AttachmentType Type { get; set; }
-
-    public required string UploadedByUserId { get; set; }
+    public required RelatedUserDto RelatedUser { get; set; }
     public DateTime UploadedAt { get; set; }
 }

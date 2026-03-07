@@ -211,7 +211,7 @@ public class TenantsController : ApiBaseController
     /// <response code="200">Returns the list of users successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
-    [Authorize(Policy = Policies.Tenant_Read)]
+    [Authorize]
     [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("my-tenant/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetMyTenantUsers([FromQuery] GetTenantUsersRequest request)

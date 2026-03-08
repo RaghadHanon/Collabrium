@@ -110,16 +110,29 @@ public class SprintsRepository : ISprintsRepository
             .AnyAsync(w => w.SprintId == sId && tenantId == w.Project.TenantId, cancellationToken);
     }
 
-    public Task<List<WorkItemEntity>>? GetWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<bool> CanSprintBeCompletedAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+            return false;
+
+        var sId = sprintId.Trim();
+
+        return await _dbContext.WorkItems
+                .AsNoTracking()
+                .Where(w => w.SprintId == sId && w.Project.TenantId == tenantId)
+                .AnyAsync(w => w.Status != WorkItemStatus.Done);
+    }
+
+    public async Task<List<WorkItemEntity>>? GetWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
             return null;
 
         var sId = sprintId.Trim();
 
-        return _dbContext.WorkItems
+        return await _dbContext.WorkItems
                 .AsNoTracking()
-                .Where(w => w.SprintId == sId)
+                .Where(w => w.SprintId == sId && w.Project.TenantId == tenantId)
                 .ToListAsync(cancellationToken);
     }
 

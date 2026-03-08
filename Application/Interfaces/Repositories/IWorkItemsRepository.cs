@@ -13,7 +13,8 @@ public interface IWorkItemsRepository
     Task<bool> IsExistAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default);
     Task MoveWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default);
 
-    Task AddWorkItemsToSprintAsync(string tenantId, string projectId, string sprintId, string[] workItemIds, CancellationToken cancellationToken);
+    Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
+        string[] workItemIds, CancellationToken cancellationToken);
     Task<WorkItem?> GetByIdAsync(string tenantId, string projectId, string workItemId, bool includeChildren = true, CancellationToken cancellationToken = default);
     Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,

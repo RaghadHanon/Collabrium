@@ -2,7 +2,9 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
+using Microsoft.EntityFrameworkCore.Migrations;
 using System.Net;
 
 namespace Application.Features.Sprints.Commands;
@@ -17,6 +19,7 @@ public class AddWorkItemsToSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         IWorkItemsRepository workItemsRepository,
         IProjectsRepository projectsRepository,
         ITenantContext tenantContext,
@@ -47,8 +50,15 @@ public class AddWorkItemsToSprint
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                await workItemsRepository.AddWorkItemsToSprintAsync(tenantId, request.ProjectId, request.SprintId, request.WorkItemIds, cancellationToken);
+                var workItems = await workItemsRepository.GetWorkItemsListFromIds(tenantId, request.ProjectId, request.SprintId, request.WorkItemIds, cancellationToken);
 
+                foreach (var workItem in workItems)
+                {
+                    var oldWorkItemState = workItem.Clone();
+                    workItem.MoveToSprint(sprint.Id);
+                    await workItemsRepository.UpdateAsync(workItem, cancellationToken);
+                    historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);
+                }
             }, cancellationToken);
 
             return Result<string>.Success("WorkItems added to sprint successfully.", HttpStatusCode.OK);

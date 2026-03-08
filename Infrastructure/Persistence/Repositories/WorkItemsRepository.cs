@@ -117,18 +117,18 @@ public class WorkItemsRepository : IWorkItemsRepository
         return;
     }
 
-    public async Task AddWorkItemsToSprintAsync(string tenantId, string projectId, string sprintId,
+    public async Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
         string[] workItemIds, CancellationToken cancellationToken)
     {
-        var workItems = await _dbContext.WorkItems
+        var workItemsEntity = await _dbContext.WorkItems
             .Where(w => workItemIds.Contains(w.Id) && w.ProjectId == projectId && w.Project.TenantId == tenantId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-        foreach (var workItem in workItems)
-        {
-            workItem.SprintId = sprintId;
-            await UpdateAsync(WorkItemMapper.ToDomain(workItem, includeChildren: false), cancellationToken);
-        }
+        var workItems = workItemsEntity
+            .Select(e => WorkItemMapper.ToDomain(e, includeChildren: false))
+            .ToList();
+
+        return workItems;
     }
 
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(

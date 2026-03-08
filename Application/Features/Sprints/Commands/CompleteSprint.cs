@@ -40,6 +40,10 @@ public class CompleteSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
+            if(!(await sprintsRepository.CanSprintBeCompletedAsync(tenantId, request.SprintId, cancellationToken)))
+                return Result<SprintDto>.Failure("Sprint cannot be completed. Please ensure all work items are closed.",
+                    HttpStatusCode.BadRequest);
+
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {

@@ -15,7 +15,7 @@ public class UpdateWorkItemComment
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
         public required string CommentId { get; set; }
-        public required string NewContent { get; set; }
+        public required string Content { get; set; }
     }
 
     public class Handler(
@@ -54,7 +54,7 @@ public class UpdateWorkItemComment
             var oldCommentState = comment.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                comment.Edit(request.NewContent);
+                comment.Edit(request.Content);
 
                 await workItemsRepository.UpdateCommentOfWorkItemAsync(
                     request.WorkItemId,

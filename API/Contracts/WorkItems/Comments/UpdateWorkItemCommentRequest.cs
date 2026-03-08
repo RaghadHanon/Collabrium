@@ -2,5 +2,5 @@
 
 public class UpdateWorkItemCommentRequest
 {
-    public required string NewContent { get; set; }
+    public required string Content { get; set; }
 }

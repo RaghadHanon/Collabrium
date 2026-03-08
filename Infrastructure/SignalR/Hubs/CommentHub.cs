@@ -44,7 +44,7 @@ public sealed class CommentHub(
             ProjectId = projectId,
             WorkItemId = workItemId,
             CommentId = commentId,
-            NewContent = content
+            Content = content
         });
 
         if (!result.IsSuccess)

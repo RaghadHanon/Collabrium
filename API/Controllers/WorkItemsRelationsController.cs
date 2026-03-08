@@ -57,10 +57,10 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get a specific WorkItem Relations (optionally with a specific relation type).
+    /// Get a specific WorkItem WorkItems (optionally with a specific relation type).
     /// </summary>
     /// <remarks>
-    /// Get a specific WorkItem Relations.
+    /// Get a specific WorkItem WorkItems.
     ///
     /// Sample request:
     ///
@@ -76,7 +76,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     /// <param name="workItemId">The unique identifies of the workItem.</param>
     /// <param name="request">Filter on type payload.</param>
     /// <returns>The list of the specified WorkItem relations.</returns>
-    /// <response code="200">Relations retrieved successfully.</response>
+    /// <response code="200">WorkItems retrieved successfully.</response>
     /// <response code="400">If the request payload is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
@@ -97,10 +97,10 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     }
 
     /// <summary>
-    /// Delete a specific WorkItem Relations.
+    /// Delete a specific WorkItem WorkItems.
     /// </summary>
     /// <remarks>
-    /// Delete a specific WorkItem Relations.
+    /// Delete a specific WorkItem WorkItems.
     ///
     /// Sample request:
     ///

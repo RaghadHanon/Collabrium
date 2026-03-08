@@ -49,6 +49,6 @@ public static class Policies
     public const string WorkItems_AssignOthers = "WorkItems.Assign.Others";
 
     public const string WorkItems_Delete = "WorkItems.Delete";
-    public const string WorkItems_ChangeStatus = "WorkItems.ChangeStatus";
+    public const string WorkItems_ChangeStatus = "WorkItems.ChangeStatusWithValidation";
     public const string WorkItems_ChangeAssignee = "WorkItems.ChangeAssignee";
 }

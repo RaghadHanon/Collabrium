@@ -72,14 +72,7 @@ public sealed class TestCase : WorkItem
             };
     }
 
-    public void StartTesting()
-    {
-        Result = TestCaseResult.NotRun;
-        ActualResult = null;
-        ChangeStatus(WorkItemStatus.InTesting);
-    }
-
-    public void RecordOutcome(TestCaseResult result, string? actualResult, string executedByUserId, string? note = null)
+    public void RecordOutcome(TestCaseResult result, string? actualResult, string executedByUserId, Project project, Sprint? sprint, string? note = null)
     {
         Guard.Against(Status != WorkItemStatus.InTesting, "TestCase must be InTesting to record outcome.");
         Guard.Against(result == TestCaseResult.NotRun, "Outcome must be Passed/Failed/Blocked.");
@@ -87,7 +80,7 @@ public sealed class TestCase : WorkItem
         Result = result;
         ActualResult = actualResult?.Trim();
 
-        ChangeStatus(WorkItemStatus.Done);
+        ChangeStatus(WorkItemStatus.Done, project, sprint);
 
         if (!string.IsNullOrWhiteSpace(note))
             AddComment(Guid.NewGuid().ToString(), executedByUserId, $"Test Outcome: {result}. {note}");

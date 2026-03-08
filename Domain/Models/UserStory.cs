@@ -34,11 +34,13 @@ public sealed class UserStory : WorkItem
     }
 
     public override void ChangeStatusWithValidation(
-         WorkItemStatus newStatus,
+         WorkItemStatus newStatus, 
+         Project project,
+         Sprint? sprint,
          IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateStatusGate(newStatus, linked);
-        base.ChangeStatus(newStatus);
+        base.ChangeStatus(newStatus, project, sprint);
     }
 
     private void ValidateStatusGate(WorkItemStatus target, IEnumerable<WorkItemSnapshot>? linked)

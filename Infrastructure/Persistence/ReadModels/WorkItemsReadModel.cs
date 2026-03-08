@@ -48,6 +48,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .Include(w => w.Relations)
             .ThenInclude(r => r.TargetWorkItem)
             .Include(w => w.CodeLinks)
+            .ThenInclude(cl => cl.CreatedByUser)
             .AsNoTracking()
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);

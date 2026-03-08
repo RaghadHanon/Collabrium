@@ -68,7 +68,7 @@ public class SprintsRepository : ISprintsRepository
             .AnyAsync(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId, cancellationToken);
     }
 
-    public async Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default)
+    public async Task<Sprint?> GetByIdAsync(string tenantId, string? sprintId, string? projectId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
             return null;

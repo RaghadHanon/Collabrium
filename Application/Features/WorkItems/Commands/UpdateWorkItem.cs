@@ -50,7 +50,8 @@ public partial class UpdateWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project is null)
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
@@ -80,11 +81,12 @@ public partial class UpdateWorkItem
                     HttpStatusCode.Forbidden);
 
             var sprintDecision = PatchHelpers.DecideStringPatch(request.SprintId);
+            Sprint? sprint = null;
             if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
                 var sprintIdToSet = sprintDecision.Value!;
 
-                var sprint = await sprintsRepository.GetByIdAsync(
+                sprint = await sprintsRepository.GetByIdAsync(
                     tenantId,
                     sprintIdToSet,
                     request.ProjectId,
@@ -131,7 +133,7 @@ public partial class UpdateWorkItem
                     else workItem.Unblock();
                 }
 
-                ApplyTypeSpecificPatch(workItem, request);
+                ApplyTypeSpecificPatch(workItem, request, project, sprint);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
@@ -149,7 +151,7 @@ public partial class UpdateWorkItem
                 : Result<WorkItemDto>.Success(dto, HttpStatusCode.OK);
         }
 
-        private void ApplyTypeSpecificPatch(WorkItem workItem, Command request)
+        private void ApplyTypeSpecificPatch(WorkItem workItem, Command request, Project project, Sprint? sprint)
         {
             if (request.Details is null) return;
 
@@ -164,7 +166,7 @@ public partial class UpdateWorkItem
                     break;
 
                 case WorkItemType.TestCase:
-                    ApplyTestCasePatch((TestCase) workItem, request.Details);
+                    ApplyTestCasePatch((TestCase) workItem, request.Details, project, sprint);
                     break;
 
                 default:
@@ -192,7 +194,7 @@ public partial class UpdateWorkItem
                 d.ActualResult ?? bug.ActualResult);
         }
 
-        private void ApplyTestCasePatch(TestCase tc, IWorkItemUpdateDetails details)
+        private void ApplyTestCasePatch(TestCase tc, IWorkItemUpdateDetails details, Project project, Sprint? sprint)
         {
             if (details is not UpdateTestCaseDetails d) return;
 
@@ -215,7 +217,7 @@ public partial class UpdateWorkItem
                     throw new InvalidOperationException("User id not found.");
 
                 if (d.Result.HasValue && d.Result.Value != TestCaseResult.NotRun)
-                    tc.RecordOutcome(d.Result.Value, d.ActualResult, executedBy);
+                    tc.RecordOutcome(d.Result.Value, d.ActualResult, executedBy, project, sprint);
             }
         }
     }

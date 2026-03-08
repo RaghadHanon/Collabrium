@@ -84,7 +84,6 @@ public class Sprint : Entity
         Guard.Against(Status == SprintStatus.Completed, "Cannot update a completed sprint.");
 
         Schedule(start, end);
-
         Name = name;
         Goal = goal;
 
@@ -96,9 +95,7 @@ public class Sprint : Entity
         Guard.Against(Status != SprintStatus.Planned, "Only planned sprint can be started.");
 
         Schedule(start, end);
-
         Status = SprintStatus.Active;
-
         Name = name;
         Goal = goal;
 

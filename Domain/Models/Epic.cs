@@ -88,11 +88,13 @@ public sealed class Epic : WorkItem
     }
 
     public override void ChangeStatusWithValidation(
-    WorkItemStatus newStatus,
-    IEnumerable<WorkItemSnapshot>? linked)
+        WorkItemStatus newStatus,
+        Project project,
+        Sprint? sprint,
+        IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateEpicGate(newStatus, linked);
-        base.ChangeStatus(newStatus);
+        base.ChangeStatus(newStatus, project, sprint);
     }
 
     private void ValidateEpicGate(

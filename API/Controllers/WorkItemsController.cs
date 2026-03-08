@@ -271,7 +271,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items?RelationType=Bug&Status=InProgress&Priority=High&PageSize=10&Cursor=2026-02-01T00:00:00Z
+    ///     GET /api/projects/{projectId}/work-items?RelationType=Bug&amp;Status=InProgress&amp;Priority=High&amp;PageSize=10&amp;Cursor=2026-02-01T00:00:00Z
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>

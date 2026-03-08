@@ -23,6 +23,7 @@ public class UpdateWorkItemStatus
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
         IProjectHistoryRecorder historyRecorder,
+        ISprintsRepository sprintsRepository,
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
@@ -36,7 +37,8 @@ public class UpdateWorkItemStatus
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project is null)
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
@@ -71,7 +73,10 @@ public class UpdateWorkItemStatus
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
-                workItem.ChangeStatusWithValidation(request.NewStatus, children);
+                var sprint = await sprintsRepository.GetByIdAsync(tenantId, workItem.SprintId, request.ProjectId, ct);
+
+                workItem.ChangeStatusWithValidation(request.NewStatus, project, sprint, children);
+
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
                 historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);

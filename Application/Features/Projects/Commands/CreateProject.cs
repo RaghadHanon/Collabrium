@@ -78,7 +78,6 @@ public class CreateProject
                 project.UpdateDetails(
                     name: request.Name,
                     description: request.Description,
-                    status: ProjectStatus.NotStarted,
                     startDate: request.StartDate,
                     endDate: request.EndDate
                 );

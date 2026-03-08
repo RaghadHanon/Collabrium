@@ -9,7 +9,7 @@ public static class ProjectMapper
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        return Project.Rehydrate(
+       return Project.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,

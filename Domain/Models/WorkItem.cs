@@ -68,8 +68,8 @@ public abstract class WorkItem : Entity
 
     protected void RehydrateCommon(
         DateTime createdAt,
-        DateTime? updatedAt, 
-        WorkItemType Type,
+        DateTime? updatedAt,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -104,6 +104,7 @@ public abstract class WorkItem : Entity
 
         StartDate = startDate;
         EndDate = endDate;
+        Type = type;
     }
 
     public void RehydrateAddComment(Comment comment)
@@ -158,8 +159,22 @@ public abstract class WorkItem : Entity
             };
     }
 
-    public void ChangeStatus(WorkItemStatus newStatus)
+    public virtual void ChangeStatusWithValidation(
+        WorkItemStatus newStatus,
+        Project project,
+        Sprint? sprint,
+        IEnumerable<WorkItemSnapshot>? linked = null)
     {
+        ChangeStatus(newStatus, project, sprint);
+    }
+
+    public void ChangeStatus(WorkItemStatus newStatus, Project project, Sprint? sprint)
+    {
+        Guard.Against(project.Status == ProjectStatus.NotStarted || project.Status == ProjectStatus.Completed
+            || project.Status == ProjectStatus.Cancelled, $"Cannot change status of work items in an {project.Status} project.");
+
+        Guard.Against(sprint is null || sprint.Status != SprintStatus.Active, "Cannot update work item status before starting its sprint.");
+
         Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
             "Blocked work item cannot be moved to InProgress.");
 
@@ -178,13 +193,6 @@ public abstract class WorkItem : Entity
             EndDate = null;
 
         Touch();
-    }
-
-    public virtual void ChangeStatusWithValidation(
-        WorkItemStatus newStatus,
-        IEnumerable<WorkItemSnapshot>? linked = null)
-    {
-        ChangeStatus(newStatus);
     }
 
     public List<WorkItemStatus> GetAllowedStatuses()

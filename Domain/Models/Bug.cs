@@ -52,14 +52,6 @@ public class Bug : WorkItem
             };
     }
 
-    public void Reopen(string reopenedByUserId, string? note = null)
-    {
-        Guard.Against(!IsDone, "Only Done bug can be reopened.");
-        ChangeStatus(WorkItemStatus.InProgress);
-        if (!string.IsNullOrWhiteSpace(note))
-            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
-    }
-
     public static Bug Rehydrate(
         string id,
         DateTime createdAt,

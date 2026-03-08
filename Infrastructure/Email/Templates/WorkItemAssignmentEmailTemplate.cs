@@ -54,7 +54,7 @@ Collabrium Team";
            <img src=""https://res.cloudinary.com/dcfpagr5v/image/upload/v1772752623/Collabrium/ProfileImages/mqogyk5po3aoq7gv2oov.jpg"" 
                 alt=""Collabrium Logo"" style=""display: block; margin: 0 auto; width: 150px; height: 150px; 
                          border-radius: 50%; object-fit: cover; -webkit-border-radius: 50%; -moz-border-radius: 50%;"" />
-          <h2 style=""color: #2a3f58; margin-top: 0;"">New Work Item Assigned</h2>
+          <h2 style=""color: #2a3f58; margin-top: 10;"">New Work Item Assigned</h2>
         </td>
       </tr>
       

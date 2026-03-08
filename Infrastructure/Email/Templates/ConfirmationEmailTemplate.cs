@@ -42,7 +42,7 @@ If you did not request this, you can safely ignore this email.";
                    style=""display: block; margin: 0 auto; width: 150px; height: 150px; 
                          border-radius: 50%; object-fit: cover; -webkit-border-radius: 50%; -moz-border-radius: 50%;""/>
                 
-                <h2 style=""color: #333333 !important;"">Confirm Your Email</h2>
+                <h2 style=""color: #333333 !important; margin-top: 10;"">Confirm Your Email</h2>
                 
                 <p style=""color: #555555 !important; font-size: 16px; line-height: 1.5;"">
                   Hi {fullName},<br/><br/>

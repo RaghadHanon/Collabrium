@@ -1,10 +1,10 @@
 ﻿using API.Contracts.Sprints;
 using API.SetupProgram;
 using Application.Common;
-using Application.Features.Projects.DTOs.Boards;
 using Application.Features.Sprints.Commands;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
+using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.Queries;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -111,6 +111,8 @@ public sealed class SprintsController : ApiBaseController
     ///     Content-RelationType: application/json
     ///
     ///     {
+    ///       "name": "Sprint 1",
+    ///       "goal": "Complete user authentication module",
     ///       "startDate": "2026-02-02T00:00:00Z",
     ///       "endDate": "2026-02-15T23:59:59Z"
     ///     }
@@ -176,6 +178,8 @@ public sealed class SprintsController : ApiBaseController
     ///     Content-RelationType: application/json
     ///
     ///     {
+    ///       "name": "Sprint 1",
+    ///       "goal": "Complete user authentication module",
     ///       "startDate": "2026-02-01T00:00:00Z",
     ///       "endDate": "2026-02-14T23:59:59Z"
     ///     }
@@ -279,7 +283,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/user-stories")]
-    public async Task<ActionResult<BoardDto>> GetSprintUserStories(string projectId, string sprintId)
+    public async Task<ActionResult<WorkItemListItemDto>> GetSprintUserStories(string projectId, string sprintId)
     {
         var query = new GetWorkItemsByType.Query
         {

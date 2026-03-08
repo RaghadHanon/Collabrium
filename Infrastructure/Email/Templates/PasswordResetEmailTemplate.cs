@@ -38,7 +38,7 @@ If you did not request a password reset, you can safely ignore this email.";
                    alt=""Collabrium logo""  
                    style=""display: block; margin: 0 auto; width: 150px; height: 150px; 
                          border-radius: 50%; object-fit: cover; -webkit-border-radius: 50%; -moz-border-radius: 50%;""/>
-          <h2 style=""color: #333;"">Reset Your Password</h2>
+          <h2 style=""color: #333; margin-top: 10px;"">Reset Your Password</h2>
           <p style=""color: #555; font-size: 16px;"">
             Hi {fullName},<br/><br/>
             We received a request to reset your password. Click the button below to set a new password.

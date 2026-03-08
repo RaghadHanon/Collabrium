@@ -10,7 +10,6 @@ public class AddWorkItemAttachmentRequestValidator
     public AddWorkItemAttachmentRequestValidator()
     {
         RuleFor(x => x.Type)
-            .NotEmpty()
             .IsInEnum()
             .WithMessage("Invalid attachment type.");
 

@@ -188,6 +188,8 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 AssignedToUserId = w.AssignedToUserId,
                 CreatedAt = w.CreatedAt,
 
+                AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
+
                 Parent = w.Relations
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)
                     .Select(r => new WorkItemRelationDto
@@ -308,6 +310,8 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 AssignedToUserId = w.AssignedToUserId,
                 CreatedAt = w.CreatedAt,
 
+                AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
+
                 Parent = w.Relations
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)
                     .Select(r => new WorkItemRelationDto
@@ -360,6 +364,8 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
                 CreatedAt = w.CreatedAt,
+
+                AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
                 Parent = w.Relations
                     .Where(r => r.RelationType == WorkItemRelationType.Parent)

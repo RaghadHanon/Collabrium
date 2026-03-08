@@ -134,7 +134,6 @@ public abstract class WorkItem : Entity
         Guard.Against(IsDone, "Cannot update a completed work item.");
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         EffortPoints = Guard.NonNegative(effortPoints, nameof(effortPoints));
-
         Description = description?.Trim();
         AcceptanceCriteria = acceptanceCriteria?.Trim();
         Touch();
@@ -185,6 +184,9 @@ public abstract class WorkItem : Entity
 
         if (newStatus == WorkItemStatus.InProgress && StartDate is null)
             StartDate = DateTime.UtcNow;
+
+        if(newStatus == WorkItemStatus.ToDo && StartDate is not null)
+            StartDate = null;
 
         if (newStatus == WorkItemStatus.Done)
             EndDate = DateTime.UtcNow;

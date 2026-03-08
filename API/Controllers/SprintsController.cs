@@ -280,7 +280,7 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="200">User stories loaded successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
-    /// <response code="404">If tenant/project not found.</response>
+    /// <response code="404">If tenant/project/sprint not found.</response>
     [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/user-stories")]
     public async Task<ActionResult<WorkItemListItemDto>> GetSprintUserStories(string projectId, string sprintId)
@@ -293,5 +293,42 @@ public sealed class SprintsController : ApiBaseController
         };
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Add list of WorkItems to sprint.
+    /// </summary>
+    /// <remarks>
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/sprints/sprint/{sprintId}/work-items
+    ///     Content-RelationType: application/json
+    ///
+    ///     {
+    ///       "workItemIds": [
+    ///         "11111111-1111-1111-1111-111111111111",
+    ///         "22222222-2222-2222-2222-222222222222"
+    ///       ]
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <param name="sprintId">Sprint identifier.</param>
+    /// <param name="request">List of work item ids to be added to sprint.</param>
+    /// <returns>Success message.</returns>
+    /// <response code="200">WorkItems added successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project/sprint not found.</response>
+    [Authorize(Policy = Policies.Sprints_Manage)]
+    [HttpPost("sprint/{sprintId}/work-items")]
+    public async Task<ActionResult<WorkItemListItemDto>> AddWorkItemsToSprint(string projectId, string sprintId, AddWorkItemsToSprintRequest request)
+    {
+       var command = Mapper.Map<AddWorkItemsToSprint.Command>(request);
+        command.ProjectId = projectId;
+        command.SprintId = sprintId;
+
+        return HandleResult(await Mediator.Send(command));
     }
 }

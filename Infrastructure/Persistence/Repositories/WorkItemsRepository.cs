@@ -117,6 +117,20 @@ public class WorkItemsRepository : IWorkItemsRepository
         return;
     }
 
+    public async Task AddWorkItemsToSprintAsync(string tenantId, string projectId, string sprintId,
+        string[] workItemIds, CancellationToken cancellationToken)
+    {
+        var workItems = await _dbContext.WorkItems
+            .Where(w => workItemIds.Contains(w.Id) && w.ProjectId == projectId && w.Project.TenantId == tenantId)
+            .ToListAsync();
+
+        foreach (var workItem in workItems)
+        {
+            workItem.SprintId = sprintId;
+            await UpdateAsync(WorkItemMapper.ToDomain(workItem, includeChildren: false), cancellationToken);
+        }
+    }
+
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

@@ -10,11 +10,11 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     {
         RuleFor(x => x.Name)
             .MaximumLength(100).WithMessage("Code cannot exceed 100 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Name));
+            .When(x => !string.IsNullOrEmpty(x.Name));
 
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.")
-            .When(x => !(x.Description is null));
+            .When(x => !string.IsNullOrEmpty(x.Description));
 
         RuleFor(x => x.Status)
             .IsInEnum()
@@ -33,7 +33,7 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
 
     private static bool HasAnyField(UpdateProjectRequest r)
     {
-        return !string.IsNullOrWhiteSpace(r.Name)
+        return !(r.Name is null)
                || !(r.Description is null)
                || r.Status.HasValue
                || r.StartDate.HasValue

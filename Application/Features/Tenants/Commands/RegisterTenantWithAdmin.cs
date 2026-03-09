@@ -51,7 +51,7 @@ public class RegisterTenantWithAdmin
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 tenant = new Tenant(request.TenantName, request.Domain);
-                tenant.UpdateProfile(request.Description, country: null, websiteUrl: null);
+                tenant.UpdateProfile(request.TenantName, request.Domain, request.Description, country: null, websiteUrl: null);
 
                 await tenantRepository.AddAsync(tenant, ct);
 

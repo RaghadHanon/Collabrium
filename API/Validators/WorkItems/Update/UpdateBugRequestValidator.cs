@@ -11,15 +11,15 @@ public sealed class UpdateBugRequestValidator : AbstractValidator<UpdateBugReque
 
         RuleFor(x => x.StepsToReproduce)
             .MaximumLength(4000).WithMessage("StepsToReproduce cannot exceed 4000 characters.")
-            .When(x => !(x.StepsToReproduce is null));
+            .When(x => !string.IsNullOrEmpty(x.StepsToReproduce));
 
         RuleFor(x => x.ExpectedResult)
             .MaximumLength(4000).WithMessage("ExpectedResult cannot exceed 4000 characters.")
-            .When(x => !(x.ExpectedResult is null));
+            .When(x => !string.IsNullOrEmpty(x.ExpectedResult));
 
         RuleFor(x => x.ActualResult)
             .MaximumLength(4000).WithMessage("ActualResult cannot exceed 4000 characters.")
-            .When(x => !(x.ActualResult is null));
+            .When(x => !string.IsNullOrEmpty(x.ActualResult));
 
         RuleFor(x => x)
             .Must(HasAnyField)

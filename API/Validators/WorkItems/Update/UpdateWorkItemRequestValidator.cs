@@ -10,15 +10,15 @@ public sealed class UpdateWorkItemRequestValidator : AbstractValidator<UpdateWor
     {
         RuleFor(x => x.Title)
             .MaximumLength(200).WithMessage("Title cannot exceed 200 characters.")
-            .When(x => !(x.Title is null));
+            .When(x => !string.IsNullOrEmpty(x.Title));
 
         RuleFor(x => x.Description)
             .MaximumLength(4000).WithMessage("Description cannot exceed 4000 characters.")
-            .When(x => !(x.Description is null));
+            .When(x => !string.IsNullOrEmpty(x.Description));
 
         RuleFor(x => x.AcceptanceCriteria)
             .MaximumLength(4000).WithMessage("AcceptanceCriteria cannot exceed 4000 characters.")
-            .When(x => !(x.AcceptanceCriteria is null));
+            .When(x => !string.IsNullOrEmpty(x.AcceptanceCriteria));
 
         RuleFor(x => x.EffortPoints)
             .GreaterThanOrEqualTo(0).WithMessage("EffortPoints must be greater than or equal to 0.")

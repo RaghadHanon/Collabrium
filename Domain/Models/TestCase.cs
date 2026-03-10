@@ -59,8 +59,6 @@ public sealed class TestCase : WorkItem
     {
         // TestCase: ToDo -> InTesting -> Done
         // Allow Done -> InTesting (re-run)
-        Guard.Against(to == WorkItemStatus.Done && Result != TestCaseResult.Passed, "Allow Done status only if the result is Passed");
-
         return from == to
             || to == WorkItemStatus.ToDo
             || from switch

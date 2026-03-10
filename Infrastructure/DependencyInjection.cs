@@ -7,6 +7,7 @@ using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.FilesStorage.Factory;
 using Infrastructure.Identity;
+using Infrastructure.Pdf;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.ReadModels;
@@ -26,6 +27,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 using System.Text;
 using System.Text.Json;
 
@@ -53,6 +55,9 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IPdfService, PdfService>();
+        services.AddScoped<IChartService, ChartService>();
+        QuestPDF.Settings.License = LicenseType.Community;
 
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
         services.AddSignalR();

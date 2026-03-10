@@ -9,5 +9,6 @@ public class ReportsApiMappingProfile : Profile
     public ReportsApiMappingProfile()
     {
         CreateMap<GetCycleTimeReportRequest, GetCycleTimeReport.Query>();
+        CreateMap<GetCycleTimeReportRequest, GetCycleTimeReportPdf.Query>();
     }
 }

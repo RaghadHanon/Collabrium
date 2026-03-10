@@ -13,7 +13,6 @@ public sealed class CreateWorkItemRequestValidator : AbstractValidator<CreateWor
             .MaximumLength(200).WithMessage("Title cannot exceed 200 characters.");
 
         RuleFor(x => x.Priority)
-            .NotEmpty().WithMessage("Priority is required.")
             .IsInEnum()
             .WithMessage("Priority must be a valid WorkItemPriority value.");
 

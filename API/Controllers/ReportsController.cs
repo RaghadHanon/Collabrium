@@ -81,4 +81,28 @@ public sealed class ReportsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(query));
     }
+
+    /// <summary>
+    /// Retrieves Project Cycle Time report as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/tenants/my-tenant/{projectId}/cycle-time-report/pdf
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/cycle-time-report/pdf")]
+    public async Task<IActionResult> GetCycleTimeReportPdf(string projectId, [FromQuery] GetCycleTimeReportRequest request)
+    {
+        // Map request to MediatR query
+        var query = Mapper.Map<GetCycleTimeReportPdf.Query>(request);
+        query.ProjectId = projectId;
+        
+        return HandleResult(await Mediator.Send(query));
+    }
 }

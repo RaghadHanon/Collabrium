@@ -20,7 +20,6 @@ public sealed class CreateTeamRequestValidator : AbstractValidator<CreateTeamReq
             .When(x => !string.IsNullOrWhiteSpace(x.Description));
 
         RuleFor(x => x.Department)
-            .NotEmpty().WithMessage("Department is required.")
             .IsInEnum()
             .WithMessage("Department must be a valid value.");
 

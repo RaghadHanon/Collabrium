@@ -23,7 +23,6 @@ public sealed class CreateTestCaseRequestValidator : AbstractValidator<CreateTes
             .MaximumLength(4000).WithMessage("ExpectedResult cannot exceed 4000 characters.");
 
         RuleFor(x => x.TestEnvironment)
-            .NotEmpty().WithMessage("TestEnvironment is required.")
             .IsInEnum()
             .WithMessage("TestEnvironment must be a valid TestEnvironment value.");
     }

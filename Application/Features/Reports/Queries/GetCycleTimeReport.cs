@@ -3,6 +3,7 @@ using Application.Features.Reports.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Infrastructure.Pdf;
 using MediatR;
 using System.Net;
 

@@ -136,6 +136,12 @@ public class ReportsReadModel : IReportsReadModel
     }
     public async Task<CycleTimeReport> GenerateCycleTimeReportAsync(string tenantId, string projectId, DateTime from, DateTime to, string? sprintId = null)
     {
+        var projectKey = await _dbContext.Projects
+            .AsNoTracking()
+            .Where(p => p.Id == projectId && p.TenantId == tenantId)
+            .Select(p => p.Key )
+            .FirstOrDefaultAsync();
+
         var query = _dbContext.WorkItems
             .AsNoTracking()
             .Where(wi => wi.ProjectId == projectId
@@ -162,12 +168,14 @@ public class ReportsReadModel : IReportsReadModel
         {
             WorkItemId = wi.Id,
             Code = wi.Code,
+            EndDate = wi.EndDate!.Value,
             CycleTimeDays = (wi.EndDate!.Value - wi.CreatedAt).Days
         }).ToList();
 
         return new CycleTimeReport
         {
             ProjectId = projectId,
+            ProjectKey = projectKey!,
             GeneratedAt = DateTime.UtcNow,
             AverageCycleTimeDays = items.Any() ? items.Average(i => i.CycleTimeDays) : 0,
             MedianCycleTimeDays = items.Any() ? items.OrderBy(i => i.CycleTimeDays).ElementAt(items.Count / 2).CycleTimeDays : 0,

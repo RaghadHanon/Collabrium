@@ -78,8 +78,13 @@ public static class DependencyInjection
         services.AddScoped<IUsersRepository, UsersRepository>();
         services.AddScoped<ITeamsRepository, TeamsRepository>();
         services.AddScoped<IProjectsRepository, ProjectsRepository>();
+        services.AddScoped<IRoadmapsRepository, RoadmapsRepository>();
         services.AddScoped<ISprintsRepository, SprintsRepository>();
         services.AddScoped<IWorkItemsRepository, WorkItemsRepository>();
+        services.AddScoped<ITagsRepository, TagsRepository>();
+        services.AddScoped<IRoadmapNodesRepository, RoadmapNodesRepository>();
+        services.AddScoped<IRoadmapSubTopicsRepository, RoadmapSubTopicsRepository>();
+        services.AddScoped<IRoadmapResourcesRepository, RoadmapResourcesRepository>();
         services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
     }
 
@@ -89,8 +94,14 @@ public static class DependencyInjection
         services.AddScoped<ITenantsReadModel, TenantsReadModel>();
         services.AddScoped<ITeamsReadModel, TeamsReadModel>();
         services.AddScoped<IProjectsReadModel, ProjectsReadModel>();
+        services.AddScoped<IRoadmapsReadModel, RoadmapsReadModel>();
         services.AddScoped<ISprintsReadModel, SprintsReadModel>();
         services.AddScoped<IWorkItemsReadModel, WorkItemsReadModel>();
+        services.AddScoped<ITagsReadModel, TagsReadModel>();
+        services.AddScoped<IRoadmapNodesReadModel, RoadmapNodesReadModel>();
+        services.AddScoped<IRoadmapSubTopicsReadModel, RoadmapSubTopicsReadModel>();
+        services.AddScoped<IRoadmapResourcesReadModel, RoadmapResourcesReadModel>();
+
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
     }
 

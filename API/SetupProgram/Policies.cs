@@ -42,7 +42,7 @@ public static class Policies
     public const string WorkItems_CreateExecution = "WorkItems.Create.Execution";   // Task/Bug/TestCase
 
     public const string WorkItems_UpdateContent = "WorkItems.Update.Content";
-    public const string WorkItems_UpdatePlanning = "WorkItems.Update.Planning"; 
+    public const string WorkItems_UpdatePlanning = "WorkItems.Update.Planning";
     public const string WorkItems_UpdateExecution = "WorkItems.Update.Execution";
 
     public const string WorkItems_AssignSelf = "WorkItems.Assign.Self";
@@ -51,4 +51,12 @@ public static class Policies
     public const string WorkItems_Delete = "WorkItems.Delete";
     public const string WorkItems_ChangeStatus = "WorkItems.ChangeStatus";
     public const string WorkItems_ChangeAssignee = "WorkItems.ChangeAssignee";
+
+    // Roadmaps
+    public const string Roadmaps_Read = "Roadmaps.Read";
+    public const string Roadmaps_Manage = "Roadmaps.Manage";
+
+    //Tags
+    public const string Tags_Read = "Tags.Read";
+    public const string Tags_Manage = "Tags.Manage";
 }

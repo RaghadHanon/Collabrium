@@ -1,0 +1,19 @@
+﻿using Application.Common;
+using Application.Features.Roadmaps.DTOs;
+
+namespace Application.Interfaces.ReadModels
+{
+    public interface IRoadmapsReadModel
+    {
+        Task<RoadmapDto?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken = default);
+
+        Task<PagedList<RoadmapDto, DateTime?>> GetRoadmapsAsync(
+            RoadmapsSearchAndFilterParametersDto parameters,
+            CancellationToken cancellationToken = default);
+
+        Task<RoadmapDetailsDto?> GetDetailsAsync(
+            string tenantId,
+            string roadmapId,
+            CancellationToken cancellationToken);
+    }
+}

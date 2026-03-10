@@ -29,6 +29,17 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<WorkItemRelationEntity> WorkItemRelations => Set<WorkItemRelationEntity>();
     public DbSet<CommentEntity> Comments => Set<CommentEntity>();
 
+    public DbSet<RoadmapEntity> Roadmaps => Set<RoadmapEntity>();
+    public DbSet<RoadmapNodeEntity> RoadmapNodes => Set<RoadmapNodeEntity>();
+    public DbSet<TopicNodeEntity> TopicNodes => Set<TopicNodeEntity>();
+    public DbSet<ReferenceNodeEntity> ReferenceNodes => Set<ReferenceNodeEntity>();
+    public DbSet<SubTopicEntity> SubTopics => Set<SubTopicEntity>();
+    public DbSet<ResourceEntity> Resources => Set<ResourceEntity>();
+
+    public DbSet<TagEntity> Tags => Set<TagEntity>();
+    public DbSet<RoadmapTagEntity> RoadmapTags => Set<RoadmapTagEntity>(); // join table
+
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

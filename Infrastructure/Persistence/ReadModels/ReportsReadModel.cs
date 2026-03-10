@@ -30,6 +30,7 @@ public class ReportsReadModel : IReportsReadModel
         {
             TenantId = tenantId,
             GeneratedAt = DateTime.UtcNow,
+            UsersSummary = usersSummary,    
             TeamsSummary = teamsSummary,
             ProjectsSummary = projectsSummary,
             SprintsSummary = sprintsSummary,

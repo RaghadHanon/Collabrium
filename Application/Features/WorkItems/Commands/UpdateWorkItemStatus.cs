@@ -55,6 +55,9 @@ public class UpdateWorkItemStatus
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
+            if (workItem.AssignedToUserId is null)
+                return Result<WorkItemDto>.Failure("You can't change WoorkItem status without assigning it to someone.", HttpStatusCode.BadRequest);
+
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 

@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -14,14 +15,11 @@ public class CreateSprint
     public class Command : IRequest<Result<SprintDto>>
     {
         public required string ProjectId { get; set; }
-        public required string Name { get; set; }
-        public required string Goal { get; set; }
-        public required DateTime StartDate { get; set; }
-        public required DateTime EndDate { get; set; }
     }
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         IProjectsRepository projectsRepository,
         ITenantContext tenantContext,
@@ -33,23 +31,26 @@ public class CreateSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project is null)
                 return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            Sprint sprint = null!;
+            if (project.Status == ProjectStatus.Completed || project.Status == ProjectStatus.Cancelled)
+                return Result<SprintDto>.Failure($"Cannot create a sprint for an {project.Status} project.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            Sprint sprint = null!;
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
                 sprint = new Sprint(
                     tenantId: tenantId,
-                    projectId: request.ProjectId,
-                    name: request.Name,
-                    goal: request.Goal,
-                    start: request.StartDate,
-                    end: request.EndDate);
+                    projectId: project.Id,
+                    code: project.GenerateNextSprintName());
 
                 sprintsRepository.Add(sprint, cancellationToken);
-            }, cancellationToken);
+                await projectsRepository.UpdateAsync(project, cancellationToken);
+
+                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,(string) sprint.Code);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -19,6 +20,7 @@ public class UpdateWorkItemComment
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -34,9 +36,9 @@ public class UpdateWorkItemComment
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var isWorkItemExist = await workItemsRepository.IsExistAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
-            if (!isWorkItemExist)
-                return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
+            if (workItem is null)
+                return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
@@ -49,6 +51,7 @@ public class UpdateWorkItemComment
             if (currentUserId != comment.CreatedByUserId)
                 return Result<Unit>.Failure("You don't own this comment to update it.", HttpStatusCode.Forbidden);
 
+            var oldCommentState = comment.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 comment.Edit(request.NewContent);
@@ -57,6 +60,8 @@ public class UpdateWorkItemComment
                     request.WorkItemId,
                     comment,
                     cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Comment>(request.ProjectId, workItem.Id, workItem.Title, oldCommentState, comment);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

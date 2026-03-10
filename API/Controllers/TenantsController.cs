@@ -83,7 +83,7 @@ public class TenantsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a TenantAdmin.</response>
     /// <response code="404">If the tenant could not be found.</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.Tenant_Manage)]
     [RejectUnknownFormFields(typeof(UpdateTenantRequest), allowEmptyRequest: false)]
     [HttpPatch("my-tenant")]
     public async Task<ActionResult<UserWithTenantDto>> UpdateTenant([FromForm] UpdateTenantRequest request)
@@ -131,9 +131,9 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user has not changed their initial password.</response>
     /// <response code="404">If the user is not assigned to a tenant.</response>
     [Authorize(Policy = Policies.PasswordChanged)]
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.Tenant_Manage)]
     [HttpGet("my-tenant-with-admin")]
-    public async Task<ActionResult<TenantDto>> GetCurrentTenantForAdmin()
+    public async Task<ActionResult<TenantWithAdminDto>> GetCurrentTenantForAdmin()
     {
         var query = new GetTenantWithAdmin.Query();
 
@@ -186,7 +186,7 @@ public class TenantsController : ApiBaseController
     /// <response code="400">If no file is provided or the file format is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized (must be a Tenant Admin).</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.Tenant_Manage)]
     [Authorize(Policy = Policies.PasswordChanged)]
     [RejectUnknownFormFields(typeof(UploadImageRequest), allowEmptyRequest: false)]
     [HttpPost("profile-image")]
@@ -211,7 +211,7 @@ public class TenantsController : ApiBaseController
     /// <response code="200">Returns the list of users successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.Tenant_Manage)]
     [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("my-tenant/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetMyTenantUsers([FromQuery] GetTenantUsersRequest request)
@@ -258,7 +258,7 @@ public class TenantsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/tenants?NameContains=example&Country=US&PageSize=10
+    ///     GET /api/tenants?Code=example&Country=US&PageSize=10
     ///
     /// </remarks>
     /// <param name="request">The pagination and filtering parameters for tenants.</param>
@@ -268,7 +268,7 @@ public class TenantsController : ApiBaseController
     /// <response code="403">If the user is not a Super Admin.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
     [HttpGet]
-    public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetTenants([FromQuery] GetTenantsRequest request)
+    public async Task<ActionResult<PagedList<TenantWithAdminDto, DateTime?>>> GetTenants([FromQuery] GetTenantsRequest request)
     {
         var query = Mapper.Map<GetTenants.Query>(request);
 
@@ -297,8 +297,9 @@ public class TenantsController : ApiBaseController
     [HttpPatch("{id}/toggle-active")]
     public async Task<ActionResult> ToggleTenantActiveStatus(string id)
     {
-        var command = new DeactivateTenant.Command();
+        var command = new ToggleTenantActiveStatus.Command();
         command.TenantId = id;
+        command.IsSuper = true;
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -324,7 +325,8 @@ public class TenantsController : ApiBaseController
     [HttpPatch("my-tenant/deactivate")]
     public async Task<ActionResult> DeactivateMyTenant()
     {
-        var command = new DeactivateTenant.Command();
+        var command = new ToggleTenantActiveStatus.Command();
+        command.IsSuper = false;
 
         return HandleResult(await Mediator.Send(command));
     }

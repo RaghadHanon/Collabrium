@@ -5,6 +5,7 @@ namespace Infrastructure.Persistence.Entities;
 public class WorkItemEntity : DbEntity
 {
     public string Title { get; set; } = null!;
+    public string Code { get; set; } = null!;
     public string? AcceptanceCriteria { get; set; }
     public string? Description { get; set; }
     public int EffortPoints { get; set; }

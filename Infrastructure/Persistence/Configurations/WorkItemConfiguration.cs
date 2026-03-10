@@ -55,6 +55,14 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
             .HasForeignKey(a => a.WorkItemId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasIndex(w => new { w.ProjectId, w.SprintId, w.CreatedAt });
+        builder.HasIndex(w => new { w.ProjectId, w.Type });
+        builder.HasIndex(w => new { w.ProjectId, w.Status });
+        builder.HasIndex(w => new { w.ProjectId, w.AssignedToUserId });
+        builder.HasIndex(w => new { w.ProjectId, w.Priority });
+        builder.HasIndex(w => new { w.ProjectId, w.CreatedAt });
+        builder.HasIndex(w => w.Code).IsUnique();
+
         builder
             .HasDiscriminator(w => w.Type)
             .HasValue<WorkItemEntity>(WorkItemType.WorkItem)

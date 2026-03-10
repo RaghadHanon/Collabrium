@@ -13,5 +13,6 @@ public class ProjectsApiMappingProfile : Profile
         CreateMap<UpdateProjectRequest, UpdateProject.Command>();
         CreateMap<AssignProjectToTeamRequest, AssignProjectToTeam.Command>();
         CreateMap<GetProjectsRequest, GetProjects.Query>();
+        CreateMap<GetProjectBoardRequest, GetProjectBoard.Query>();
     }
 }

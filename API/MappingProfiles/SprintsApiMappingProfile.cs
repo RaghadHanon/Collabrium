@@ -9,7 +9,7 @@ public class SprintsApiMappingProfile : Profile
 {
     public SprintsApiMappingProfile()
     {
-        CreateMap<CreateSprintRequest, CreateSprint.Command>();
+        CreateMap<StartSprintRequest, StartSprint.Command>();
         CreateMap<UpdateSprintRequest, UpdateSprint.Command>();
         CreateMap<GetSprintsRequest, GetSprints.Query>();
     }

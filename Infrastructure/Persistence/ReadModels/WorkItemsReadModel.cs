@@ -8,6 +8,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Core;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
@@ -26,10 +27,10 @@ public class WorkItemsReadModel : IWorkItemsReadModel
     }
 
     public async Task<WorkItemDto?> GetByIdAsync(
-    string tenantId,
-    string projectId,
-    string workItemId,
-    CancellationToken cancellationToken = default)
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(projectId) ||
@@ -49,7 +50,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .FirstOrDefaultAsync(cancellationToken);
 
         var allowedStatuses = GetAllowedStatusTransitions(entity);
-        var parentRelation = GetParentAsync(entity);
+        var parentRelation = GetParent(entity);
         var dto = entity is null ? null : _mapper.Map<WorkItemDto>(entity);
 
         if (dto != null)
@@ -61,13 +62,44 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         return entity is null ? null : dto;
     }
 
-    private WorkItemRelationEntity? GetParentAsync(WorkItemEntity? entity)
+    private WorkItemRelationEntity? GetParent(WorkItemEntity? entity)
     {
         return entity is null
             ? null
             : entity.Relations
                 .Where(r => r.RelationType == WorkItemRelationType.Parent)
                 .FirstOrDefault();
+    }
+
+    public async Task<List<WorkItemSnapshot>> GetChildrenAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(workItemId))
+            return new List<WorkItemSnapshot>();
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var wId = workItemId.Trim();
+
+        return await _dbContext.WorkItemRelations
+            .AsNoTracking()
+            .Where(r =>
+                r.RelationType == WorkItemRelationType.Child &&
+                r.SourceWorkItemId == wId &&
+                r.SourceWorkItem.ProjectId == pId &&
+                r.SourceWorkItem.Project.TenantId == tId)
+            .Select(r => new WorkItemSnapshot(
+                r.TargetWorkItem.Id,
+                r.TargetWorkItem.Title,
+                r.TargetWorkItem.Type,
+                r.TargetWorkItem.Status,
+                null))
+            .ToListAsync(cancellationToken);
     }
 
     private static List<WorkItemStatus> GetAllowedStatusTransitions(WorkItemEntity? entity)
@@ -82,32 +114,34 @@ public class WorkItemsReadModel : IWorkItemsReadModel
     }
 
     public async Task<List<WorkItemListItemDto>> GetBoardItemsAsync(
-        string tenantId,
-        string projectId,
-        string? sprintId,
+        WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return new List<WorkItemListItemDto>();
-
-        var tId = tenantId.Trim();
-        var pId = projectId.Trim();
-        var sId = sprintId?.Trim();
-
         var query = _dbContext.WorkItems
-            .AsNoTracking()
-            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
+            .Include(i => i.Project)
+            .Include(i => i.Sprint)
+            .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(sId))
-            query = query.Where(w => w.SprintId == sId);
+        var typeFilterApplied = parameters.Type;
+        if (parameters.Type.HasValue)
+        {
+            query = query.Where(i => i.Type == typeFilterApplied || i.Type == WorkItemType.UserStory);
+            parameters.Type = null;
+        }
 
-        var items = await _dbContext.WorkItems
-            .Where(w => w.Type != WorkItemType.UserStory && w.Type != WorkItemType.Epic && w.SprintId != null)
+        query = ApplyFilters(query, parameters);
+
+        var items = await query
+            .Where(w =>
+                w.Type != WorkItemType.Epic &&
+                w.Sprint != null &&
+                w.Sprint.Status == SprintStatus.Active)
             .OrderBy(w => w.CreatedAt)
             .Select(w => new WorkItemListItemDto
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -130,8 +164,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                             Type = r.TargetWorkItem.Type,
                             Status = r.TargetWorkItem.Status,
                         }
-                    }
-                    )
+                    })
                     .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
@@ -172,6 +205,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -223,6 +257,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             {
                 Id = w.Id,
                 Title = w.Title,
+                Code = w.Code,
                 Type = w.Type,
                 Status = w.Status,
                 Priority = w.Priority,
@@ -279,6 +314,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         {
             var prId = parameters.ProjectId.Trim();
             query = query.Where(x => x.ProjectId == prId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Code))
+        {
+            var code = parameters.Code.Trim();
+            query = query.Where(x => x.Code == code);
         }
 
         if (parameters.Type.HasValue)

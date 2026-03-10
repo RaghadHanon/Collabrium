@@ -68,14 +68,15 @@ public sealed class TenantsReadModel : ITenantsReadModel
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<PagedList<TenantDto, DateTime?>> GetTenantsAsync(
+    public async Task<PagedList<TenantWithAdminDto, DateTime?>> GetTenantsAsync(
         TenantsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
         parameters ??= new TenantsSearchAndFilterParametersDto();
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-        var query = _dbContext.Tenants.AsNoTracking();
+        var query = _dbContext.Tenants
+                .AsNoTracking();
 
         query = ApplyFilters(query, parameters);
 
@@ -85,7 +86,7 @@ public sealed class TenantsReadModel : ITenantsReadModel
         var items = await query
             .OrderBy(t => t.CreatedAt)
             .Take(pageSize + 1)
-            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<TenantWithAdminDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
@@ -95,7 +96,7 @@ public sealed class TenantsReadModel : ITenantsReadModel
             items.RemoveAt(items.Count - 1);
         }
 
-        return new PagedList<TenantDto, DateTime?>
+        return new PagedList<TenantWithAdminDto, DateTime?>
         {
             Items = items,
             NextCursor = nextCursor

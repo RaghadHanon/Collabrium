@@ -1,28 +1,66 @@
 ﻿using Domain.Common;
+using Domain.Enums;
 
 namespace Domain.Models;
 
-public sealed class ProjectHistory : Entity
+public class ProjectHistory : Entity
 {
     public string ProjectId { get; private set; } = null!;
-    public string ChangedByUserId { get; private set; } = null!;
+    public string RelatedEntityId { get; private set; } = null!;
+    public string RelatedEntityTitle { get; private set; } = null!;
+    public ProjectHistoryScope Scope { get; private set; }
+    public ActionType ActionType { get; private set; }
+    public string MadeByUserId { get; private set; } = null!;
+
     public string? PropertyName { get; private set; }
     public string? OldValue { get; private set; }
     public string? NewValue { get; private set; }
 
-    private ProjectHistory() { } // EF
+    private ProjectHistory() { }
 
     public ProjectHistory(
         string id,
         string projectId,
-        string changedByUserId,
+        string relatedEntityId,
+        string relatedEntityTitle,
+        string madeByUserId,
+        ActionType actionType,
+        ProjectHistoryScope scope,
         string? propertyName,
         string? oldValue,
         string? newValue) : base(id)
     {
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
-        ChangedByUserId = Guard.NotNullOrWhiteSpace(changedByUserId, nameof(changedByUserId));
-        PropertyName = propertyName?.Trim();
+        RelatedEntityId = Guard.NotNullOrWhiteSpace(relatedEntityId, nameof(relatedEntityId));
+        RelatedEntityTitle = Guard.NotNullOrWhiteSpace(relatedEntityTitle, nameof(relatedEntityTitle));
+        MadeByUserId = Guard.NotNullOrWhiteSpace(madeByUserId, nameof(madeByUserId));
+        Scope = scope;
+        ActionType = actionType;
+        PropertyName =propertyName;
+
+        OldValue = oldValue;
+        NewValue = newValue;
+    }
+
+    public ProjectHistory(
+      string projectId,
+      string relatedEntityId,
+      string relatedEntityTitle,
+      string madeByUserId,
+      ProjectHistoryScope scope,
+      ActionType actionType, 
+      string? propertyName,
+      string? oldValue,
+      string? newValue) 
+    {
+        ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
+        RelatedEntityId = Guard.NotNullOrWhiteSpace(relatedEntityId, nameof(relatedEntityId));
+        RelatedEntityTitle = Guard.NotNullOrWhiteSpace(relatedEntityTitle, nameof(relatedEntityTitle));
+        MadeByUserId = Guard.NotNullOrWhiteSpace(madeByUserId, nameof(madeByUserId));
+        Scope = scope;
+        ActionType = actionType;
+        PropertyName = propertyName;
+
         OldValue = oldValue;
         NewValue = newValue;
     }
@@ -32,7 +70,11 @@ public sealed class ProjectHistory : Entity
     DateTime createdAt,
     DateTime? updatedAt,
     string projectId,
-    string changedByUserId,
+    string relatedEntityId,
+    string relatedEntityTitle,
+    string madeByUserId,
+    ProjectHistoryScope scope,
+    ActionType actionType,
     string? propertyName,
     string? oldValue,
     string? newValue)
@@ -40,12 +82,16 @@ public sealed class ProjectHistory : Entity
         var history = new ProjectHistory(
             id,
             projectId,
-            changedByUserId,
+            relatedEntityId,
+            relatedEntityTitle,
+            madeByUserId,
+            actionType,
+            scope,
             propertyName,
             oldValue,
             newValue);
 
-        history.SetTimestamps(createdAt, updatedAt); // من Entity base
+        history.SetTimestamps(createdAt, updatedAt); 
         return history;
     }
 }

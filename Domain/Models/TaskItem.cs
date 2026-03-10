@@ -6,14 +6,14 @@ public sealed class TaskItem : WorkItem
 {
     private TaskItem() { }
 
-    public TaskItem(string id, string title, string createdByUserId, string projectId)
-        : base(id, title, createdByUserId, projectId)
+    public TaskItem(string id, string title, string code, string createdByUserId, string projectId)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TaskItem;
     }
 
-    public TaskItem(string title, string createdByUserId, string projectId)
-        : base(title, createdByUserId, projectId)
+    public TaskItem(string title, string code, string createdByUserId, string projectId)
+        : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.TaskItem;
     }
@@ -22,13 +22,14 @@ public sealed class TaskItem : WorkItem
     {
         // Task workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> Done
         return from == to
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.ReadyForDev,
                 WorkItemStatus.InReview => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.InReview or WorkItemStatus.InProgress,
                 _ => false
             };
     }
@@ -38,8 +39,10 @@ public sealed class TaskItem : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -51,9 +54,35 @@ public sealed class TaskItem : WorkItem
         DateTime? startDate,
         DateTime? endDate)
     {
-        var t = new TaskItem(id, title, createdByUserId, projectId);
-        t.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        var t = new TaskItem(id, title, code, createdByUserId, projectId);
+        t.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
         return t;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            Code,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate
+        );
+
+        return clone;
     }
 }

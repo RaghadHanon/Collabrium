@@ -8,7 +8,7 @@ using System.Net;
 namespace Application.Features.Tenants.Queries;
 public class GetTenants
 {
-    public class Query : IRequest<Result<PagedList<TenantDto, DateTime?>>>
+    public class Query : IRequest<Result<PagedList<TenantWithAdminDto, DateTime?>>>
     {
         public string? NameContains { get; set; }
         public string? DomainContains { get; set; }
@@ -25,14 +25,14 @@ public class GetTenants
     public class Handler(
         ITenantsReadModel tenantsReadModel,
         IMapper mapper
-        ) : IRequestHandler<Query, Result<PagedList<TenantDto, DateTime?>>>
+        ) : IRequestHandler<Query, Result<PagedList<TenantWithAdminDto, DateTime?>>>
     {
-        public async Task<Result<PagedList<TenantDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<Result<PagedList<TenantWithAdminDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
         {
             var queryParams = mapper.Map<TenantsSearchAndFilterParametersDto>(request);
             var pagedUsers = await tenantsReadModel.GetTenantsAsync(queryParams, cancellationToken);
 
-            return Result<PagedList<TenantDto, DateTime?>>.Success(pagedUsers, HttpStatusCode.OK);
+            return Result<PagedList<TenantWithAdminDto, DateTime?>>.Success(pagedUsers, HttpStatusCode.OK);
         }
     }
 }

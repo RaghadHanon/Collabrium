@@ -42,6 +42,19 @@ public class CodeLink : Entity
         return link;
     }
 
+    public CodeLink Clone()
+    {
+        return Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Url,
+            LinkType,
+            CreatedByUserId,
+            DisplayName
+        );
+    }
+
     public void Update(string url, CodeLinkType linkType, string? displayName)
     {
         Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();

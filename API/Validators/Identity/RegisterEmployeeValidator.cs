@@ -15,9 +15,9 @@ public class RegisterEmployeeValidator : RegisterAppUserValidator<RegisterEmploy
     public RegisterEmployeeValidator()
     {
         RuleFor(x => x.UserRole)
-            .NotEmpty().WithMessage("User Role is required.")
+            .NotEmpty().WithMessage("User JobTitle is required.")
             .Must(value => Enum.TryParse<UserRole>(value, true, out _))
-            .WithMessage("User Role is invalid.")
+            .WithMessage("User JobTitle is invalid.")
             .Must(value =>
             {
                 if (!Enum.TryParse<UserRole>(value, true, out var role))

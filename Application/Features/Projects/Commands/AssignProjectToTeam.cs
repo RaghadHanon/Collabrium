@@ -3,6 +3,8 @@ using Application.Features.Projects.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -19,6 +21,7 @@ public class AssignProjectToTeam
     public class Handler(
         IProjectsRepository projectsRepository,
         IProjectsReadModel projectsReadModel,
+        IProjectHistoryRecorder historyRecorder,
         ITeamsRepository teamsRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
@@ -41,11 +44,13 @@ public class AssignProjectToTeam
             if (!team.IsActive)
                 return Result<ProjectDto>.Failure("Cannot assign project to an inactive team.", HttpStatusCode.BadRequest);
 
+            var oldProjectState = project.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 project.AssignToTeam(request.TeamId);
-                await projectsRepository.UpdateAsync(project, ct);
-                await unitOfWork.SaveChangesAsync(ct);
+                await projectsRepository.UpdateAsync(project, ct); 
+
+                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

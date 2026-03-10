@@ -4,6 +4,7 @@ using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -15,7 +16,7 @@ public class UsersReadModel : IUsersReadModel
 
     public UsersReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContext = dbContext;
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -103,24 +104,7 @@ public class UsersReadModel : IUsersReadModel
         };
     }
 
-    public async Task<List<UserDto>> GetUsersByTenantAsync(
-        string tenantId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return new List<UserDto>();
-
-        var id = tenantId.Trim();
-
-        return await _dbContext.Users
-            .AsNoTracking()
-            .Where(u => u.TenantId == id)
-            .OrderBy(u => u.FullName)
-            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
-
-    private static IQueryable<ApplicationUserEntity> ApplyFilters(
+    private IQueryable<ApplicationUserEntity> ApplyFilters(
         IQueryable<ApplicationUserEntity> query,
         UsersSearchAndFilterParametersDto parameters)
     {
@@ -156,6 +140,11 @@ public class UsersReadModel : IUsersReadModel
             var phone = parameters.PhoneNumber.Trim();
 
             query = query.Where(u => u.ContactDetails.PhoneNumber == phone);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.JobTitle.ToString()))
+        {
+            query = query.Where(u => u.JobTitle == parameters.JobTitle.ToString());
         }
 
         return query;

@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -21,6 +22,7 @@ public sealed class UpdateWorkItemAssignee
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
         IWorkItemsReadModel workItemsReadModel,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
         IUsersReadModel usersReadModel,
@@ -96,6 +98,7 @@ public sealed class UpdateWorkItemAssignee
                         HttpStatusCode.Forbidden);
             }
 
+            var oldWorkItemState = workItem.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 if (decision.Action == PatchHelpers.PatchStringAction.Clear)
@@ -104,6 +107,8 @@ public sealed class UpdateWorkItemAssignee
                     workItem.AssignTo(decision.Value!);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
+
+                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemState, workItem);
             }, cancellationToken);
 
             var dto = await workItemsReadModel.GetByIdAsync(

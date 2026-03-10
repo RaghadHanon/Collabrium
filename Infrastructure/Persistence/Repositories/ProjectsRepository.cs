@@ -74,6 +74,18 @@ public sealed class ProjectsRepository : IProjectsRepository
             .AnyAsync(p => p.TenantId == tId && p.Name.ToLower() == normalized, cancellationToken);
     }
 
+    public async Task<bool> IsKeyUniqueAsync(string tenantId, string key, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(key))
+            return false;
+
+        var tId = tenantId.Trim();
+
+        return !await _dbContext.Projects
+            .AsNoTracking()
+            .AnyAsync(p => p.TenantId == tId && p.Key == key, cancellationToken);
+    }
+
     public async Task<bool> IsUserHasAccessToProjectAsync(string tenantId, string userId, string projectId, CancellationToken cancellationToken = default)
     {
         return !TryNormalize(tenantId, projectId, out var tId, out var pId)

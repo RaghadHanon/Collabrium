@@ -8,8 +8,8 @@ public sealed class CreateProjectRequestValidator : AbstractValidator<CreateProj
     public CreateProjectRequestValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+            .NotEmpty().WithMessage("Code is required.")
+            .MaximumLength(100).WithMessage("Code cannot exceed 100 characters.");
 
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.")
@@ -19,6 +19,11 @@ public sealed class CreateProjectRequestValidator : AbstractValidator<CreateProj
             .Must(x => !string.IsNullOrWhiteSpace(x))
             .When(x => x.TeamId is not null)
             .WithMessage("TeamId cannot be empty.");
+
+        RuleFor(x => x.Key)
+            .NotEmpty()
+            .Matches("^[A-Z]{2,10}$")
+            .WithMessage("Project key must be 2-10 uppercase letters only.");
 
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate!.Value)

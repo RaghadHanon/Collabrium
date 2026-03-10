@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -25,6 +24,7 @@ public class AddWorkItemAttachment
     public sealed class Handler(
         IAttachmentStorageFactory storageFactory,
         ITenantContext tenantContext,
+        IProjectHistoryRecorder historyRecorder,
         IWorkItemsRepository workItemsRepository,
         IProjectsRepository projectsRepository,
         IUnitOfWork unitOfWork,
@@ -71,9 +71,10 @@ public class AddWorkItemAttachment
             if (stored is null)
                 return Result<Unit>.Failure("Upload failed.", HttpStatusCode.BadRequest);
 
+            Attachment? attachment = null;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                var attachment = new Attachment(
+                attachment = new Attachment(
                     fileName: stored.FileName,
                     storagePath: stored.StoragePath,
                     url: stored.Url,
@@ -88,6 +89,8 @@ public class AddWorkItemAttachment
                     workItemId: request.WorkItemId,
                     attachment: attachment,
                     cancellationToken: cancellationToken);
+
+                historyRecorder.RecordCreationChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

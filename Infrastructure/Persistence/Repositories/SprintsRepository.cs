@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
@@ -64,7 +65,7 @@ public class SprintsRepository : ISprintsRepository
 
         return await _dbContext.Sprints
             .AsNoTracking()
-            .AnyAsync(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId), cancellationToken);
+            .AnyAsync(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId, cancellationToken);
     }
 
     public async Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default)
@@ -77,12 +78,12 @@ public class SprintsRepository : ISprintsRepository
 
         var entity = await _dbContext.Sprints
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId), cancellationToken);
+            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId, cancellationToken);
 
         return entity is null ? null : SprintMapper.ToDomain(entity);
     }
 
-    public Task<bool> HasActiveSprintAsync(string tenantId, string projectId, CancellationToken cancellationToken = default)
+    public Task<bool> ProjectHasActiveSprintAsync(string tenantId, string projectId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
             return Task.FromResult(false);
@@ -94,10 +95,10 @@ public class SprintsRepository : ISprintsRepository
             .AsNoTracking()
             .AnyAsync(s => s.TenantId == tId
                         && s.ProjectId == pId
-                        && s.Status == Domain.Enums.SprintStatus.Active, cancellationToken);
+                        && s.Status == SprintStatus.Active, cancellationToken);
     }
 
-    public Task<bool> HasWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public Task<bool> SprintHasWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
             return Task.FromResult(false);
@@ -106,7 +107,20 @@ public class SprintsRepository : ISprintsRepository
 
         return _dbContext.WorkItems
             .AsNoTracking()
-            .AnyAsync(w => w.SprintId == sId, cancellationToken);
+            .AnyAsync(w => w.SprintId == sId && tenantId == w.Project.TenantId, cancellationToken);
+    }
+
+    public Task<List<WorkItemEntity>>? GetWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+            return null;
+
+        var sId = sprintId.Trim();
+
+        return _dbContext.WorkItems
+                .AsNoTracking()
+                .Where(w => w.SprintId == sId)
+                .ToListAsync(cancellationToken);
     }
 
     public async Task<PagedList<Sprint, DateTime?>> GetPagedAsync(
@@ -158,7 +172,12 @@ public class SprintsRepository : ISprintsRepository
         if (!string.IsNullOrWhiteSpace(p.NameContains))
         {
             var term = p.NameContains.Trim();
-            query = query.Where(x => x.Name.Contains(term));
+            query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && x.Name.Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(p.Code))
+        {
+            query = query.Where(x => x.Code == p.Code);
         }
 
         if (p.Status.HasValue)

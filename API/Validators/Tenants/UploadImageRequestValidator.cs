@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace API.Validators.Tenants;
 
-public sealed class UploadImageRequestValidator : AbstractValidator<UploadImageRequest>
+public class UploadImageRequestValidator : AbstractValidator<UploadImageRequest>
 {
     public UploadImageRequestValidator()
     {

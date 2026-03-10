@@ -19,6 +19,7 @@ public class AddWorkItemComment
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -34,8 +35,8 @@ public class AddWorkItemComment
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var isExist = await workItemsRepository.IsExistAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
-            if (!isExist)
+            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
+            if (workItem is null)
                 return Result<string>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
@@ -53,6 +54,8 @@ public class AddWorkItemComment
                     request.WorkItemId,
                     comment,
                     cancellationToken);
+
+                historyRecorder.RecordCreationChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<string>.Success(comment?.Id, HttpStatusCode.OK);

@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -18,6 +19,7 @@ public class DeleteWorkItemComment
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -33,8 +35,8 @@ public class DeleteWorkItemComment
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var isWorkItemExist = await workItemsRepository.IsExistAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
-            if (!isWorkItemExist)
+            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
+            if (workItem is null)
                 return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
@@ -54,6 +56,8 @@ public class DeleteWorkItemComment
                     request.WorkItemId,
                     request.CommentId,
                     cancellationToken);
+
+                historyRecorder.RecordDeletionChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

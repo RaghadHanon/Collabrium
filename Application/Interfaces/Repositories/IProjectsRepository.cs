@@ -13,6 +13,7 @@ public interface IProjectsRepository
     Task<Project?> GetByIdAsync(string tenantId, string projectId, CancellationToken cancellationToken = default);
 
     Task<bool> IsNameUniqueAsync(string tenantId, string name, CancellationToken cancellationToken = default);
+    Task<bool> IsKeyUniqueAsync(string tenantId, string key, CancellationToken cancellationToken = default);
     Task<bool> IsUserHasAccessToProjectAsync(string tenantId, string userId, string projectId, CancellationToken cancellationToken = default);
     Task<bool> IsProjectExists(string tenantId, string projectId, CancellationToken cancellationToken = default);
 

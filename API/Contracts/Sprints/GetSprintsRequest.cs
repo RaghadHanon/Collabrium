@@ -2,6 +2,7 @@
 
 public sealed class GetSprintsRequest
 {
+    public string? Code { get; init; }
     public string? NameContains { get; init; }
     public string? Status { get; init; }
 

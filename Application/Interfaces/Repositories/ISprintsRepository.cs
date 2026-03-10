@@ -11,8 +11,8 @@ public interface ISprintsRepository
     Task<bool> RemoveAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default);
     Task<bool> IsExistsAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default);
     Task<Sprint?> GetByIdAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default);
-    Task<bool> HasActiveSprintAsync(string tenantId, string projectId, CancellationToken cancellationToken = default);
-    Task<bool> HasWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default);
+    Task<bool> ProjectHasActiveSprintAsync(string tenantId, string projectId, CancellationToken cancellationToken = default);
+    Task<bool> SprintHasWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default);
     Task<PagedList<Sprint, DateTime?>> GetPagedAsync(
         SprintsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);

@@ -44,6 +44,7 @@ public sealed class IdentityService : IIdentityService
 
     public async Task<User> RegisterUserAsync(
     string fullName,
+    string jobTitle,
     Department department,
     string password,
     DateOnly dateOfBirth,
@@ -53,7 +54,7 @@ public sealed class IdentityService : IIdentityService
     string phoneNumber,
     CancellationToken cancellationToken = default)
     {
-        var userEntity = CreateApplicationUserEntity(fullName, department, dateOfBirth, tenantId, email, phoneNumber);
+        var userEntity = CreateApplicationUserEntity(fullName, jobTitle, department, dateOfBirth, tenantId, email, phoneNumber);
         userEntity.MustChangePassword = role != UserRole.SuperAdmin;
 
         await CreateUserAsync(userEntity, password);
@@ -132,19 +133,22 @@ public sealed class IdentityService : IIdentityService
         if (string.IsNullOrWhiteSpace(userId))
             throw new BadRequestException("UserId must be provided.");
 
+        if (string.Equals(currentPassword, newPassword, StringComparison.Ordinal))
+            throw new BadRequestException("New password must be different from the current password.");
+
         var user = await _userManager.FindByIdAsync(userId.Trim());
         if (user is null)
             throw new BadRequestException("User not found.");
 
-        user.MustChangePassword = false;
-
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
         if (!result.Succeeded)
         {
             var errors = string.Join(" ", result.Errors.Select(e => e.Description));
             throw new BadRequestException($"Password change failed: {errors}");
         }
 
+        user.MustChangePassword = false;
         await _userManager.UpdateAsync(user);
     }
 
@@ -191,13 +195,21 @@ public sealed class IdentityService : IIdentityService
         if (string.IsNullOrWhiteSpace(encodedToken))
             throw new BadRequestException("Token must be provided.");
 
+        if (string.IsNullOrWhiteSpace(newPassword))
+            throw new BadRequestException("New password must be provided.");
+
         var user = await _userManager.FindByIdAsync(userId.Trim());
         if (user is null)
             throw new BadRequestException("User not found.");
 
-        user.MustChangePassword = false;
+        var isSameAsOld = await _userManager.CheckPasswordAsync(user, newPassword);
+        if (isSameAsOld)
+        {
+            throw new BadRequestException("New password cannot be the same as your old password.");
+        }
 
         var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encodedToken));
+
         var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
 
         if (!result.Succeeded)
@@ -206,7 +218,14 @@ public sealed class IdentityService : IIdentityService
             throw new BadRequestException($"Password reset failed: {errors}");
         }
 
-        await _userManager.UpdateAsync(user);
+        user.MustChangePassword = false;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            var errors = string.Join(" ", updateResult.Errors.Select(e => e.Description));
+            throw new BadRequestException($"Failed to update user state: {errors}");
+        }
     }
 
     private async Task<ApplicationUserEntity> ValidateCredentialsAsync(string email, string password)
@@ -242,7 +261,7 @@ public sealed class IdentityService : IIdentityService
         var roleName = role.ToString();
 
         if (!await _roleManager.RoleExistsAsync(roleName))
-            throw new BadRequestException($"Role '{roleName}' does not exist.");
+            throw new BadRequestException($"JobTitle '{roleName}' does not exist.");
 
         var result = await _userManager.AddToRoleAsync(user, roleName);
         if (!result.Succeeded)
@@ -282,6 +301,7 @@ public sealed class IdentityService : IIdentityService
 
     private static ApplicationUserEntity CreateApplicationUserEntity(
         string fullName,
+        string jobTitle,
         Department department,
         DateOnly dateOfBirth,
         string tenantId,
@@ -291,6 +311,7 @@ public sealed class IdentityService : IIdentityService
         var user = new ApplicationUserEntity
         {
             FullName = fullName.Trim(),
+            JobTitle = jobTitle.Trim(),
             Email = email.Trim(),
             UserName = email.Trim(),
             Department = department,

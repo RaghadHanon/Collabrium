@@ -5,6 +5,7 @@ using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -21,6 +22,7 @@ public class UpdateWorkItemStatus
 
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         IWorkItemsReadModel workItemsReadModel,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
@@ -65,17 +67,14 @@ public class UpdateWorkItemStatus
             if (!allowedStatuses.Contains(request.NewStatus))
                 return Result<WorkItemDto>.Failure($"Invalid status transition. Allowed statuses: {string.Join(", ", allowedStatuses)}.", HttpStatusCode.BadRequest);
 
+            var oldWorkItemState = workItem.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                //if(sourceWorkItem.RelationType == WorkItemType.UserStory)
-                //{
-                //    var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
-                //    ((UserStory) sourceWorkItem).ChangeStatusWithValidation(request.NewStatus, children!);
-                //}
-                //else
-                workItem.ChangeStatus(request.NewStatus);
-
+                var children = await workItemsReadModel.GetChildrenAsync(tenantId, request.ProjectId, request.WorkItemId, ct);
+                workItem.ChangeStatusWithValidation(request.NewStatus, children);
                 await workItemsRepository.UpdateAsync(workItem, ct);
+
+                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemState, workItem);
             }, cancellationToken);
 
             var dto = await workItemsReadModel.GetByIdAsync(

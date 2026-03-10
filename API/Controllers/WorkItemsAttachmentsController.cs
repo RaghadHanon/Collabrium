@@ -1,4 +1,6 @@
-﻿using API.Contracts.WorkItems.Attachments;
+﻿using API.Common.Attributes;
+using API.Contracts.Tenants;
+using API.Contracts.WorkItems.Attachments;
 using API.SetupProgram;
 using Application.Features.WorkItems.Commands.Attachments;
 using Application.Features.WorkItems.DTOs.Attachment;
@@ -39,6 +41,7 @@ public sealed class WorkItemsAttachmentsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     /// <response code="500">If an unexpected error occurred.</response>
+    [RejectUnknownFormFields(typeof(AddWorkItemAttachmentRequest), allowEmptyRequest: false)]
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPost("{workItemId}/attachment")]
     public async Task<ActionResult<string>> AddWorkItemAttachment(

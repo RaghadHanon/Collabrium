@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -18,6 +19,7 @@ public sealed class DeleteWorkItem
 
     public sealed class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
         IProjectsRepository projectsRepository,
@@ -48,6 +50,8 @@ public sealed class DeleteWorkItem
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 removed = await workItemsRepository.RemoveAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
+
+                historyRecorder.RecordDeletionChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return removed

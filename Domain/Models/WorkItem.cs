@@ -7,6 +7,7 @@ namespace Domain.Models;
 public abstract class WorkItem : Entity
 {
     public string Title { get; private set; } = null!;
+    public string Code { get; set; } = null!;
     public string? AcceptanceCriteria { get; private set; }
     public string? Description { get; private set; }
 
@@ -39,9 +40,10 @@ public abstract class WorkItem : Entity
 
     protected WorkItem() { } // EF
 
-    protected WorkItem(string id, string title, string createdByUserId, string projectId) : base(id)
+    protected WorkItem(string id, string title, string code, string createdByUserId, string projectId) : base(id)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        Code = Guard.NotNullOrWhiteSpace(code, nameof(code));
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
@@ -50,9 +52,10 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    protected WorkItem(string title, string createdByUserId, string projectId)
+    protected WorkItem(string title, string code, string createdByUserId, string projectId)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
+        Code = Guard.NotNullOrWhiteSpace(code, nameof(code));
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
 
@@ -60,18 +63,25 @@ public abstract class WorkItem : Entity
         Priority = WorkItemPriority.Medium;
         Touch();
     }
+
+    public abstract WorkItem Clone();
 
     protected void RehydrateCommon(
         DateTime createdAt,
-        DateTime? updatedAt,
+        DateTime? updatedAt, 
+        WorkItemType Type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
         int effortPoints,
+        string title,
+        string code,
         string? description,
         string? acceptanceCriteria,
         string? assignedToUserId,
+        string createdByUserId,
         string? sprintId,
+        string projectId,
         DateTime? startDate,
         DateTime? endDate)
     {
@@ -82,11 +92,15 @@ public abstract class WorkItem : Entity
         IsBlocked = isBlocked;
 
         EffortPoints = effortPoints;
+        Title = title;
+        Code = code;
         Description = description;
         AcceptanceCriteria = acceptanceCriteria;
 
         AssignedToUserId = assignedToUserId;
+        CreatedByUserId = createdByUserId;
         SprintId = sprintId;
+        ProjectId = projectId;
 
         StartDate = startDate;
         EndDate = endDate;
@@ -116,6 +130,7 @@ public abstract class WorkItem : Entity
 
     public void UpdateDetails(string title, string? description, string? acceptanceCriteria, int effortPoints)
     {
+        Guard.Against(IsDone, "Cannot update a completed work item.");
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         EffortPoints = Guard.NonNegative(effortPoints, nameof(effortPoints));
 
@@ -124,11 +139,12 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    protected virtual bool CanReopenFromDone => false;
+    protected virtual bool CanReopenFromDone => true;
 
     protected virtual bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        return from == to
+        return from == to 
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
@@ -137,7 +153,7 @@ public abstract class WorkItem : Entity
                 WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
                 WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 _ => false
             };
     }
@@ -146,11 +162,6 @@ public abstract class WorkItem : Entity
     {
         Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
             "Blocked work item cannot be moved to InProgress.");
-
-        if (Status == WorkItemStatus.Done && newStatus != WorkItemStatus.Done)
-        {
-            Guard.Against(!CanReopenFromDone, "Done work item cannot be reopened.");
-        }
 
         Guard.Against(!IsValidTransition(Status, newStatus),
             $"Invalid status transition: {Status} -> {newStatus}");
@@ -167,6 +178,13 @@ public abstract class WorkItem : Entity
             EndDate = null;
 
         Touch();
+    }
+
+    public virtual void ChangeStatusWithValidation(
+        WorkItemStatus newStatus,
+        IEnumerable<WorkItemSnapshot>? linked = null)
+    {
+        ChangeStatus(newStatus);
     }
 
     public List<WorkItemStatus> GetAllowedStatuses()
@@ -341,6 +359,7 @@ public abstract class WorkItem : Entity
 
     public CodeLink AddCodeLink(string linkId, string url, CodeLinkType type, string? displayName = null)
     {
+        Guard.Against(IsDone, "Cannot add code links to a completed work item.");
         url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
 
         Guard.Against(_codeLinks.Any(l => l.Url.Equals(url, StringComparison.OrdinalIgnoreCase)),
@@ -354,6 +373,7 @@ public abstract class WorkItem : Entity
 
     public void RemoveCodeLink(string linkId)
     {
+        Guard.Against(IsDone, "Cannot remove code links from a completed work item.");
         linkId = Guard.NotNullOrWhiteSpace(linkId, nameof(linkId));
         var link = _codeLinks.FirstOrDefault(x => x.Id == linkId);
         Guard.Against(link is null, "Code link not found.");
@@ -372,7 +392,7 @@ public abstract class WorkItem : Entity
         string uploadedByUserId,
         string? checksum = null)
     {
-        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); // optional rule
+        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); 
 
         var att = new Attachment(
             attachmentId, fileName, storagePath, contentType, type, uploadedByUserId);
@@ -384,6 +404,7 @@ public abstract class WorkItem : Entity
 
     public void RemoveAttachment(string attachmentId)
     {
+        Guard.Against(IsDone, "Cannot remove attachments from a completed work item.");
         attachmentId = Guard.NotNullOrWhiteSpace(attachmentId, nameof(attachmentId));
         var att = _attachments.FirstOrDefault(x => x.Id == attachmentId);
         Guard.Against(att is null, "Attachment not found.");

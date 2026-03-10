@@ -55,7 +55,7 @@ public class AddWorkItemComment
                     comment,
                     cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordCreationChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<string>.Success(comment?.Id, HttpStatusCode.OK);

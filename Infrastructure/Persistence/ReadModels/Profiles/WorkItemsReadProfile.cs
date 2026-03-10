@@ -40,16 +40,27 @@ public sealed class WorkItemsReadProfile : Profile
 
         CreateMap<WorkItemEntity, RelationParticipantWorkItemDto>();
 
+        // common
+        CreateMap<ApplicationUserEntity, RelatedUserDto>()
+            .ForMember(d => d.Id, opt => opt.MapFrom(s => s.Id))
+            .ForMember(d => d.Name, opt => opt.MapFrom(s => s.FullName))
+            .ForMember(d => d.Image, opt => opt.MapFrom(s =>
+                        s.ProfileImage == null ?
+                        null : s.ProfileImage.Url));
+
         // relations
         CreateMap<WorkItemRelationEntity, WorkItemRelationDto>();
 
         // comments
-        CreateMap<CommentEntity, CommentDto>();
+        CreateMap<CommentEntity, CommentDto>()
+            .ForMember(d => d.RelatedUser, opt => opt.MapFrom(s => s.CreatedByUser));
 
         // code links
-        CreateMap<CodeLinkEntity, CodeLinkDto>();
+        CreateMap<CodeLinkEntity, CodeLinkDto>()
+            .ForMember(d => d.RelatedUser, opt => opt.MapFrom(s => s.CreatedByUser));
 
         // attachments
-        CreateMap<AttachmentEntity, AttachmentDto>();
+        CreateMap<AttachmentEntity, AttachmentDto>()
+            .ForMember(d => d.RelatedUser, opt => opt.MapFrom(s => s.UploadedByUser));
     }
 }

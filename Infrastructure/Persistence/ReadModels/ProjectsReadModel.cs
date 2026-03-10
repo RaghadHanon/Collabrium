@@ -5,6 +5,7 @@ using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Enums;
+using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,6 +35,26 @@ public sealed class ProjectsReadModel : IProjectsReadModel
             .Where(p => p.TenantId == tId && p.Id == pId)
             .ProjectTo<ProjectDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<WorkItemSnapshot>> GetProjectWorkItemSnapshotAsync(string tenantId, string projectId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return new List<WorkItemSnapshot>();
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+
+        return await _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(wi => wi.Project.TenantId == tId && wi.Project.Id == pId)
+            .Select(wi => new WorkItemSnapshot(
+                wi.Id,
+                wi.Title,
+                wi.Type,
+                wi.Status,
+                null))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<PagedList<ProjectDto, DateTime?>> GetProjectsAsync(

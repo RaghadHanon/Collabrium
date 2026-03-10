@@ -40,6 +40,10 @@ public class CompleteSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
+            if(!(await sprintsRepository.CanSprintBeCompletedAsync(tenantId, request.SprintId, cancellationToken)))
+                return Result<SprintDto>.Failure("Sprint cannot be completed. Please ensure all work items are closed.",
+                    HttpStatusCode.BadRequest);
+
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
@@ -47,7 +51,7 @@ public class CompleteSprint
                 sprint.Complete();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code, oldSprintState, sprint);
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

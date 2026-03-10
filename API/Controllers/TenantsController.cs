@@ -20,7 +20,7 @@ public class TenantsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     POST /api/auth/tenant-with-admin
+    ///     POST /api/tenants/tenant-with-admin
     ///     {
     ///         "tenantName": "TechFusion Ltd",
     ///         "domain": "techfusion.com",
@@ -203,7 +203,7 @@ public class TenantsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     /// 
-    ///     GET /api/tenants/my-tenant/users?PageNumber=1&PageSize=10&SearchTerm=john
+    ///     GET /api/tenants/my-tenant/users?PageNumber=1&amp;PageSize=10&amp;SearchTerm=john
     /// 
     /// </remarks>
     /// <param name="request">The pagination and filtering parameters (e.g., page size, search term).</param>
@@ -211,7 +211,7 @@ public class TenantsController : ApiBaseController
     /// <response code="200">Returns the list of users successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not a Tenant Admin.</response>
-    [Authorize(Policy = Policies.Tenant_Manage)]
+    [Authorize]
     [Authorize(Policy = Policies.PasswordChanged)]
     [HttpGet("my-tenant/users")]
     public async Task<ActionResult<PagedList<UserDto, DateTime?>>> GetMyTenantUsers([FromQuery] GetTenantUsersRequest request)
@@ -229,7 +229,7 @@ public class TenantsController : ApiBaseController
     /// 
     /// Sample request:
     /// 
-    ///     GET /api/tenants/3fa85f64-5717-4562-b3fc-2c963f66afa6/users?PageNumber=1&PageSize=10
+    ///     GET /api/tenants/3fa85f64-5717-4562-b3fc-2c963f66afa6/users?PageNumber=1&amp;PageSize=10
     /// 
     /// </remarks>
     /// <param name="id">The unique identifier of the tenant to inspect.</param>
@@ -258,7 +258,7 @@ public class TenantsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/tenants?Code=example&Country=US&PageSize=10
+    ///     GET /api/tenants?Code=example&amp;Country=US&amp;PageSize=10
     ///
     /// </remarks>
     /// <param name="request">The pagination and filtering parameters for tenants.</param>

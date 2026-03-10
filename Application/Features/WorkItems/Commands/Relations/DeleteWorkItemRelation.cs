@@ -71,7 +71,7 @@ public class DeleteWorkItemRelation
                     request.RelationId,
                     ct);
 
-                historyRecorder.RecordDeletionChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title);
+                historyRecorder.RecordDeletionChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
             }, cancellationToken);
 
             return deleted

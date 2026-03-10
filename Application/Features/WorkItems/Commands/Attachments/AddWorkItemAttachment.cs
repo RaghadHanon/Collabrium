@@ -42,7 +42,7 @@ public class AddWorkItemAttachment
 
             var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
             if (workItem is null)
-                return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+                return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
@@ -90,7 +90,7 @@ public class AddWorkItemAttachment
                     attachment: attachment,
                     cancellationToken: cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordCreationChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

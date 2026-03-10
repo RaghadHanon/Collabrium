@@ -1240,7 +1240,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("Relations")
+                        .WithMany("WorkItems")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1358,7 +1358,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("Relations");
+                    b.Navigation("WorkItems");
                 });
 #pragma warning restore 612, 618
         }

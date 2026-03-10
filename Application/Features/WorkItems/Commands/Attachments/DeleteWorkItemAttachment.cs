@@ -66,7 +66,7 @@ public class DeleteWorkItemAttachment
                     request.AttachmentId,
                     cancellationToken);
 
-                historyRecorder.RecordDeletionChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordDeletionChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

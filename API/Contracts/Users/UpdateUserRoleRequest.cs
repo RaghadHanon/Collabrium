@@ -1,6 +1,8 @@
-﻿namespace API.Contracts.Users;
+﻿using Domain.Enums;
+
+namespace API.Contracts.Users;
 
 public class UpdateUserRoleRequest
 {
-    public required string NewRole { get; set; }
+    public required UserRole NewRole { get; set; }
 }

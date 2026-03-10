@@ -7,7 +7,7 @@ public class UpdateWorkItemCommentRequestValidator : AbstractValidator<UpdateWor
 {
     public UpdateWorkItemCommentRequestValidator()
     {
-        RuleFor(x => x.NewContent)
+        RuleFor(x => x.Content)
             .Must(x => !string.IsNullOrWhiteSpace(x))
             .WithMessage("Content can't be empty or null");
     }

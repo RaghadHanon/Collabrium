@@ -12,27 +12,27 @@ public sealed class UpdateTestCaseRequestValidator : AbstractValidator<UpdateTes
 
         RuleFor(x => x.Preconditions)
             .MaximumLength(4000).WithMessage("Preconditions cannot exceed 4000 characters.")
-            .When(x => !(x.Preconditions is null));
+            .When(x => !string.IsNullOrEmpty(x.Preconditions));
 
         RuleFor(x => x.Steps)
             .MaximumLength(4000).WithMessage("Steps cannot exceed 4000 characters.")
-            .When(x => !(x.Steps is null));
+            .When(x => !string.IsNullOrEmpty(x.Steps));
 
         RuleFor(x => x.ExpectedResult)
             .MaximumLength(4000).WithMessage("ExpectedResult cannot exceed 4000 characters.")
-            .When(x => !(x.ExpectedResult is null));
+            .When(x => !string.IsNullOrEmpty(x.ExpectedResult));
 
         RuleFor(x => x.ActualResult)
             .MaximumLength(4000).WithMessage("ActualResult cannot exceed 4000 characters.")
-            .When(x => !(x.ActualResult is null));
+            .When(x => !string.IsNullOrEmpty(x.ActualResult));
 
         RuleFor(x => x.TestEnvironment)
-            .Must(v => Enum.TryParse<TestEnvironment>(v, true, out _))
+            .IsInEnum()
             .WithMessage("TestEnvironment must be a valid TestEnvironment value.")
             .When(x => !(x.TestEnvironment is null));
 
         RuleFor(x => x.Result)
-            .Must(v => Enum.TryParse<TestCaseResult>(v, true, out _))
+            .IsInEnum()
             .WithMessage("Result must be a valid Result value.")
             .When(x => !(x.Result is null));
 

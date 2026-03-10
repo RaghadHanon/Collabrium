@@ -7,6 +7,7 @@ public class ProjectHistory : Entity
 {
     public string ProjectId { get; private set; } = null!;
     public string RelatedEntityId { get; private set; } = null!;
+    public string RelatedEntityCode { get; private set; } = null!;
     public string RelatedEntityTitle { get; private set; } = null!;
     public ProjectHistoryScope Scope { get; private set; }
     public ActionType ActionType { get; private set; }
@@ -23,6 +24,7 @@ public class ProjectHistory : Entity
         string projectId,
         string relatedEntityId,
         string relatedEntityTitle,
+        string relatedEntityCode,
         string madeByUserId,
         ActionType actionType,
         ProjectHistoryScope scope,
@@ -33,6 +35,7 @@ public class ProjectHistory : Entity
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
         RelatedEntityId = Guard.NotNullOrWhiteSpace(relatedEntityId, nameof(relatedEntityId));
         RelatedEntityTitle = Guard.NotNullOrWhiteSpace(relatedEntityTitle, nameof(relatedEntityTitle));
+        RelatedEntityCode = Guard.NotNullOrWhiteSpace(relatedEntityCode, nameof(relatedEntityCode));
         MadeByUserId = Guard.NotNullOrWhiteSpace(madeByUserId, nameof(madeByUserId));
         Scope = scope;
         ActionType = actionType;
@@ -46,6 +49,7 @@ public class ProjectHistory : Entity
       string projectId,
       string relatedEntityId,
       string relatedEntityTitle,
+      string relatedEntityCode,
       string madeByUserId,
       ProjectHistoryScope scope,
       ActionType actionType, 
@@ -56,6 +60,7 @@ public class ProjectHistory : Entity
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
         RelatedEntityId = Guard.NotNullOrWhiteSpace(relatedEntityId, nameof(relatedEntityId));
         RelatedEntityTitle = Guard.NotNullOrWhiteSpace(relatedEntityTitle, nameof(relatedEntityTitle));
+        RelatedEntityCode = Guard.NotNullOrWhiteSpace(relatedEntityCode, nameof(relatedEntityCode));
         MadeByUserId = Guard.NotNullOrWhiteSpace(madeByUserId, nameof(madeByUserId));
         Scope = scope;
         ActionType = actionType;
@@ -72,6 +77,7 @@ public class ProjectHistory : Entity
     string projectId,
     string relatedEntityId,
     string relatedEntityTitle,
+    string relatedEntityCode,
     string madeByUserId,
     ProjectHistoryScope scope,
     ActionType actionType,
@@ -84,6 +90,7 @@ public class ProjectHistory : Entity
             projectId,
             relatedEntityId,
             relatedEntityTitle,
+            relatedEntityCode,
             madeByUserId,
             actionType,
             scope,

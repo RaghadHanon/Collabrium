@@ -21,4 +21,5 @@ public class WorkItemListItemDto
 
     public DateTime CreatedAt { get; set; }
     public WorkItemRelationDto? Parent { get; set; }
+    public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
 }

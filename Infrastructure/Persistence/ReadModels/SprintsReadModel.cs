@@ -19,16 +19,16 @@ public sealed class SprintsReadModel : ISprintsReadModel
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public Task<SprintDto?> GetByIdAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken ct = default)
+    public async Task<SprintDto?> GetByIdAsync(string tenantId, string? sprintId, string? projectId = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
-            return Task.FromResult<SprintDto?>(null);
+            return null;
 
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
         var prId = projectId?.Trim();
 
-        return _dbContext.Sprints
+        return await _dbContext.Sprints
             .AsNoTracking()
             .Where(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId))
             .ProjectTo<SprintDto>(_mapper.ConfigurationProvider)

@@ -137,19 +137,22 @@ public sealed class Project : Entity
         return $"{Key} Sprint {LastSprintNumber}";
     }
 
-    public void UpdateDetails(string name, string? description, ProjectStatus? status,
+    public void UpdateDetails(string name, string? description,
         DateTime? startDate, DateTime? endDate)
     {
         Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
         Description = description?.Trim();
-        if (status.HasValue)
-            SetStatus(status.Value);
         SetSchedule(startDate, endDate);
         Touch();
     }
 
-    public void ChangeStatus(ProjectStatus status)
+    public void ChangeStatusWithValidation(ProjectStatus status,
+         IEnumerable<WorkItemSnapshot> workItemSnapshots)
     {
+        if (status == ProjectStatus.Completed)
+            Guard.Against(workItemSnapshots.Any(wi => wi.Status != WorkItemStatus.Done),
+                "Cannot mark project as Completed if it has incomplete work items.");
+
         SetStatus(status);
         Touch();
     }

@@ -10,7 +10,8 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
         When(x => x.StartDate.HasValue, () =>
         {
             RuleFor(x => x.StartDate!.Value)
-                .NotEmpty().WithMessage("StartDate cannot be empty.");
+                .NotEmpty()
+                .WithMessage("StartDate cannot be empty.");
         });
 
         When(x => x.StartDate.HasValue && x.EndDate.HasValue, () =>

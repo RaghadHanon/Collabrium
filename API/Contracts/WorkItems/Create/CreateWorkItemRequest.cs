@@ -1,4 +1,6 @@
-﻿namespace API.Contracts.WorkItems.Create;
+﻿using Domain.Enums;
+
+namespace API.Contracts.WorkItems.Create;
 
 /// <summary>
 /// Base request payload for creating a work item.
@@ -28,5 +30,5 @@ public class CreateWorkItemRequest
     /// <summary>
     /// The priority of the work item (e.g., Low, Medium, High).
     /// </summary>
-    public required string Priority { get; init; }
+    public required WorkItemPriority Priority { get; init; }
 }

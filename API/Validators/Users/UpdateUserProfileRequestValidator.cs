@@ -10,12 +10,12 @@ public class UpdateUserProfileRequestValidator : AbstractValidator<UpdateUserPro
 
         RuleFor(x => x.FirstName)
             .MaximumLength(50)
-            .When(x => !(x.FirstName is null))
+            .When(x => !string.IsNullOrEmpty(x.FirstName))
             .WithMessage("First name cannot exceed 50 characters.");
 
         RuleFor(x => x.LastName)
             .MaximumLength(50)
-            .When(x => !(x.LastName is null))
+            .When(x => !string.IsNullOrEmpty(x.LastName))
             .WithMessage("Last name cannot exceed 50 characters.");
 
         RuleFor(x => x.DateOfBirth)
@@ -25,32 +25,32 @@ public class UpdateUserProfileRequestValidator : AbstractValidator<UpdateUserPro
 
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^\+?\d{9,15}$")
-            .When(x => !(x.PhoneNumber is null))
+            .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
             .WithMessage("Phone number must be valid and contain only digits (optionally starting with +).");
 
         RuleFor(x => x.LinkedIn)
             .Must(BeValidUrl)
-            .When(x => !(x.LinkedIn is null))
+            .When(x => !string.IsNullOrEmpty(x.LinkedIn))
             .WithMessage("LinkedIn must be a valid URL.");
 
         RuleFor(x => x.Facebook)
             .Must(BeValidUrl)
-            .When(x => !(x.Facebook is null))
+            .When(x => !string.IsNullOrEmpty(x.Facebook))
             .WithMessage("Facebook must be a valid URL.");
 
         RuleFor(x => x.Instagram)
             .Must(BeValidUrl)
-            .When(x => !(x.Instagram is null))
+            .When(x => !string.IsNullOrEmpty(x.Instagram))
             .WithMessage("Instagram must be a valid URL.");
 
         RuleFor(x => x.YouTube)
             .Must(BeValidUrl)
-            .When(x => !(x.YouTube is null))
+            .When(x => !string.IsNullOrEmpty(x.YouTube))
             .WithMessage("YouTube must be a valid URL.");
 
         RuleFor(x => x.Github)
             .Must(BeValidUrl)
-            .When(x => !(x.Github is null))
+            .When(x => !string.IsNullOrEmpty(x.Github))
             .WithMessage("Github must be a valid URL.");
 
         RuleFor(x => x)

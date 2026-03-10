@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Application.Features.WorkItems.DTOs.Comments;
+using Domain.Enums;
 
 namespace Application.Features.WorkItems.DTOs.CodeLinkes;
 public class CodeLinkDto
@@ -9,5 +10,5 @@ public class CodeLinkDto
     public string Url { get; private set; } = null!;
     public CodeLinkType LinkType { get; private set; }
     public string? DisplayName { get; private set; }
-    public string? CreatedByUserId { get; private set; }
+    public required RelatedUserDto RelatedUser { get; set; }
 }

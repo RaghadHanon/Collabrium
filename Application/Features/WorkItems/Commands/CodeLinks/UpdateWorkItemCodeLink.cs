@@ -74,7 +74,7 @@ public class UpdateWorkItemCodeLink
                     codeLink,
                     cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, oldWorkItemCodeLinkState, codeLink);
+                historyRecorder.RecordUpdatingChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemCodeLinkState, codeLink);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

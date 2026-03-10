@@ -155,17 +155,20 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("UploadedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.HasIndex("WorkItemId");
 
@@ -335,6 +338,10 @@ namespace Infrastructure.Migrations
                     b.Property<string>("PropertyName")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RelatedEntityCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RelatedEntityId")
                         .IsRequired()
@@ -1206,11 +1213,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("Attachments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("UploadedByUser");
 
                     b.Navigation("WorkItem");
                 });
@@ -1565,7 +1580,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("Relations")
+                        .WithMany("WorkItems")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1711,7 +1726,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("Relations");
+                    b.Navigation("WorkItems");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TopicNodeEntity", b =>

@@ -66,7 +66,7 @@ public class DeleteWorkItemCodeLink
                     request.CodeLinkId,
                     cancellationToken);
 
-                historyRecorder.RecordDeletionChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordDeletionChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

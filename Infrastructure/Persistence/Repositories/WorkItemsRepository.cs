@@ -117,6 +117,20 @@ public class WorkItemsRepository : IWorkItemsRepository
         return;
     }
 
+    public async Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
+        string[] workItemIds, CancellationToken cancellationToken)
+    {
+        var workItemsEntity = await _dbContext.WorkItems
+            .Where(w => workItemIds.Contains(w.Id) && w.ProjectId == projectId && w.Project.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var workItems = workItemsEntity
+            .Select(e => WorkItemMapper.ToDomain(e, includeChildren: false))
+            .ToList();
+
+        return workItems;
+    }
+
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

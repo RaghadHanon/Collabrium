@@ -36,7 +36,7 @@ public class Bug : WorkItem
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
         return from == to
             || to == WorkItemStatus.ToDo
@@ -45,18 +45,11 @@ public class Bug : WorkItem
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
-                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
-                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress or WorkItemStatus.InReview,
+                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress or WorkItemStatus.InReview,
                 _ => false
             };
-    }
-
-    public void Reopen(string reopenedByUserId, string? note = null)
-    {
-        Guard.Against(!IsDone, "Only Done bug can be reopened.");
-        ChangeStatus(WorkItemStatus.InProgress);
-        if (!string.IsNullOrWhiteSpace(note))
-            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
     }
 
     public static Bug Rehydrate(

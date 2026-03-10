@@ -78,13 +78,12 @@ public class CreateProject
                 project.UpdateDetails(
                     name: request.Name,
                     description: request.Description,
-                    status: ProjectStatus.NotStarted,
                     startDate: request.StartDate,
                     endDate: request.EndDate
                 );
                 await projectsRepository.AddAsync(project, cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Project>(project.Id, project.Id, project.Name);
+                historyRecorder.RecordCreationChanges<Project>(project.Id, project.Id, project.Name, project.Key);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

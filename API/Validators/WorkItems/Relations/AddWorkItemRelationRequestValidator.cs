@@ -13,7 +13,7 @@ public class AddWorkItemRelationRequestValidator : AbstractValidator<AddWorkItem
             .WithMessage("NewTargetWorkItemId can't be empty or null");
 
         RuleFor(x => x.RelationType)
-            .Must(v => Enum.TryParse<WorkItemRelationType>(v, true, out _))
+            .IsInEnum()
             .WithMessage("RelationType must be a valid RelationType value.");
     }
 }

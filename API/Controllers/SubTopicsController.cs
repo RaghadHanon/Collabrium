@@ -62,7 +62,7 @@ namespace API.Controllers
         /// <response code="404">If tenant/roadmap/topic/subtopic not found.</response>
         [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet("{subTopicId}")]
-        public async Task<ActionResult<SubTopicDto>> GetSubTopicById(
+        public async Task<ActionResult<SubTopicDto>> GetSubTopic(
             string roadmapId,
             string topicNodeId,
             string subTopicId)
@@ -146,8 +146,8 @@ namespace API.Controllers
             var command = Mapper.Map<CreateSubTopic.Command>(request);
             command.RoadmapId = roadmapId;
             command.TopicNodeId = topicNodeId;
+            return HandleResult(await Mediator.Send(command), "GetSubTopic", "SubTopics");
 
-            return HandleResult(await Mediator.Send(command));
         }
 
         /// <summary>

@@ -67,7 +67,7 @@ namespace API.Controllers
         /// <response code="404">If tenant/roadmap/topic/subtopic/resource not found.</response>
         [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet("{resourceId}")]
-        public async Task<ActionResult<ResourceDto>> GetResourceById(
+        public async Task<ActionResult<ResourceDto>> GetResource(
             string roadmapId,
             string topicNodeId,
             string subTopicId,
@@ -123,8 +123,8 @@ namespace API.Controllers
             command.RoadmapId = roadmapId;
             command.TopicNodeId = topicNodeId;
             command.SubTopicId = subTopicId;
+            return HandleResult(await Mediator.Send(command), "GetResource", "Resources");
 
-            return HandleResult(await Mediator.Send(command));
         }
 
         /// <summary>

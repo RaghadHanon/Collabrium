@@ -47,7 +47,7 @@ namespace API.Controllers
             var command = Mapper.Map<CreateTopicNode.Command>(request);
             command.RoadmapId = roadmapId;
 
-            return HandleResult(await Mediator.Send(command));
+            return HandleResult(await Mediator.Send(command), "GetTopic", "Topics");
         }
 
         /// <summary>

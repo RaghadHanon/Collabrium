@@ -12,6 +12,7 @@ namespace Infrastructure.Persistence.Mappers
             {
                 Id = domain.Id,
                 TopicNodeId = domain.TopicNodeId,
+                Title = domain.Title,
                 Description = domain.Description,
                 Order = domain.Order,
                 CreatedAt = domain.CreatedAt,

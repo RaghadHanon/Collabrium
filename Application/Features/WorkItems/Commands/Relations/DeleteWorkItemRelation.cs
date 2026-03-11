@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Interfaces;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
@@ -20,6 +21,7 @@ public class DeleteWorkItemRelation
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IWorkItemsReadModel workItemsReadModel,
         IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
@@ -51,6 +53,17 @@ public class DeleteWorkItemRelation
             if (sourceWorkItem is null)
                 return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
+            var relation = await workItemsReadModel.GetRelationByIdAsync(tenantId, request.ProjectId, request.RelationId, cancellationToken);
+            if (relation is null)
+                return Result<Unit>.Failure("Relation not found in this project.", HttpStatusCode.NotFound);
+            
+            var targetWorkItem = await workItemsRepository.GetByIdAsync(
+               tenantId,
+               request.ProjectId,
+               relation.TargetWorkItem!.Id,
+               includeChildren: true,
+               cancellationToken);
+
             var isCurrentAssignee = string.Equals(sourceWorkItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
@@ -60,11 +73,17 @@ public class DeleteWorkItemRelation
                     "You can only update items assigned to you. Managers can update any item.",
                     HttpStatusCode.Forbidden);
 
-            var deleted = false;
-
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                deleted = await workItemsRepository.DeleteRelationAsync(
+                if (relation.RelationType == WorkItemRelationType.Parent)
+                    sourceWorkItem.UpdateParent(null);
+
+                if (relation.RelationType == WorkItemRelationType.Child)
+                    targetWorkItem!.UpdateParent(null);
+
+                await workItemsRepository.UpdateAsync(sourceWorkItem, ct);
+                await workItemsRepository.UpdateAsync(targetWorkItem!, ct);
+                await workItemsRepository.DeleteRelationAsync(
                     tenantId,
                     request.ProjectId,
                     request.SourceWorkItemId,
@@ -74,9 +93,7 @@ public class DeleteWorkItemRelation
                 historyRecorder.RecordDeletionChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
             }, cancellationToken);
 
-            return deleted
-                ? Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent)
-                : Result<Unit>.Failure("Relation not found in this workItem.", HttpStatusCode.NotFound);
+            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }
     }
 }

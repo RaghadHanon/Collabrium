@@ -101,6 +101,7 @@ public sealed class TestCase : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         string preconditions,
@@ -112,7 +113,7 @@ public sealed class TestCase : WorkItem
     {
         var tc = new TestCase(id, title, code, createdByUserId, projectId, preconditions, steps, env, expectedResult);
         tc.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
         tc.ActualResult = actualResult;
         tc.Result = result;
         return tc;
@@ -137,6 +138,7 @@ public sealed class TestCase : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             Preconditions,

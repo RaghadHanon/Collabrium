@@ -787,6 +787,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ParentId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
@@ -822,6 +825,8 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("SprintId");
 
@@ -1557,6 +1562,11 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
                         .WithMany("WorkItems")
                         .HasForeignKey("ProjectId")
@@ -1572,6 +1582,8 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedByUser");
 
+                    b.Navigation("Parent");
+
                     b.Navigation("Project");
 
                     b.Navigation("Sprint");
@@ -1580,7 +1592,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("WorkItems")
+                        .WithMany("Relations")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1726,7 +1738,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("WorkItems");
+                    b.Navigation("Relations");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TopicNodeEntity", b =>

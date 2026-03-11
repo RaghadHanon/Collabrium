@@ -64,12 +64,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}/relations
-    ///     Content-RelationType: application/json
-    ///
-    ///     {
-    ///       "relationType": "Parent"
-    ///     }
+    ///     GET /api/projects/{projectId}/work-items/{workItemId}/relations?relationType=Child
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -90,6 +85,43 @@ public sealed class WorkItemsRelationsController : ApiBaseController
       [FromQuery] GetWorkItemRelationsRequest request)
     {
         var query = Mapper.Map<GetWorkItemRelations.Query>(request);
+        query.ProjectId = projectId;
+        query.WorkItemId = workItemId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves work items that can be related to the specified work item.
+    /// </summary>
+    /// <remarks>
+    /// Returns a list of work items that are valid candidates for creating a relation
+    /// with the specified source work item based on the provided relation type.
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/work-items/{workItemId}/relation-candidates?relationType=Child
+    ///     
+    ///
+    /// </remarks>
+    /// <param name="projectId">The unique identifier of the project.</param>
+    /// <param name="workItemId">The unique identifier of the source work item.</param>
+    /// <param name="request">Query parameters used to filter relation candidates (e.g., relation type).</param>
+    /// <returns>A list of work items that can participate in the relation.</returns>
+    /// <response code="200">Work items retrieved successfully.</response>
+    /// <response code="400">If the request parameters are invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project or work item does not exist.</response>
+    /// <response code="500">If an unexpected error occurred.</response>
+    [Authorize(Policy = Policies.WorkItems_Read)]
+    [HttpGet("{workItemId}/relation-candidates")]
+    public async Task<ActionResult<List<RelationParticipantWorkItemDto>>> GetRelationCandidates(
+      string projectId,
+      string workItemId,
+      [FromQuery] GetRelationCandidatesRequest request)
+    {
+        var query = Mapper.Map<GetRelationCandidates.Query>(request);
         query.ProjectId = projectId;
         query.WorkItemId = workItemId;
 

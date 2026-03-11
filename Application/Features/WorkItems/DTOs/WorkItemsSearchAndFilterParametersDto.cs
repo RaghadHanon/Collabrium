@@ -15,7 +15,7 @@ public sealed class WorkItemsSearchAndFilterParametersDto : QueryParametersDto<D
 
     public string? SprintId { get; set; }
     public string? AssignedToUserId { get; set; }
-
+    public string? CreatedByUserId { get; init; }
     public string? TitleContains { get; set; }
 
     public DateTime? CreatedAfter { get; set; }

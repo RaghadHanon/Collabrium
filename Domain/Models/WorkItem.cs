@@ -25,6 +25,7 @@ public abstract class WorkItem : Entity
     public string ProjectId { get; private set; } = null!;
     public string? SprintId { get; private set; }
 
+    public string? ParentId { get; set; }
 
     private readonly List<WorkItemRelation> _relations = new();
     public IReadOnlyCollection<WorkItemRelation> Relations => _relations.AsReadOnly();
@@ -81,6 +82,7 @@ public abstract class WorkItem : Entity
         string? assignedToUserId,
         string createdByUserId,
         string? sprintId,
+        string? parentId,
         string projectId,
         DateTime? startDate,
         DateTime? endDate)
@@ -101,6 +103,7 @@ public abstract class WorkItem : Entity
         CreatedByUserId = createdByUserId;
         SprintId = sprintId;
         ProjectId = projectId;
+        ParentId = parentId;
 
         StartDate = startDate;
         EndDate = endDate;
@@ -226,6 +229,21 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public void SetParent(string? parentId)
+    {
+        Guard.Against(!string.IsNullOrEmpty(ParentId), "WorkItem can have only one parent.");
+        Guard.Against(parentId == Id, "WorkItem can't relate to itself.");
+        ParentId = parentId;
+        Touch();
+    }
+
+    public void UpdateParent(string? parentId)
+    {
+        Guard.Against(parentId == Id, "WorkItem can't relate to itself.");
+        ParentId = parentId;
+        Touch();
+    }
+
     public void AssignTo(string? userId)
     {
         Guard.Against(IsDone, "Cannot assign a completed work item.");
@@ -259,8 +277,7 @@ public abstract class WorkItem : Entity
 
         if (type == WorkItemRelationType.Parent)
         {
-            Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent),
-                "WorkItem can have only one parent.");
+            Guard.Against(ParentId != null, "WorkItem can have only one parent.");
             Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Child
                                             && r.SourceWorkItemId == Id
                                             && r.TargetWorkItemId == targetWorkItemId),
@@ -336,11 +353,6 @@ public abstract class WorkItem : Entity
 
         _relations.Remove(rel!);
         Touch();
-    }
-
-    public string? GetParentId()
-    {
-        return _relations.FirstOrDefault(r => r.RelationType == WorkItemRelationType.Parent)?.TargetWorkItemId;
     }
 
     public IReadOnlyCollection<string> GetChildrenIds()

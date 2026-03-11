@@ -104,6 +104,7 @@ public sealed class WorkItemsApiProfile : Profile
         // relations
         CreateMap<AddWorkItemRelationRequest, AddWorkItemRelation.Command>();
         CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Query>();
+        CreateMap<GetRelationCandidatesRequest, GetRelationCandidates.Query>();
 
         // comments
         CreateMap<AddWorkItemCommentRequest, AddWorkItemComment.Command>();

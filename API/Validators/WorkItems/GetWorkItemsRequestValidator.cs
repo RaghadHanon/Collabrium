@@ -23,16 +23,6 @@ public class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsReques
             .When(x => x.Priority.HasValue)
             .WithMessage("Priority must be a valid WorkItemPriority value.");
 
-        RuleFor(x => x.SprintId)
-            .Must(x => !string.IsNullOrWhiteSpace(x))
-            .When(x => x.SprintId is not null)
-            .WithMessage("SprintId cannot be empty.");
-
-        RuleFor(x => x.AssignedToUserId)
-            .Must(x => !string.IsNullOrWhiteSpace(x))
-            .When(x => x.AssignedToUserId is not null)
-            .WithMessage("AssignedToUserId cannot be empty.");
-
         RuleFor(x => x.TitleContains)
             .MaximumLength(200).WithMessage("TitleContains cannot exceed 200 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.TitleContains));

@@ -31,6 +31,10 @@ public class GetWorkItemsRequest
     /// Filters work items by assigned user identifier.
     /// </summary>
     public string? AssignedToUserId { get; init; }
+    /// <summary>
+    /// Filters work items by creator user identifier.
+    /// </summary>
+    public string? CreatedByUserId { get; init; }
 
     /// <summary>
     /// Filters work items whose title contains the specified text.

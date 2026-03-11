@@ -47,6 +47,13 @@ public interface IWorkItemsReadModel
        string relationId,
        CancellationToken cancellationToken = default);
 
+    Task<List<RelationParticipantWorkItemDto>?> GetRelationCandidates(
+       string tenantId,
+       string projectId,
+       string sourceWorkItemId,
+       WorkItemRelationType relationType,
+       CancellationToken cancellationToken = default);
+
     // comments
     Task<PagedList<CommentDto, DateTime?>> GetWorkItemComments(
         CommentsQueryParametersDto parameters,

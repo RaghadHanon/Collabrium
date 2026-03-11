@@ -51,12 +51,13 @@ public sealed class TaskItem : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate)
     {
         var t = new TaskItem(id, title, code, createdByUserId, projectId);
         t.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
         return t;
     }
 
@@ -79,6 +80,7 @@ public sealed class TaskItem : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate
         );

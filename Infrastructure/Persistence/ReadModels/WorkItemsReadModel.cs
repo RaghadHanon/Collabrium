@@ -45,34 +45,34 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var wId = workItemId.Trim();
 
         var entity = await _dbContext.WorkItems
-            .Include(w => w.Relations)
-            .ThenInclude(r => r.TargetWorkItem)
+            .Include(w => w.Parent)
             .Include(w => w.CodeLinks)
             .ThenInclude(cl => cl.CreatedByUser)
             .AsNoTracking()
             .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.Id == wId)
             .FirstOrDefaultAsync(cancellationToken);
 
+        if (entity == null)
+            return null;
+
         var allowedStatuses = GetAllowedStatusTransitions(entity);
-        var parentRelation = GetParent(entity);
         var dto = entity is null ? null : _mapper.Map<WorkItemDto>(entity);
 
         if (dto != null)
-        {
             dto.AllowedStatuses = allowedStatuses;
-            dto.Parent = _mapper.Map<WorkItemRelationDto>(parentRelation);
-        }
 
         return entity is null ? null : dto;
     }
 
-    private WorkItemRelationEntity? GetParent(WorkItemEntity? entity)
+    private async Task<RelationParticipantWorkItemDto?> GetParentAsync(string tennatId, string projectId, string? parentId, CancellationToken cancellationToken)
     {
-        return entity is null
+        return parentId is null
             ? null
-            : entity.Relations
-                .Where(r => r.RelationType == WorkItemRelationType.Parent)
-                .FirstOrDefault();
+            : await _dbContext.WorkItems
+                    .AsNoTracking()
+                    .Where(w => w.Project.TenantId == tennatId && w.ProjectId == projectId && w.Id == parentId)
+                    .ProjectTo<RelationParticipantWorkItemDto>(_mapper.ConfigurationProvider)
+                    .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<List<WorkItemSnapshot>> GetChildrenAsync(
@@ -138,7 +138,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .ToList();
 
         var itemsByParent = nonUserStoryItemsWithParents
-            .GroupBy(i => i.Parent!.TargetWorkItem!.Id)
+            .GroupBy(i => i.Parent!.Id)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         return new BoardDto
@@ -190,20 +190,16 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = w.Relations
-                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
-                    .Select(r => new WorkItemRelationDto
+                Parent = _dbContext.WorkItems
+                    .Where(r => r.Id == w.ParentId)
+                    .Select(r => new RelationParticipantWorkItemDto
                     {
                         Id = r.Id,
-                        RelationType = r.RelationType,
-                        TargetWorkItem = new RelationParticipantWorkItemDto
-                        {
-                            Id = r.TargetWorkItem.Id,
-                            Code = r.TargetWorkItem.Code,
-                            Title = r.TargetWorkItem.Title,
-                            Type = r.TargetWorkItem.Type,
-                            Status = r.TargetWorkItem.Status,
-                        }
+                        Code = r.Code,
+                        Title = r.Title,
+                        Type = r.Type,
+                        Status = r.Status,
+
                     })
                     .FirstOrDefault()
             })
@@ -261,7 +257,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 Status = status,
                 Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
                 Items = items
-                    .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == status)
+                    .Where(i => string.IsNullOrEmpty(i.Parent?.Id) && i.Status == status)
                     .ToList()
             }).ToList() : null
         };
@@ -312,22 +308,17 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = w.Relations
-                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
-                    .Select(r => new WorkItemRelationDto
+                Parent = _dbContext.WorkItems
+                    .Where(r => r.Id == w.ParentId)
+                    .Select(r => new RelationParticipantWorkItemDto
                     {
                         Id = r.Id,
-                        RelationType = r.RelationType,
-                        TargetWorkItem = new RelationParticipantWorkItemDto
-                        {
-                            Id = r.TargetWorkItem.Id,
-                            Code = r.TargetWorkItem.Code,
-                            Title = r.TargetWorkItem.Title,
-                            Type = r.TargetWorkItem.Type,
-                            Status = r.TargetWorkItem.Status,
-                        }
-                    }
-                    )
+                        Code = r.Code,
+                        Title = r.Title,
+                        Type = r.Type,
+                        Status = r.Status,
+
+                    })
                     .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
@@ -367,22 +358,17 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = w.Relations
-                    .Where(r => r.RelationType == WorkItemRelationType.Parent)
-                    .Select(r => new WorkItemRelationDto
+                Parent = _dbContext.WorkItems
+                    .Where(r => r.Id == w.ParentId)
+                    .Select(r => new RelationParticipantWorkItemDto
                     {
                         Id = r.Id,
-                        RelationType = r.RelationType,
-                        TargetWorkItem = new RelationParticipantWorkItemDto
-                        {
-                            Id = r.TargetWorkItem.Id,
-                            Code = r.TargetWorkItem.Code,
-                            Title = r.TargetWorkItem.Title,
-                            Type = r.TargetWorkItem.Type,
-                            Status = r.TargetWorkItem.Status,
-                        }
-                    }
-                    )
+                        Code = r.Code,
+                        Title = r.Title,
+                        Type = r.Type,
+                        Status = r.Status,
+
+                    })
                     .FirstOrDefault()
             })
             .Take(pageSize + 1)
@@ -442,6 +428,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         {
             var aId = parameters.AssignedToUserId.Trim();
             query = query.Where(x => x.AssignedToUserId == aId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.CreatedByUserId))
+        {
+            var aId = parameters.CreatedByUserId.Trim();
+            query = query.Where(x => x.CreatedByUserId == aId);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.TitleContains))
@@ -511,6 +503,91 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         return await query
             .ProjectTo<WorkItemRelationDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<RelationParticipantWorkItemDto>?> GetRelationCandidates(
+    string tenantId,
+    string projectId,
+    string sourceWorkItemId,
+    WorkItemRelationType relationType,
+    CancellationToken cancellationToken = default)
+    {
+        tenantId = tenantId.Trim();
+        projectId = projectId.Trim();
+        sourceWorkItemId = sourceWorkItemId.Trim();
+
+        var sourceWorkItem = await _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(w =>
+                w.Project.TenantId == tenantId &&
+                w.ProjectId == projectId &&
+                w.Id == sourceWorkItemId)
+            .Select(w => new { w.Id, w.SprintId, w.Type, w.ParentId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (sourceWorkItem == null)
+            return null;
+
+        var query = _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(w =>
+                w.Project.TenantId == tenantId &&
+                w.ProjectId == projectId &&
+                w.Id != sourceWorkItem.Id && 
+                (w.SprintId == null || w.SprintId == sourceWorkItem.SprintId));
+
+        var allowedTypes = GetAllowedTargetTypes(sourceWorkItem.Type, relationType);
+
+        if (allowedTypes.Any())
+            query = query.Where(w => allowedTypes.Contains(w.Type));
+
+        if (relationType == WorkItemRelationType.Child)
+            query = query.Where(w => w.ParentId == null);
+
+        return await query
+            .ProjectTo<RelationParticipantWorkItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
+    private static IReadOnlyList<WorkItemType> GetAllowedTargetTypes(
+    WorkItemType source,
+    WorkItemRelationType relationType)
+    {
+        if (relationType == WorkItemRelationType.RelatesTo)
+        {
+            return Enum.GetValues<WorkItemType>();
+        }
+
+        return (source, relationType) switch
+        {
+            (WorkItemType.UserStory, WorkItemRelationType.Parent)
+                => new[] { WorkItemType.Epic },
+
+            (WorkItemType.TaskItem, WorkItemRelationType.Parent)
+                => new[] { WorkItemType.UserStory },
+
+            (WorkItemType.Bug, WorkItemRelationType.Parent)
+                => new[] { WorkItemType.UserStory },
+
+            (WorkItemType.TestCase, WorkItemRelationType.Parent)
+                => new[] { WorkItemType.UserStory },
+
+            (WorkItemType.Epic, WorkItemRelationType.Child)
+                => new[] { WorkItemType.UserStory },
+
+            (WorkItemType.UserStory, WorkItemRelationType.Child)
+                => new[]
+                {
+                WorkItemType.TaskItem,
+                WorkItemType.Bug,
+                WorkItemType.TestCase
+                },
+
+            (WorkItemType.Bug, WorkItemRelationType.FoundByTestCase)
+                => new[] { WorkItemType.TestCase },
+
+            _ => Array.Empty<WorkItemType>()
+        };
     }
 
     // comments

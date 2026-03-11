@@ -29,6 +29,9 @@ public class WorkItemEntity : DbEntity
 
     public string? SprintId { get; set; }
     public SprintEntity? Sprint { get; set; }
+
+    public string? ParentId { get; set; }
+    public WorkItemEntity? Parent { get; set; }
     public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
     public ICollection<WorkItemRelationEntity> Relations { get; set; } = new List<WorkItemRelationEntity>();
     public ICollection<CodeLinkEntity> CodeLinks { get; set; } = new List<CodeLinkEntity>();

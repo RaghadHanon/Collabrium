@@ -1,5 +1,4 @@
 ﻿using Domain.Enums;
-using Domain.Models;
 
 namespace API.Contracts.WorkItems.Update;
 

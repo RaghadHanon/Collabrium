@@ -25,6 +25,11 @@ public class WorkItemConfiguration : IEntityTypeConfiguration<WorkItemEntity>
             .HasForeignKey(w => w.SprintId)
             .OnDelete(DeleteBehavior.NoAction);
 
+        builder.HasOne(w => w.Parent)
+            .WithMany()
+            .HasForeignKey(w => w.ParentId)
+            .OnDelete(DeleteBehavior.NoAction);
+
         builder.HasOne(w => w.AssignedToUser)
             .WithMany(u => u.AssignedWorkItems)
             .HasForeignKey(w => w.AssignedToUserId)

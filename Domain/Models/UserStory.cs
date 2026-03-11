@@ -117,6 +117,7 @@ public sealed class UserStory : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         int storyPoints)
@@ -127,7 +128,7 @@ public sealed class UserStory : WorkItem
             createdAt, updatedAt, type,
             status, priority, isBlocked, effortPoints,
             title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId,
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId,
             startDate, endDate);
 
         us.StoryPoints = storyPoints;
@@ -153,6 +154,7 @@ public sealed class UserStory : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             StoryPoints

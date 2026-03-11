@@ -69,6 +69,7 @@ public class Bug : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         string stepsToReproduce,
@@ -77,7 +78,7 @@ public class Bug : WorkItem
     {
         var b = new Bug(id, title, code, createdByUserId, projectId, stepsToReproduce);
         b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
         b.ActualResult = actualResult;
@@ -104,6 +105,7 @@ public class Bug : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             StepsToReproduce,

@@ -83,6 +83,15 @@ public class AddWorkItemRelation
                     request.RelationType,
                     ct);
 
+                if (request.RelationType == WorkItemRelationType.Parent)
+                    sourceWorkItem.SetParent(targetWorkItem.Id); 
+                
+                if (request.RelationType == WorkItemRelationType.Child)
+                    targetWorkItem.SetParent(sourceWorkItem.Id);
+
+                await workItemsRepository.UpdateAsync(sourceWorkItem, ct);
+                await workItemsRepository.UpdateAsync(targetWorkItem, ct);
+
                 historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
             }, cancellationToken);
 

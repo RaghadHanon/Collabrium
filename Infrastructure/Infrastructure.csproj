@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Persistence\NewFolder\" />
+  </ItemGroup>
+
 </Project>

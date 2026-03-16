@@ -51,15 +51,32 @@ namespace Application.Features.RoadmapNodes.Commands
                 if (node is not Domain.Models.TopicNode topic)
                     return Result<TopicNodeDto>.Failure("Node is not a topic.", HttpStatusCode.BadRequest);
 
+                var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
+                if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    var newTitle = titleDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newTitle))
+                        return Result<TopicNodeDto>.Failure("Title cannot be empty.", HttpStatusCode.BadRequest);
+                }
+
+                var newTitleValue =
+                    PatchHelpers.ApplyStringPatch(topic.Title, request.Title) ?? topic.Title;
+
+                var newDescription =
+                    PatchHelpers.ApplyStringPatch(topic.Description, request.Description);
+
+                var newOrder = request.Order ?? topic.Order;
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     topic.Update(
-                        title: request.Title,
-                        description: request.Description,
-                        order: request.Order);
+                        title: newTitleValue,
+                        description: newDescription,
+                        order: newOrder);
 
                     await roadmapNodesRepository.UpdateAsync(topic, ct);
                 }, cancellationToken);
+
 
                 var dto = await roadmapNodesReadModel.GetTopicAsync(
                     tenantId: tenantId,

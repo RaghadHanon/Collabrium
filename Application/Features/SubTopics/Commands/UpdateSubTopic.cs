@@ -56,12 +56,28 @@ namespace Application.Features.SubTopics.Commands
                 if (subTopic is null)
                     return Result<SubTopicDto>.Failure("SubTopic not found.", HttpStatusCode.NotFound);
 
+                var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
+                if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    var newTitle = titleDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newTitle))
+                        return Result<SubTopicDto>.Failure("Title cannot be empty.", HttpStatusCode.BadRequest);
+                }
+
+                var newTitleValue =
+                    PatchHelpers.ApplyStringPatch(subTopic.Title, request.Title) ?? subTopic.Title;
+
+                var newDescription =
+                    PatchHelpers.ApplyStringPatch(subTopic.Description, request.Description);
+
+                var newOrder = request.Order ?? subTopic.Order;
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     subTopic.Update(
-                        title: request.Title,
-                        description: request.Description,
-                        order: request.Order);
+                        title: newTitleValue,
+                        description: newDescription,
+                        order: newOrder);
 
                     await subTopicsRepository.UpdateAsync(subTopic, ct);
                 }, cancellationToken);

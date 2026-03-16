@@ -13,12 +13,11 @@ namespace Application.Features.RoadmapNodes.Commands
         public sealed class Command : IRequest<Result<ReferenceNodeDto>>
         {
             public required string RoadmapId { get; set; }
-            public string? ReferenceNodeId { get; set; }
+            public required string ReferenceNodeId { get; set; }
 
             public string? Title { get; set; }
             public string? Description { get; set; }
             public int? Order { get; set; }
-
             public string? RefRoadmapId { get; set; }
         }
 
@@ -36,11 +35,13 @@ namespace Application.Features.RoadmapNodes.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<ReferenceNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
                 if (roadmap is null)
                     return Result<ReferenceNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
-
 
                 var node = await roadmapNodesRepository.GetByIdAsync(
                     tenantId: tenantId,
@@ -54,19 +55,47 @@ namespace Application.Features.RoadmapNodes.Commands
                 if (node is not Domain.Models.ReferenceNode reference)
                     return Result<ReferenceNodeDto>.Failure("Node is not a reference.", HttpStatusCode.BadRequest);
 
+                var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
+                if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    var newTitlee = titleDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newTitlee))
+                        return Result<ReferenceNodeDto>.Failure("Title cannot be empty.", HttpStatusCode.BadRequest);
+                }
 
-                var referenced = await roadmapsRepository.GetByIdAsync(tenantId, request.RefRoadmapId, cancellationToken);
-                if (referenced is null)
-                    return Result<ReferenceNodeDto>.Failure("Referenced roadmap not found.", HttpStatusCode.NotFound);
+                if (!string.IsNullOrWhiteSpace(request.RefRoadmapId))
+                {
+                    if (request.RefRoadmapId == request.RoadmapId)
+                        return Result<ReferenceNodeDto>.Failure("Reference node cannot reference the same roadmap.", HttpStatusCode.BadRequest);
+
+                    var referencedRoadmap = await roadmapsRepository.GetByIdAsync(
+                        tenantId,
+                        request.RefRoadmapId,
+                        cancellationToken);
+
+                    if (referencedRoadmap is null)
+                        return Result<ReferenceNodeDto>.Failure("Referenced roadmap not found.", HttpStatusCode.NotFound);
+                }
+
+                var newTitle = PatchHelpers.ApplyStringPatch(reference.Title, request.Title) ?? reference.Title;
+                var newDescription = PatchHelpers.ApplyStringPatch(reference.Description, request.Description);
+                var newOrder = request.Order ?? reference.Order;
+                var newRefRoadmapId = !string.IsNullOrWhiteSpace(request.RefRoadmapId)
+                    ? request.RefRoadmapId
+                    : reference.RefRoadmapId;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     reference.Update(
-                        title: request.Title,
-                        description: request.Description,
-                        order: request.Order);
+                        title: newTitle,
+                        description: newDescription,
+                        order: newOrder);
 
-                    reference.ChangeReference(request.RefRoadmapId);
+                    if (!string.IsNullOrWhiteSpace(request.RefRoadmapId) &&
+                        !string.Equals(reference.RefRoadmapId, request.RefRoadmapId, StringComparison.Ordinal))
+                    {
+                        reference.ChangeReference(request.RefRoadmapId);
+                    }
 
                     await roadmapNodesRepository.UpdateAsync(reference, ct);
                 }, cancellationToken);
@@ -84,3 +113,4 @@ namespace Application.Features.RoadmapNodes.Commands
         }
     }
 }
+

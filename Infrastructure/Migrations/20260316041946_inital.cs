@@ -433,7 +433,6 @@ namespace Infrastructure.Migrations
                     Scope = table.Column<int>(type: "int", nullable: false),
                     RelatedEntityId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RelatedEntityTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RelatedEntityCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MadeByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PropertyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -529,7 +528,6 @@ namespace Infrastructure.Migrations
                     CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SprintId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    ParentId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     StepsToReproduce = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BugEntity_ActualResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BugEntity_ExpectedResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -569,11 +567,6 @@ namespace Infrastructure.Migrations
                         column: x => x.SprintId,
                         principalTable: "Sprints",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_WorkItems_WorkItems_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "WorkItems",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -584,10 +577,10 @@ namespace Infrastructure.Migrations
                     WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StoragePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    UploadedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UploadedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UploadedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -595,12 +588,6 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Attachments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Attachments_AspNetUsers_UploadedByUserId",
-                        column: x => x.UploadedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Attachments_WorkItems_WorkItemId",
                         column: x => x.WorkItemId,
@@ -745,11 +732,6 @@ namespace Infrastructure.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Attachments_UploadedByUserId",
-                table: "Attachments",
-                column: "UploadedByUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Attachments_WorkItemId",
@@ -928,11 +910,6 @@ namespace Infrastructure.Migrations
                 name: "IX_WorkItems_CreatedByUserId",
                 table: "WorkItems",
                 column: "CreatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WorkItems_ParentId",
-                table: "WorkItems",
-                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkItems_ProjectId_AssignedToUserId",

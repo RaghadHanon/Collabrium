@@ -18,10 +18,10 @@ namespace Application.Features.RoadmapResources.Commands
             public required string SubTopicId { get; set; }
             public required string ResourceId { get; set; }
 
-            public required string Title { get; set; }
-            public required string Url { get; set; }
-            public RoadmapResourceType Type { get; set; }
-            public int Order { get; set; }
+            public string? Title { get; set; }
+            public string? Url { get; set; }
+            public RoadmapResourceType? Type { get; set; }
+            public int? Order { get; set; }
         }
 
         public sealed class Handler(

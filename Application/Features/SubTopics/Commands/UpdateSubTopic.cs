@@ -16,9 +16,9 @@ namespace Application.Features.SubTopics.Commands
             public required string TopicNodeId { get; set; }
             public required string SubTopicId { get; set; }
 
-            public required string Title { get; set; }
+            public string? Title { get; set; }
             public string? Description { get; set; }
-            public required int Order { get; set; }
+            public int? Order { get; set; }
         }
 
         public sealed class Handler(

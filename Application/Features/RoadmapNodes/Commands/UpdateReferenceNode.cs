@@ -13,13 +13,13 @@ namespace Application.Features.RoadmapNodes.Commands
         public sealed class Command : IRequest<Result<ReferenceNodeDto>>
         {
             public required string RoadmapId { get; set; }
-            public required string ReferenceNodeId { get; set; }
+            public string? ReferenceNodeId { get; set; }
 
-            public required string Title { get; set; }
+            public string? Title { get; set; }
             public string? Description { get; set; }
-            public required int Order { get; set; }
+            public int? Order { get; set; }
 
-            public required string RefRoadmapId { get; set; }
+            public string? RefRoadmapId { get; set; }
         }
 
         public sealed class Handler(

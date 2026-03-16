@@ -11,23 +11,23 @@ public class Bug : WorkItem
 
     private Bug() { }
 
-    public Bug(string id, string title, string createdByUserId, string projectId, string stepsToReproduce)
-        : base(id, title, createdByUserId, projectId)
+    public Bug(string id, string title, string code, string createdByUserId, string projectId, string stepsToReproduce)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
     }
 
-    public Bug(string title, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
-           : base(title, createdByUserId, projectId)
+    public Bug(string title, string code, string createdByUserId, string projectId, string actualResult, string expectedResult, string stepsToReproduce)
+           : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
         UpdateRepro(stepsToReproduce, actualResult, expectedResult);
     }
 
-    public Bug(string title, string createdByUserId, string projectId, string stepsToReproduce)
-       : base(title, createdByUserId, projectId)
+    public Bug(string title, string code, string createdByUserId, string projectId, string stepsToReproduce)
+       : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.Bug;
         StepsToReproduce = Guard.NotNullOrWhiteSpace(stepsToReproduce, nameof(stepsToReproduce));
@@ -38,16 +38,15 @@ public class Bug : WorkItem
     {
         // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
-        return from == WorkItemStatus.Done && to == WorkItemStatus.InProgress
-            ? true
-            : from == to
+        return from == to
+            || to == WorkItemStatus.ToDo
             || from switch
             {
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
                 WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
-                WorkItemStatus.Done => to is WorkItemStatus.Done,
+                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 _ => false
             };
     }
@@ -65,8 +64,10 @@ public class Bug : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -81,14 +82,43 @@ public class Bug : WorkItem
         string? expectedResult,
         string? actualResult)
     {
-        var b = new Bug(id, title, createdByUserId, projectId, stepsToReproduce);
-        b.RehydrateCommon(createdAt, updatedAt, status, priority, isBlocked, effortPoints, description, acceptanceCriteria,
-            assignedToUserId, sprintId, startDate, endDate);
+        var b = new Bug(id, title, code, createdByUserId, projectId, stepsToReproduce);
+        b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
         b.ActualResult = actualResult;
 
         return b;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            Code,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            StepsToReproduce,
+            ExpectedResult,
+            ActualResult
+        );
+
+        return clone;
     }
 
     public void UpdateRepro(string steps, string? expected, string? actual)

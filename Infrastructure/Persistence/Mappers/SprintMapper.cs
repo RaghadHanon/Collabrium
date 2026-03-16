@@ -13,10 +13,11 @@ public static class SprintMapper
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
+            name: entity.Name,
+            code: entity.Code,
+            goal: entity.Goal,
             tenantId: entity.TenantId,
             projectId: entity.ProjectId,
-            name: entity.Name,
-            goal: entity.Goal,
             start: entity.StartDate,
             end: entity.EndDate,
             status: entity.Status
@@ -36,6 +37,7 @@ public static class SprintMapper
             TenantId = domain.TenantId,
             ProjectId = domain.ProjectId,
 
+            Code = domain.Code,
             Name = domain.Name,
             Goal = domain.Goal,
             StartDate = domain.StartDate,
@@ -52,6 +54,7 @@ public static class SprintMapper
         entity.TenantId = domain.TenantId;
         entity.ProjectId = domain.ProjectId;
 
+        entity.Code = domain.Code;
         entity.Name = domain.Name;
         entity.Goal = domain.Goal;
         entity.StartDate = domain.StartDate;

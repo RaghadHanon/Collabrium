@@ -10,6 +10,7 @@ public class WorkItemListItemDto
     public string? SprintId { get; set; }
 
     public required string Title { get; set; }
+    public required string Code { get; set; }
 
     public WorkItemType Type { get; set; }
     public WorkItemStatus Status { get; set; }

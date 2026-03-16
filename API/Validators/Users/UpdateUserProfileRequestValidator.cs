@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace API.Validators.Users;
 
-public sealed class UpdateUserProfileRequestValidator : AbstractValidator<UpdateUserProfileRequest>
+public class UpdateUserProfileRequestValidator : AbstractValidator<UpdateUserProfileRequest>
 {
     public UpdateUserProfileRequestValidator()
     {

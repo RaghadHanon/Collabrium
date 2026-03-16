@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -14,10 +15,15 @@ public class StartSprint
     {
         public required string SprintId { get; set; }
         public required string ProjectId { get; set; }
+        public string? Name { get; set; }
+        public string? Goal { get; set; }
+        public required DateTime StartDate { get; set; }
+        public required DateTime EndDate { get; set; }
     }
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
@@ -36,15 +42,22 @@ public class StartSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
-            var hasActive = await sprintsRepository.HasActiveSprintAsync(tenantId, sprint.ProjectId, cancellationToken);
-            if (hasActive)
-                return Result<SprintDto>.Failure("This project already has an active sprint.", HttpStatusCode.BadRequest);
+            if (!(await sprintsRepository.SprintHasWorkItemsAsync(tenantId, request.SprintId, cancellationToken)))
+                return Result<SprintDto>.Failure("Cannot start a sprint for a project without work items.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            var oldSprintState = sprint.Clone();
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
-                sprint.Start();
+                sprint.Start(
+                    request.StartDate, 
+                    request.EndDate,
+                    PatchHelpers.ApplyStringPatch(sprint.Name, request.Name),
+                    PatchHelpers.ApplyStringPatch(sprint.Goal, request.Goal)
+                    );
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
-            }, cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

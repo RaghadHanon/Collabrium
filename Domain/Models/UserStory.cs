@@ -9,15 +9,15 @@ public sealed class UserStory : WorkItem
 
     private UserStory() { } // EF
 
-    public UserStory(string id, string title, string createdByUserId, string projectId, int storyPoints)
-        : base(id, title, createdByUserId, projectId)
+    public UserStory(string id, string title, string code, string createdByUserId, string projectId, int storyPoints)
+        : base(id, title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.UserStory;
         Estimate(storyPoints);
     }
 
-    public UserStory(string title, string createdByUserId, string projectId, int storyPoints)
-        : base(title, createdByUserId, projectId)
+    public UserStory(string title, string code, string createdByUserId, string projectId, int storyPoints)
+        : base(title, code, createdByUserId, projectId)
     {
         Type = WorkItemType.UserStory;
         Estimate(storyPoints);
@@ -28,12 +28,14 @@ public sealed class UserStory : WorkItem
     public void Estimate(int points)
     {
         Guard.Against(points < 0, "StoryPoints cannot be negative.");
-        Guard.Against(points > 100, "StoryPoints is too high.");
+        Guard.Against(!(new[] { 1, 2, 3, 5, 8, 13 }.Contains(points)), "StoryPoints must one of these values [1, 2, 3, 5, 8, 13].");
         StoryPoints = points;
         Touch();
     }
 
-    public void ChangeStatusWithValidation(WorkItemStatus newStatus, IEnumerable<WorkItemSnapshot>? linked)
+    public override void ChangeStatusWithValidation(
+         WorkItemStatus newStatus,
+         IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateStatusGate(newStatus, linked);
         base.ChangeStatus(newStatus);
@@ -86,7 +88,6 @@ public sealed class UserStory : WorkItem
             return;
         }
 
-        // ---- Done gate ----
         if (target == WorkItemStatus.Done)
         {
             Guard.Against(!allTasksDone,
@@ -105,8 +106,10 @@ public sealed class UserStory : WorkItem
         DateTime createdAt,
         DateTime? updatedAt,
         string title,
+        string code,
         string createdByUserId,
         string projectId,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -119,16 +122,43 @@ public sealed class UserStory : WorkItem
         DateTime? endDate,
         int storyPoints)
     {
-        var us = new UserStory(id, title, createdByUserId, projectId, storyPoints);
+        var us = new UserStory(id, title, code, createdByUserId, projectId, storyPoints);
 
         us.RehydrateCommon(
-            createdAt, updatedAt,
+            createdAt, updatedAt, type,
             status, priority, isBlocked, effortPoints,
-            description, acceptanceCriteria,
-            assignedToUserId, sprintId,
+            title, code, description, acceptanceCriteria,
+            assignedToUserId, createdByUserId, sprintId, projectId,
             startDate, endDate);
 
         us.StoryPoints = storyPoints;
         return us;
+    }
+
+    public override WorkItem Clone()
+    {
+        var clone = Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Title,
+            Code,
+            CreatedByUserId,
+            ProjectId,
+            Type,
+            Status,
+            Priority,
+            IsBlocked,
+            EffortPoints,
+            Description,
+            AcceptanceCriteria,
+            AssignedToUserId,
+            SprintId,
+            StartDate,
+            EndDate,
+            StoryPoints
+        );
+
+        return clone;
     }
 }

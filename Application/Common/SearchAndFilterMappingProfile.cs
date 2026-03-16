@@ -1,7 +1,9 @@
-﻿using Application.Features.Projects.DTOs;
+﻿using Application.Features.ProjectHistories.DTOs;
+using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
 using Application.Features.Roadmaps.DTOs;
 using Application.Features.Roadmaps.Queries;
+using Application.Features.ProjectsHistories.Queries;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
 using Application.Features.Tags.DTOs;
@@ -22,15 +24,17 @@ public class SearchAndFilterMappingProfile : Profile
 {
     public SearchAndFilterMappingProfile()
     {
-        CreateMap<GetTenantUsers, UsersSearchAndFilterParametersDto>();
+        CreateMap<GetTenantUsers.Query, UsersSearchAndFilterParametersDto>();
         CreateMap<GetTenants.Query, TenantsSearchAndFilterParametersDto>();
         CreateMap<GetTeams.Query, TeamsSearchAndFilterParametersDto>();
         CreateMap<GetSprints.Query, SprintsSearchAndFilterParametersDto>();
         CreateMap<GetProjects.Query, ProjectsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItems.Query, WorkItemsSearchAndFilterParametersDto>();
+        CreateMap<GetProjectBoard.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
         CreateMap<GetTags.Query, TagsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();
 
+        CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>(); 
     }
 }

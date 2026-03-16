@@ -12,6 +12,7 @@ public class WorkItemDto
     public string? SprintId { get; set; }
 
     public required string Title { get; set; }
+    public required string Code { get; set; }
     public string? Description { get; set; }
     public string? AcceptanceCriteria { get; set; }
 

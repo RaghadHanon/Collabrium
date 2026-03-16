@@ -25,6 +25,10 @@ public class DeleteProject
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            if (project == null)
+                return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
+
             var removed = await projectsRepository.RemoveAsync(tenantId, request.ProjectId, cancellationToken);
             if (!removed)
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);

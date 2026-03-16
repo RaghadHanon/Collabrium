@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -26,6 +27,7 @@ public class UpdateProject
     public class Handler(
         IProjectsRepository projectsRepository,
         IProjectsReadModel projectsReadModel,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<ProjectDto>>
@@ -41,7 +43,7 @@ public class UpdateProject
                 return Result<ProjectDto>.Failure("Project not found in this tenant.", HttpStatusCode.NotFound);
 
             var nameDecision = PatchHelpers.DecideStringPatch(request.Name);
-            
+
             if (nameDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
                 var newName = nameDecision.Value!;
@@ -53,23 +55,26 @@ public class UpdateProject
                 }
             }
 
-            var newStart = request.StartDate ?? project.StartDate;
-            var newEnd = request.EndDate ?? project.EndDate;
+            var newStartFinal = request.StartDate ?? project.StartDate;
+            var newEndFinal = request.EndDate ?? project.EndDate;
 
-            if (newStart.HasValue && newEnd.HasValue && newEnd.Value < newStart.Value)
+            if (newStartFinal.HasValue && newEndFinal.HasValue && newEndFinal.Value < newStartFinal.Value)
                 return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            var oldProjectState = project.Clone();
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 project.UpdateDetails(
                     name: PatchHelpers.ApplyStringPatch(project.Name, request.Name) ?? project.Name,
                     description: PatchHelpers.ApplyStringPatch(project.Description, request.Description),
                     status: request.Status ?? project.Status,
-                    startDate: newStart,
-                    endDate: newEnd
+                    startDate: newStartFinal,
+                    endDate: newEndFinal
                 );
 
-                await projectsRepository.UpdateAsync(project, cancellationToken);
+                await projectsRepository.UpdateAsync(project, ct);
+
+                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

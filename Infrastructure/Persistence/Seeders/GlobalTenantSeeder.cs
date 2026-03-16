@@ -71,6 +71,7 @@ public static class GlobalTenantSeeder
 
         var superAdminDomain = await identityService.RegisterUserAsync(
             fullName: "Super Admin",
+            jobTitle: UserRole.SuperAdmin.ToString(),
             department: Department.Administration,
             password: SuperAdminPassword,
             dateOfBirth: DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)),

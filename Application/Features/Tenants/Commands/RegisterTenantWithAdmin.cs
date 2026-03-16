@@ -57,6 +57,7 @@ public class RegisterTenantWithAdmin
 
                 var admin = await identityService.RegisterUserAsync(
                     fullName: request.FullName,
+                    jobTitle: UserRole.TenantAdmin.ToString(),
                     department: Department.ITSupport,
                     password: request.Password,
                     dateOfBirth: request.DateOfBirth,

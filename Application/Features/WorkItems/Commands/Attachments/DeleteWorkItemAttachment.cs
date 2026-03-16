@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -20,6 +19,7 @@ public class DeleteWorkItemAttachment
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -65,6 +65,8 @@ public class DeleteWorkItemAttachment
                     request.WorkItemId,
                     request.AttachmentId,
                     cancellationToken);
+
+                historyRecorder.RecordDeletionChanges<Attachment>(workItem.ProjectId, workItem.Id, workItem.Title);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

@@ -10,7 +10,7 @@ public class SprintConfiguration : IEntityTypeConfiguration<SprintEntity>
     {
         builder.HasKey(s => s.Id);
 
-        builder.Property(s => s.Name)
+        builder.Property(s => s.Code)
             .IsRequired()
             .HasMaxLength(200);
 
@@ -23,5 +23,7 @@ public class SprintConfiguration : IEntityTypeConfiguration<SprintEntity>
             .WithOne(w => w.Sprint)
             .HasForeignKey(w => w.SprintId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(s => s.Code).IsUnique();
     }
 }

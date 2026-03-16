@@ -4,6 +4,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -19,6 +20,8 @@ public class CompleteSprint
 
     public class Handler(
         ISprintsRepository sprintsRepository,
+        IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
@@ -37,11 +40,15 @@ public class CompleteSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+            var oldSprintState = sprint.Clone();
+            await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
+                await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Complete();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
-            }, cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+            }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 

@@ -14,7 +14,7 @@ public sealed class UpdateTeamRequestValidator : AbstractValidator<UpdateTeamReq
             .WithMessage("TeamLeadId cannot be empty.");
 
         RuleFor(x => x.Name)
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.")
+            .MaximumLength(100).WithMessage("Code cannot exceed 100 characters.")
             .When(x => !(x.Name is null));
 
         RuleFor(x => x.Description)

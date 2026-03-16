@@ -13,6 +13,10 @@ public interface IUsersRepository
     Task<bool> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
     Task<bool> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);
+    Task<bool> ReplaceUserRoleAsync(
+     string userId,
+     string newRole,
+     CancellationToken cancellationToken = default);
 
     Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default);
     Task<bool> IsUserNameUniqueAsync(string username, CancellationToken cancellationToken = default);

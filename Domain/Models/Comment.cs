@@ -28,6 +28,17 @@ public class Comment : Entity
         return c;
     }
 
+    public Comment Clone()
+    {
+        return Rehydrate(
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            CreatedByUserId,
+            Content
+        );
+    }
+
     public void Edit(string content)
     {
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content));

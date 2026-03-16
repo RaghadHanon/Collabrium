@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -19,6 +20,7 @@ public class DeleteWorkItemRelation
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
@@ -68,6 +70,8 @@ public class DeleteWorkItemRelation
                     request.SourceWorkItemId,
                     request.RelationId,
                     ct);
+
+                historyRecorder.RecordDeletionChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title);
             }, cancellationToken);
 
             return deleted

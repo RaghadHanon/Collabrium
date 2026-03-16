@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260220000157_AddIsVisibleAndRemoveIsActive")]
-    partial class AddIsVisibleAndRemoveIsActive
+    [Migration("20260316041946_inital")]
+    partial class inital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,6 +57,10 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
@@ -123,6 +127,93 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkItemId");
+
+                    b.ToTable("Attachments");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CodeLinkEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LinkType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("WorkItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("WorkItemId");
+
+                    b.ToTable("CodeLinks");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -174,6 +265,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("LastSprintNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LastWorkItemNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -199,6 +300,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("Key")
+                        .IsUnique();
+
                     b.HasIndex("TeamId");
 
                     b.HasIndex("TenantId");
@@ -211,12 +315,15 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ChangedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("MadeByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");
@@ -229,16 +336,28 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("PropertyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RelatedEntityId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedEntityTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChangedByUserId");
+                    b.HasIndex("MadeByUserId");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId", "CreatedAt");
 
                     b.ToTable("ProjectHistories");
                 });
@@ -312,8 +431,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("TenantId")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -359,6 +478,11 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -399,16 +523,22 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Goal")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
@@ -420,10 +550,17 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.HasIndex("ProjectId");
 
@@ -623,6 +760,10 @@ namespace Infrastructure.Migrations
                     b.Property<string>("AssignedToUserId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -669,18 +810,28 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToUserId");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("SprintId");
+
+                    b.HasIndex("ProjectId", "AssignedToUserId");
+
+                    b.HasIndex("ProjectId", "CreatedAt");
+
+                    b.HasIndex("ProjectId", "Priority");
+
+                    b.HasIndex("ProjectId", "Status");
+
+                    b.HasIndex("ProjectId", "Type");
+
+                    b.HasIndex("ProjectId", "SprintId", "CreatedAt");
 
                     b.ToTable("WorkItems");
 
@@ -931,6 +1082,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Result")
+                        .HasColumnType("int");
+
                     b.Property<string>("Steps")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1053,6 +1207,36 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
+                        .WithMany("Attachments")
+                        .HasForeignKey("WorkItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkItem");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CodeLinkEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
+                        .WithMany("CodeLinks")
+                        .HasForeignKey("WorkItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("WorkItem");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
@@ -1100,19 +1284,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectHistoryEntity", b =>
                 {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "ChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("ChangedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "MadeByUser")
+                        .WithMany("ProjectsHistories")
+                        .HasForeignKey("MadeByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
-                        .WithMany()
+                        .WithMany("ProjectHistories")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ChangedByUser");
+                    b.Navigation("MadeByUser");
 
                     b.Navigation("Project");
                 });
@@ -1384,15 +1568,15 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("OutgoingRelations")
+                        .WithMany("WorkItems")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "TargetWorkItem")
-                        .WithMany("IncomingRelations")
+                        .WithMany()
                         .HasForeignKey("TargetWorkItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SourceWorkItem");
@@ -1470,11 +1654,15 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Projects");
 
+                    b.Navigation("ProjectsHistories");
+
                     b.Navigation("TeamMemberships");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
+                    b.Navigation("ProjectHistories");
+
                     b.Navigation("Sprints");
 
                     b.Navigation("WorkItems");
@@ -1520,11 +1708,13 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
                 {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("CodeLinks");
+
                     b.Navigation("Comments");
 
-                    b.Navigation("IncomingRelations");
-
-                    b.Navigation("OutgoingRelations");
+                    b.Navigation("WorkItems");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TopicNodeEntity", b =>

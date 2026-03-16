@@ -100,15 +100,25 @@ namespace Infrastructure.Persistence.ReadModels
                 string.IsNullOrWhiteSpace(roadmapId) ||
                 string.IsNullOrWhiteSpace(nodeId))
                 return null;
+            tenantId = tenantId.Trim();
+            roadmapId = roadmapId.Trim();
+            nodeId = nodeId.Trim();
+            var entity = await _dbContext.RoadmapNodes
+           .AsNoTracking()
+           .FirstOrDefaultAsync(n =>
+           n.TenantId == tenantId &&
+           n.RoadmapId == roadmapId &&
+           n.Id == nodeId,
+           ct);
 
-            return await _dbContext.RoadmapNodes
-                .AsNoTracking()
-                .Where(n =>
-                    n.TenantId == tenantId &&
-                    n.RoadmapId == roadmapId &&
-                    n.Id == nodeId)
-                .ProjectTo<RoadmapNodeDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(ct);
+            if (entity is null)
+                return null;
+            return entity switch
+            {
+                TopicNodeEntity topic => _mapper.Map<TopicNodeDto>(topic),
+                ReferenceNodeEntity reference => _mapper.Map<ReferenceNodeDto>(reference),
+                _ => _mapper.Map<RoadmapNodeDto>(entity)
+            };
         }
     }
 }

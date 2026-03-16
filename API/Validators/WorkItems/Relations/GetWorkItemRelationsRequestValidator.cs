@@ -1,5 +1,4 @@
 ﻿using API.Contracts.WorkItems.Relations;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.WorkItems.Relations;
@@ -9,7 +8,7 @@ public class GetWorkItemRelationsRequestValidator : AbstractValidator<GetWorkIte
     public GetWorkItemRelationsRequestValidator()
     {
         RuleFor(x => x.RelationType)
-            .Must(v => Enum.TryParse<WorkItemRelationType>(v, true, out _))
+            .IsInEnum()
             .WithMessage("RelationType must be a valid RelationType value.")
             .When(x => !(x.RelationType is null));
     }

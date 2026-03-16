@@ -1,4 +1,6 @@
-﻿namespace API.Contracts.WorkItems;
+﻿using Domain.Enums;
+
+namespace API.Contracts.WorkItems;
 
 /// <summary>
 /// Represents filtering and pagination parameters for retrieving work items.
@@ -8,17 +10,17 @@ public class GetWorkItemsRequest
     /// <summary>
     /// Filters work items by type.
     /// </summary>
-    public string? Type { get; init; }
+    public WorkItemType? Type { get; init; }
 
     /// <summary>
     /// Filters work items by status.
     /// </summary>
-    public string? Status { get; init; }
+    public WorkItemStatus? Status { get; init; }
 
     /// <summary>
     /// Filters work items by priority.
     /// </summary>
-    public string? Priority { get; init; }
+    public WorkItemPriority? Priority { get; init; }
 
     /// <summary>
     /// Filters work items by sprint identifier.
@@ -29,6 +31,10 @@ public class GetWorkItemsRequest
     /// Filters work items by assigned user identifier.
     /// </summary>
     public string? AssignedToUserId { get; init; }
+    /// <summary>
+    /// Filters work items by creator user identifier.
+    /// </summary>
+    public string? CreatedByUserId { get; init; }
 
     /// <summary>
     /// Filters work items whose title contains the specified text.

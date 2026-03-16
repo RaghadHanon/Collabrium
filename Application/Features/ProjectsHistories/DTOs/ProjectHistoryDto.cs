@@ -11,7 +11,9 @@ public class ProjectHistoryDto
     public ActionType ActionType { get; init; }
 
     public string RelatedEntityId { get; init; } = null!;
-    public string ProjectId { get; init; } = null!;
+    public string RelatedEntityCode { get; init; } = null!;
+    public string RelatedEntityTitle { get; init; } = null!;
+
     public string MadeByUserId { get; init; } = null!;
     public string? MadeByUserName { get; init; }
 

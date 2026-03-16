@@ -1,10 +1,10 @@
 ﻿using API.Contracts.Sprints;
 using API.SetupProgram;
 using Application.Common;
-using Application.Features.Projects.DTOs.Boards;
 using Application.Features.Sprints.Commands;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
+using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.Queries;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -111,6 +111,8 @@ public sealed class SprintsController : ApiBaseController
     ///     Content-RelationType: application/json
     ///
     ///     {
+    ///       "name": "Sprint 1",
+    ///       "goal": "Complete user authentication module",
     ///       "startDate": "2026-02-02T00:00:00Z",
     ///       "endDate": "2026-02-15T23:59:59Z"
     ///     }
@@ -176,6 +178,8 @@ public sealed class SprintsController : ApiBaseController
     ///     Content-RelationType: application/json
     ///
     ///     {
+    ///       "name": "Sprint 1",
+    ///       "goal": "Complete user authentication module",
     ///       "startDate": "2026-02-01T00:00:00Z",
     ///       "endDate": "2026-02-14T23:59:59Z"
     ///     }
@@ -276,10 +280,10 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="200">User stories loaded successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
-    /// <response code="404">If tenant/project not found.</response>
+    /// <response code="404">If tenant/project/sprint not found.</response>
     [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/user-stories")]
-    public async Task<ActionResult<BoardDto>> GetSprintUserStories(string projectId, string sprintId)
+    public async Task<ActionResult<WorkItemListItemDto>> GetSprintUserStories(string projectId, string sprintId)
     {
         var query = new GetWorkItemsByType.Query
         {
@@ -289,5 +293,42 @@ public sealed class SprintsController : ApiBaseController
         };
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Add list of WorkItems to sprint.
+    /// </summary>
+    /// <remarks>
+    ///
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{projectId}/sprints/sprint/{sprintId}/work-items
+    ///     Content-RelationType: application/json
+    ///
+    ///     {
+    ///       "workItemIds": [
+    ///         "11111111-1111-1111-1111-111111111111",
+    ///         "22222222-2222-2222-2222-222222222222"
+    ///       ]
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <param name="sprintId">Sprint identifier.</param>
+    /// <param name="request">List of work item ids to be added to sprint.</param>
+    /// <returns>Success message.</returns>
+    /// <response code="200">WorkItems added successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If tenant/project/sprint not found.</response>
+    [Authorize(Policy = Policies.Sprints_Manage)]
+    [HttpPost("sprint/{sprintId}/work-items")]
+    public async Task<ActionResult<WorkItemListItemDto>> AddWorkItemsToSprint(string projectId, string sprintId, AddWorkItemsToSprintRequest request)
+    {
+       var command = Mapper.Map<AddWorkItemsToSprint.Command>(request);
+        command.ProjectId = projectId;
+        command.SprintId = sprintId;
+
+        return HandleResult(await Mediator.Send(command));
     }
 }

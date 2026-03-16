@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Identity;
 
@@ -30,9 +31,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new("fullName", entityUser.FullName),
             new("userName", entityUser.UserName ?? string.Empty),
             new(JwtRegisteredClaimNames.Email, entityUser.Email ?? string.Empty),
-            new("age", entityUser.Age.ToString()),
             new("lastLoginAt", entityUser.LastLoginAt?.ToString("O") ?? string.Empty),
             new("tenantId", entityUser.TenantId ?? string.Empty),
+            new("MustChangePassword", entityUser.MustChangePassword.ToString()),
         };
 
         foreach (var role in roles)

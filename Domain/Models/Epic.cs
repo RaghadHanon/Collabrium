@@ -36,12 +36,13 @@ public sealed class Epic : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate)
     {
         var e = new Epic(id, title, code, createdByUserId, projectId);
         e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints,title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
         return e;
     }
 
@@ -64,6 +65,7 @@ public sealed class Epic : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate
         );
@@ -88,11 +90,13 @@ public sealed class Epic : WorkItem
     }
 
     public override void ChangeStatusWithValidation(
-    WorkItemStatus newStatus,
-    IEnumerable<WorkItemSnapshot>? linked)
+        WorkItemStatus newStatus,
+        Project project,
+        Sprint? sprint,
+        IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateEpicGate(newStatus, linked);
-        base.ChangeStatus(newStatus);
+        base.ChangeStatus(newStatus, project, sprint);
     }
 
     private void ValidateEpicGate(

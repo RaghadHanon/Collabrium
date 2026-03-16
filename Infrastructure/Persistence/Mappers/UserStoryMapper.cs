@@ -26,6 +26,7 @@ public static class UserStoryMapper
             acceptanceCriteria: entity.AcceptanceCriteria,
             assignedToUserId: entity.AssignedToUserId,
             sprintId: entity.SprintId,
+            parentId: entity.ParentId,
             startDate: entity.StartDate,
             endDate: entity.EndDate,
             storyPoints: entity.StoryPoints

@@ -61,8 +61,10 @@ public sealed class Tenant : Entity
         return t;
     }
 
-    public void UpdateProfile(string? description, string? country, string? websiteUrl)
+    public void UpdateProfile(string? name, string? domain, string? description, string? country, string? websiteUrl)
     {
+        Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
+        Domain = Guard.NotNullOrWhiteSpace(domain, nameof(domain));
         Description = description?.Trim();
         Country = country?.Trim();
         WebsiteUrl = websiteUrl?.Trim();

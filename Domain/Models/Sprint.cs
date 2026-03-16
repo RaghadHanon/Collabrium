@@ -82,46 +82,55 @@ public class Sprint : Entity
     public void Update(DateTime start, DateTime end, string? name, string? goal)
     {
         Guard.Against(Status == SprintStatus.Completed, "Cannot update a completed sprint.");
+
         Schedule(start, end);
-        StartDate = start;
-        EndDate = end;
         Name = name;
         Goal = goal;
+
         Touch();
     }
 
     public void Start(DateTime start, DateTime end, string? name, string? goal)
     {
-        Guard.Against(Status != SprintStatus.Planned && Status != SprintStatus.Active, "Only planned sprint can be started.");
+        Guard.Against(Status != SprintStatus.Planned, "Only planned sprint can be started.");
+
         Schedule(start, end);
         Status = SprintStatus.Active;
-        StartDate = start;
-        EndDate = end;
         Name = name;
         Goal = goal;
+
         Touch();
     }
 
     private void Schedule(DateTime start, DateTime end)
     {
-        Guard.Against(start != StartDate && DateTime.UtcNow >= StartDate && Status == SprintStatus.Active,
-            "Cannot update start date for a sprint that has already started.");
-        Guard.Against(start != StartDate && DateTime.UtcNow < start, "Start date must be in the future.");
+        Guard.Against(
+            Status == SprintStatus.Active && DateTime.UtcNow >= StartDate && start != StartDate,
+            "Cannot update start date for a sprint that has already started."
+        );
+        Guard.Against(start <= DateTime.UtcNow, "Start date must be in the future.");
         Guard.Against(end < start, "Sprint end date must be >= start date.");
+
+        StartDate = start;
+        EndDate = end;
     }
 
     public void Complete()
     {
-        Guard.Against(Status != SprintStatus.Active && Status != SprintStatus.Completed, "Only active sprint can be completed.");
+        Guard.Against(Status != SprintStatus.Active, "Only active sprint can be completed.");
+
         Status = SprintStatus.Completed;
         EndDate = DateTime.UtcNow;
+
         Touch();
     }
 
     public void Cancel()
     {
         Guard.Against(Status == SprintStatus.Completed, "Cannot cancel a completed sprint.");
+
         Status = SprintStatus.Cancelled;
+
         Touch();
     }
 }

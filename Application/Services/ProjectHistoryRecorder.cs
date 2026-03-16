@@ -14,6 +14,7 @@ public class ProjectHistoryRecorder(
         string projectId,
         string relatedEntityId,
         string relatedEntityTitle,
+        string relatedEntityKey,
         T oldObject,
         T newObject)
     {
@@ -36,6 +37,7 @@ public class ProjectHistoryRecorder(
                 projectId: projectId,
                 relatedEntityId: relatedEntityId,
                 relatedEntityTitle: relatedEntityTitle,
+                relatedEntityCode: relatedEntityKey,
                 scope: scope,
                 actionType: ActionType.Update,
                 propertyName: prop.Name,
@@ -51,7 +53,8 @@ public class ProjectHistoryRecorder(
     public void RecordCreationChanges<T>(
         string projectId,
         string relatedEntityId,
-        string relatedEntityTitle)
+        string relatedEntityTitle,
+        string relatedEntityKey)
     {
         var currentUserId = currentUserAccessor.GetUserId();
         if (currentUserId == null)
@@ -63,6 +66,7 @@ public class ProjectHistoryRecorder(
             projectId: projectId,
             relatedEntityId: relatedEntityId,
             relatedEntityTitle: relatedEntityTitle,
+            relatedEntityCode: relatedEntityKey,
             scope: scope,
             actionType: ActionType.Create,
             propertyName: null,
@@ -78,7 +82,8 @@ public class ProjectHistoryRecorder(
     public void RecordDeletionChanges<T>(
         string projectId,
         string relatedEntityId,
-        string relatedEntityTitle)
+        string relatedEntityTitle,
+        string relatedEntityKey)
     {
         var currentUserId = currentUserAccessor.GetUserId();
         if (currentUserId == null)
@@ -90,6 +95,7 @@ public class ProjectHistoryRecorder(
             projectId: projectId,
             relatedEntityId: relatedEntityId,
             relatedEntityTitle: relatedEntityTitle,
+            relatedEntityCode: relatedEntityKey,
             scope: scope,
             actionType: ActionType.Delete,
             propertyName: null,

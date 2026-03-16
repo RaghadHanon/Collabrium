@@ -61,6 +61,9 @@ public class AddWorkItemRelation
             if (targetWorkItem is null)
                 return Result<Unit>.Failure("Target Work item not found in this project.", HttpStatusCode.NotFound);
 
+            if(sourceWorkItem.SprintId != targetWorkItem.SprintId)
+                return Result<Unit>.Failure("Work items must be in the same sprint to create a relation.", HttpStatusCode.BadRequest);
+
             var isCurrentAssignee = string.Equals(sourceWorkItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
@@ -80,7 +83,16 @@ public class AddWorkItemRelation
                     request.RelationType,
                     ct);
 
-                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title);
+                if (request.RelationType == WorkItemRelationType.Parent)
+                    sourceWorkItem.SetParent(targetWorkItem.Id); 
+                
+                if (request.RelationType == WorkItemRelationType.Child)
+                    targetWorkItem.SetParent(sourceWorkItem.Id);
+
+                await workItemsRepository.UpdateAsync(sourceWorkItem, ct);
+                await workItemsRepository.UpdateAsync(targetWorkItem, ct);
+
+                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

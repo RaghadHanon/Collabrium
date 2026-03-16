@@ -60,7 +60,7 @@ public sealed class WorkItemsApiProfile : Profile
             {
                 Preconditions = s.Preconditions,
                 Steps = s.Steps,
-                TestEnvironment = Enum.Parse<TestEnvironment>(s.TestEnvironment, true),
+                TestEnvironment = s.TestEnvironment,
                 ExpectedResult = s.ExpectedResult,
             }));
 
@@ -97,13 +97,14 @@ public sealed class WorkItemsApiProfile : Profile
                 Steps = s.Steps,
                 ExpectedResult = s.ExpectedResult,
                 ActualResult = s.ActualResult,
-                Result = string.IsNullOrWhiteSpace(s.Result) ? null : Enum.Parse<TestCaseResult>(s.Result, true),
-                TestEnvironment = string.IsNullOrWhiteSpace(s.TestEnvironment) ? null : Enum.Parse<TestEnvironment>(s.TestEnvironment, true),
+                Result = s.Result,
+                TestEnvironment = s.TestEnvironment,
             }));
 
         // relations
         CreateMap<AddWorkItemRelationRequest, AddWorkItemRelation.Command>();
         CreateMap<GetWorkItemRelationsRequest, GetWorkItemRelations.Query>();
+        CreateMap<GetRelationCandidatesRequest, GetRelationCandidates.Query>();
 
         // comments
         CreateMap<AddWorkItemCommentRequest, AddWorkItemComment.Command>();

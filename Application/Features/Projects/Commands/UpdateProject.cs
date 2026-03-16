@@ -62,19 +62,23 @@ public class UpdateProject
                 return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
 
             var oldProjectState = project.Clone();
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 project.UpdateDetails(
                     name: PatchHelpers.ApplyStringPatch(project.Name, request.Name) ?? project.Name,
                     description: PatchHelpers.ApplyStringPatch(project.Description, request.Description),
-                    status: request.Status ?? project.Status,
                     startDate: newStartFinal,
                     endDate: newEndFinal
                 );
 
-                await projectsRepository.UpdateAsync(project, ct);
+                var projectsWorkItems = await projectsReadModel.GetProjectWorkItemSnapshotAsync(tenantId, project.Id, cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, oldProjectState, project);
+                if (request.Status.HasValue)
+                    project.ChangeStatusWithValidation(request.Status.Value, projectsWorkItems); 
+
+                await projectsRepository.UpdateAsync(project, cancellationToken);
+
+                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

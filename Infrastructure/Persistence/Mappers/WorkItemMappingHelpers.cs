@@ -59,5 +59,6 @@ internal static class WorkItemMappingHelpers
         entity.CreatedByUserId = domain.CreatedByUserId;
         entity.ProjectId = domain.ProjectId;
         entity.SprintId = domain.SprintId;
+        entity.ParentId = domain.ParentId;
     }
 }

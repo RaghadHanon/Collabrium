@@ -155,17 +155,20 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("UploadedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.HasIndex("WorkItemId");
 
@@ -335,6 +338,10 @@ namespace Infrastructure.Migrations
                     b.Property<string>("PropertyName")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RelatedEntityCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RelatedEntityId")
                         .IsRequired()
@@ -780,6 +787,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ParentId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
@@ -815,6 +825,8 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("SprintId");
 
@@ -1206,11 +1218,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("Attachments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("UploadedByUser");
 
                     b.Navigation("WorkItem");
                 });
@@ -1542,6 +1562,11 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
                         .WithMany("WorkItems")
                         .HasForeignKey("ProjectId")
@@ -1556,6 +1581,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("AssignedToUser");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Parent");
 
                     b.Navigation("Project");
 

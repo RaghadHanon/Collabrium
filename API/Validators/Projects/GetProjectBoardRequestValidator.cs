@@ -14,13 +14,13 @@ public class GetProjectBoardRequestValidator : AbstractValidator<GetProjectBoard
             .WithMessage("RelationType must be a valid WorkItemType value.");
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.IsDefined(typeof(WorkItemStatus), status))
-            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .IsInEnum()
+            .When(x => x.Status.HasValue)
             .WithMessage("Status must be a valid WorkItemStatus value.");
 
         RuleFor(x => x.Priority)
             .Must(p => Enum.IsDefined(typeof(WorkItemPriority), p))
-            .When(x => !string.IsNullOrWhiteSpace(x.Priority))
+            .When(x => x.Priority.HasValue)
             .WithMessage("Priority must be a valid WorkItemPriority value.");
 
         RuleFor(x => x.SprintId)

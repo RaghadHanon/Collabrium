@@ -19,13 +19,13 @@ public sealed class GetProjectHistoryRequestValidator : AbstractValidator<GetPro
             .WithMessage("MadeByUserId cannot be empty.");
 
         RuleFor(x => x.Scope)
-            .Must(s => Enum.TryParse<ProjectHistoryScope>(s, true, out _))
-            .When(x => !string.IsNullOrWhiteSpace(x.Scope))
+            .IsInEnum()
+            .When(x => x.Scope.HasValue)
             .WithMessage("Scope must be a valid ProjectHistoryScope value.");
 
         RuleFor(x => x.ActionType)
-            .Must(s => Enum.TryParse<ActionType>(s, true, out _))
-            .When(x => !string.IsNullOrWhiteSpace(x.ActionType))
+            .IsInEnum()
+            .When(x => x.ActionType.HasValue)
             .WithMessage("Action Type must be a valid ActionType value.");
 
         RuleFor(x => x.PropertyName)

@@ -28,17 +28,19 @@ public sealed class UserStory : WorkItem
     public void Estimate(int points)
     {
         Guard.Against(points < 0, "StoryPoints cannot be negative.");
-        Guard.Against(!(new[] { 1, 2, 3, 5, 8, 13 }.Contains(points)), "StoryPoints must one of these values [1, 2, 3, 5, 8, 13].");
+        Guard.Against(!new[] { 1, 2, 3, 5, 8, 13 }.Contains(points), "StoryPoints must one of these values [1, 2, 3, 5, 8, 13].");
         StoryPoints = points;
         Touch();
     }
 
     public override void ChangeStatusWithValidation(
-         WorkItemStatus newStatus,
+         WorkItemStatus newStatus, 
+         Project project,
+         Sprint? sprint,
          IEnumerable<WorkItemSnapshot>? linked)
     {
         ValidateStatusGate(newStatus, linked);
-        base.ChangeStatus(newStatus);
+        base.ChangeStatus(newStatus, project, sprint);
     }
 
     private void ValidateStatusGate(WorkItemStatus target, IEnumerable<WorkItemSnapshot>? linked)
@@ -48,20 +50,17 @@ public sealed class UserStory : WorkItem
 
         var items = linked?.ToList() ?? new List<WorkItemSnapshot>();
 
-        bool allTasksDone =
+        var allTasksDone =
             items.Where(x => x.Type == WorkItemType.TaskItem)
                  .All(x => x.Status == WorkItemStatus.Done);
 
-        bool noOpenBugs =
+        var noOpenBugs =
             items.Where(x => x.Type == WorkItemType.Bug)
                  .All(x => x.Status == WorkItemStatus.Done);
 
-        var testCases = items.Where(x => x.Type == WorkItemType.TestCase).ToList();
-
-        bool allTestsPassed =
-            testCases.Count > 0 &&
-            testCases.All(x => x.Status == WorkItemStatus.Done &&
-                               x.TestCaseResult == TestCaseResult.Passed);
+        var allTestsPassed = 
+            items.Where(x => x.Type == WorkItemType.TestCase)
+                 .All(x => x.Status == WorkItemStatus.Done && x.TestCaseResult == TestCaseResult.Passed);
 
         if (target == WorkItemStatus.InTesting)
         {
@@ -118,6 +117,7 @@ public sealed class UserStory : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         int storyPoints)
@@ -128,7 +128,7 @@ public sealed class UserStory : WorkItem
             createdAt, updatedAt, type,
             status, priority, isBlocked, effortPoints,
             title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId,
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId,
             startDate, endDate);
 
         us.StoryPoints = storyPoints;
@@ -154,6 +154,7 @@ public sealed class UserStory : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             StoryPoints

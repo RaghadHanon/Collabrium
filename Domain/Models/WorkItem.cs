@@ -25,6 +25,7 @@ public abstract class WorkItem : Entity
     public string ProjectId { get; private set; } = null!;
     public string? SprintId { get; private set; }
 
+    public string? ParentId { get; set; }
 
     private readonly List<WorkItemRelation> _relations = new();
     public IReadOnlyCollection<WorkItemRelation> Relations => _relations.AsReadOnly();
@@ -68,8 +69,8 @@ public abstract class WorkItem : Entity
 
     protected void RehydrateCommon(
         DateTime createdAt,
-        DateTime? updatedAt, 
-        WorkItemType Type,
+        DateTime? updatedAt,
+        WorkItemType type,
         WorkItemStatus status,
         WorkItemPriority priority,
         bool isBlocked,
@@ -81,6 +82,7 @@ public abstract class WorkItem : Entity
         string? assignedToUserId,
         string createdByUserId,
         string? sprintId,
+        string? parentId,
         string projectId,
         DateTime? startDate,
         DateTime? endDate)
@@ -101,9 +103,11 @@ public abstract class WorkItem : Entity
         CreatedByUserId = createdByUserId;
         SprintId = sprintId;
         ProjectId = projectId;
+        ParentId = parentId;
 
         StartDate = startDate;
         EndDate = endDate;
+        Type = type;
     }
 
     public void RehydrateAddComment(Comment comment)
@@ -133,7 +137,6 @@ public abstract class WorkItem : Entity
         Guard.Against(IsDone, "Cannot update a completed work item.");
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         EffortPoints = Guard.NonNegative(effortPoints, nameof(effortPoints));
-
         Description = description?.Trim();
         AcceptanceCriteria = acceptanceCriteria?.Trim();
         Touch();
@@ -151,15 +154,29 @@ public abstract class WorkItem : Entity
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InReview or WorkItemStatus.InTesting,
                 WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
-                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InProgress or WorkItemStatus.InReview,
                 WorkItemStatus.ReadyForRelease => to is WorkItemStatus.Done or WorkItemStatus.InTesting,
                 WorkItemStatus.Done => to is WorkItemStatus.ReadyForRelease or WorkItemStatus.InTesting or WorkItemStatus.InProgress,
                 _ => false
             };
     }
 
-    public void ChangeStatus(WorkItemStatus newStatus)
+    public virtual void ChangeStatusWithValidation(
+        WorkItemStatus newStatus,
+        Project project,
+        Sprint? sprint,
+        IEnumerable<WorkItemSnapshot>? linked = null)
     {
+        ChangeStatus(newStatus, project, sprint);
+    }
+
+    public void ChangeStatus(WorkItemStatus newStatus, Project project, Sprint? sprint)
+    {
+        Guard.Against(project.Status == ProjectStatus.NotStarted || project.Status == ProjectStatus.Completed
+            || project.Status == ProjectStatus.Cancelled, $"Cannot change status of work items in an {project.Status} project.");
+
+        Guard.Against(sprint is null || sprint.Status != SprintStatus.Active, "Cannot update work item status before starting its sprint.");
+
         Guard.Against(IsBlocked && newStatus == WorkItemStatus.InProgress,
             "Blocked work item cannot be moved to InProgress.");
 
@@ -171,6 +188,9 @@ public abstract class WorkItem : Entity
         if (newStatus == WorkItemStatus.InProgress && StartDate is null)
             StartDate = DateTime.UtcNow;
 
+        if(newStatus == WorkItemStatus.ToDo && StartDate is not null)
+            StartDate = null;
+
         if (newStatus == WorkItemStatus.Done)
             EndDate = DateTime.UtcNow;
 
@@ -178,13 +198,6 @@ public abstract class WorkItem : Entity
             EndDate = null;
 
         Touch();
-    }
-
-    public virtual void ChangeStatusWithValidation(
-        WorkItemStatus newStatus,
-        IEnumerable<WorkItemSnapshot>? linked = null)
-    {
-        ChangeStatus(newStatus);
     }
 
     public List<WorkItemStatus> GetAllowedStatuses()
@@ -213,6 +226,21 @@ public abstract class WorkItem : Entity
     public void Unblock()
     {
         IsBlocked = false;
+        Touch();
+    }
+
+    public void SetParent(string? parentId)
+    {
+        Guard.Against(!string.IsNullOrEmpty(ParentId), "WorkItem can have only one parent.");
+        Guard.Against(parentId == Id, "WorkItem can't relate to itself.");
+        ParentId = parentId;
+        Touch();
+    }
+
+    public void UpdateParent(string? parentId)
+    {
+        Guard.Against(parentId == Id, "WorkItem can't relate to itself.");
+        ParentId = parentId;
         Touch();
     }
 
@@ -249,8 +277,7 @@ public abstract class WorkItem : Entity
 
         if (type == WorkItemRelationType.Parent)
         {
-            Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Parent),
-                "WorkItem can have only one parent.");
+            Guard.Against(ParentId != null, "WorkItem can have only one parent.");
             Guard.Against(_relations.Any(r => r.RelationType == WorkItemRelationType.Child
                                             && r.SourceWorkItemId == Id
                                             && r.TargetWorkItemId == targetWorkItemId),
@@ -326,11 +353,6 @@ public abstract class WorkItem : Entity
 
         _relations.Remove(rel!);
         Touch();
-    }
-
-    public string? GetParentId()
-    {
-        return _relations.FirstOrDefault(r => r.RelationType == WorkItemRelationType.Parent)?.TargetWorkItemId;
     }
 
     public IReadOnlyCollection<string> GetChildrenIds()

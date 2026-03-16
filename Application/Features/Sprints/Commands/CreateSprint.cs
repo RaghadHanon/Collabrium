@@ -49,7 +49,7 @@ public class CreateSprint
                 sprintsRepository.Add(sprint, cancellationToken);
                 await projectsRepository.UpdateAsync(project, cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id,(string) sprint.Code);
+                historyRecorder.RecordCreationChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code);
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

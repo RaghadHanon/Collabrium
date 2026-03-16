@@ -82,7 +82,7 @@ public sealed class CreateWorkItem
                 workItemsRepository.Add(workItem, cancellationToken);
                 await projectsRepository.UpdateAsync(project, cancellationToken);
 
-                historyRecorder.RecordCreationChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordCreationChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return workItem is null

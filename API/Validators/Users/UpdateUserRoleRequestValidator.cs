@@ -9,7 +9,7 @@ public class UpdateUserRoleRequestValidator : AbstractValidator<UpdateUserRoleRe
     public UpdateUserRoleRequestValidator()
     {
         RuleFor(x => x.NewRole)
-            .Must(v => Enum.TryParse<UserRole>(v, true, out _))
+            .IsInEnum()
             .WithMessage("User role is not valid.");
     }
 }

@@ -1,4 +1,5 @@
 ﻿using API.Contracts.WorkItems;
+using Domain.Enums;
 
 namespace API.Contracts.Projects;
 
@@ -12,12 +13,12 @@ public class GetProjectBoardRequest
     /// <summary>
     /// Filters work items by status.
     /// </summary>
-    public string? Status { get; init; }
+    public WorkItemStatus? Status { get; init; }
 
     /// <summary>
     /// Filters work items by priority.
     /// </summary>
-    public string? Priority { get; init; }
+    public WorkItemPriority? Priority { get; init; }
     /// <summary>
     /// Filters work items by their unique code.
     /// </summary>

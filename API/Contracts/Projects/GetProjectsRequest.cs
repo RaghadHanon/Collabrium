@@ -1,4 +1,6 @@
-﻿namespace API.Contracts.Projects;
+﻿using Domain.Enums;
+
+namespace API.Contracts.Projects;
 
 public class GetProjectsRequest
 {
@@ -7,7 +9,7 @@ public class GetProjectsRequest
     public bool AssignedToTeam { get; set; }
 
     public string? Key { get; set; }
-    public string? Status { get; set; }
+    public ProjectStatus? Status { get; set; }
 
     public DateTime? StartAfter { get; set; }
     public DateTime? StartBefore { get; set; }

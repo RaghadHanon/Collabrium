@@ -137,6 +137,7 @@ public class UsersController : ApiBaseController
     ///     }
     ///
     /// </remarks>
+    /// <param name="id">The Id of the user.</param>
     /// <param name="request">The target user ID and the new role to assign.</param>
     /// <returns>No[[ content if the role was updated successfully.</returns>
     /// <response code="204">User role updated successfully.</response>

@@ -45,7 +45,7 @@ public class CancelSprint
                 await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, (string) sprint.Code, oldSprintState, sprint);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name?? sprint.Code, sprint.Code, oldSprintState, sprint);
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);

@@ -70,14 +70,7 @@ public sealed class TestCase : WorkItem
             };
     }
 
-    public void StartTesting()
-    {
-        Result = TestCaseResult.NotRun;
-        ActualResult = null;
-        ChangeStatus(WorkItemStatus.InTesting);
-    }
-
-    public void RecordOutcome(TestCaseResult result, string? actualResult, string executedByUserId, string? note = null)
+    public void RecordOutcome(TestCaseResult result, string? actualResult, string executedByUserId, Project project, Sprint? sprint, string? note = null)
     {
         Guard.Against(Status != WorkItemStatus.InTesting, "TestCase must be InTesting to record outcome.");
         Guard.Against(result == TestCaseResult.NotRun, "Outcome must be Passed/Failed/Blocked.");
@@ -85,7 +78,7 @@ public sealed class TestCase : WorkItem
         Result = result;
         ActualResult = actualResult?.Trim();
 
-        ChangeStatus(WorkItemStatus.Done);
+        ChangeStatus(WorkItemStatus.Done, project, sprint);
 
         if (!string.IsNullOrWhiteSpace(note))
             AddComment(Guid.NewGuid().ToString(), executedByUserId, $"Test Outcome: {result}. {note}");
@@ -108,6 +101,7 @@ public sealed class TestCase : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         string preconditions,
@@ -119,7 +113,7 @@ public sealed class TestCase : WorkItem
     {
         var tc = new TestCase(id, title, code, createdByUserId, projectId, preconditions, steps, env, expectedResult);
         tc.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
         tc.ActualResult = actualResult;
         tc.Result = result;
         return tc;
@@ -144,6 +138,7 @@ public sealed class TestCase : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             Preconditions,

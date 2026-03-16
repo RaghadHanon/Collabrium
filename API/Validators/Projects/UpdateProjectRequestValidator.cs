@@ -10,15 +10,15 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
     {
         RuleFor(x => x.Name)
             .MaximumLength(100).WithMessage("Code cannot exceed 100 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Name));
+            .When(x => !string.IsNullOrEmpty(x.Name));
 
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.")
-            .When(x => !(x.Description is null));
+            .When(x => !string.IsNullOrEmpty(x.Description));
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.TryParse<ProjectStatus>(status, true, out _))
-            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .IsInEnum()
+            .When(x => x.Status.HasValue)
             .WithMessage("Status must be a valid ProjectStatus value.");
 
         RuleFor(x => x.EndDate)
@@ -33,9 +33,9 @@ public sealed class UpdateProjectRequestValidator : AbstractValidator<UpdateProj
 
     private static bool HasAnyField(UpdateProjectRequest r)
     {
-        return !string.IsNullOrWhiteSpace(r.Name)
+        return !(r.Name is null)
                || !(r.Description is null)
-               || !string.IsNullOrWhiteSpace(r.Status)
+               || r.Status.HasValue
                || r.StartDate.HasValue
                || r.EndDate.HasValue;
     }

@@ -13,7 +13,8 @@ public sealed class GetSprintsRequestValidator : AbstractValidator<GetSprintsReq
             .WithMessage("PageSize must be between 1 and 100.");
 
         RuleFor(x => x.Status)
-            .Must(status => string.IsNullOrEmpty(status) || Enum.TryParse<SprintStatus>(status, true, out _))
+            .IsInEnum()
+            .When(x => x.Status.HasValue)
             .WithMessage("Status must be a valid SprintStatus value.");
 
         When(x => x.StartAfter.HasValue && x.StartBefore.HasValue, () =>

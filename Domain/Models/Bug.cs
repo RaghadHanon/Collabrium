@@ -36,7 +36,7 @@ public class Bug : WorkItem
 
     protected override bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InTesting -> Done
+        // Bug workflow: ToDo -> ReadyForDev -> InProgress -> InReview -> InTesting -> Done
         // Allow Done -> InProgress (Reopen)
         return from == to
             || to == WorkItemStatus.ToDo
@@ -45,18 +45,11 @@ public class Bug : WorkItem
                 WorkItemStatus.ToDo => to is WorkItemStatus.ReadyForDev,
                 WorkItemStatus.ReadyForDev => to is WorkItemStatus.InProgress or WorkItemStatus.ToDo,
                 WorkItemStatus.InProgress => to is WorkItemStatus.InTesting,
-                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress,
-                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InReview => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress,
+                WorkItemStatus.InTesting => to is WorkItemStatus.Done or WorkItemStatus.InProgress or WorkItemStatus.InReview,
+                WorkItemStatus.Done => to is WorkItemStatus.InTesting or WorkItemStatus.InProgress or WorkItemStatus.InReview,
                 _ => false
             };
-    }
-
-    public void Reopen(string reopenedByUserId, string? note = null)
-    {
-        Guard.Against(!IsDone, "Only Done bug can be reopened.");
-        ChangeStatus(WorkItemStatus.InProgress);
-        if (!string.IsNullOrWhiteSpace(note))
-            AddComment(Guid.NewGuid().ToString(), reopenedByUserId, $"Reopened: {note}");
     }
 
     public static Bug Rehydrate(
@@ -76,6 +69,7 @@ public class Bug : WorkItem
         string? acceptanceCriteria,
         string? assignedToUserId,
         string? sprintId,
+        string? parentId,
         DateTime? startDate,
         DateTime? endDate,
         string stepsToReproduce,
@@ -84,7 +78,7 @@ public class Bug : WorkItem
     {
         var b = new Bug(id, title, code, createdByUserId, projectId, stepsToReproduce);
         b.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
-            assignedToUserId, createdByUserId, sprintId, projectId, startDate, endDate);
+            assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
 
         b.ExpectedResult = expectedResult;
         b.ActualResult = actualResult;
@@ -111,6 +105,7 @@ public class Bug : WorkItem
             AcceptanceCriteria,
             AssignedToUserId,
             SprintId,
+            ParentId,
             StartDate,
             EndDate,
             StepsToReproduce,

@@ -67,101 +67,11 @@ public class GetProjectBoard
             var parameters = mapper.Map<WorkItemsSearchAndFilterParametersDto>(request);
             parameters.TenantId = tenantId;
 
-            var allItems = await workItemsReadModel.GetBoardItemsAsync(
+            var boardDto = await workItemsReadModel.GetBoardItemsAsync(
                 parameters,
                 cancellationToken);
 
-            var userStories = allItems
-                .Where(x => x.Type == WorkItemType.UserStory)
-                .ToList();
-
-            var nonUserStoryItemsWithParents = allItems
-                .Where(x => x.Type != WorkItemType.UserStory && x.Parent != null)
-                .ToList();
-
-            var orphanNonUserStoryItems = allItems
-                .Where(x => x.Type != WorkItemType.UserStory && x.Parent == null)
-                .ToList();
-
-            var itemsByParent = nonUserStoryItemsWithParents
-                .GroupBy(i => i.Parent!.TargetWorkItem!.Id)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var dto = new BoardDto
-            {
-                ProjectId = request.ProjectId,
-                SprintId = request.SprintId,
-                UserStoryRows = BuildUserStoryRows(userStories, itemsByParent),
-                OrphanRow = BuildOrphanRow(orphanNonUserStoryItems),
-            };
-
-            return Result<BoardDto>.Success(dto, HttpStatusCode.OK);
-        }
-
-        private static readonly WorkItemStatus[] BoardStatuses =
-        {
-            WorkItemStatus.ToDo,
-            WorkItemStatus.ReadyForDev,
-            WorkItemStatus.InProgress,
-            WorkItemStatus.InReview,
-            WorkItemStatus.InTesting,
-            WorkItemStatus.ReadyForRelease,
-            WorkItemStatus.Done
-        };
-
-        private List<UserStoryBoardGroupDto> BuildUserStoryRows(
-            List<WorkItemListItemDto> userStories,
-            Dictionary<string, List<WorkItemListItemDto>> itemsByParent)
-        {
-            var rows = new List<UserStoryBoardGroupDto>();
-
-            foreach (var us in userStories)
-            {
-                itemsByParent.TryGetValue(us.Id, out var children);
-                children ??= new List<WorkItemListItemDto>();
-
-                var columns = children.Count != 0 ? BoardStatuses
-                    .Select(status =>
-                    {
-                        var items = children
-                            .Where(i => i.Status == status)
-                            .ToList();
-
-                        return new BoardColumnDto
-                        {
-                            Status = status,
-                            Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
-                            Count = items.Count,
-                            Items = items
-                        };
-                    })
-                    .ToList() : null;
-
-                rows.Add(new UserStoryBoardGroupDto
-                {
-                    ParentUserStory = us,
-                    Columns = columns
-                });
-            }
-
-            return rows;
-        }
-
-        private static OrphanBoardGroupDto BuildOrphanRow(
-            List<WorkItemListItemDto> items)
-        {
-
-            return new OrphanBoardGroupDto
-            {
-                Columns = items.Count != 0 ? BoardStatuses.Select(status => new BoardColumnDto
-                {
-                    Status = status,
-                    Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),
-                    Items = items
-                        .Where(i => string.IsNullOrEmpty(i.Parent?.TargetWorkItem?.Id) && i.Status == status)
-                        .ToList()
-                }).ToList() : null
-            };
+            return Result<BoardDto>.Success(boardDto, HttpStatusCode.OK);
         }
     }
 }

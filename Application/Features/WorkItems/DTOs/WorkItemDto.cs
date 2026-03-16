@@ -31,7 +31,7 @@ public class WorkItemDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
-    public WorkItemRelationDto? Parent { get; set; }
+    public RelationParticipantWorkItemDto? Parent { get; set; }
     public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
     public List<CodeLinkDto>? CodeLinks { get; set; } = new List<CodeLinkDto>();
 }

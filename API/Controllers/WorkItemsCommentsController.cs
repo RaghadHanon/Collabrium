@@ -135,7 +135,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment/{commentId}
+    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/comment/{commentId}
     ///     Content-RelationType: application/json
     ///
     ///     {

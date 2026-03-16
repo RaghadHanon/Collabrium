@@ -117,6 +117,20 @@ public class WorkItemsRepository : IWorkItemsRepository
         return;
     }
 
+    public async Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
+        string[] workItemIds, CancellationToken cancellationToken)
+    {
+        var workItemsEntity = await _dbContext.WorkItems
+            .Where(w => workItemIds.Contains(w.Id) && w.ProjectId == projectId && w.Project.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var workItems = workItemsEntity
+            .Select(e => WorkItemMapper.ToDomain(e, includeChildren: false))
+            .ToList();
+
+        return workItems;
+    }
+
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
@@ -228,32 +242,33 @@ public class WorkItemsRepository : IWorkItemsRepository
             return;
 
         var sourceWorkItemDomain = WorkItemMapper.ToDomain(sourceWorkItemEntity, true);
+        var targetWorkItemDomain = WorkItemMapper.ToDomain(targetWorkItemEntity, true);
 
-        sourceWorkItemDomain.AddRelation(targetWorkItemId, relationType);
+        sourceWorkItemDomain.AddRelation(targetWorkItemDomain, relationType);
         sourceWorkItemEntity.Relations.Add(CreateRelationRow(sourceWorkItemId, targetWorkItemId, relationType));
 
-        EnsureInverse(targetWorkItemEntity, sourceWorkItemId, targetWorkItemId, relationType);
+        EnsureInverse(targetWorkItemDomain, sourceWorkItemDomain, targetWorkItemEntity, sourceWorkItemEntity, relationType);
         WorkItemMapper.UpdateEntity(sourceWorkItemDomain, sourceWorkItemEntity);
     }
 
     private void EnsureInverse(
+        WorkItem targetWorkItemDomain,
+        WorkItem sourceWorkItemDomain,
         WorkItemEntity targetWorkItemEntity,
-        string sourceWorkItemId,
-        string targetWorkItemId,
+        WorkItemEntity sourceWorkItemEntity,
         WorkItemRelationType relationType)
     {
-        var targetWorkItemDomain = WorkItemMapper.ToDomain(targetWorkItemEntity, true);
         if (relationType == WorkItemRelationType.Parent)
         {
-            targetWorkItemDomain.AddRelation(sourceWorkItemId, WorkItemRelationType.Child);
+            targetWorkItemDomain.AddRelation(sourceWorkItemDomain, WorkItemRelationType.Child);
             targetWorkItemEntity.Relations
-                .Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Child));
+                .Add(CreateRelationRow(targetWorkItemEntity.Id, sourceWorkItemEntity.Id, WorkItemRelationType.Child));
         }
         else if (relationType == WorkItemRelationType.Child)
         {
-            targetWorkItemDomain.AddRelation(sourceWorkItemId, WorkItemRelationType.Parent);
+            targetWorkItemDomain.AddRelation(sourceWorkItemDomain, WorkItemRelationType.Parent);
             targetWorkItemEntity.Relations
-                .Add(CreateRelationRow(targetWorkItemId, sourceWorkItemId, WorkItemRelationType.Parent));
+                .Add(CreateRelationRow(targetWorkItemEntity.Id, sourceWorkItemEntity.Id, WorkItemRelationType.Parent));
         }
 
         WorkItemMapper.UpdateEntity(targetWorkItemDomain, targetWorkItemEntity);
@@ -271,6 +286,7 @@ public class WorkItemsRepository : IWorkItemsRepository
             RelationType = relationType
         };
     }
+
     public async Task<bool> DeleteRelationAsync(
         string tenantId,
         string projectId,

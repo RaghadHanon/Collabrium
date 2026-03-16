@@ -1,6 +1,8 @@
-﻿namespace API.Contracts.WorkItems.Relations;
+﻿using Domain.Enums;
+
+namespace API.Contracts.WorkItems.Relations;
 
 public class GetWorkItemRelationsRequest
 {
-    public string? RelationType { get; set; }
+    public WorkItemRelationType? RelationType { get; set; }
 }

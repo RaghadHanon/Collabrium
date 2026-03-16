@@ -20,5 +20,6 @@ public class WorkItemListItemDto
     public string? AssignedToUserId { get; set; }
 
     public DateTime CreatedAt { get; set; }
-    public WorkItemRelationDto? Parent { get; set; }
+    public RelationParticipantWorkItemDto? Parent { get; set; }
+    public List<WorkItemStatus>? AllowedStatuses { get; set; } = new List<WorkItemStatus>();
 }

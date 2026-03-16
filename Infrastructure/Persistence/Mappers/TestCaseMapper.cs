@@ -26,6 +26,7 @@ public static class TestCaseMapper
             acceptanceCriteria: entity.AcceptanceCriteria,
             assignedToUserId: entity.AssignedToUserId,
             sprintId: entity.SprintId,
+            parentId: entity.ParentId,
             startDate: entity.StartDate,
             endDate: entity.EndDate,
             preconditions: entity.Preconditions,

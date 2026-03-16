@@ -1,3 +1,4 @@
+using API.Common.EnumHandlers;
 using API.Middlewares;
 using Application;
 using Application.Common;
@@ -21,7 +22,7 @@ public static class ServiceCollectionExtensions
         services.AddControllers()
             .AddJsonOptions(opts =>
             {
-                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                opts.JsonSerializerOptions.Converters.Add(new SpacedEnumConverterFactory());
                 opts.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
                 opts.JsonSerializerOptions.Converters.Add(new DateTimeConverterUsingIso8601());
             });

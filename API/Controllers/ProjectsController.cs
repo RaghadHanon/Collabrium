@@ -236,6 +236,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
+    /// <param name="request">Get Project Board payload</param>
     /// <returns>The board data grouped by workflow status.</returns>
     /// <response code="200">Board loaded successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>

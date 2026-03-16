@@ -10,6 +10,6 @@ public class ProjectHistoriesReadProfile : Profile
     {
         CreateMap<ProjectHistoryEntity, ProjectHistoryDto>()
             .ForMember(d => d.MadeByUserName,
-                o => o.MapFrom(s => s.MadeByUser.UserName));
+                o => o.MapFrom(s => s.MadeByUser.FullName));
     }
 }

@@ -68,7 +68,7 @@ public class AddWorkItemCodeLink
                     codeLink,
                     cancellationToken);
 
-                historyRecorder.RecordCreationChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title);
+                historyRecorder.RecordCreationChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<string>.Success(codeLink?.Id, HttpStatusCode.OK);

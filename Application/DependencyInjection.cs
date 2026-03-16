@@ -1,4 +1,5 @@
-﻿using Application.Common.Behaviors;
+﻿using Application.Common;
+using Application.Common.Behaviors;
 using Application.Interfaces;
 using Application.Services;
 using FluentValidation;
@@ -21,6 +22,8 @@ public static class DependencyInjection
         });
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddScoped<IProjectHistoryRecorder, ProjectHistoryRecorder>();
+
+        services.Configure<WebAppSettings>(configuration.GetSection("WebAppSettings"));
 
         return services;
     }

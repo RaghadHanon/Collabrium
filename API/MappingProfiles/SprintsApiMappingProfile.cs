@@ -12,5 +12,6 @@ public class SprintsApiMappingProfile : Profile
         CreateMap<StartSprintRequest, StartSprint.Command>();
         CreateMap<UpdateSprintRequest, UpdateSprint.Command>();
         CreateMap<GetSprintsRequest, GetSprints.Query>();
+        CreateMap<AddWorkItemsToSprintRequest, AddWorkItemsToSprint.Command>();
     }
 }

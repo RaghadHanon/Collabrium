@@ -9,29 +9,19 @@ public class GetWorkItemsRequestValidator : AbstractValidator<GetWorkItemsReques
     public GetWorkItemsRequestValidator()
     {
         RuleFor(x => x.Type)
-            .Must(type => Enum.IsDefined(typeof(WorkItemType), type))
-            .When(x => !string.IsNullOrWhiteSpace(x.Type))
+            .IsInEnum()
+            .When(x => x.Type.HasValue)
             .WithMessage("RelationType must be a valid WorkItemType value.");
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.IsDefined(typeof(WorkItemStatus), status))
-            .When(x => !string.IsNullOrWhiteSpace(x.Status))
+            .IsInEnum()
+            .When(x => x.Status.HasValue)
             .WithMessage("Status must be a valid WorkItemStatus value.");
 
         RuleFor(x => x.Priority)
-            .Must(p => Enum.IsDefined(typeof(WorkItemPriority), p))
-            .When(x => !string.IsNullOrWhiteSpace(x.Priority))
+            .IsInEnum()
+            .When(x => x.Priority.HasValue)
             .WithMessage("Priority must be a valid WorkItemPriority value.");
-
-        RuleFor(x => x.SprintId)
-            .Must(x => !string.IsNullOrWhiteSpace(x))
-            .When(x => x.SprintId is not null)
-            .WithMessage("SprintId cannot be empty.");
-
-        RuleFor(x => x.AssignedToUserId)
-            .Must(x => !string.IsNullOrWhiteSpace(x))
-            .When(x => x.AssignedToUserId is not null)
-            .WithMessage("AssignedToUserId cannot be empty.");
 
         RuleFor(x => x.TitleContains)
             .MaximumLength(200).WithMessage("TitleContains cannot exceed 200 characters.")

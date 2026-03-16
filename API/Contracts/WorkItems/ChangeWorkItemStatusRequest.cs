@@ -1,6 +1,8 @@
-﻿namespace API.Contracts.WorkItems;
+﻿using Domain.Enums;
+
+namespace API.Contracts.WorkItems;
 
 public class ChangeWorkItemStatusRequest
 {
-    public required string NewStatus { get; init; }
+    public required WorkItemStatus NewStatus { get; init; }
 }

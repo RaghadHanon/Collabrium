@@ -13,6 +13,8 @@ public class UpdateTenant
 {
     public class Command : IRequest<Result<Unit>>
     {
+        public string? Name { get; set; }
+        public string? Domain { get; set; }
         public string? Description { get; set; }
         public string? Country { get; set; }
         public string? WebsiteUrl { get; set; }
@@ -67,6 +69,8 @@ public class UpdateTenant
                 }
 
                 tenant.UpdateProfile(
+                    name: PatchHelpers.ApplyStringPatch(tenant.Name, request.Name),
+                    domain: PatchHelpers.ApplyStringPatch(tenant.Domain, request.Domain),
                     description: PatchHelpers.ApplyStringPatch(tenant.Description, request.Description),
                     country: PatchHelpers.ApplyStringPatch(tenant.Country, request.Country),
                     websiteUrl: PatchHelpers.ApplyStringPatch(tenant.WebsiteUrl, request.WebsiteUrl)

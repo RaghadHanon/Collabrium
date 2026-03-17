@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260302210208_Update-Sprint")]
-    partial class UpdateSprint
+    [Migration("20260316233344_inital")]
+    partial class inital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -158,17 +158,20 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("UploadedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("WorkItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.HasIndex("WorkItemId");
 
@@ -275,7 +278,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("LastWorkItemNumber")
                         .HasColumnType("int");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -339,6 +342,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("RelatedEntityCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RelatedEntityId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -362,10 +369,171 @@ namespace Infrastructure.Migrations
                     b.ToTable("ProjectHistories");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ResourceEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubTopicId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubTopicId", "Order")
+                        .HasDatabaseName("IX_Resource_SubTopic_Order");
+
+                    b.ToTable("Resources");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Path")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("IX_Roadmap_Title");
+
+                    b.ToTable("Roadmaps");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapNodeEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("NodeType")
+                        .IsRequired()
+                        .HasMaxLength(21)
+                        .HasColumnType("nvarchar(21)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoadmapId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoadmapId");
+
+                    b.ToTable("RoadmapNodes");
+
+                    b.HasDiscriminator<string>("NodeType").HasValue("RoadmapNodeEntity");
+
+                    b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapTagEntity", b =>
+                {
+                    b.Property<string>("RoadmapId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TagId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("RoadmapId", "TagId");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("IX_RoadmapTag_TagId");
+
+                    b.ToTable("RoadmapTags");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -374,13 +542,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Goal")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
@@ -401,9 +566,76 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Sprints");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SubTopicEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TopicNodeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicNodeId", "Order")
+                        .HasDatabaseName("IX_SubTopic_TopicNode_Order");
+
+                    b.ToTable("SubTopics");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TagEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tag_Tenant_Name");
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
@@ -426,7 +658,7 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
@@ -444,7 +676,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("Name")
                         .IsUnique()
                         .HasDatabaseName("IX_Team_Name");
 
@@ -495,7 +727,7 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -515,7 +747,7 @@ namespace Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_Tenant_Domain");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("Name")
                         .IsUnique()
                         .HasDatabaseName("IX_Tenant_Name");
 
@@ -558,6 +790,9 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ParentId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
@@ -593,6 +828,8 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ParentId");
 
                     b.HasIndex("SprintId");
 
@@ -657,7 +894,7 @@ namespace Infrastructure.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -770,15 +1007,36 @@ namespace Infrastructure.Migrations
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId", "LoginProvider", "Code");
+                    b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.RoadmapNodeEntity");
+
+                    b.Property<string>("RefRoadmapId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasIndex("RefRoadmapId")
+                        .HasDatabaseName("IX_ReferenceNode_RefRoadmapId");
+
+                    b.HasDiscriminator().HasValue("Reference");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TopicNodeEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.RoadmapNodeEntity");
+
+                    b.HasDiscriminator().HasValue("Topic");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.BugEntity", b =>
@@ -963,11 +1221,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
                         .WithMany("Attachments")
                         .HasForeignKey("WorkItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("UploadedByUser");
 
                     b.Navigation("WorkItem");
                 });
@@ -1055,6 +1321,65 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ResourceEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.SubTopicEntity", "SubTopic")
+                        .WithMany("Resources")
+                        .HasForeignKey("SubTopicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SubTopic");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapNodeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.RoadmapEntity", "Roadmap")
+                        .WithMany("Nodes")
+                        .HasForeignKey("RoadmapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Roadmap");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapTagEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.RoadmapEntity", "Roadmap")
+                        .WithMany("Tags")
+                        .HasForeignKey("RoadmapId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
+                        .WithMany("Roadmaps")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Roadmap");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
@@ -1064,6 +1389,28 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SubTopicEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.TopicNodeEntity", "TopicNode")
+                        .WithMany("SubTopics")
+                        .HasForeignKey("TopicNodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TopicNode");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TagEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
@@ -1218,6 +1565,11 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Infrastructure.Persistence.Entities.ProjectEntity", "Project")
                         .WithMany("WorkItems")
                         .HasForeignKey("ProjectId")
@@ -1233,6 +1585,8 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedByUser");
 
+                    b.Navigation("Parent");
+
                     b.Navigation("Project");
 
                     b.Navigation("Sprint");
@@ -1241,7 +1595,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemRelationEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "SourceWorkItem")
-                        .WithMany("WorkItems")
+                        .WithMany("Relations")
                         .HasForeignKey("SourceWorkItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1308,6 +1662,17 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.RoadmapEntity", "RefRoadmap")
+                        .WithMany()
+                        .HasForeignKey("RefRoadmapId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RefRoadmap");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.Navigation("AssignedWorkItems");
@@ -1330,9 +1695,26 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorkItems");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RoadmapEntity", b =>
+                {
+                    b.Navigation("Nodes");
+
+                    b.Navigation("Tags");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.SprintEntity", b =>
                 {
                     b.Navigation("WorkItems");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.SubTopicEntity", b =>
+                {
+                    b.Navigation("Resources");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TagEntity", b =>
+                {
+                    b.Navigation("Roadmaps");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.TeamEntity", b =>
@@ -1359,7 +1741,12 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("WorkItems");
+                    b.Navigation("Relations");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.TopicNodeEntity", b =>
+                {
+                    b.Navigation("SubTopics");
                 });
 #pragma warning restore 612, 618
         }

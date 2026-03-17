@@ -36,7 +36,7 @@ namespace Application.Features.RoadmapNodes.Commands
                     return Result<ReferenceNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
                 }
-                var roadmap = roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
                 if (roadmap == null)
                 {
                     return Result<ReferenceNodeDto>.Failure("Roadmap not found", HttpStatusCode.NotFound);

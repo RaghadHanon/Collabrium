@@ -85,7 +85,7 @@ namespace API.Controllers
             var command = Mapper.Map<CreateReferenceNode.Command>(request);
             command.RoadmapId = roadmapId;
 
-            return HandleResult(await Mediator.Send(command));
+            return HandleResult(await Mediator.Send(command), "GetReference", "References");
         }
         /// <summary>
         /// Retrieves all roadmap nodes (topic + reference) for a roadmap (scoped to current tenant).

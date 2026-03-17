@@ -10,8 +10,15 @@ namespace Application.Interfaces.Repositories
         Task UpdateAsync(Roadmap roadmap, CancellationToken cancellationToken = default);
         Task<bool> RemoveAsync(string tenantId, string roadmapId, CancellationToken cancellationToken = default);
 
-        Task<Roadmap?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken = default);
-
+        Task<Roadmap?> GetByIdAsync(
+            string tenantId,
+            string roadmapId,
+            bool includeHidden = false,
+            CancellationToken ct = default);
+        Task<Roadmap?> GetByIdAsync(
+           string tenantId,
+           string roadmapId,
+           CancellationToken ct = default);
         Task AddTagsAsync(string tenantId, string roadmapId, IReadOnlyCollection<string> tagIds, CancellationToken cancellationToken = default);
         Task RemoveTagsAsync(string tenantId, string roadmapId, IReadOnlyCollection<string> tagIds, CancellationToken cancellationToken = default);
         Task SetTagsAsync(string tenantId, string roadmapId, IReadOnlyCollection<string> tagIds, CancellationToken cancellationToken = default);

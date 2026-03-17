@@ -61,6 +61,27 @@ namespace Infrastructure.Persistence.Repositories
 
             return entity is null ? null : RoadmapMapper.ToDomain(entity);
         }
+        public async Task<Roadmap?> GetByIdAsync(
+            string tenantId,
+            string roadmapId,
+            bool includeHidden = false,
+            CancellationToken ct = default)
+        {
+
+            if (!TryNormalize(tenantId, roadmapId, out var tId, out var rId))
+                return null;
+
+            IQueryable<RoadmapEntity> query = _dbContext.Roadmaps
+                .AsNoTracking()
+                .Where(r => r.TenantId == tenantId && r.Id == roadmapId);
+
+            if (!includeHidden)
+                query = query.Where(r => r.IsVisible);
+
+            var entity = await query.FirstOrDefaultAsync(ct);
+
+            return entity is null ? null : RoadmapMapper.ToDomain(entity);
+        }
 
         public async Task AddTagsAsync(string tenantId, string roadmapId, IReadOnlyCollection<string> tagIds, CancellationToken cancellationToken = default)
         {

@@ -24,12 +24,18 @@ namespace Infrastructure.Persistence.ReadModels
                 return new List<RoadmapNodeDto>();
             tenantId = tenantId.Trim();
             roadmapId = roadmapId.Trim();
-            return await _dbContext.RoadmapNodes
-               .AsNoTracking()
-               .Where(n => n.TenantId == tenantId && n.RoadmapId == roadmapId)
-                .OrderBy(n => n.Order)
-               .ProjectTo<RoadmapNodeDto>(_mapper.ConfigurationProvider)
-               .ToListAsync(ct);
+            var entities = await _dbContext.RoadmapNodes
+         .AsNoTracking()
+         .Where(n => n.TenantId == tenantId && n.RoadmapId == roadmapId)
+         .OrderBy(n => n.Order)
+         .ToListAsync(ct);
+
+            return entities.Select(entity => entity switch
+            {
+                TopicNodeEntity topic => _mapper.Map<TopicNodeDto>(topic),
+                ReferenceNodeEntity reference => _mapper.Map<ReferenceNodeDto>(reference),
+                _ => _mapper.Map<RoadmapNodeDto>(entity)
+            }).ToList();
         }
 
         public async Task<ReferenceNodeDetailsDto?> GetReferenceDetailsAsync(string tenantId, string roadmapId, string referenceNodeId, CancellationToken ct = default)

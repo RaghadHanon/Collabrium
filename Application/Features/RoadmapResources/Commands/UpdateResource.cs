@@ -63,7 +63,21 @@ namespace Application.Features.RoadmapResources.Commands
 
                 if (resource is null)
                     return Result<ResourceDto>.Failure("Resource not found.", HttpStatusCode.NotFound);
+                if (request.Order.HasValue)
+                {
+                    var isOrderUsed = await resourcesRepository.IsOrderUsedAsync(
+                        subTopicId: request.SubTopicId,
+                        order: request.Order.Value,
+                        excludeResourceId: request.ResourceId,
+                        ct: cancellationToken);
 
+                    if (isOrderUsed)
+                    {
+                        return Result<ResourceDto>.Failure(
+                            "Order already exists in this subtopic.",
+                            HttpStatusCode.BadRequest);
+                    }
+                }
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {

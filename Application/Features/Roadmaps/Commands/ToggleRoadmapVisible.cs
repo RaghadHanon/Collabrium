@@ -13,7 +13,6 @@ namespace Application.Features.Roadmaps.Commands
         public class Command : IRequest<Result<RoadmapDto>>
         {
             public required string RoadmapId { get; set; }
-            public required bool IsVisible { get; set; }
         }
 
         public class Handler(
@@ -33,7 +32,7 @@ namespace Application.Features.Roadmaps.Commands
                 if (roadmap is null)
                     return Result<RoadmapDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
-                if (!request.IsVisible)
+                if (!roadmap.IsVisible)
                     roadmap.Show();
                 else
                     roadmap.Hide();

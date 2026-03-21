@@ -88,5 +88,24 @@ namespace Infrastructure.Persistence.Repositories
 
             SubTopicsMapper.UpdateEntity(entity, subTopic);
         }
+        public Task<bool> IsOrderUsedAsync(
+    string topicNodeId,
+    int order,
+    string? excludeSubTopicId = null,
+    CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(topicNodeId) || order < 1)
+                return Task.FromResult(false);
+
+            var topicId = topicNodeId.Trim();
+            var excludedId = excludeSubTopicId?.Trim();
+
+            return _dbContext.SubTopics
+                .AsNoTracking()
+                .AnyAsync(s =>
+                    s.TopicNodeId == topicId &&
+                    s.Order == order &&
+                    (excludedId == null || s.Id != excludedId), ct);
+        }
     }
 }

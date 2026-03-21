@@ -69,6 +69,29 @@ namespace Infrastructure.Persistence.Repositories
             return entity is null ? null : RoadmapNodeMapper.ToDomain(entity);
         }
 
+        public Task<bool> IsOrderUsedAsync(
+         string tenantId,
+         string roadmapId,
+         int order,
+         string? excludeNodeId = null,
+         CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId) || order < 1)
+                return Task.FromResult(false);
+
+            var tId = tenantId.Trim();
+            var rId = roadmapId.Trim();
+            var excludedId = excludeNodeId?.Trim();
+
+            return _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .AnyAsync(n =>
+                    n.TenantId == tId &&
+                    n.RoadmapId == rId &&
+                    n.Order == order &&
+                    (excludedId == null || n.Id != excludedId), ct);
+        }
+
         public async Task<List<RoadmapNode>> GetByRoadmapIdAsync(string tenantId, string roadmapId, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))

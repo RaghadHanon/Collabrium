@@ -50,6 +50,24 @@ namespace Application.Features.RoadmapNodes.Commands
 
                 if (node is not Domain.Models.TopicNode topic)
                     return Result<TopicNodeDto>.Failure("Node is not a topic.", HttpStatusCode.BadRequest);
+                if (request.Order.HasValue)
+                {
+                    var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
+                   tenantId: tenantId,
+                   roadmapId: request.RoadmapId,
+                   order: request.Order.Value,
+                   excludeNodeId: request.TopicNodeId,
+                   ct: cancellationToken);
+
+                    if (isOrderUsed)
+                    {
+                        return Result<TopicNodeDto>.Failure(
+                            "Order already exists in this roadmap.",
+                            HttpStatusCode.BadRequest);
+                    }
+                }
+
+
 
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)

@@ -48,6 +48,19 @@ namespace Application.Features.SubTopics.Commands
 
                 if (!topicExists)
                     return Result<SubTopicDto>.Failure("Topic node not found.", HttpStatusCode.NotFound);
+
+                var isOrderUsed = await subTopicsRepository.IsOrderUsedAsync(
+                    topicNodeId: request.TopicNodeId,
+                    order: request.Order,
+               ct: cancellationToken);
+
+                if (isOrderUsed)
+                {
+                    return Result<SubTopicDto>.Failure(
+                        "Order already exists in this topic.",
+                        HttpStatusCode.BadRequest);
+                }
+
                 RoadmapSubTopic subTopic = null!;
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

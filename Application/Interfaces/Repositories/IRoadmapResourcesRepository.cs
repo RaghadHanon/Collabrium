@@ -34,5 +34,10 @@ namespace Application.Interfaces.Repositories
             string topicNodeId,
             string subTopicId,
             CancellationToken ct = default);
+        Task<bool> IsOrderUsedAsync(
+        string subTopicId,
+        int order,
+        string? excludeResourceId = null,
+        CancellationToken ct = default);
     }
 }

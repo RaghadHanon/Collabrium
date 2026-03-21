@@ -54,6 +54,23 @@ namespace Application.Features.RoadmapNodes.Commands
 
                 if (node is not Domain.Models.ReferenceNode reference)
                     return Result<ReferenceNodeDto>.Failure("Node is not a reference.", HttpStatusCode.BadRequest);
+                if (request.Order.HasValue)
+                {
+                    var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
+                   tenantId: tenantId,
+                   roadmapId: request.RoadmapId,
+                   order: request.Order.Value,
+                   excludeNodeId: node.Id,
+                   ct: cancellationToken);
+
+                    if (isOrderUsed)
+                    {
+                        return Result<ReferenceNodeDto>.Failure(
+                            "Order already exists in this roadmap.",
+                            HttpStatusCode.BadRequest);
+                    }
+                }
+
 
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)

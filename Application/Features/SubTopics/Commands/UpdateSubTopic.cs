@@ -55,7 +55,22 @@ namespace Application.Features.SubTopics.Commands
 
                 if (subTopic is null)
                     return Result<SubTopicDto>.Failure("SubTopic not found.", HttpStatusCode.NotFound);
+                if (request.Order.HasValue)
+                {
+                    var isOrderUsed = await subTopicsRepository.IsOrderUsedAsync(
+                     topicNodeId: request.TopicNodeId,
+                     order: request.Order.Value,
+                     excludeSubTopicId: request.SubTopicId,
+                     ct: cancellationToken);
 
+                    if (isOrderUsed)
+                    {
+                        return Result<SubTopicDto>.Failure(
+                            "Order already exists in this topic.",
+                            HttpStatusCode.BadRequest);
+                    }
+
+                }
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {

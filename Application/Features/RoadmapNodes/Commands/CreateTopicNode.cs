@@ -35,6 +35,18 @@ namespace Application.Features.RoadmapNodes.Commands
                 var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
                 if (roadmap is null)
                     return Result<TopicNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
+                var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
+                   tenantId: tenantId,
+                   roadmapId: request.RoadmapId,
+                   order: request.Order,
+                   ct: cancellationToken);
+
+                if (isOrderUsed)
+                {
+                    return Result<TopicNodeDto>.Failure(
+                        "Order already exists in this roadmap.",
+                        HttpStatusCode.BadRequest);
+                }
 
                 TopicNode topic = null!;
 

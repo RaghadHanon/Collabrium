@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260313133155_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260323225646_inital")]
+    partial class inital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -248,6 +248,177 @@ namespace Infrastructure.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AssignedToUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByUserId");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("TenantId", "AssignedToUserId", "CourseId", "Status")
+                        .HasDatabaseName("IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status");
+
+                    b.ToTable("CourseAssignments");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("EstimatedDurationInHours")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InstructorName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Language")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("IX_Courses_Title");
+
+                    b.HasIndex("TenantId", "Title")
+                        .HasDatabaseName("IX_Courses_TenantId_Title");
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseRatingEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Review")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "UserId", "CourseId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CourseRatings_TenantId_UserId_CourseId");
+
+                    b.ToTable("CourseRatings");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseTagEntity", b =>
+                {
+                    b.Property<string>("CourseId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TagId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("CourseId", "TagId");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("IX_CourseTags_TagId");
+
+                    b.ToTable("CourseTags");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -754,6 +925,56 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TenantAdminId");
 
                     b.ToTable("Tenants");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserCourseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsSaved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "UserId", "CourseId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UserCourses_TenantId_UserId_CourseId");
+
+                    b.ToTable("UserCourseEntity");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
@@ -1276,6 +1497,125 @@ namespace Infrastructure.Migrations
                     b.Navigation("WorkItem");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedByUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
+                        .WithMany("CourseAssignments")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignedByUser");
+
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Domain.ValueObjects.StoredImage", "ThumbnailImage", b1 =>
+                        {
+                            b1.Property<string>("CourseEntityId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("PublicId")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("ThumbnailImage_PublicId");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("nvarchar(1000)")
+                                .HasColumnName("ThumbnailImage_Url");
+
+                            b1.HasKey("CourseEntityId");
+
+                            b1.ToTable("Courses");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CourseEntityId");
+                        });
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("ThumbnailImage");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseRatingEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
+                        .WithMany("CourseRatings")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseTagEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
+                        .WithMany("CourseTags")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
@@ -1552,6 +1892,33 @@ namespace Infrastructure.Migrations
                     b.Navigation("TenantAdmin");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.UserCourseEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
+                        .WithMany("UserCourses")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedToUser")
@@ -1684,6 +2051,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProjectsHistories");
 
                     b.Navigation("TeamMemberships");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
+                {
+                    b.Navigation("CourseAssignments");
+
+                    b.Navigation("CourseRatings");
+
+                    b.Navigation("CourseTags");
+
+                    b.Navigation("UserCourses");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>

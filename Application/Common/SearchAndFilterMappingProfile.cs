@@ -1,9 +1,10 @@
-﻿using Application.Features.ProjectHistories.DTOs;
+﻿using Application.Features.Courses.DTOs;
+using Application.Features.ProjectHistories.DTOs;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
+using Application.Features.ProjectsHistories.Queries;
 using Application.Features.Roadmaps.DTOs;
 using Application.Features.Roadmaps.Queries;
-using Application.Features.ProjectsHistories.Queries;
 using Application.Features.Sprints.DTOs;
 using Application.Features.Sprints.Queries;
 using Application.Features.Tags.DTOs;
@@ -34,7 +35,7 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
         CreateMap<GetTags.Query, TagsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();
-
-        CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>(); 
+        CreateMap<GetRoadmaps.Query, CoursesSearchAndFilterParametersDto>();
+        CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>();
     }
 }

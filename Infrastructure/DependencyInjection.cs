@@ -91,6 +91,7 @@ public static class DependencyInjection
         services.AddScoped<IRoadmapSubTopicsRepository, RoadmapSubTopicsRepository>();
         services.AddScoped<IRoadmapResourcesRepository, RoadmapResourcesRepository>();
         services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
+        services.AddScoped<ICoursesRepository, CoursesRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -109,6 +110,7 @@ public static class DependencyInjection
 
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
         services.AddScoped<IReportsReadModel, ReportsReadModel>();
+        services.AddScoped<ICoursesReadModel, CoursesReadModel>();
     }
 
     private static void AddAutoMapper(IServiceCollection services)

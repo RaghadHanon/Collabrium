@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class inital : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -192,6 +192,36 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Courses",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Provider = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    InstructorName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    Language = table.Column<int>(type: "int", nullable: false),
+                    EstimatedDurationInHours = table.Column<int>(type: "int", nullable: true),
+                    ThumbnailImage_Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    ThumbnailImage_PublicId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Courses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Courses_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roadmaps",
                 columns: table => new
                 {
@@ -278,6 +308,123 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CourseAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AssignedToUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    AssignedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourseAssignments_AspNetUsers_AssignedByUserId",
+                        column: x => x.AssignedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CourseAssignments_AspNetUsers_AssignedToUserId",
+                        column: x => x.AssignedToUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CourseAssignments_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourseAssignments_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseRatings",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Review = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseRatings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourseRatings_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CourseRatings_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourseRatings_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserCourseEntity",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    IsSaved = table.Column<bool>(type: "bit", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserCourseEntity", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserCourseEntity_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserCourseEntity_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserCourseEntity_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoadmapNodes",
                 columns: table => new
                 {
@@ -307,6 +454,30 @@ namespace Infrastructure.Migrations
                         principalTable: "Roadmaps",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseTags",
+                columns: table => new
+                {
+                    CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TagId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseTags", x => new { x.CourseId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_CourseTags_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourseTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -777,6 +948,57 @@ namespace Infrastructure.Migrations
                 column: "WorkItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CourseAssignments_AssignedByUserId",
+                table: "CourseAssignments",
+                column: "AssignedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseAssignments_AssignedToUserId",
+                table: "CourseAssignments",
+                column: "AssignedToUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseAssignments_CourseId",
+                table: "CourseAssignments",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status",
+                table: "CourseAssignments",
+                columns: new[] { "TenantId", "AssignedToUserId", "CourseId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseRatings_CourseId",
+                table: "CourseRatings",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseRatings_TenantId_UserId_CourseId",
+                table: "CourseRatings",
+                columns: new[] { "TenantId", "UserId", "CourseId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseRatings_UserId",
+                table: "CourseRatings",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courses_TenantId_Title",
+                table: "Courses",
+                columns: new[] { "TenantId", "Title" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courses_Title",
+                table: "Courses",
+                column: "Title");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseTags_TagId",
+                table: "CourseTags",
+                column: "TagId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectHistories_MadeByUserId",
                 table: "ProjectHistories",
                 column: "MadeByUserId");
@@ -901,6 +1123,22 @@ namespace Infrastructure.Migrations
                 name: "IX_Tenants_TenantAdminId",
                 table: "Tenants",
                 column: "TenantAdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCourseEntity_CourseId",
+                table: "UserCourseEntity",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCourseEntity_UserId",
+                table: "UserCourseEntity",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCourses_TenantId_UserId_CourseId",
+                table: "UserCourseEntity",
+                columns: new[] { "TenantId", "UserId", "CourseId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkItemRelations_TargetWorkItemId",
@@ -1034,6 +1272,15 @@ namespace Infrastructure.Migrations
                 name: "Comments");
 
             migrationBuilder.DropTable(
+                name: "CourseAssignments");
+
+            migrationBuilder.DropTable(
+                name: "CourseRatings");
+
+            migrationBuilder.DropTable(
+                name: "CourseTags");
+
+            migrationBuilder.DropTable(
                 name: "ProjectHistories");
 
             migrationBuilder.DropTable(
@@ -1046,6 +1293,9 @@ namespace Infrastructure.Migrations
                 name: "TeamMembers");
 
             migrationBuilder.DropTable(
+                name: "UserCourseEntity");
+
+            migrationBuilder.DropTable(
                 name: "WorkItemRelations");
 
             migrationBuilder.DropTable(
@@ -1056,6 +1306,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "Courses");
 
             migrationBuilder.DropTable(
                 name: "WorkItems");

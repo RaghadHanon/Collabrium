@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Roadmaps.DTOs;
+using Application.Features.Tags.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -113,6 +114,25 @@ namespace Infrastructure.Persistence.ReadModels
 
             return query;
 
+        }
+        public async Task<List<TagDto>> GetTagsAsync(
+           string tenantId,
+           string roadmapId,
+           CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+                return new();
+
+            var tId = tenantId.Trim();
+            var rId = roadmapId.Trim();
+
+            return await _dbContext.Roadmaps
+                .AsNoTracking()
+                .Where(r => r.TenantId == tId && r.Id == rId)
+                .SelectMany(r => r.Tags)
+                .Select(rt => rt.Tag)
+                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(cancellationToken);
         }
 
         public Task<RoadmapDto?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken)

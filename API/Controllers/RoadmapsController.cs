@@ -4,6 +4,7 @@ using Application.Common;
 using Application.Features.Roadmaps.Commands;
 using Application.Features.Roadmaps.DTOs;
 using Application.Features.Roadmaps.Queries;
+using Application.Features.Tags.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -249,6 +250,32 @@ namespace API.Controllers
             };
 
             return HandleResult(await Mediator.Send(command));
+        }
+        /// <summary>
+        /// Retrieves all tags for a specific roadmap.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /api/roadmaps/roadmap/{roadmapId}/tags
+        ///
+        /// </remarks>
+        /// <param name="roadmapId">The roadmap id.</param>
+        /// <returns>List of roadmap tags.</returns>
+        /// <response code="200">Tags retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read roadmaps.</response>
+        /// <response code="404">If tenant or roadmap was not found.</response>
+        [Authorize(Policy = Policies.Roadmaps_Read)]
+        [HttpGet("roadmap/{roadmapId}/tags")]
+        public async Task<ActionResult<List<TagDto>>> GetRoadmapTags(string roadmapId)
+        {
+            var query = new GetRoadmapTags.Query
+            {
+                RoadmapId = roadmapId
+            };
+
+            return HandleResult(await Mediator.Send(query));
         }
 
 

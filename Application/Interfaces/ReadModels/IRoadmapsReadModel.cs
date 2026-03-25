@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Roadmaps.DTOs;
+using Application.Features.Tags.DTOs;
 
 namespace Application.Interfaces.ReadModels
 {
@@ -15,5 +16,9 @@ namespace Application.Interfaces.ReadModels
             string tenantId,
             string roadmapId,
             CancellationToken cancellationToken);
+        Task<List<TagDto>> GetTagsAsync(
+         string tenantId,
+         string roadmapId,
+         CancellationToken cancellationToken = default);
     }
 }

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260316233344_inital")]
+    [Migration("20260325231905_inital")]
     partial class inital
     {
         /// <inheritdoc />
@@ -403,6 +403,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SubTopicId", "Order")
+                        .IsUnique()
                         .HasDatabaseName("IX_Resource_SubTopic_Order");
 
                     b.ToTable("Resources");
@@ -500,7 +501,8 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoadmapId");
+                    b.HasIndex("RoadmapId", "Order")
+                        .IsUnique();
 
                     b.ToTable("RoadmapNodes");
 
@@ -604,6 +606,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TopicNodeId", "Order")
+                        .IsUnique()
                         .HasDatabaseName("IX_SubTopic_TopicNode_Order");
 
                     b.ToTable("SubTopics");

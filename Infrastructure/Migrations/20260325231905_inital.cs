@@ -810,7 +810,8 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Resource_SubTopic_Order",
                 table: "Resources",
-                columns: new[] { "SubTopicId", "Order" });
+                columns: new[] { "SubTopicId", "Order" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReferenceNode_RefRoadmapId",
@@ -818,9 +819,10 @@ namespace Infrastructure.Migrations
                 column: "RefRoadmapId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoadmapNodes_RoadmapId",
+                name: "IX_RoadmapNodes_RoadmapId_Order",
                 table: "RoadmapNodes",
-                column: "RoadmapId");
+                columns: new[] { "RoadmapId", "Order" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Roadmap_Title",
@@ -856,7 +858,8 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_SubTopic_TopicNode_Order",
                 table: "SubTopics",
-                columns: new[] { "TopicNodeId", "Order" });
+                columns: new[] { "TopicNodeId", "Order" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tag_Tenant_Name",

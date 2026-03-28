@@ -18,24 +18,38 @@ namespace Infrastructure.Persistence.ReadModels
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<List<RoadmapNodeDto>> GetByRoadmapIdAsync(string tenantId, string roadmapId, CancellationToken ct = default)
+        public async Task<List<RoadmapNodeDto>> GetByRoadmapIdAsync(
+      string tenantId,
+      string roadmapId,
+      CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
                 return new List<RoadmapNodeDto>();
+
             tenantId = tenantId.Trim();
             roadmapId = roadmapId.Trim();
-            var entities = await _dbContext.RoadmapNodes
-         .AsNoTracking()
-         .Where(n => n.TenantId == tenantId && n.RoadmapId == roadmapId)
-         .OrderBy(n => n.Order)
-         .ToListAsync(ct);
 
-            return entities.Select(entity => entity switch
-            {
-                TopicNodeEntity topic => _mapper.Map<TopicNodeDto>(topic),
-                ReferenceNodeEntity reference => _mapper.Map<ReferenceNodeDto>(reference),
-                _ => _mapper.Map<RoadmapNodeDto>(entity)
-            }).ToList();
+            var topics = await _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .OfType<TopicNodeEntity>()
+                .Where(n => n.TenantId == tenantId && n.RoadmapId == roadmapId)
+                .OrderBy(n => n.Order)
+                .ProjectTo<TopicNodeDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(ct);
+
+            var references = await _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .OfType<ReferenceNodeEntity>()
+                .Where(n => n.TenantId == tenantId && n.RoadmapId == roadmapId)
+                .OrderBy(n => n.Order)
+                .ProjectTo<ReferenceNodeDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(ct);
+
+            return topics
+                .Cast<RoadmapNodeDto>()
+                .Concat(references)
+                .OrderBy(n => n.Order)
+                .ToList();
         }
 
         public async Task<ReferenceNodeDetailsDto?> GetReferenceDetailsAsync(string tenantId, string roadmapId, string referenceNodeId, CancellationToken ct = default)
@@ -97,34 +111,43 @@ namespace Infrastructure.Persistence.ReadModels
         }
 
         public async Task<RoadmapNodeDto?> GetByIdAsync(
-            string tenantId,
-            string roadmapId,
-            string nodeId,
-            CancellationToken ct = default)
+    string tenantId,
+    string roadmapId,
+    string nodeId,
+    CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) ||
                 string.IsNullOrWhiteSpace(roadmapId) ||
                 string.IsNullOrWhiteSpace(nodeId))
                 return null;
+
             tenantId = tenantId.Trim();
             roadmapId = roadmapId.Trim();
             nodeId = nodeId.Trim();
-            var entity = await _dbContext.RoadmapNodes
-           .AsNoTracking()
-           .FirstOrDefaultAsync(n =>
-           n.TenantId == tenantId &&
-           n.RoadmapId == roadmapId &&
-           n.Id == nodeId,
-           ct);
 
-            if (entity is null)
-                return null;
-            return entity switch
-            {
-                TopicNodeEntity topic => _mapper.Map<TopicNodeDto>(topic),
-                ReferenceNodeEntity reference => _mapper.Map<ReferenceNodeDto>(reference),
-                _ => _mapper.Map<RoadmapNodeDto>(entity)
-            };
+            var topic = await _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .OfType<TopicNodeEntity>()
+                .Where(n => n.TenantId == tenantId &&
+                            n.RoadmapId == roadmapId &&
+                            n.Id == nodeId)
+                .ProjectTo<TopicNodeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+
+            if (topic is not null)
+                return topic;
+
+            var reference = await _dbContext.RoadmapNodes
+                .AsNoTracking()
+                .OfType<ReferenceNodeEntity>()
+                .Where(n => n.TenantId == tenantId &&
+                            n.RoadmapId == roadmapId &&
+                            n.Id == nodeId)
+                .ProjectTo<ReferenceNodeDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+
+            return reference;
         }
     }
 }
+

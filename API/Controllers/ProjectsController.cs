@@ -1,5 +1,6 @@
 ﻿using API.Contracts.ProjectHistory;
 using API.Contracts.Projects;
+using API.Contracts.WorkItems;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.ProjectHistories.DTOs;
@@ -215,9 +216,10 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("project/{projectId}/backlog")]
-    public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId)
+    public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId,[FromQuery] GetProjectBacklogRequest request)
     {
-        var query = new GetProjectBacklog.Query { ProjectId = projectId };
+        var query = Mapper.Map<GetProjectBacklog.Query>(request);
+        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -274,7 +276,8 @@ public sealed class ProjectsController : ApiBaseController
     [HttpGet("project/{projectId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
     {
-        var query = new GetWorkItemsByType.Query {
+        var query = new GetWorkItemsByType.Query
+        {
             ProjectId = projectId,
             Type = WorkItemType.UserStory
         };
@@ -333,7 +336,7 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/project-history")]
     public async Task<ActionResult<PagedList<ProjectHistoryDto, DateTime?>>> GetProjectHistory(
-        string projectId, 
+        string projectId,
         [FromQuery] GetProjectHistoryRequest request)
     {
         var query = Mapper.Map<GetProjectHistory.Query>(request);

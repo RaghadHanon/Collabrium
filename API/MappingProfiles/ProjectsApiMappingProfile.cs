@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Projects;
+using API.Contracts.WorkItems;
 using Application.Features.Projects.Commands;
 using Application.Features.Projects.Queries;
 using AutoMapper;
@@ -14,5 +15,6 @@ public class ProjectsApiMappingProfile : Profile
         CreateMap<AssignProjectToTeamRequest, AssignProjectToTeam.Command>();
         CreateMap<GetProjectsRequest, GetProjects.Query>();
         CreateMap<GetProjectBoardRequest, GetProjectBoard.Query>();
+        CreateMap<GetProjectBacklogRequest, GetProjectBacklog.Query>();
     }
 }

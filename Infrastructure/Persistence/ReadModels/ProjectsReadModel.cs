@@ -1,10 +1,8 @@
 ﻿using Application.Common;
 using Application.Features.Projects.DTOs;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Domain.Enums;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -88,25 +86,6 @@ public sealed class ProjectsReadModel : IProjectsReadModel
             Items = items,
             NextCursor = nextCursor
         };
-    }
-
-    public async Task<IReadOnlyList<WorkItemListItemDto>> GetBacklogAsync(
-        string tenantId,
-        string projectId,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return Array.Empty<WorkItemListItemDto>();
-
-        var tId = tenantId.Trim();
-        var pId = projectId.Trim();
-
-        return await _dbContext.WorkItems
-            .AsNoTracking()
-            .Where(w => w.ProjectId == pId && w.SprintId == null && w.Status == WorkItemStatus.ToDo)
-            .OrderBy(w => w.CreatedAt)
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
     }
 
     private static IQueryable<ProjectEntity> ApplyFilters(

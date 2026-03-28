@@ -31,10 +31,10 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetProjects.Query, ProjectsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItems.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetProjectBoard.Query, WorkItemsSearchAndFilterParametersDto>();
+        CreateMap<GetProjectBacklog.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
         CreateMap<GetTags.Query, TagsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();
-
         CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>(); 
     }
 }

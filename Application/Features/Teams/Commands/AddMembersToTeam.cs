@@ -1,11 +1,9 @@
 ﻿using Application.Common;
 using Application.Events;
-using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -38,37 +36,35 @@ public sealed class AddMembersToTeam
             if (currentUser == null)
                 return Result<string>.Failure("Current user is not found.", HttpStatusCode.NotFound);
 
-            if (string.IsNullOrWhiteSpace(request.TeamId))
-                return Result<string>.Failure("TeamId is required.", HttpStatusCode.BadRequest);
+            var team = await teamsReadModel.GetByIdAsync(tenantId, request.TeamId, cancellationToken);
+            if (team is null)
+                return Result<string>.Failure("Team is not found.", HttpStatusCode.BadRequest);
 
             if (request.MembersIds is null || request.MembersIds.Length == 0)
                 return Result<string>.Failure("MembersIds is required.", HttpStatusCode.BadRequest);
 
-            try
+            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 await teamsRepository.AddMembersAsync(
                     tenantId: tenantId,
                     teamId: request.TeamId,
                     memberIds: request.MembersIds,
                     cancellationToken: cancellationToken);
+            }, cancellationToken);
 
-                await unitOfWork.SaveChangesAsync(cancellationToken);
+            var addedMembers = (await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, request.TeamId, cancellationToken))
+                        .Where(tm => request.MembersIds.Contains(tm.Id))
+                        .ToList();
 
-                var team = await teamsReadModel.GetByIdAsync(tenantId, request.TeamId, cancellationToken);  
+            await mediator.Publish(new AddMemberToTeamEvent(
+                    team.Id,
+                    addedMembers,
+                    currentUser.FullName,
+                    team!.TeamLeadName,
+                    team!.Name
+                ), cancellationToken);
 
-                await mediator.Publish(new AddMemberToTeamEvent(
-                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, request.TeamId, cancellationToken),
-                        currentUser.FullName,
-                        team!.TeamLeadName,
-                        team!.Name
-                    ), cancellationToken);
-
-                return Result<string>.Success("Members added successfully.", HttpStatusCode.OK);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Result<string>.Failure(ex.Message, HttpStatusCode.BadRequest);
-            }
+            return Result<string>.Success("Members added successfully.", HttpStatusCode.OK);
         }
     }
 }

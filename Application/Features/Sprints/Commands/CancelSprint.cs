@@ -56,6 +56,7 @@ public class CancelSprint
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
                 historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name?? sprint.Code, sprint.Code, oldSprintState, sprint);
+
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
@@ -64,6 +65,7 @@ public class CancelSprint
                         project.Id,
                         project.Name,
                         project.Key,
+                        dto.Id,
                         dto.Code,
                         dto.Name,
                         dto.Status,

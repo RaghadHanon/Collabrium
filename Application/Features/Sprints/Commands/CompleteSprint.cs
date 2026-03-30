@@ -70,6 +70,7 @@ public class CompleteSprint
                         project.Id,
                         project.Name,
                         project.Key,
+                        dto.Id,
                         dto.Code,
                         dto.Name,
                         dto.Status,

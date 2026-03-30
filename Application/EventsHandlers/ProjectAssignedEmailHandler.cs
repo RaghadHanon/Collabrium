@@ -1,6 +1,5 @@
 ﻿using Application.Common;
 using Application.Events;
-using Application.Features.Teams.Commands;
 using Application.Interfaces.Emails;
 using MediatR;
 using Microsoft.Extensions.Options;
@@ -28,9 +27,9 @@ public class ProjectAssignedEmailHandler
     {
         var template = templateFactory.GetTemplate("ProjectAssignment");
 
-        var url = $"{settings.BaseUrl}/api/projects/{notification.ProjectId}";
+        var url = $"{settings.BaseUrl}/dashboard/projects/{notification.ProjectId}";
 
-        for (int i = 0; i < notification.TeamMembers.Count; i++)
+        for (var i = 0; i < notification.TeamMembers.Count; i++)
         {
             var member = notification.TeamMembers[i];
             var data = new Dictionary<string, string>

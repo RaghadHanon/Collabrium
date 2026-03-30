@@ -4,6 +4,7 @@ using MediatR;
 namespace Application.Events;
 
 public record AddMemberToTeamEvent(
+    string TeamId,
     List<UserSnapshotDto> TeamMembers,
     string AssignerFullName,
     string TeamLeadName,

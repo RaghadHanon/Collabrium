@@ -77,7 +77,7 @@ Collabrium Team";
             <a href=""{url}"" 
                style=""background: #ECBF28; color: #fff; text-decoration: none; 
                       padding: 14px 30px; border-radius: 6px; font-weight: bold; display: inline-block;"">
-              View Work Item
+              View Storyboard
             </a>
           </p>
           

@@ -26,7 +26,7 @@ public class WorkItemAssignedEmailHandler
     {
         var template = templateFactory.GetTemplate("WorkItemAssignment");
 
-        var url = $"{settings.BaseUrl}/api/projects/{notification.ProjectId}/work-items/{notification.WorkItemId}";
+        var url = $"{settings.BaseUrl}/projects/{notification.ProjectId}?tab=storyboard";
 
         var data = new Dictionary<string, string>
         {

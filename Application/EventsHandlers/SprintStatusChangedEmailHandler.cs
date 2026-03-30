@@ -27,7 +27,7 @@ public class SprintStatusChangedEmailHandler
     {
         var template = templateFactory.GetTemplate("SprintStatusChanged");
 
-        var url = $"{settings.BaseUrl}/api/projects/{notification.ProjectId}";
+        var url = $"{settings.BaseUrl}/dashboard/projects/{notification.ProjectId}?tab=board&sprintId={notification.SprintId}";
 
         for (int i = 0; i < notification.TeamMembers.Count; i++)
         {

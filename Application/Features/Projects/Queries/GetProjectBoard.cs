@@ -24,6 +24,7 @@ public class GetProjectBoard
         public WorkItemPriority? Priority { get; set; }
         public string? Code { get; set; }
 
+        public bool? IsAssigned { get; set; }
         public string? AssignedToUserId { get; set; }
         public string? TitleContains { get; set; }
 

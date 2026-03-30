@@ -58,8 +58,10 @@ public class AssignProjectToTeam
                 project.AssignToTeam(request.TeamId);
                 await projectsRepository.UpdateAsync(project, ct);
 
-                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
+                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project); 
+                
             }, cancellationToken);
+
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
             await mediator.Publish(new ProjectAssignedEvent(

@@ -8,6 +8,7 @@ public record SprintStatusChangedEvent(
     string ProjectId,
     string ProjectTitle,
     string ProjectKey,
+    string SprintId,
     string SprintCode,
     string SprintName,
     SprintStatus Status,

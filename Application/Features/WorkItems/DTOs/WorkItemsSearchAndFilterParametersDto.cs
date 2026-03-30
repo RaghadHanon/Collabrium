@@ -13,6 +13,7 @@ public sealed class WorkItemsSearchAndFilterParametersDto : QueryParametersDto<D
     public WorkItemStatus? Status { get; set; }
     public WorkItemPriority? Priority { get; set; }
 
+    public bool? IsAssigned { get; set; }
     public string? SprintId { get; set; }
     public string? AssignedToUserId { get; set; }
     public string? CreatedByUserId { get; init; }

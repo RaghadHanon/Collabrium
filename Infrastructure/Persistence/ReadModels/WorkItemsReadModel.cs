@@ -492,6 +492,14 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         if (parameters.CreatedBefore.HasValue)
             query = query.Where(x => x.CreatedAt <= parameters.CreatedBefore.Value);
 
+        if(parameters.IsAssigned.HasValue)
+        {
+            if (parameters.IsAssigned.Value)
+                query = query.Where(x => x.AssignedToUserId != null);
+            else
+                query = query.Where(x => x.AssignedToUserId == null);
+        }
+
         return query;
     }
 

@@ -27,7 +27,7 @@ public class AddMembersToTeamEmailHandler
     {
         var template = templateFactory.GetTemplate("AddMemberToTeam");
 
-        var url = $"{settings.BaseUrl}/api/projects/{notification}";
+        var url = $"{settings.BaseUrl}/dashboard/teams/{notification.TeamId}";
 
         for (int i = 0; i < notification.TeamMembers.Count; i++)
         {

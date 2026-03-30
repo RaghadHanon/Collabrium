@@ -27,6 +27,10 @@ public class GetProjectBacklogRequest
     /// Filters work items by creator user identifier.
     /// </summary>
     public string? CreatedByUserId { get; init; }
+    /// <summary>
+    /// Filters work items based on whether they are assigned to a user or not.
+    /// </summary>
+    public bool? IsAssigned { get; set; }
 
     /// <summary>
     /// Filters work items whose title contains the specified text.

@@ -16,4 +16,8 @@ public enum MetadataType
     AttachmentType = 11,
     WorkItemAllowedStatus = 12,
     RelationRules = 13,
+    RoadmapLevel = 14,
+    RoadmapPath = 15,
+    RoadmapResourceType = 16,
+
 }

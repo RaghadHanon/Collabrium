@@ -32,7 +32,7 @@ namespace Application.Features.Roadmaps.Queries
             public DateTime? CreatedBefore { get; set; }
 
             public DateTime? Cursor { get; set; }
-            public int PageSize { get; set; } = 10;
+            public int PageSize { get; set; }
 
             public IReadOnlyCollection<string>? TagIdsAny { get; set; }
             public IReadOnlyCollection<string>? TagIdsAll { get; set; }

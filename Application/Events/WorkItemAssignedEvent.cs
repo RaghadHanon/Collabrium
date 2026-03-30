@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Domain.Events;
+namespace Application.Events;
 public record WorkItemAssignedEvent(
     string ProjectId,
     string WorkItemId,

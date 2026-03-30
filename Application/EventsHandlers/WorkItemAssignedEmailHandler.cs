@@ -1,6 +1,6 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Interfaces.Emails;
-using Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Options;
 

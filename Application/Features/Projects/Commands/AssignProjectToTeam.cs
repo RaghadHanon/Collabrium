@@ -1,9 +1,10 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Projects.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
-using Domain.Enums;
+using Application.Interfaces.Services;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -23,8 +24,11 @@ public class AssignProjectToTeam
         IProjectsReadModel projectsReadModel,
         IProjectHistoryRecorder historyRecorder,
         ITeamsRepository teamsRepository,
+        ITeamsReadModel teamsReadModel,
         ITenantContext tenantContext,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        ICurrentUserAccessor currentUserAccessor,
+        IMediator mediator
     ) : IRequestHandler<Command, Result<ProjectDto>>
     {
         public async Task<Result<ProjectDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -32,6 +36,10 @@ public class AssignProjectToTeam
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<ProjectDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
+            var currentUser = await currentUserAccessor.GetCurrentUserAsync();
+            if (currentUser == null)
+                return Result<ProjectDto>.Failure("Current user is not found.", HttpStatusCode.NotFound);
 
             var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
             if (project is null)
@@ -48,12 +56,21 @@ public class AssignProjectToTeam
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 project.AssignToTeam(request.TeamId);
-                await projectsRepository.UpdateAsync(project, ct); 
+                await projectsRepository.UpdateAsync(project, ct);
 
                 historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
+            await mediator.Publish(new ProjectAssignedEvent(
+                        request.ProjectId,
+                        dto.Name,
+                        dto.Key,
+                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, request.TeamId, cancellationToken),
+                        currentUser.FullName,
+                        team.Name
+                    ), cancellationToken);
+
             return dto is null
                 ? Result<ProjectDto>.Failure("Project updated but could not be loaded.", HttpStatusCode.InternalServerError)
                 : Result<ProjectDto>.Success(dto, HttpStatusCode.OK);

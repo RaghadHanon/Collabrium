@@ -1,8 +1,11 @@
 ﻿using Application.Common;
+using Application.Events;
+using Application.Features.Projects.DTOs;
 using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -25,8 +28,11 @@ public class StartSprint
         ISprintsRepository sprintsRepository,
         IProjectHistoryRecorder historyRecorder,
         ISprintsReadModel sprintsReadModel,
+        ITeamsReadModel teamsReadModel,
         ITenantContext tenantContext,
         IProjectsRepository projectsRepository,
+        ICurrentUserAccessor currentUserAccessor,
+        IMediator mediator,
         IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<SprintDto>>
     {
         public async Task<Result<SprintDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -35,7 +41,12 @@ public class StartSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            var currentUser = await currentUserAccessor.GetCurrentUserAsync();
+            if (currentUser == null)
+                return Result<SprintDto>.Failure("Current user is not found.", HttpStatusCode.NotFound);
+
+            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+             if (project is null)
                 return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
@@ -60,6 +71,18 @@ public class StartSprint
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
+
+            if(project.TeamId is not null)  
+                await mediator.Publish(new SprintStatusChangedEvent(
+                        project.Id,
+                        project.Name,
+                        project.Key,
+                        dto.Code,
+                        dto.Name,
+                        dto.Status,
+                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, project.TeamId, cancellationToken),
+                        currentUser.FullName
+                    ), cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint started but could not be loaded.", HttpStatusCode.InternalServerError)

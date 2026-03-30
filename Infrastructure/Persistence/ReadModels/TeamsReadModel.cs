@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Teams.DTOs;
+using Application.Features.Users.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -34,6 +35,36 @@ public sealed class TeamsReadModel : ITeamsReadModel
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<TeamFullInfoDto?> GetTeamFullAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
+            return null;
+
+        tenantId = tenantId.Trim();
+        teamId = teamId.Trim();
+
+        return await _dbContext.Teams
+            .AsNoTracking()
+            .Where(t => t.TenantId == tenantId && t.Id == teamId)
+            .ProjectTo<TeamFullInfoDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<UserSnapshotDto>> GetTeamMembersSnapshotAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
+            return new List<UserSnapshotDto>();
+
+        tenantId = tenantId.Trim();
+        teamId = teamId.Trim();
+
+        return await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Where(t => t.Team.TenantId == tenantId && t.TeamId == teamId)
+            .ProjectTo<UserSnapshotDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PagedList<TeamDto, DateTime?>> GetTeamsAsync(
         TeamsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
@@ -66,21 +97,6 @@ public sealed class TeamsReadModel : ITeamsReadModel
             Items = items,
             NextCursor = nextCursor
         };
-    }
-
-    public Task<TeamFullInfoDto?> GetTeamFullAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
-            return Task.FromResult<TeamFullInfoDto?>(null);
-
-        tenantId = tenantId.Trim();
-        teamId = teamId.Trim();
-
-        return _dbContext.Teams
-            .AsNoTracking()
-            .Where(t => t.TenantId == tenantId && t.Id == teamId)
-            .ProjectTo<TeamFullInfoDto>(_mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static IQueryable<TeamEntity> ApplyFilters(IQueryable<TeamEntity> query, TeamsSearchAndFilterParametersDto p)

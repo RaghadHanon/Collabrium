@@ -277,6 +277,18 @@ namespace API.Controllers
 
             return HandleResult(await Mediator.Send(query));
         }
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
+        [HttpGet("{currentRoadmapId}/others")]
+
+        public async Task<ActionResult<List<RoadmapDto>>> GetOtherRoadmaps(string currentRoadmapId)
+        {
+            var query = new GetOtherRoadmaps.Query
+            {
+                CurrentRoadmapId = currentRoadmapId
+            };
+
+            return HandleResult(await Mediator.Send(query));
+        }
 
 
     }

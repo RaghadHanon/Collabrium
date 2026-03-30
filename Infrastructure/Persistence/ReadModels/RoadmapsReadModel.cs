@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence.ReadModels
             CancellationToken cancellationToken = default)
         {
             parameters ??= new RoadmapsSearchAndFilterParametersDto();
-            var pageSize = parameters.PageSize <= 10 ? 10 : parameters.PageSize;
+            var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
             IQueryable<RoadmapEntity> query = _dbContext.Roadmaps.AsNoTracking();
             query = ApplyFilters(query, parameters);
             if (parameters.Cursor.HasValue)

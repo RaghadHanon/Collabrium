@@ -193,6 +193,20 @@ namespace Infrastructure.Persistence.ReadModels
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }
+        public async Task<List<RoadmapDto>> GetOtherRoadmapsAsync(
+            string tenantId,
+            string currentRoadmapId,
+            CancellationToken ct = default)
+        {
+            return await _dbContext.Roadmaps
+                .AsNoTracking()
+                .Where(r =>
+                    r.TenantId == tenantId &&
+                    r.Id != currentRoadmapId)
+                .OrderBy(r => r.Title)
+                .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(ct);
+        }
 
     }
 }

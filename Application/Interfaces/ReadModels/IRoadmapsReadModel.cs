@@ -20,5 +20,11 @@ namespace Application.Interfaces.ReadModels
          string tenantId,
          string roadmapId,
          CancellationToken cancellationToken = default);
+
+        Task<List<RoadmapDto>> GetOtherRoadmapsAsync(
+           string tenantId,
+           string currentRoadmapId,
+           CancellationToken ct = default);
     }
+
 }

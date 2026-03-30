@@ -19,17 +19,14 @@ namespace Application.Features.Roadmaps.DTOs
 
         public string? CreatedByUserId { get; set; }
 
-        // لو بدك name (زي TeamLeadName) بدنا join على AspNetUsers
         public string? CreatedByUserName { get; set; }
 
-        // مثل Count عند Team (computed field)
         public int TagsCount { get; set; }
-        public int NodesCount { get; set; } // مفيد للقوائم
+        public int NodesCount { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
         public DateTime? CreatedAt { get; set; }
 
-        // لو بدك تعرض IDs (اختياري بالقوائم)
         public IReadOnlyCollection<string> TagIds { get; set; } = Array.Empty<string>();
     }
 }

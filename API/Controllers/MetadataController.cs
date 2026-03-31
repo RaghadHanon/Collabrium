@@ -172,4 +172,40 @@ public sealed class MetadataController : ApiBaseController
 
         return HandleResult(await Mediator.Send(query));
     }
+    [IgnoreTenantContext]
+    [HttpGet("roadmap-levels")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapLevelMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.RoadmapLevel,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("roadmap-paths")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapPathMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.RoadmapPath,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("roadmap-resource-types")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapResourceTypeMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.RoadmapResourceType,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
 }

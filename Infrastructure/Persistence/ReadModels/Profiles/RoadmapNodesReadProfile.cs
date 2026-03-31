@@ -19,7 +19,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
             .ForMember(d => d.SubTopicsCount, o => o.MapFrom(s => s.SubTopics.Count));
             CreateMap<ReferenceNodeEntity, ReferenceNodeDto>()
             .ForMember(d => d.NodeType, o => o.MapFrom(_ => "Reference"))
-            .ForMember(d => d.RefRoadmapId, o => o.MapFrom(s => s.RefRoadmapId));
+            .ForMember(d => d.RefRoadmapId, o => o.MapFrom(s => s.RefRoadmapId))
+            .ForMember(d => d.RefRoadmapTitle, o => o.MapFrom(s => s.RefRoadmap.Title));
             CreateMap<TopicNodeEntity, TopicNodeDetailsDto>()
     .ForMember(d => d.SubTopicsCount, o => o.MapFrom(s => s.SubTopics.Count))
     .ForMember(d => d.SubTopics, o => o.MapFrom(s => s.SubTopics));

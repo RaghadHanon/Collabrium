@@ -27,6 +27,12 @@ public interface IWorkItemsReadModel
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken ct = default);
 
+    Task<PagedList<WorkItemListItemDto, DateTime?>> GetBacklogAsync(
+        string tenantId,
+        string projectId,
+        WorkItemsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default);
+
     //relations
     Task<List<WorkItemRelationDto>?> GetRelationsByTypeAsync(
          string tenantId,

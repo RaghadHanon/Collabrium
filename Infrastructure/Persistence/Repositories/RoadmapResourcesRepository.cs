@@ -127,6 +127,25 @@ namespace Infrastructure.Persistence.Repositories
 
             return entities.Select(RoadmapResourcesMapper.ToDomain).ToList();
         }
+        public Task<bool> IsOrderUsedAsync(
+           string subTopicId,
+           int order,
+           string? excludeResourceId = null,
+           CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(subTopicId) || order < 1)
+                return Task.FromResult(false);
+
+            var sId = subTopicId.Trim();
+            var excludedId = excludeResourceId?.Trim();
+
+            return _dbContext.Resources
+                .AsNoTracking()
+                .AnyAsync(r =>
+                    r.SubTopicId == sId &&
+                    r.Order == order &&
+                    (excludedId == null || r.Id != excludedId), ct);
+        }
 
 
     }

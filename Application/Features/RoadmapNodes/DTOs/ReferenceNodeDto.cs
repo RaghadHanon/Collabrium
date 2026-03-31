@@ -3,5 +3,6 @@
     public sealed class ReferenceNodeDto : RoadmapNodeDto
     {
         public required string RefRoadmapId { get; set; }
+        public string? RefRoadmapTitle { get; set; }
     }
 }

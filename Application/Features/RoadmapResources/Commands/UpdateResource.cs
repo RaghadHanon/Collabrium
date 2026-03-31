@@ -18,10 +18,10 @@ namespace Application.Features.RoadmapResources.Commands
             public required string SubTopicId { get; set; }
             public required string ResourceId { get; set; }
 
-            public required string Title { get; set; }
-            public required string Url { get; set; }
-            public RoadmapResourceType Type { get; set; }
-            public int Order { get; set; }
+            public string? Title { get; set; }
+            public string? Url { get; set; }
+            public RoadmapResourceType? Type { get; set; }
+            public int? Order { get; set; }
         }
 
         public sealed class Handler(
@@ -63,14 +63,53 @@ namespace Application.Features.RoadmapResources.Commands
 
                 if (resource is null)
                     return Result<ResourceDto>.Failure("Resource not found.", HttpStatusCode.NotFound);
+                if (request.Order.HasValue)
+                {
+                    var isOrderUsed = await resourcesRepository.IsOrderUsedAsync(
+                        subTopicId: request.SubTopicId,
+                        order: request.Order.Value,
+                        excludeResourceId: request.ResourceId,
+                        ct: cancellationToken);
+
+                    if (isOrderUsed)
+                    {
+                        return Result<ResourceDto>.Failure(
+                            "Order already exists in this subtopic.",
+                            HttpStatusCode.BadRequest);
+                    }
+                }
+                var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
+                if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    var newTitle = titleDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newTitle))
+                        return Result<ResourceDto>.Failure("Title cannot be empty.", HttpStatusCode.BadRequest);
+                }
+
+                var urlDecision = PatchHelpers.DecideStringPatch(request.Url);
+                if (urlDecision.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    var newUrll = urlDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newUrll))
+                        return Result<ResourceDto>.Failure("Url cannot be empty.", HttpStatusCode.BadRequest);
+                }
+
+                var newTitleValue =
+                    PatchHelpers.ApplyStringPatch(resource.Title, request.Title) ?? resource.Title;
+
+                var newUrl =
+                    PatchHelpers.ApplyStringPatch(resource.Url, request.Url) ?? resource.Url;
+
+                var newType = request.Type ?? resource.Type;
+                var newOrder = request.Order ?? resource.Order;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     resource.Update(
-                        title: request.Title,
-                        url: request.Url,
-                        type: request.Type,
-                        order: request.Order);
+                        title: newTitleValue,
+                        url: newUrl,
+                        type: newType,
+                        order: newOrder);
 
                     await resourcesRepository.UpdateAsync(resource, ct);
                 }, cancellationToken);

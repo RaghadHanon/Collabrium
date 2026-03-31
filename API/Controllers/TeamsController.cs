@@ -4,6 +4,7 @@ using Application.Common;
 using Application.Features.Teams.Commands;
 using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
+using Application.Features.Users.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -249,5 +250,35 @@ public class TeamsController : ApiBaseController
         };
 
         return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Retrieves a list of users who are eligible to be added as members to a specific team.
+    /// </summary>
+    /// 
+    /// <remarks>
+    /// This endpoint returns users who are not currently members of the specified team and meet the criteria for membership.
+    /// The request is scoped to the current tenant context.
+    ///  Sample request:
+    ///
+    ///     PUT /api/teams/3fa85f64-5717-4562-b3fc-2c963f66afa6/candidates-members
+    ///
+    /// </remarks>
+    /// <param name="id">The unique identifier of the team.</param>
+    /// <returns>List of Candidates users to be added to this team.</returns>
+    /// <response code="204">The team active status was toggled successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized.</response>
+    /// <response code="404">If the team with the specified ID does not exist.</response>aram>
+    /// <returns></returns>
+    [HttpGet("{teamId}/candidates-members")]
+    public async Task<ActionResult<List<UserDto>>> GetCandidatesTeamMembers(string teamId)
+    {
+        var query = new GetCandidatesTeamMembers.Query
+        {
+            TeamId = teamId
+        };
+
+        return HandleResult(await Mediator.Send(query));
     }
 }

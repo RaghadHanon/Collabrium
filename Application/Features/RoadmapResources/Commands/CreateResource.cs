@@ -49,6 +49,17 @@ namespace Application.Features.RoadmapResources.Commands
                     topicNodeId: request.TopicNodeId,
                     subTopicId: request.SubTopicId,
                     ct: cancellationToken);
+                var isOrderUsed = await resourcesRepository.IsOrderUsedAsync(
+                    subTopicId: request.SubTopicId,
+                    order: request.Order,
+                    ct: cancellationToken);
+
+                if (isOrderUsed)
+                {
+                    return Result<ResourceDto>.Failure(
+                        "Order already exists in this subtopic.",
+                        HttpStatusCode.BadRequest);
+                }
 
                 if (subTopic is null)
                     return Result<ResourceDto>.Failure("Subtopic not found.", HttpStatusCode.NotFound);

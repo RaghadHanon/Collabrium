@@ -163,59 +163,66 @@ public class WorkItemsRepository : IWorkItemsRepository
         };
     }
 
-    private static IQueryable<WorkItemEntity> ApplyFilters(IQueryable<WorkItemEntity> query, WorkItemsSearchAndFilterParametersDto p)
+    private static IQueryable<WorkItemEntity> ApplyFilters(IQueryable<WorkItemEntity> query, WorkItemsSearchAndFilterParametersDto parameters)
     {
-        if (!string.IsNullOrWhiteSpace(p.TenantId))
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
         {
-            var tId = p.TenantId.Trim();
+            var tId = parameters.TenantId.Trim();
             query = query.Where(x => x.Project.TenantId == tId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.ProjectId))
+        if (!string.IsNullOrWhiteSpace(parameters.ProjectId))
         {
-            var prId = p.ProjectId.Trim();
+            var prId = parameters.ProjectId.Trim();
             query = query.Where(x => x.ProjectId == prId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.Code))
+        if (!string.IsNullOrWhiteSpace(parameters.Code))
         {
-            var code = p.Code.Trim();
+            var code = parameters.Code.Trim();
             query = query.Where(x => x.Code == code);
         }
 
-        if (p.Type.HasValue)
-            query = query.Where(x => x.Type == p.Type.Value);
+        if (parameters.Type.HasValue)
+            query = query.Where(x => x.Type == parameters.Type.Value);
 
-        if (p.Status.HasValue)
-            query = query.Where(x => x.Status == p.Status.Value);
+        if (parameters.Status.HasValue)
+            query = query.Where(x => x.Status == parameters.Status.Value);
 
-        if (p.Priority.HasValue)
-            query = query.Where(x => x.Priority == p.Priority.Value);
+        if (parameters.Priority.HasValue)
+            query = query.Where(x => x.Priority == parameters.Priority.Value);
 
-        if (!string.IsNullOrWhiteSpace(p.SprintId))
+        if (!string.IsNullOrWhiteSpace(parameters.SprintId))
         {
-            var sId = p.SprintId.Trim();
+            var sId = parameters.SprintId.Trim();
             query = query.Where(x => x.SprintId == sId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.AssignedToUserId))
+        if (!string.IsNullOrWhiteSpace(parameters.AssignedToUserId))
         {
-            var aId = p.AssignedToUserId.Trim();
+            var aId = parameters.AssignedToUserId.Trim();
             query = query.Where(x => x.AssignedToUserId == aId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.TitleContains))
+        if (!string.IsNullOrWhiteSpace(parameters.TitleContains))
         {
-            var term = p.TitleContains.Trim();
+            var term = parameters.TitleContains.Trim();
             query = query.Where(x => x.Title.Contains(term));
         }
 
-        if (p.CreatedAfter.HasValue)
-            query = query.Where(x => x.CreatedAt >= p.CreatedAfter.Value);
+        if (parameters.CreatedAfter.HasValue)
+            query = query.Where(x => x.CreatedAt >= parameters.CreatedAfter.Value);
 
-        if (p.CreatedBefore.HasValue)
-            query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
+        if (parameters.CreatedBefore.HasValue)
+            query = query.Where(x => x.CreatedAt <= parameters.CreatedBefore.Value);
 
+        if (parameters.IsAssigned.HasValue)
+        {
+            if (parameters.IsAssigned.Value)
+                query = query.Where(x => x.AssignedToUserId != null);
+            else
+                query = query.Where(x => x.AssignedToUserId == null);
+        }
         return query;
     }
 

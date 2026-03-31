@@ -13,6 +13,7 @@ using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -268,6 +269,49 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         return WorkItemStatusRules.GetWorkItemWorkflowByType(type) ?? new List<WorkItemStatus>();
     }
 
+    public async Task<PagedList<WorkItemListItemDto, DateTime?>> GetBacklogAsync(
+    string tenantId,
+    string projectId,
+    WorkItemsSearchAndFilterParametersDto parameters,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+            return new PagedList<WorkItemListItemDto, DateTime?> { };
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var query = _dbContext.WorkItems
+            .Include(i => i.Project)
+            .AsNoTracking()
+            .Where(w => w.ProjectId == pId && w.SprintId == null && w.Status == WorkItemStatus.ToDo);
+
+        query = ApplyFilters(query, parameters);
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+
+        var items = await query
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items[^1].CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<WorkItemListItemDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
     public async Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(
             string tenantId,
             string projectId,
@@ -447,6 +491,14 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
         if (parameters.CreatedBefore.HasValue)
             query = query.Where(x => x.CreatedAt <= parameters.CreatedBefore.Value);
+
+        if(parameters.IsAssigned.HasValue)
+        {
+            if (parameters.IsAssigned.Value)
+                query = query.Where(x => x.AssignedToUserId != null);
+            else
+                query = query.Where(x => x.AssignedToUserId == null);
+        }
 
         return query;
     }

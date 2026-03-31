@@ -56,6 +56,11 @@ public class GetWorkItemsRequest
     public DateTime? CreatedBefore { get; init; }
 
     /// <summary>
+    /// Filters work items based on whether they are assigned to a user or not.
+    /// </summary>
+    public bool? IsAssigned { get; set; }
+
+    /// <summary>
     /// The maximum number of items to return per page.
     /// </summary>
     public int PageSize { get; init; } = 10;

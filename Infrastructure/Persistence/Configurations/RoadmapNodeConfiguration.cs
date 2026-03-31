@@ -23,6 +23,9 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(n => n.Order)
                 .IsRequired();
 
+            builder
+    .HasIndex(n => new { n.RoadmapId, n.Order })
+    .IsUnique();
             builder.HasOne(n => n.Roadmap)
            .WithMany(r => r.Nodes)
            .HasForeignKey(n => n.RoadmapId)

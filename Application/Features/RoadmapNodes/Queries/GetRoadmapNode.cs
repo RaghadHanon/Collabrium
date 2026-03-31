@@ -3,6 +3,8 @@ using Application.Features.RoadmapNodes.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using System.Net;
 
@@ -19,7 +21,8 @@ namespace Application.Features.RoadmapNodes.Queries
         public sealed class Handler(
             IRoadmapNodesReadModel roadmapNodesReadModel,
             IRoadmapsRepository roadmapsRepository,
-            ITenantContext tenantContext
+            ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor
         ) : IRequestHandler<Query, Result<RoadmapNodeDto>>
         {
             public async Task<Result<RoadmapNodeDto>> Handle(Query request, CancellationToken cancellationToken)
@@ -27,12 +30,27 @@ namespace Application.Features.RoadmapNodes.Queries
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<RoadmapNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                var userId = currentUserAccessor.GetUserId();
+                bool canViewHidden = false;
 
+                if (!string.IsNullOrWhiteSpace(userId))
+                {
+                    var role = await currentUserAccessor.GetUserRole(userId, cancellationToken);
+
+                    canViewHidden = role == UserRole.TenantAdmin
+                                 || role == UserRole.HR
+                                 || role == UserRole.IT
+                                 || role == UserRole.TeamLead
+                                 || role == UserRole.CEO
+                                 ;
+                }
 
                 var roadmap = await roadmapsRepository.GetByIdAsync(
-                    tenantId,
-                    request.RoadmapId,
-                    cancellationToken);
+               tenantId,
+               request.RoadmapId,
+               includeHidden: canViewHidden,
+               cancellationToken);
+
 
                 if (roadmap is null)
                     return Result<RoadmapNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);

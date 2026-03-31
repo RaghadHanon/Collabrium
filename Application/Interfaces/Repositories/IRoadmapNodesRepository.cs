@@ -12,5 +12,11 @@ namespace Application.Interfaces.Repositories
         public Task<List<RoadmapNode>> GetByRoadmapIdAsync(string tenantId, string roadmapId, CancellationToken ct = default);
 
         Task<RoadmapNode?> GetByIdAsync(string tenantId, string roadmapId, string nodeId, CancellationToken ct = default);
+        Task<bool> IsOrderUsedAsync(
+           string tenantId,
+           string roadmapId,
+           int order,
+           string? excludeNodeId = null,
+           CancellationToken ct = default);
     }
 }

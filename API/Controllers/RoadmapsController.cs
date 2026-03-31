@@ -4,6 +4,7 @@ using Application.Common;
 using Application.Features.Roadmaps.Commands;
 using Application.Features.Roadmaps.DTOs;
 using Application.Features.Roadmaps.Queries;
+using Application.Features.Tags.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -178,16 +179,17 @@ namespace API.Controllers
         /// <response code="403">If the user does not have permission to manage roadmaps.</response>
         /// <response code="404">If the current tenant is not found or the roadmap does not exist.</response>        [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPatch("roadmap/{roadmapId}/visibility")]
-        public async Task<ActionResult> ToggleRoadmapVisibility(string roadmapId, ToggleRoadmapVisibleRequest request)
+        public async Task<ActionResult> ToggleRoadmapVisibility(string roadmapId)
         {
             var command = new ToggleRoadmapVisible.Command
             {
                 RoadmapId = roadmapId,
-                IsVisible = request.IsVisible
+
             };
 
             return HandleResult(await Mediator.Send(command));
         }
+
 
         /// <summary>
         /// Sets roadmap tags (replace all existing tags).
@@ -207,12 +209,12 @@ namespace API.Controllers
         /// <response code="403">If the user does not have permission to manage roadmaps.</response>
         /// <response code="404">If the current tenant, roadmap, or one of the tags does not exist.</response>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
-        [HttpPut("roadmap/{roadmapId}/tags")]
-        public async Task<ActionResult> SetTags(string roadmapId, SetTagsRequest request)
+        [HttpPut("roadmap/tags")]
+        public async Task<ActionResult> SetTags(SetTagsRequest request)
         {
             var command = new SetTags.Command
             {
-                RoadmapId = roadmapId,
+                RoadmapId = request.RoadmapId,
                 TagIds = request.TagIds
             };
 
@@ -222,12 +224,12 @@ namespace API.Controllers
         /// Adds tags to roadmap.
         /// </summary>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
-        [HttpPost("roadmap/{roadmapId}/tags")]
-        public async Task<ActionResult> AddTags(string roadmapId, AddTagsRequest request)
+        [HttpPost("roadmap/tags")]
+        public async Task<ActionResult> AddTags(AddTagsRequest request)
         {
             var command = new AddTags.Command
             {
-                RoadmapId = roadmapId,
+                RoadmapId = request.RoadmapId,
                 TagIds = request.TagIds
             };
 
@@ -238,16 +240,54 @@ namespace API.Controllers
         /// Removes tags from roadmap.
         /// </summary>
         [Authorize(Policy = Policies.Roadmaps_Manage)]
-        [HttpPatch("roadmap/{roadmapId}/tags")]
-        public async Task<ActionResult> RemoveTags(string roadmapId, RemoveTagsRequest request)
+        [HttpPatch("roadmap/tags")]
+        public async Task<ActionResult> RemoveTags(RemoveTagsRequest request)
         {
             var command = new RemoveTags.Command
             {
-                RoadmapId = roadmapId,
+                RoadmapId = request.RoadmapId,
                 TagIds = request.TagIds
             };
 
             return HandleResult(await Mediator.Send(command));
+        }
+        /// <summary>
+        /// Retrieves all tags for a specific roadmap.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /api/roadmaps/roadmap/{roadmapId}/tags
+        ///
+        /// </remarks>
+        /// <param name="roadmapId">The roadmap id.</param>
+        /// <returns>List of roadmap tags.</returns>
+        /// <response code="200">Tags retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read roadmaps.</response>
+        /// <response code="404">If tenant or roadmap was not found.</response>
+        [Authorize(Policy = Policies.Roadmaps_Read)]
+        [HttpGet("roadmap/{roadmapId}/tags")]
+        public async Task<ActionResult<List<TagDto>>> GetRoadmapTags(string roadmapId)
+        {
+            var query = new GetRoadmapTags.Query
+            {
+                RoadmapId = roadmapId
+            };
+
+            return HandleResult(await Mediator.Send(query));
+        }
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
+        [HttpGet("{currentRoadmapId}/others")]
+
+        public async Task<ActionResult<List<RoadmapDto>>> GetOtherRoadmaps(string currentRoadmapId)
+        {
+            var query = new GetOtherRoadmaps.Query
+            {
+                CurrentRoadmapId = currentRoadmapId
+            };
+
+            return HandleResult(await Mediator.Send(query));
         }
 
 

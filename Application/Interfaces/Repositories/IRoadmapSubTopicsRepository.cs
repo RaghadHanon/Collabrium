@@ -21,5 +21,12 @@ namespace Application.Interfaces.Repositories
         Task<bool> HasResourcesAsync(
             string subTopicId,
             CancellationToken ct = default);
+
+        Task<bool> IsOrderUsedAsync(
+          string topicNodeId,
+          int order,
+          string? excludeSubTopicId = null,
+          CancellationToken ct = default);
+
     }
 }

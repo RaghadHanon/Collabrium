@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<<< HEAD:Infrastructure/Migrations/20260331104505_inital.Designer.cs
     [Migration("20260331104505_inital")]
     partial class inital
+========
+    [Migration("20260328182239_Initial")]
+    partial class Initial
+>>>>>>>> main:Infrastructure/Migrations/20260328182239_Initial.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -574,6 +579,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SubTopicId", "Order")
+                        .IsUnique()
                         .HasDatabaseName("IX_Resource_SubTopic_Order");
 
                     b.ToTable("Resources");
@@ -671,7 +677,8 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoadmapId");
+                    b.HasIndex("RoadmapId", "Order")
+                        .IsUnique();
 
                     b.ToTable("RoadmapNodes");
 
@@ -775,6 +782,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TopicNodeId", "Order")
+                        .IsUnique()
                         .HasDatabaseName("IX_SubTopic_TopicNode_Order");
 
                     b.ToTable("SubTopics");

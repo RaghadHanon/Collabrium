@@ -33,11 +33,11 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Email, entityUser.Email ?? string.Empty),
             new("lastLoginAt", entityUser.LastLoginAt?.ToString("O") ?? string.Empty),
             new("tenantId", entityUser.TenantId ?? string.Empty),
-            new("MustChangePassword", entityUser.MustChangePassword.ToString()),
+            new("mustChangePassword", entityUser.MustChangePassword.ToString()),
         };
 
         foreach (var role in roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim("role", role));
 
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var creds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256Signature);

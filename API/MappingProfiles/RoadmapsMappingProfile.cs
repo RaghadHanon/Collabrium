@@ -18,6 +18,7 @@ namespace API.MappingProfiles
             CreateMap<GetRoadmapsRequest, GetRoadmaps.Query>();
             CreateMap<GetManagerRoadmapsRequest, GetRoadmaps.Query>();
             CreateMap<GetPublicRoadmapsRequest, GetRoadmaps.Query>();
+
         }
     }
 }

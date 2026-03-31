@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Roadmaps.DTOs;
+using Application.Features.Tags.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -23,7 +24,7 @@ namespace Infrastructure.Persistence.ReadModels
             CancellationToken cancellationToken = default)
         {
             parameters ??= new RoadmapsSearchAndFilterParametersDto();
-            var pageSize = parameters.PageSize <= 10 ? 10 : parameters.PageSize;
+            var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
             IQueryable<RoadmapEntity> query = _dbContext.Roadmaps.AsNoTracking();
             query = ApplyFilters(query, parameters);
             if (parameters.Cursor.HasValue)
@@ -114,6 +115,25 @@ namespace Infrastructure.Persistence.ReadModels
             return query;
 
         }
+        public async Task<List<TagDto>> GetTagsAsync(
+           string tenantId,
+           string roadmapId,
+           CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+                return new();
+
+            var tId = tenantId.Trim();
+            var rId = roadmapId.Trim();
+
+            return await _dbContext.Roadmaps
+                .AsNoTracking()
+                .Where(r => r.TenantId == tId && r.Id == rId)
+                .SelectMany(r => r.Tags)
+                .Select(rt => rt.Tag)
+                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(cancellationToken);
+        }
 
         public Task<RoadmapDto?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken)
         {
@@ -172,6 +192,20 @@ namespace Infrastructure.Persistence.ReadModels
                         .ToList()
                 })
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+        public async Task<List<RoadmapDto>> GetOtherRoadmapsAsync(
+            string tenantId,
+            string currentRoadmapId,
+            CancellationToken ct = default)
+        {
+            return await _dbContext.Roadmaps
+                .AsNoTracking()
+                .Where(r =>
+                    r.TenantId == tenantId &&
+                    r.Id != currentRoadmapId)
+                .OrderBy(r => r.Title)
+                .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(ct);
         }
 
     }

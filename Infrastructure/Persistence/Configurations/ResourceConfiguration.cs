@@ -25,6 +25,7 @@ namespace Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             builder.HasIndex(r => new { r.SubTopicId, r.Order })
+                .IsUnique()
                 .HasDatabaseName("IX_Resource_SubTopic_Order");
 
             builder.HasOne(r => r.SubTopic)

@@ -15,6 +15,5 @@ namespace API.Contracts.Courses
 
         public int? EstimatedDurationInHours { get; set; }
 
-        public List<string> TagIds { get; set; } = new();
     }
 }

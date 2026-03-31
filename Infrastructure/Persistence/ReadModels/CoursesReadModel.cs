@@ -86,7 +86,24 @@ namespace Infrastructure.Persistence.ReadModels
                 .ProjectTo<CourseDetailsDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
         }
+        public async Task<List<CourseTagDto>> GetTagsAsync(
+            string tenantId,
+            string courseId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(courseId))
+                return new();
 
+            var tId = tenantId.Trim();
+            var cId = courseId.Trim();
+
+            return await _dbContext.Courses
+                .AsNoTracking()
+                .Where(c => c.TenantId == tId && c.Id == cId)
+                .SelectMany(c => c.CourseTags)
+                .ProjectTo<CourseTagDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(cancellationToken);
+        }
         private static IQueryable<CourseEntity> ApplyFilters(
             IQueryable<CourseEntity> query,
             CoursesSearchAndFilterParametersDto parameters)

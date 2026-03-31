@@ -1,5 +1,6 @@
 ﻿using API.Contracts.Courses;
 using Application.Features.Courses.Commands;
+using Application.Features.Courses.DTOs;
 using Application.Features.Courses.Queries;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -102,6 +103,7 @@ namespace API.Controllers
         {
             var query = _mapper.Map<GetCourses.Query>(request);
             var result = await Mediator.Send(query);
+
             return HandleResult(result);
         }
 
@@ -285,6 +287,16 @@ namespace API.Controllers
 
             var result = await Mediator.Send(command);
             return HandleResult(result);
+        }
+        [HttpGet("{courseId}/tags")]
+        public async Task<ActionResult<List<CourseTagDto>>> GetCourseTags(string courseId)
+        {
+            var query = new GetCourseTags.Query
+            {
+                CourseId = courseId
+            };
+
+            return HandleResult(await Mediator.Send(query));
         }
     }
 }

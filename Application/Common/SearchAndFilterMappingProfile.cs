@@ -1,4 +1,5 @@
 ﻿using Application.Features.Courses.DTOs;
+using Application.Features.Courses.Queries;
 using Application.Features.ProjectHistories.DTOs;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
@@ -37,5 +38,6 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, CoursesSearchAndFilterParametersDto>();
         CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>();
+        CreateMap<GetCourses.Query, CoursesSearchAndFilterParametersDto>();
     }
 }

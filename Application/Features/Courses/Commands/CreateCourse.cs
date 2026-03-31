@@ -3,6 +3,7 @@ using Application.Features.Courses.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -19,12 +20,11 @@ namespace Application.Features.Courses.Commands
             public required string Provider { get; set; }
             public string? InstructorName { get; set; }
 
-            public required Domain.Enums.CourseLevel Level { get; set; }
-            public required Domain.Enums.CourseLanguage Language { get; set; }
+            public required CourseLevel Level { get; set; }
+            public required CourseLanguage Language { get; set; }
 
             public int? EstimatedDurationInHours { get; set; }
 
-            public List<string> TagIds { get; set; } = new();
         }
 
         public sealed class Handler(
@@ -54,15 +54,9 @@ namespace Application.Features.Courses.Commands
                         estimatedDurationInHours: request.EstimatedDurationInHours
                     );
 
-                    course.SetTags(request.TagIds);
 
                     await coursesRepository.AddAsync(course, ct);
 
-                    await coursesRepository.SetTagsAsync(
-                        tenantId,
-                        course.Id,
-                        request.TagIds,
-                        ct);
 
                 }, cancellationToken);
 

@@ -73,11 +73,11 @@ Collabrium Team";
             <p style=""margin: 5px 0; color: #333;""><strong>Priority:</strong> {workItemPriority}</p>
           </div>
 
-          <p style=""text-align: center; margin: 35px 0;"">
+          <p style=""text-align: center; margin: 30px 0;"">
             <a href=""{url}"" 
                style=""background: #ECBF28; color: #fff; text-decoration: none; 
                       padding: 14px 30px; border-radius: 6px; font-weight: bold; display: inline-block;"">
-              View Work Item
+              View Storyboard
             </a>
           </p>
           

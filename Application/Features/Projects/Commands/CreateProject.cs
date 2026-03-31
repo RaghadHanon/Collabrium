@@ -1,10 +1,10 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Projects.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -30,7 +30,9 @@ public class CreateProject
         ITeamsRepository teamsRepository,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
-        IUnitOfWork unitOfWork
+        IUnitOfWork unitOfWork,
+        IMediator mediator,
+        ITeamsReadModel teamsReadModel
     ) : IRequestHandler<Command, Result<ProjectDto>>
     {
         public async Task<Result<ProjectDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -39,9 +41,9 @@ public class CreateProject
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<ProjectDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var createdByUserId = currentUserAccessor.GetUserId();
-            if (string.IsNullOrWhiteSpace(createdByUserId))
-                return Result<ProjectDto>.Failure("User not found.", HttpStatusCode.NotFound);
+            var currentUser = await currentUserAccessor.GetCurrentUserAsync();
+            if (currentUser == null)
+                return Result<ProjectDto>.Failure("Current user is not found.", HttpStatusCode.NotFound);
 
             if (request.StartDate.HasValue && request.EndDate.HasValue && request.EndDate < request.StartDate)
                 return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
@@ -49,14 +51,15 @@ public class CreateProject
             var isNameUnique = await projectsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
             if (!isNameUnique)
                 return Result<ProjectDto>.Failure("A project with this name already exists.", HttpStatusCode.BadRequest);
-            
+
             var isKeyUnique = await projectsRepository.IsKeyUniqueAsync(tenantId, request.Key, cancellationToken);
             if (!isKeyUnique)
                 return Result<ProjectDto>.Failure("Project Key must be unique.", HttpStatusCode.BadRequest);
 
+            Team? team = null;
             if (!string.IsNullOrWhiteSpace(request.TeamId))
             {
-                var team = await teamsRepository.GetByIdAsync(tenantId, request.TeamId, cancellationToken);
+                team = await teamsRepository.GetByIdAsync(tenantId, request.TeamId, cancellationToken);
                 if (team is null)
                     return Result<ProjectDto>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
 
@@ -70,7 +73,7 @@ public class CreateProject
                 project = new Project(
                     name: request.Name,
                     key: request.Key,
-                    createdByUserId: createdByUserId,
+                    createdByUserId: currentUser.Id,
                     teamId: request.TeamId,
                     tenantId: tenantId
                 );
@@ -87,6 +90,16 @@ public class CreateProject
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
+
+            if (request.TeamId != null)
+                await mediator.Publish(new ProjectAssignedEvent(
+                            dto.Id,
+                            dto.Name,
+                            dto.Key,
+                            await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, request.TeamId, cancellationToken),
+                            currentUser.FullName,
+                            team!.Name
+                        ), cancellationToken);
 
             return dto is null
                 ? Result<ProjectDto>.Failure("Project created but could not be loaded.", HttpStatusCode.InternalServerError)

@@ -33,6 +33,10 @@ public class GetProjectBoardRequest
     /// Filters work items by assigned user identifier.
     /// </summary>
     public string? AssignedToUserId { get; init; }
+    /// <summary>
+    /// Filters work items based on whether they are assigned to a user or not.
+    /// </summary>
+    public bool? IsAssigned { get; set; }
 
     /// <summary>
     /// Filters work items whose title contains the specified text.

@@ -29,6 +29,7 @@ public sealed class GetWorkItems
         public string? CreatedByUserId { get; init; }
         public string? TitleContains { get; set; }
 
+        public bool? IsAssigned { get; set; }
         public DateTime? CreatedAfter { get; set; }
         public DateTime? CreatedBefore { get; set; }
 

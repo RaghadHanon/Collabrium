@@ -1,15 +1,13 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Users.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
-using Application.Interfaces.Emails;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Events;
 using Domain.Models;
 using MediatR;
-using Microsoft.Extensions.Options;
 using System.Net;
 
 namespace Application.Features.WorkItems.Commands;
@@ -146,18 +144,14 @@ public sealed class UpdateWorkItemAssignee
         {
             if (isManager) return true;
 
-            if (isCreator) return true;
-
-            return isWorkItemUnassigned ? assigningToSelf : false;
+            return isCreator ? true : isWorkItemUnassigned ? assigningToSelf : false;
         }
 
         private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isCreator)
         {
             if (isManager) return true;
 
-            if (isCreator) return true;
-
-            return isCurrentAssignee;
+            return isCreator ? true : isCurrentAssignee;
         }
     }
 }

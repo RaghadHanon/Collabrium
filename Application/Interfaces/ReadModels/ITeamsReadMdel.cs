@@ -13,6 +13,8 @@ public interface ITeamsReadModel
         CancellationToken cancellationToken = default);
 
     Task<List<UserSnapshotDto>> GetTeamMembersSnapshotAsync(string tenantId, string teamId, CancellationToken cancellationToken = default);
+    
+    Task<List<UserDto>> GetCandidatesMembers(string tenantId, string teamId, CancellationToken cancellationToken = default);
 
     Task<TeamFullInfoDto?> GetTeamFullAsync(string tenantId, string teamId, CancellationToken cancellationToken = default);
 }

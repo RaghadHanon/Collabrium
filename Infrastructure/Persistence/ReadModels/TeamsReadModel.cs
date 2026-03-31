@@ -65,6 +65,27 @@ public sealed class TeamsReadModel : ITeamsReadModel
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<UserDto>> GetCandidatesMembers(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(teamId))
+            return new List<UserDto>();
+
+        tenantId = tenantId.Trim();
+        teamId = teamId.Trim();
+
+        var teamMemberIds = await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Where(tm => tm.Team.TenantId == tenantId && (tm.TeamId == null || tm.TeamId != teamId))
+            .Select(tm => tm.UserId)
+            .ToListAsync(cancellationToken);
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.TenantId == tenantId && !teamMemberIds.Contains(u.Id))
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PagedList<TeamDto, DateTime?>> GetTeamsAsync(
         TeamsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

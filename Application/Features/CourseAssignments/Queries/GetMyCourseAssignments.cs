@@ -2,6 +2,7 @@
 using Application.Features.CourseAssignments.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
@@ -11,12 +12,13 @@ namespace Application.Features.CourseAssignments.Queries
     {
         public sealed class Query : IRequest<Result<List<CourseAssignmentDto>>>
         {
-            public required string CurrentUserId { get; set; }
+            public string? CurrentUserId { get; set; }
         }
 
         public sealed class Handler(
             ICourseAssignmentsReadModel courseAssignmentsReadModel,
-            ITenantContext tenantContext)
+            ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor)
             : IRequestHandler<Query, Result<List<CourseAssignmentDto>>>
         {
             public async Task<Result<List<CourseAssignmentDto>>> Handle(Query request, CancellationToken cancellationToken)
@@ -25,6 +27,10 @@ namespace Application.Features.CourseAssignments.Queries
 
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<List<CourseAssignmentDto>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                var currentUserId = request.CurrentUserId ?? currentUserAccessor.GetUserId();
+
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<List<CourseAssignmentDto>>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
                 var items = await courseAssignmentsReadModel.GetByUserAsync(
                     tenantId,

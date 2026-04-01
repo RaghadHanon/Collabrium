@@ -165,7 +165,7 @@ public class AuthController : ApiBaseController
     ///
     ///     POST /api/auth/confirmation-email
     ///     {
-    ///         "userId": "12345",
+    ///         "UserId": "12345",
     ///         "token": "encoded-confirmation-token"
     ///     }
     ///
@@ -232,13 +232,13 @@ public class AuthController : ApiBaseController
     /// 
     ///     POST /api/auth/password-reset
     ///     {
-    ///         "userId": "12345",
+    ///         "UserId": "12345",
     ///         "token": "encoded-reset-token",
     ///         "newPassword": "NewPa$$w0rd"
     ///     }
     /// 
     /// </remarks>
-    /// <param name="resetPasswordRequest">The request containing the userId, token, and new password.</param>
+    /// <param name="resetPasswordRequest">The request containing the UserId, token, and new password.</param>
     /// <returns>A success message if the password was reset successfully.</returns>
     /// <response code="200">If the password was reset successfully.</response>
     /// <response code="400">If the reset token is invalid or the request data is incorrect.</response>
@@ -264,7 +264,7 @@ public class AuthController : ApiBaseController
     ///     }
     /// 
     /// </remarks>
-    /// <param name="changePasswordRequest">The request containing the userId, current password, and new password.</param>
+    /// <param name="changePasswordRequest">The request containing the UserId, current password, and new password.</param>
     /// <returns>A success message if the password was changed successfully.</returns>
     /// <response code="200">If the password was changed successfully.</response>
     /// <response code="400">If the current password is incorrect or the request data is invalid.</response>

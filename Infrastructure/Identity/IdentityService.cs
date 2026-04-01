@@ -194,7 +194,7 @@ public sealed class IdentityService : IIdentityService
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
-        var resetUrl = $"{_identitySettings.PasswordResetUrlBase}?userId={user.Id}&token={encodedToken}";
+        var resetUrl = $"{_identitySettings.PasswordResetUrlBase}?UserId={user.Id}&token={encodedToken}";
 
         var template = _emailTemplateFactory.GetTemplate("PasswordReset");
 
@@ -306,7 +306,7 @@ public sealed class IdentityService : IIdentityService
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
-        var confirmationUrl = $"{_identitySettings.ConfirmationUrlBase}?userId={user.Id}&token={encodedToken}";
+        var confirmationUrl = $"{_identitySettings.ConfirmationUrlBase}?UserId={user.Id}&token={encodedToken}";
 
         var template = _emailTemplateFactory.GetTemplate("Confirmation");
 

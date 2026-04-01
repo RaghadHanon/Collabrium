@@ -89,11 +89,35 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <response code="200">Returns projects successfully.</response>
-    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Projects_High_Level_Manage)]
     [HttpGet]
     public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetProjects([FromQuery] GetProjectsRequest request)
     {
         var query = Mapper.Map<GetProjects.Query>(request);
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves projects for a user with filtering and cursor-based pagination.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{UserId}/user-projects?nameContains=Collab&amp;pageSize=10
+    ///
+    /// Cursor pagination:
+    ///
+    ///     GET /api/projects?cursor=2026-01-01T00:00:00Z&amp;pageSize=10
+    ///
+    /// </remarks>
+    /// <response code="200">Returns projects successfully.</response>
+    [Authorize(Policy = Policies.Projects_Read)]
+    [HttpGet("{userId}/user-projects")]
+    public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetUserProjects(string userId, [FromQuery] GetProjectsRequest request)
+    {
+        var query = Mapper.Map<GetUserProjects.Query>(request);
+        query.UserId = userId;
 
         return HandleResult(await Mediator.Send(query));
     }

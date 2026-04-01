@@ -55,6 +55,46 @@ public sealed class ProjectsReadModel : IProjectsReadModel
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PagedList<ProjectDto, DateTime?>> GetUserProjectsAsync(
+        string userId,
+        ProjectsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
+    {
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var query = _dbContext.Projects
+            .Where(p => p.CreatedByUserId == userId ||
+            (
+                p.TeamId != null &&
+                _dbContext.TeamMembers.Any(tm => tm.TeamId == p.TeamId && tm.UserId == userId)
+            ))
+            .AsNoTracking();
+
+        query = ApplyFilters(query, parameters);
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(p => p.CreatedAt <= parameters.Cursor.Value);
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .ProjectTo<ProjectDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items[^1].CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<ProjectDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
     public async Task<PagedList<ProjectDto, DateTime?>> GetProjectsAsync(
         ProjectsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

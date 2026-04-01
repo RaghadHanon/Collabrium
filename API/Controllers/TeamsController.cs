@@ -184,6 +184,37 @@ public class TeamsController : ApiBaseController
     }
 
     /// <summary>
+    /// Retrieves teams for a user with filtering and cursor-based pagination.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns teams scoped to the current tenant context, with optional filters.
+    /// 
+    /// Sample request:
+    ///
+    ///     GET /api/teams?nameContains=Unity&amp;department=SoftwareDevelopment&amp;isActive=true&amp;pageSize=10
+    ///
+    /// Cursor pagination:
+    ///
+    ///     GET /api/teams?cursor=2026-01-01T00:00:00Z&amp;pageSize=10
+    ///
+    /// </remarks>
+    /// <param name="request">Filter and pagination parameters.</param>
+    /// <param name="userId">The unique identifier of the user whose teams are being retrieved.</param>
+    /// <returns>A paged list of teams.</returns>
+    /// <response code="200">Returns teams successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If the tenant does not exist.</response>
+    [Authorize(Policy = Policies.Teams_Read)]
+    [HttpGet("{userId}/user-teams")]
+    public async Task<ActionResult<PagedList<TeamDto, DateTime?>>> GetUserTeams(string userId, [FromQuery] GetTeamsRequest request)
+    {
+        var query = Mapper.Map<GetUserTeams.Query>(request);
+        query.UserId = userId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
     /// Updates an existing team within the current tenant.
     /// </summary>
     /// <remarks>

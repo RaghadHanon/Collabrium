@@ -25,6 +25,7 @@ public static class Policies
 
     // Projects
     public const string Projects_Read = "Projects.Read";
+    public const string Projects_High_Level_Manage = "Projects.HighLevelManage";
     public const string Projects_Manage = "Projects.Manage";
 
     // Teams

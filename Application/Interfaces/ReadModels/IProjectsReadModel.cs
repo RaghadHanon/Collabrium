@@ -10,7 +10,10 @@ public interface IProjectsReadModel
 
     Task<List<WorkItemSnapshot>> GetProjectWorkItemSnapshotAsync(string tenantId, string projectId,
         CancellationToken cancellationToken = default);
-
+    Task<PagedList<ProjectDto, DateTime?>> GetUserProjectsAsync(
+        string userId,
+        ProjectsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default);
     Task<PagedList<ProjectDto, DateTime?>> GetProjectsAsync(
         ProjectsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);

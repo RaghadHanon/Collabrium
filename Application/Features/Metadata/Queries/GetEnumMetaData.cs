@@ -79,6 +79,17 @@ public class GetEnumMetaData
                Enum.GetNames(typeof(RoadmapResourceType)).Select(AddSpace).ToArray(),
                HttpStatusCode.OK),
 
+                MetadataType.CourseLevel => Result<string[]>.Success(
+                Enum.GetNames(typeof(CourseLevel)).Select(AddSpace).ToArray(),
+                HttpStatusCode.OK),
+
+                MetadataType.CourseLanguage => Result<string[]>.Success(
+                Enum.GetNames(typeof(CourseLanguage)).Select(AddSpace).ToArray(),
+                HttpStatusCode.OK),
+
+                MetadataType.CourseAssignmentStatus => Result<string[]>.Success(
+               Enum.GetNames(typeof(CourseAssignmentStatus)).Select(AddSpace).ToArray(),
+               HttpStatusCode.OK),
                 _ => throw new NotImplementedException()
             };
         }

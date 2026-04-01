@@ -208,4 +208,42 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
     }
 
+    [IgnoreTenantContext]
+    [HttpGet("course-levels")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetCourseLevelMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.CourseLevel,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+    [IgnoreTenantContext]
+    [HttpGet("course-languages")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetCourseLanguageMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.CourseLanguage,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("course-assignment-status")]
+    public async Task<ActionResult<List<WorkItemRelationDto>>> GetCourseAssignmentStatusMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.CourseAssignmentStatus,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+
 }

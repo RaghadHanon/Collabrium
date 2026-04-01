@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-[Route("api/projects/project/{projectId}/sprints")]
+[Route("api/projects/project/{ProjectId}/sprints")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class SprintsController : ApiBaseController
@@ -23,7 +23,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     POST /api/projects/project/{projectId}/sprints/sprint
+    ///     POST /api/projects/project/{ProjectId}/sprints/sprint
     ///
     /// </remarks>
     /// <param name="projectId">The project id to which the sprint belongs (from route).</param>
@@ -51,7 +51,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/projects/project/{projectId}/sprints/sprint/{sprintId}
+    ///     GET /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}
     ///
     /// </remarks>
     /// <param name="sprintId">The sprint id.</param>
@@ -79,11 +79,11 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/projects/project/{projectId}/sprints?amp;name=COL Sprint 1&amp;status=Active&amp;pageSize=10
+    ///     GET /api/projects/project/{ProjectId}/sprints?amp;name=COL Sprint 1&amp;status=Active&amp;pageSize=10
     ///
     /// Cursor pagination:
     ///
-    ///     GET /api/projects/project/{projectId}/sprints?amp;cursor=2026-02-01T00:00:00Z&amp;pageSize=10
+    ///     GET /api/projects/project/{ProjectId}/sprints?amp;cursor=2026-02-01T00:00:00Z&amp;pageSize=10
     ///
     /// </remarks>
     /// <param name="request">Filter and pagination parameters.</param>
@@ -107,7 +107,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}
+    ///     PATCH /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -144,7 +144,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     DELETE /api/projects/project/{projectId}/sprints/sprint/{sprintId}
+    ///     DELETE /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}
     ///
     /// </remarks>
     /// <param name="sprintId">The sprint id.</param>
@@ -174,7 +174,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}/start
+    ///     PATCH /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}/start
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -211,7 +211,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}/cancel
+    ///     PATCH /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}/cancel
     ///
     /// </remarks>
     /// <param name="sprintId">The sprint id.</param>
@@ -240,7 +240,7 @@ public sealed class SprintsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/sprints/sprint/{sprintId}/complete
+    ///     PATCH /api/projects/project/{ProjectId}/sprints/sprint/{sprintId}/complete
     ///
     /// </remarks>
     /// <param name="sprintId">The sprint id.</param>
@@ -271,7 +271,7 @@ public sealed class SprintsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/sprints/{sprintId}/user-stories
+    ///     GET /api/projects/{ProjectId}/sprints/{sprintId}/user-stories
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -302,7 +302,7 @@ public sealed class SprintsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/sprints/sprint/{sprintId}/work-items
+    ///     GET /api/projects/{ProjectId}/sprints/sprint/{sprintId}/work-items
     ///     Content-RelationType: application/json
     ///
     ///     {

@@ -5,13 +5,13 @@ using Application.Interfaces.Emails;
 using Application.Interfaces.Services;
 using Domain.Enums;
 using Domain.Models;
-using Infrastructure.Email;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text;
 
@@ -24,23 +24,28 @@ public sealed class IdentityService : IIdentityService
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IEmailService _emailService;
     private readonly IdentitySettings _identitySettings;
-    private readonly IEmailTemplateFactory _emailTemplateFactory;
+    private readonly IEmailTemplateFactory _emailTemplateFactory; 
+    private readonly AppDbContext _dbContext;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
 
     public IdentityService(
-        UserManager<ApplicationUserEntity> userManager,
-        RoleManager<IdentityRole> roleManager,
-        IJwtTokenGenerator jwtTokenGenerator,
-        AppDbContext dbContext,
-        IEmailService emailService,
-        IOptions<IdentitySettings> identityOptions,
-        IEmailTemplateFactory emailTemplateFactory)
+    UserManager<ApplicationUserEntity> userManager,
+    RoleManager<IdentityRole> roleManager,
+    IJwtTokenGenerator jwtTokenGenerator,
+    AppDbContext dbContext,
+    IEmailService emailService,
+    IOptions<IdentitySettings> identityOptions,
+    IEmailTemplateFactory emailTemplateFactory,
+    IRefreshTokenGenerator refreshTokenGenerator)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         _identitySettings = identityOptions?.Value ?? throw new ArgumentNullException(nameof(identityOptions));
         _emailTemplateFactory = emailTemplateFactory ?? throw new ArgumentNullException(nameof(emailTemplateFactory));
+        _refreshTokenGenerator = refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
     }
 
     public async Task<User> RegisterUserAsync(
@@ -72,24 +77,45 @@ public sealed class IdentityService : IIdentityService
         return UserMapper.ToDomain(userEntity);
     }
 
-    public async Task<(string Token, string Id, string TenantId)> LoginAsync(
-        string email,
-        string password,
-        CancellationToken cancellationToken = default)
+    public async Task<(string AccessToken, string RefreshToken, string Id, string TenantId)> LoginAsync(
+    string email,
+    string password,
+    CancellationToken cancellationToken = default)
     {
         var userEntity = await ValidateCredentialsAsync(email, password);
+
         if (!await _userManager.IsEmailConfirmedAsync(userEntity))
             throw new UnauthenticatedException("You must confirm your email before logging in.");
 
         var roles = await GetRolesAsync(userEntity);
+
         userEntity.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(userEntity);
 
-        var token = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(userEntity), roles);
+        var accessToken = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(userEntity), roles);
 
-        return string.IsNullOrWhiteSpace(token)
-            ? throw new TokenGenerationFailedException("Token generation failed.")
-            : ((string Token, string Id, string TenantId)) (token, userEntity.Id, userEntity.TenantId ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(accessToken))
+            throw new TokenGenerationFailedException("AccessToken generation failed.");
+
+        var refreshToken = _refreshTokenGenerator.GenerateToken();
+
+        var refreshTokenEntity = new RefreshTokenEntity
+        {
+            Token = refreshToken,
+            UserId = userEntity.Id,
+            CreatedAtUtc = DateTime.UtcNow,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(7)
+        };
+
+        _dbContext.RefreshTokens.Add(refreshTokenEntity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return (
+            accessToken,
+            refreshToken,
+            userEntity.Id,
+            userEntity.TenantId ?? string.Empty
+        );
     }
 
     public async Task ConfirmEmailAsync(string userId, string encodedToken, CancellationToken cancellationToken = default)
@@ -98,7 +124,7 @@ public sealed class IdentityService : IIdentityService
             throw new BadRequestException("UserId must be provided.");
 
         if (string.IsNullOrWhiteSpace(encodedToken))
-            throw new BadRequestException("Token must be provided.");
+            throw new BadRequestException("AccessToken must be provided.");
 
         var user = await _userManager.FindByIdAsync(userId.Trim());
         if (user is null)
@@ -194,7 +220,7 @@ public sealed class IdentityService : IIdentityService
             throw new BadRequestException("UserId must be provided.");
 
         if (string.IsNullOrWhiteSpace(encodedToken))
-            throw new BadRequestException("Token must be provided.");
+            throw new BadRequestException("AccessToken must be provided.");
 
         if (string.IsNullOrWhiteSpace(newPassword))
             throw new BadRequestException("New password must be provided.");
@@ -328,5 +354,71 @@ public sealed class IdentityService : IIdentityService
         };
 
         return user;
+    }
+
+    public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
+    string refreshToken,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            throw new BadRequestException("Refresh token must be provided.");
+
+        var storedToken = await _dbContext.RefreshTokens
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Token == refreshToken, cancellationToken);
+
+        if (storedToken is null)
+            throw new UnauthenticatedException("Invalid refresh token.");
+
+        if (!storedToken.IsActive)
+            throw new UnauthenticatedException("Refresh token is no longer active.");
+
+        var user = storedToken.User;
+
+        var roles = await GetRolesAsync(user);
+
+        var newAccessToken = _jwtTokenGenerator.GenerateToken(UserMapper.ToDomain(user), roles);
+
+        if (string.IsNullOrWhiteSpace(newAccessToken))
+            throw new TokenGenerationFailedException("Access token generation failed.");
+
+        var newRefreshToken = _refreshTokenGenerator.GenerateToken();
+
+        storedToken.RevokedAtUtc = DateTime.UtcNow;
+        storedToken.ReplacedByToken = newRefreshToken;
+
+        var newRefreshTokenEntity = new RefreshTokenEntity
+        {
+            Token = newRefreshToken,
+            UserId = user.Id,
+            CreatedAtUtc = DateTime.UtcNow,
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(7)
+        };
+
+        _dbContext.RefreshTokens.Add(newRefreshTokenEntity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return (newAccessToken, newRefreshToken);
+    }
+
+    public async Task RevokeRefreshTokenAsync(
+    string refreshToken,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            throw new BadRequestException("Refresh token must be provided.");
+
+        var storedToken = await _dbContext.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == refreshToken, cancellationToken);
+
+        if (storedToken is null)
+            throw new BadRequestException("Refresh token not found.");
+
+        if (!storedToken.IsActive)
+            throw new BadRequestException("Refresh token is already inactive.");
+
+        storedToken.RevokedAtUtc = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

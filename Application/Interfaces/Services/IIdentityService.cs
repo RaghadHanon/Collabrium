@@ -17,9 +17,17 @@ public interface IIdentityService
         string phoneNumber,
         CancellationToken cancellationToken = default);
 
-    Task<(string Token, string Id, string TenantId)> LoginAsync(
-        string email,
-        string password,
+    Task<(string AccessToken, string RefreshToken, string Id, string TenantId)> LoginAsync(
+    string email,
+    string password,
+    CancellationToken cancellationToken = default);
+
+    Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
+        string refreshToken,
+        CancellationToken cancellationToken = default);
+
+    Task RevokeRefreshTokenAsync(
+        string refreshToken,
         CancellationToken cancellationToken = default);
 
     Task ConfirmEmailAsync(string userId, string encodedToken, CancellationToken cancellationToken = default);

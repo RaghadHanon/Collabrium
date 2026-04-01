@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/work-items")]
+[Route("api/projects/{ProjectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsAttachmentsController : ApiBaseController
@@ -23,7 +23,7 @@ public sealed class WorkItemsAttachmentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/attachment
+    ///     POST /api/projects/{ProjectId}/work-items/{workItemId}/attachment
     ///     Content-RelationType: multipart/form-data
     ///     
     ///     Form Data:
@@ -63,7 +63,7 @@ public sealed class WorkItemsAttachmentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}/attachments
+    ///     GET /api/projects/{ProjectId}/work-items/{workItemId}/attachments
     ///     
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -96,7 +96,7 @@ public sealed class WorkItemsAttachmentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/attachment/{attachmentId}
+    ///     DELETE /api/projects/{ProjectId}/work-items/{workItemId}/attachment/{attachmentId}
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>

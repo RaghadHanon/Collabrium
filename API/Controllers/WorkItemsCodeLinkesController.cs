@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/work-items")]
+[Route("api/projects/{ProjectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsCodeLinkesController : ApiBaseController
@@ -22,7 +22,7 @@ public sealed class WorkItemsCodeLinkesController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/codeLink
+    ///     POST /api/projects/{ProjectId}/work-items/{workItemId}/codeLink
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -63,7 +63,7 @@ public sealed class WorkItemsCodeLinkesController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/code-links/{AttachmentId}
+    ///     DELETE /api/projects/{ProjectId}/work-items/{workItemId}/code-links/{AttachmentId}
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -99,7 +99,7 @@ public sealed class WorkItemsCodeLinkesController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/code-links/{AttachmentId}
+    ///     POST /api/projects/{ProjectId}/work-items/{workItemId}/code-links/{AttachmentId}
     ///     Content-RelationType: application/json
     ///
     ///     {

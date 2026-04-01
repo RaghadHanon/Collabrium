@@ -34,7 +34,7 @@ public class GetCycleTimeReport
                 request.TenantId = tenantContext.TenantId;
                 if (request.TenantId is null)
                 {
-                    return Result<CycleTimeReport>.Failure("TenantId is not found.", HttpStatusCode.BadRequest);
+                    return Result<CycleTimeReport>.Failure("ProjectId is not found.", HttpStatusCode.BadRequest);
                 }
             }
 

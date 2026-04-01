@@ -39,6 +39,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<TagEntity> Tags => Set<TagEntity>();
     public DbSet<RoadmapTagEntity> RoadmapTags => Set<RoadmapTagEntity>(); // join table
 
+    public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -25,7 +25,7 @@ public class GetTenantInfoReport
                 request.TenantId = tenantContext.TenantId;
                 if (request.TenantId is null)
                 {
-                    return Result<TenantInfoReport>.Failure("TenantId is not found.", HttpStatusCode.BadRequest);
+                    return Result<TenantInfoReport>.Failure("ProjectId is not found.", HttpStatusCode.BadRequest);
                 }
             }
 

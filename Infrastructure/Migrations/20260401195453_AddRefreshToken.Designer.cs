@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260328182239_Initial")]
-    partial class Initial
+    [Migration("20260401195453_AddRefreshToken")]
+    partial class AddRefreshToken
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -367,6 +367,49 @@ namespace Infrastructure.Migrations
                     b.HasIndex("ProjectId", "CreatedAt");
 
                     b.ToTable("ProjectHistories");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RefreshTokenEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReplacedByToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ResourceEntity", b =>
@@ -1324,6 +1367,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.RefreshTokenEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ResourceEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.SubTopicEntity", "SubTopic")
@@ -1685,6 +1739,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Projects");
 
                     b.Navigation("ProjectsHistories");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("TeamMemberships");
                 });

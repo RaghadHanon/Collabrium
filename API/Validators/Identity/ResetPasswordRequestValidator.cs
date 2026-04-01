@@ -11,7 +11,7 @@ public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequ
             .NotEmpty().WithMessage("UserId is required.");
 
         RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Token is required.");
+            .NotEmpty().WithMessage("AccessToken is required.");
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("New password is required.")

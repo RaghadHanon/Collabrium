@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/work-items")]
+[Route("api/projects/{ProjectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsCommentsController : ApiBaseController
@@ -22,7 +22,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/comment
+    ///     POST /api/projects/{ProjectId}/work-items/{workItemId}/comment
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -61,7 +61,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}/comments
+    ///     GET /api/projects/{ProjectId}/work-items/{workItemId}/comments
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -99,7 +99,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/comment/{commentId}
+    ///     DELETE /api/projects/{ProjectId}/work-items/{workItemId}/comment/{commentId}
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -135,7 +135,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/comment/{commentId}
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/comment/{commentId}
     ///     Content-RelationType: application/json
     ///
     ///     {

@@ -87,12 +87,12 @@ public sealed class CommentHub(
             return;
         }
 
-        var projectId = http.Request.Query["projectId"].ToString();
+        var projectId = http.Request.Query["ProjectId"].ToString();
         var workItemId = http.Request.Query["workItemId"].ToString();
 
         if (string.IsNullOrWhiteSpace(projectId) || string.IsNullOrWhiteSpace(workItemId))
         {
-            await Clients.Caller.SendAsync("Comments:Error", "Missing projectId/workItemId in query string.");
+            await Clients.Caller.SendAsync("Comments:Error", "Missing ProjectId/workItemId in query string.");
             Context.Abort();
             return;
         }
@@ -134,7 +134,7 @@ public sealed class CommentHub(
     private (string tenantId, string commentsGroup) ValidateAndBuildGroups(string projectId, string workItemId)
     {
         if (string.IsNullOrWhiteSpace(projectId))
-            throw new HubException("Invalid projectId.");
+            throw new HubException("Invalid ProjectId.");
 
         if (string.IsNullOrWhiteSpace(workItemId))
             throw new HubException("Invalid workItemId.");

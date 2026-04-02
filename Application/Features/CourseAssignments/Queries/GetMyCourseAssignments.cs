@@ -34,7 +34,7 @@ namespace Application.Features.CourseAssignments.Queries
 
                 var items = await courseAssignmentsReadModel.GetByUserAsync(
                     tenantId,
-                    request.CurrentUserId,
+                    currentUserId,
                     cancellationToken);
 
                 return Result<List<CourseAssignmentDto>>.Success(items, HttpStatusCode.OK);

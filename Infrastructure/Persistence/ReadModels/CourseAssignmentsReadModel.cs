@@ -156,6 +156,40 @@ namespace Infrastructure.Persistence.ReadModels
 
             return query;
         }
+        public async Task<CourseAssignmentDetailsDto?> GetDetailsByIdAsync(
+            string tenantId,
+            string assignmentId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(assignmentId))
+                return null;
 
+            var tId = tenantId.Trim();
+            var aId = assignmentId.Trim();
+
+            return await _dbContext.CourseAssignments
+                .AsNoTracking()
+                .Where(a => a.TenantId == tId && a.Id == aId)
+                .Select(a => new CourseAssignmentDetailsDto
+                {
+                    Id = a.Id,
+                    TenantId = a.TenantId,
+                    CourseId = a.CourseId,
+
+                    CourseTitle = a.Course.Title,
+                    AssignedToUserId = a.AssignedToUserId,
+                    AssignedToUserName = a.AssignedToUser.FullName,
+
+                    AssignedByUserId = a.AssignedByUserId,
+                    AssignedByUserName = a.AssignedByUser.FullName,
+
+                    AssignedAt = a.AssignedAt,
+                    Status = a.Status,
+
+                    CreatedAt = a.CreatedAt,
+                    UpdatedAt = a.UpdatedAt
+                })
+                .FirstOrDefaultAsync(ct);
+        }
     }
 }

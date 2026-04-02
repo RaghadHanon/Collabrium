@@ -8,8 +8,11 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
     {
         public CourseAssignmentsReadProfile()
         {
-            CreateMap<CourseAssignmentEntity, CourseAssignmentDto>();
-
+            CreateMap<CourseAssignmentEntity, CourseAssignmentDto>()
+            .ForMember(d => d.CourseTitle,
+                o => o.MapFrom(s => s.Course.Title))
+            .ForMember(d => d.AssignedByUserName,
+                o => o.MapFrom(s => s.AssignedByUser.FullName));
             CreateMap<CourseAssignmentEntity, CourseAssignmentDetailsDto>()
                 .ForMember(d => d.CourseTitle,
                     o => o.MapFrom(s => s.Course.Title))

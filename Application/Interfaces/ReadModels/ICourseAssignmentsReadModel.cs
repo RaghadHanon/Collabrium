@@ -23,5 +23,10 @@ namespace Application.Interfaces.ReadModels
             string tenantId,
             string courseId,
             CancellationToken ct = default);
+
+        Task<CourseAssignmentDetailsDto?> GetDetailsByIdAsync(
+           string tenantId,
+           string assignmentId,
+           CancellationToken ct = default);
     }
 }

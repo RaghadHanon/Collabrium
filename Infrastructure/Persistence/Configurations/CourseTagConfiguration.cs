@@ -24,7 +24,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasOne(x => x.Tag)
                 .WithMany()
                 .HasForeignKey(x => x.TagId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(x => x.TagId)
                 .HasDatabaseName("IX_CourseTags_TagId");

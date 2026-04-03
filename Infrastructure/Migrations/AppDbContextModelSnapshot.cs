@@ -1608,7 +1608,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
@@ -1712,7 +1712,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
                         .WithMany("Roadmaps")
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Roadmap");

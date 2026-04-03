@@ -18,7 +18,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasOne(rt => rt.Tag)
                 .WithMany(t => t.Roadmaps)
                 .HasForeignKey(rt => rt.TagId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(rt => rt.TagId)
                 .HasDatabaseName("IX_RoadmapTag_TagId");

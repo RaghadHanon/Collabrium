@@ -12,6 +12,8 @@ namespace Application.Features.CourseAssignments.DTOs
         public required string AssignedByUserId { get; set; }
         public string? CourseTitle { get; set; }
         public string? AssignedByUserName { get; set; }
+        public string? AssignedToUserName { get; set; }
+        public string? CourseThumbnailUrl { get; set; }
         public DateTime AssignedAt { get; set; }
         public CourseAssignmentStatus Status { get; set; }
 

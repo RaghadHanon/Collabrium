@@ -17,7 +17,7 @@ namespace Application.Features.CourseAssignments.DTOs
 
         public DateTime AssignedAt { get; set; }
         public CourseAssignmentStatus Status { get; set; }
-
+        public string? CourseThumbnailUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

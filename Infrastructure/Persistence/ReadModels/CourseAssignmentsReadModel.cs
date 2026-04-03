@@ -157,9 +157,9 @@ namespace Infrastructure.Persistence.ReadModels
             return query;
         }
         public async Task<CourseAssignmentDetailsDto?> GetDetailsByIdAsync(
-            string tenantId,
-            string assignmentId,
-            CancellationToken ct = default)
+    string tenantId,
+    string assignmentId,
+    CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(assignmentId))
                 return null;
@@ -177,6 +177,10 @@ namespace Infrastructure.Persistence.ReadModels
                     CourseId = a.CourseId,
 
                     CourseTitle = a.Course.Title,
+                    CourseThumbnailUrl = a.Course.ThumbnailImage != null
+                        ? a.Course.ThumbnailImage.Url
+                        : null,
+
                     AssignedToUserId = a.AssignedToUserId,
                     AssignedToUserName = a.AssignedToUser.FullName,
 

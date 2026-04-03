@@ -6,11 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:Infrastructure/Migrations/20260331170145_inital.cs
     public partial class inital : Migration
-========
-    public partial class AddRefreshToken : Migration
->>>>>>>> main:Infrastructure/Migrations/20260401195453_AddRefreshToken.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -486,7 +482,7 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CourseTags",
+                name: "CourseTagEntity",
                 columns: table => new
                 {
                     CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -494,19 +490,19 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseTags", x => new { x.CourseId, x.TagId });
+                    table.PrimaryKey("PK_CourseTagEntity", x => new { x.CourseId, x.TagId });
                     table.ForeignKey(
-                        name: "FK_CourseTags_Courses_CourseId",
+                        name: "FK_CourseTagEntity_Courses_CourseId",
                         column: x => x.CourseId,
                         principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CourseTags_Tags_TagId",
+                        name: "FK_CourseTagEntity_Tags_TagId",
                         column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -530,7 +526,7 @@ namespace Infrastructure.Migrations
                         column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1024,7 +1020,7 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseTags_TagId",
-                table: "CourseTags",
+                table: "CourseTagEntity",
                 column: "TagId");
 
             migrationBuilder.CreateIndex(
@@ -1321,7 +1317,7 @@ namespace Infrastructure.Migrations
                 name: "CourseRatings");
 
             migrationBuilder.DropTable(
-                name: "CourseTags");
+                name: "CourseTagEntity");
 
             migrationBuilder.DropTable(
                 name: "ProjectHistories");

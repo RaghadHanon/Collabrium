@@ -12,13 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-<<<<<<<< HEAD:Infrastructure/Migrations/20260331170145_inital.Designer.cs
-    [Migration("20260331170145_inital")]
+    [Migration("20260403182345_inital")]
     partial class inital
-========
-    [Migration("20260401195453_AddRefreshToken")]
-    partial class AddRefreshToken
->>>>>>>> main:Infrastructure/Migrations/20260401195453_AddRefreshToken.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -423,7 +418,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TagId")
                         .HasDatabaseName("IX_CourseTags_TagId");
 
-                    b.ToTable("CourseTags");
+                    b.ToTable("CourseTagEntity");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -1659,7 +1654,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
@@ -1774,7 +1769,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Persistence.Entities.TagEntity", "Tag")
                         .WithMany("Roadmaps")
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Roadmap");

@@ -415,7 +415,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TagId")
                         .HasDatabaseName("IX_CourseTags_TagId");
 
-                    b.ToTable("CourseTags");
+                    b.ToTable("CourseTagEntity");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>

@@ -49,7 +49,7 @@ public class MustHaveProjectAccessHandler
             return;
         }
 
-        var projectIdString = _httpContextAccessor.HttpContext?.Request.RouteValues["projectId"]?.ToString();
+        var projectIdString = _httpContextAccessor.HttpContext?.Request.RouteValues["ProjectId"]?.ToString();
         if (string.IsNullOrEmpty(projectIdString) || !Guid.TryParse(projectIdString, out var projectId))
             throw new BadRequestException("Project id is missing or wrongly formatted.");
 

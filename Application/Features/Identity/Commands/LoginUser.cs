@@ -19,11 +19,13 @@ public class LoginUser
     {
         public async Task<Result<LoginResponseDto>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var (token, id, tenantId) = await identityService.LoginAsync(request.Email, request.Password, cancellationToken);
+            var (accessToken, refreshToken, id, tenantId) =
+                await identityService.LoginAsync(request.Email, request.Password, cancellationToken);
 
             return Result<LoginResponseDto>.Success(new LoginResponseDto
             {
-                Token = token,
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
                 Id = id,
                 TenantId = tenantId
             }, HttpStatusCode.OK);

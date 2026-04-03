@@ -88,14 +88,17 @@ public sealed class ProjectsRepository : IProjectsRepository
 
     public async Task<bool> IsUserHasAccessToProjectAsync(string tenantId, string userId, string projectId, CancellationToken cancellationToken = default)
     {
-        return !TryNormalize(tenantId, projectId, out var tId, out var pId)
-            ? false
-            : await _dbContext.Projects
+        if (!TryNormalize(tenantId, projectId, out var tId, out var pId))
+            return false;
+
+        return await _dbContext.Projects
          .AsNoTracking()
          .AnyAsync(p =>
              p.TenantId == tId &&
              p.Id == pId &&
-             p.Team != null && p.Team.Members.Any(m => m.UserId == userId),
+             (p.Team != null && 
+             p.Team.Members.Any(m => m.UserId == userId))
+             || (p.CreatedByUserId == userId),
              cancellationToken);
     }
 

@@ -86,6 +86,43 @@ public sealed class TeamsReadModel : ITeamsReadModel
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PagedList<TeamDto, DateTime?>> GetUserTeamsAsync(
+      string userId,
+      TeamsSearchAndFilterParametersDto parameters,
+      CancellationToken cancellationToken = default)
+    {
+        parameters ??= new TeamsSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var query = _dbContext.Teams
+            .Where(t => _dbContext.TeamMembers.Any(tm => t.Id == tm.TeamId && tm.UserId == userId))
+            .AsNoTracking();
+
+        query = ApplyFilters(query, parameters);
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
+
+        var items = await query
+            .OrderBy(t => t.CreatedAt)
+            .ProjectTo<TeamDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        if (items.Count > pageSize)
+        {
+            nextCursor = items.Last().CreatedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<TeamDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
     public async Task<PagedList<TeamDto, DateTime?>> GetTeamsAsync(
         TeamsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

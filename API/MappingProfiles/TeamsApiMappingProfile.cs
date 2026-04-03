@@ -13,6 +13,7 @@ public class TeamsApiMappingProfile : Profile
         CreateMap<AddMembersToTeamRequest, AddMembersToTeam.Command>();
         CreateMap<RemoveMembersFromTeamRequest, RemoveMembersFromTeam.Command>();
         CreateMap<GetTeamsRequest, GetTeams.Query>();
+        CreateMap<GetTeamsRequest, GetUserTeams.Query>();
         CreateMap<UpdateTeamRequest, UpdateTeam.Command>();
     }
 }

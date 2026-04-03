@@ -31,12 +31,12 @@ public class GetCycleTimeReportPdf
     {
         public async Task<Result<FileContentResult>> Handle(Query request, CancellationToken cancellationToken)
         {
-            // Resolve TenantId
+            // Resolve ProjectId
             if (request.TenantId is null)
             {
                 request.TenantId = tenantContext.TenantId;
                 if (request.TenantId is null)
-                    return Result<FileContentResult>.Failure("TenantId is not found.", HttpStatusCode.BadRequest);
+                    return Result<FileContentResult>.Failure("ProjectId is not found.", HttpStatusCode.BadRequest);
             }
 
             // Check Project existence

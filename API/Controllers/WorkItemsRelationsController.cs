@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/work-items")]
+[Route("api/projects/{ProjectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsRelationsController : ApiBaseController
@@ -23,7 +23,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/{workItemId}/relation
+    ///     POST /api/projects/{ProjectId}/work-items/{workItemId}/relation
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -64,7 +64,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}/relations?relationType=Child
+    ///     GET /api/projects/{ProjectId}/work-items/{workItemId}/relations?relationType=Child
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>
@@ -100,7 +100,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}/relation-candidates?relationType=Child
+    ///     GET /api/projects/{ProjectId}/work-items/{workItemId}/relation-candidates?relationType=Child
     ///     
     ///
     /// </remarks>
@@ -136,7 +136,7 @@ public sealed class WorkItemsRelationsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}/relations/{relationId}
+    ///     DELETE /api/projects/{ProjectId}/work-items/{workItemId}/relations/{relationId}
     ///
     /// </remarks>
     /// <param name="projectId">The unique identifier of the project.</param>

@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/projects/{projectId}/work-items")]
+[Route("api/projects/{ProjectId}/work-items")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class WorkItemsController : ApiBaseController
@@ -27,7 +27,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/epics
+    ///     POST /api/projects/{ProjectId}/work-items/epics
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -68,7 +68,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/user-stories
+    ///     POST /api/projects/{ProjectId}/work-items/user-stories
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -110,7 +110,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/tasks
+    ///     POST /api/projects/{ProjectId}/work-items/tasks
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -152,7 +152,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/bugs
+    ///     POST /api/projects/{ProjectId}/work-items/bugs
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -196,7 +196,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     POST /api/projects/{projectId}/work-items/test-cases
+    ///     POST /api/projects/{ProjectId}/work-items/test-cases
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -239,7 +239,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items/{workItemId}
+    ///     GET /api/projects/{ProjectId}/work-items/{workItemId}
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -271,7 +271,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/work-items?RelationType=Bug&amp;Status=InProgress&amp;Priority=High&amp;PageSize=10&amp;Cursor=2026-02-01T00:00:00Z
+    ///     GET /api/projects/{ProjectId}/work-items?RelationType=Bug&amp;Status=InProgress&amp;Priority=High&amp;PageSize=10&amp;Cursor=2026-02-01T00:00:00Z
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -303,7 +303,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/epic
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/epic
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -346,7 +346,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/user-story
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/user-story
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -384,7 +384,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/task
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/task
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -417,7 +417,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/bug
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/bug
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -454,7 +454,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/test-case
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/test-case
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -493,7 +493,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     DELETE /api/projects/{projectId}/work-items/{workItemId}
+    ///     DELETE /api/projects/{ProjectId}/work-items/{workItemId}
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -527,7 +527,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/status
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/status
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -567,7 +567,7 @@ public sealed class WorkItemsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     PATCH /api/projects/{projectId}/work-items/{workItemId}/assignee
+    ///     PATCH /api/projects/{ProjectId}/work-items/{workItemId}/assignee
     ///     Content-RelationType: application/json
     ///
     ///     {

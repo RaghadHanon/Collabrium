@@ -60,14 +60,14 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/projects/project/{projectId}
+    ///     GET /api/projects/project/{ProjectId}
     ///
     /// </remarks>
     /// <response code="200">Returns the project.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
-    [HttpGet("project/{projectId}")]
+    [HttpGet("project/{ProjectId}")]
     public async Task<ActionResult<ProjectDto>> GetProject(string projectId)
     {
         var query = new GetProject.Query { ProjectId = projectId };
@@ -89,11 +89,35 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <response code="200">Returns projects successfully.</response>
-    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Projects_High_Level_Manage)]
     [HttpGet]
     public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetProjects([FromQuery] GetProjectsRequest request)
     {
         var query = Mapper.Map<GetProjects.Query>(request);
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves projects for a user with filtering and cursor-based pagination.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/projects/{UserId}/user-projects?nameContains=Collab&amp;pageSize=10
+    ///
+    /// Cursor pagination:
+    ///
+    ///     GET /api/projects?cursor=2026-01-01T00:00:00Z&amp;pageSize=10
+    ///
+    /// </remarks>
+    /// <response code="200">Returns projects successfully.</response>
+    [Authorize(Policy = Policies.Projects_Read)]
+    [HttpGet("{userId}/user-projects")]
+    public async Task<ActionResult<PagedList<ProjectDto, DateTime?>>> GetUserProjects(string userId, [FromQuery] GetProjectsRequest request)
+    {
+        var query = Mapper.Map<GetUserProjects.Query>(request);
+        query.UserId = userId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -104,7 +128,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}
+    ///     PATCH /api/projects/project/{ProjectId}
     ///     Content-RelationType: application/json
     ///
     ///     {
@@ -121,7 +145,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If project (or team if provided) not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpPatch("project/{projectId}")]
+    [HttpPatch("project/{ProjectId}")]
     public async Task<ActionResult<ProjectDto>> UpdateProject(string projectId, UpdateProjectRequest request)
     {
         var command = Mapper.Map<UpdateProject.Command>(request);
@@ -136,14 +160,14 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     DELETE /api/projects/project/{projectId}
+    ///     DELETE /api/projects/project/{ProjectId}
     ///
     /// </remarks>
     /// <response code="204">Deleted successfully.</response>
     /// <response code="404">If project not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpDelete("project/{projectId}")]
+    [HttpDelete("project/{ProjectId}")]
     public async Task<ActionResult> DeleteProject(string projectId)
     {
         var command = new DeleteProject.Command { ProjectId = projectId };
@@ -157,7 +181,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/assign-team
+    ///     PATCH /api/projects/project/{ProjectId}/assign-team
     ///     Content-RelationType: application/json
     ///
     ///     { "teamId": "3fa85f64-5717-4562-b3fc-2c963f66afa6" }
@@ -168,7 +192,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If project/team not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpPatch("project/{projectId}/assign-team")]
+    [HttpPatch("project/{ProjectId}/assign-team")]
     public async Task<ActionResult<ProjectDto>> AssignProjectToTeam(string projectId, AssignProjectToTeamRequest request)
     {
         var command = new AssignProjectToTeam.Command
@@ -186,14 +210,14 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     PATCH /api/projects/project/{projectId}/unassign-team
+    ///     PATCH /api/projects/project/{ProjectId}/unassign-team
     ///
     /// </remarks>
     /// <response code="200">Returns updated project.</response>
     /// <response code="404">If project not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpPatch("project/{projectId}/unassign-team")]
+    [HttpPatch("project/{ProjectId}/unassign-team")]
     public async Task<ActionResult<ProjectDto>> UnassignProjectFromTeam(string projectId)
     {
         var command = new UnassignProjectFromTeam.Command { ProjectId = projectId };
@@ -208,14 +232,14 @@ public sealed class ProjectsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/projects/project/{projectId}/backlog
+    ///     GET /api/projects/project/{ProjectId}/backlog
     ///
     /// </remarks>
     /// <response code="200">Returns backlog items.</response>
     /// <response code="404">If project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("project/{projectId}/backlog")]
+    [HttpGet("project/{ProjectId}/backlog")]
     public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId,[FromQuery] GetProjectBacklogRequest request)
     {
         var query = Mapper.Map<GetProjectBacklog.Query>(request);
@@ -234,7 +258,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/board
+    ///     GET /api/projects/{ProjectId}/board
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -246,7 +270,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("project/{projectId}/board")]
+    [HttpGet("project/{ProjectId}/board")]
     public async Task<ActionResult<BoardDto>> GetProjectBoard(string projectId, [FromQuery] GetProjectBoardRequest request)
     {
         var query = Mapper.Map<GetProjectBoard.Query>(request);
@@ -262,7 +286,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/user-stories
+    ///     GET /api/projects/{ProjectId}/user-stories
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -273,7 +297,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("project/{projectId}/user-stories")]
+    [HttpGet("project/{ProjectId}/user-stories")]
     public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
     {
         var query = new GetWorkItemsByType.Query
@@ -292,7 +316,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/epics
+    ///     GET /api/projects/{ProjectId}/epics
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -303,7 +327,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("project/{projectId}/epics")]
+    [HttpGet("project/{ProjectId}/epics")]
     public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId)
     {
         var query = new GetWorkItemsByType.Query
@@ -322,7 +346,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// Sample request:
     ///
-    ///     GET /api/projects/{projectId}/project-history
+    ///     GET /api/projects/{ProjectId}/project-history
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
@@ -334,7 +358,7 @@ public sealed class ProjectsController : ApiBaseController
     /// <response code="404">If tenant/project not found.</response>
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/project-history")]
+    [HttpGet("{ProjectId}/project-history")]
     public async Task<ActionResult<PagedList<ProjectHistoryDto, DateTime?>>> GetProjectHistory(
         string projectId,
         [FromQuery] GetProjectHistoryRequest request)

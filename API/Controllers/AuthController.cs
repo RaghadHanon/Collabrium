@@ -81,7 +81,7 @@ public class AuthController : ApiBaseController
     }
 
     /// <summary>
-    /// Authenticates a user and returns a JWT token upon successful login.
+    /// Authenticates a user and returns access and refresh tokens upon successful login.
     /// </summary>
     /// <remarks>
     /// Sample request:
@@ -93,15 +93,66 @@ public class AuthController : ApiBaseController
     ///     }
     ///
     /// </remarks>
-    /// <param name="loginRequest"></param>
-    /// <returns>The token and the user Id</returns>
-    /// <response code="200">If the user logged in successfully</response>
+    /// <param name="loginRequest">The login credentials.</param>
+    /// <returns>Access token, refresh token, user Id, and tenant Id.</returns>
+    /// <response code="200">If the user logged in successfully.</response>
     /// <response code="400">If the request data is invalid.</response>
     [IgnoreTenantContext]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequest loginRequest)
     {
         var command = Mapper.Map<LoginUser.Command>(loginRequest);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Issues a new access token and refresh token using a valid refresh token.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     POST /api/auth/refresh
+    ///     {
+    ///         "refreshToken": "your-refresh-token"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="refreshTokenRequest">The refresh token request.</param>
+    /// <returns>A new access token and refresh token pair.</returns>
+    /// <response code="200">If the token was refreshed successfully.</response>
+    /// <response code="400">If the request data is invalid.</response>
+    /// <response code="401">If the refresh token is invalid or expired.</response>
+    [IgnoreTenantContext]
+    [HttpPost("refresh")]
+    public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken(RefreshTokenRequest refreshTokenRequest)
+    {
+        var command = Mapper.Map<RefreshUserToken.Command>(refreshTokenRequest);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Revokes a refresh token and terminates its session usage.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     POST /api/auth/revoke
+    ///     {
+    ///         "refreshToken": "your-refresh-token"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="revokeRefreshTokenRequest">The refresh token to revoke.</param>
+    /// <returns>No content if the token was revoked successfully.</returns>
+    /// <response code="204">If the refresh token was revoked successfully.</response>
+    /// <response code="400">If the request data is invalid.</response>
+    [IgnoreTenantContext]
+    [HttpPost("revoke")]
+    public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshTokenRequest revokeRefreshTokenRequest)
+    {
+        var command = Mapper.Map<RevokeUserRefreshToken.Command>(revokeRefreshTokenRequest);
 
         return HandleResult(await Mediator.Send(command));
     }
@@ -114,7 +165,7 @@ public class AuthController : ApiBaseController
     ///
     ///     POST /api/auth/confirmation-email
     ///     {
-    ///         "userId": "12345",
+    ///         "UserId": "12345",
     ///         "token": "encoded-confirmation-token"
     ///     }
     ///
@@ -181,13 +232,13 @@ public class AuthController : ApiBaseController
     /// 
     ///     POST /api/auth/password-reset
     ///     {
-    ///         "userId": "12345",
+    ///         "UserId": "12345",
     ///         "token": "encoded-reset-token",
     ///         "newPassword": "NewPa$$w0rd"
     ///     }
     /// 
     /// </remarks>
-    /// <param name="resetPasswordRequest">The request containing the userId, token, and new password.</param>
+    /// <param name="resetPasswordRequest">The request containing the UserId, token, and new password.</param>
     /// <returns>A success message if the password was reset successfully.</returns>
     /// <response code="200">If the password was reset successfully.</response>
     /// <response code="400">If the reset token is invalid or the request data is incorrect.</response>
@@ -213,7 +264,7 @@ public class AuthController : ApiBaseController
     ///     }
     /// 
     /// </remarks>
-    /// <param name="changePasswordRequest">The request containing the userId, current password, and new password.</param>
+    /// <param name="changePasswordRequest">The request containing the UserId, current password, and new password.</param>
     /// <returns>A success message if the password was changed successfully.</returns>
     /// <response code="200">If the password was changed successfully.</response>
     /// <response code="400">If the current password is incorrect or the request data is invalid.</response>

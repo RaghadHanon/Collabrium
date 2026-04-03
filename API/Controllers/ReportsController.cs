@@ -1,6 +1,7 @@
 ﻿using API.Contracts.Reports;
 using API.SetupProgram;
-using Application.Features.Projects.DTOs;
+using Application.Features.Reports.DTOs;
+using Application.Features.Reports.DTOs.Summaries;
 using Application.Features.Reports.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.TenantAdmin)]
     [HttpGet("tenants/my-tenant/tenant-info-report")]
-    public async Task<ActionResult<ProjectDto>> GetMyTenantInfoReport()
+    public async Task<ActionResult<TenantInfoReport>> GetMyTenantInfoReport()
     {
         var query = new GetTenantInfoReport.Query();
 
@@ -46,11 +47,62 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.SuperAdmin)]
     [HttpGet("tenants/{tenantId}/tenant-info-report")]
-    public async Task<ActionResult<ProjectDto>> GetTenantInfoReport(string tenantId)
+    public async Task<ActionResult<TenantInfoReport>> GetTenantInfoReport(string tenantId)
     {
         var query = new GetTenantInfoReport.Query
         {
             TenantId = tenantId
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves a sprints summary report.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/projects/{ProjectId}/sprints-summary-report
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
+    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("projects/{projectId}/sprints-summary-report")]
+    public async Task<ActionResult<SprintsSummary>> GetSprintsSummaryReport(string projectId)
+    {
+        var query = new GetProjectSprintsSummaryReport.Query()
+        {
+            ProjectId = projectId
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves sprint progress report.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/projects/{ProjectId}/sprints/{sprintId}/sprint-progress-report
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
+    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("projects/{projectId}/sprints/{sprintId}/sprint-progress-report")]
+    public async Task<ActionResult<SprintProgressDto>> GetSprintProgressReport(string projectId, string sprintId)
+    {
+        var query = new GetSprintsProgressReport.Query()
+        {
+            ProjectId = projectId,
+            SprintId = sprintId
         };
 
         return HandleResult(await Mediator.Send(query));
@@ -62,7 +114,7 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/cycle-time-report
+    ///     GET /api/reports/{ProjectId}/cycle-time-report
     ///
     /// </remarks>
     /// <response code="200">Returns the report.</response>
@@ -70,8 +122,8 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/cycle-time-report")]
-    public async Task<ActionResult<ProjectDto>> GetCycleTimeReport(string projectId, [FromQuery] GetCycleTimeReportRequest request)
+    [HttpGet("{ProjectId}/cycle-time-report")]
+    public async Task<ActionResult<CycleTimeReport>> GetCycleTimeReport(string projectId, [FromQuery] GetCycleTimeReportRequest request)
     {
         var query = Mapper.Map<GetCycleTimeReport.Query>(request);
         query.ProjectId = projectId;
@@ -85,7 +137,7 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/cycle-time-report/pdf
+    ///     GET /api/reports/{ProjectId}/cycle-time-report/pdf
     ///
     /// </remarks>
     /// <response code="200">Returns the PDF report.</response>
@@ -93,7 +145,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/cycle-time-report/pdf")]
+    [HttpGet("{ProjectId}/cycle-time-report/pdf")]
     public async Task<IActionResult> GetCycleTimeReportPdf(string projectId, [FromQuery] GetCycleTimeReportRequest request)
     {
         var query = Mapper.Map<GetCycleTimeReportPdf.Query>(request);

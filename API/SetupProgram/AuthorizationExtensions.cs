@@ -17,6 +17,13 @@ public static class AuthorizationExtensions
                 nameof(UserRole.IT)
             };
 
+            string[] LocalTenantAdmins =
+            {
+                nameof(UserRole.CEO),
+                nameof(UserRole.TenantAdmin),
+                nameof(UserRole.IT)
+            };
+
             string[] ProductManagers =
             {
                 nameof(UserRole.ProductOwner),
@@ -79,10 +86,11 @@ public static class AuthorizationExtensions
             //Tenant
             options.AddPolicy(Policies.Tenant_Read, p => p.RequireRole(TenantMembers));
             options.AddPolicy(Policies.Tenant_Manage, p => p.RequireRole(TenantAdmins));
+            options.AddPolicy(Policies.Local_Tenant_Manage, p => p.RequireRole(LocalTenantAdmins));
 
             //Projects
             options.AddPolicy(Policies.Projects_Read, p => p.RequireRole(TenantMembers));
-            options.AddPolicy(Policies.Projects_High_Level_Manage, p => p.RequireRole(
+            options.AddPolicy(Policies.High_Level_Manage, p => p.RequireRole(
                 nameof(UserRole.CEO),
                 nameof(UserRole.TenantAdmin)));
             options.AddPolicy(Policies.Projects_Manage, p => p.RequireRole(

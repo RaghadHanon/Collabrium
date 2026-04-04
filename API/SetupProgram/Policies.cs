@@ -22,10 +22,11 @@ public static class Policies
     // Tenant
     public const string Tenant_Read = "Tenant.Read";
     public const string Tenant_Manage = "Tenant.Manage";
+    public const string Local_Tenant_Manage = "Local.Tenant.Manage";
 
     // Projects
     public const string Projects_Read = "Projects.Read";
-    public const string Projects_High_Level_Manage = "Projects.HighLevelManage";
+    public const string High_Level_Manage = "HighLevelManage";
     public const string Projects_Manage = "Projects.Manage";
 
     // Teams

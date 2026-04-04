@@ -24,7 +24,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.High_Level_Manage)]
     [HttpGet("tenants/my-tenant/tenant-info-report")]
     public async Task<ActionResult<TenantInfoReport>> GetMyTenantInfoReport()
     {
@@ -122,7 +122,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{ProjectId}/cycle-time-report")]
+    [HttpGet("{projectId}/cycle-time-report")]
     public async Task<ActionResult<CycleTimeReport>> GetCycleTimeReport(string projectId, [FromQuery] GetCycleTimeReportRequest request)
     {
         var query = Mapper.Map<GetCycleTimeReport.Query>(request);
@@ -145,7 +145,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{ProjectId}/cycle-time-report/pdf")]
+    [HttpGet("{projectId}/cycle-time-report/pdf")]
     public async Task<IActionResult> GetCycleTimeReportPdf(string projectId, [FromQuery] GetCycleTimeReportRequest request)
     {
         var query = Mapper.Map<GetCycleTimeReportPdf.Query>(request);

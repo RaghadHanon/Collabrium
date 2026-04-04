@@ -295,7 +295,7 @@ public class TeamsController : ApiBaseController
     ///     PUT /api/teams/3fa85f64-5717-4562-b3fc-2c963f66afa6/candidates-members
     ///
     /// </remarks>
-    /// <param name="id">The unique identifier of the team.</param>
+    /// <param name="teamId">The unique identifier of the team.</param>
     /// <returns>List of Candidates users to be added to this team.</returns>
     /// <response code="204">The team active status was toggled successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>

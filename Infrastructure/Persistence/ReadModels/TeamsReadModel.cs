@@ -75,7 +75,7 @@ public sealed class TeamsReadModel : ITeamsReadModel
 
         var teamMemberIds = await _dbContext.TeamMembers
             .AsNoTracking()
-            .Where(tm => tm.Team.TenantId == tenantId && (tm.TeamId == null || tm.TeamId != teamId))
+            .Where(tm => tm.Team.TenantId == tenantId && tm.TeamId == teamId)
             .Select(tm => tm.UserId)
             .ToListAsync(cancellationToken);
 

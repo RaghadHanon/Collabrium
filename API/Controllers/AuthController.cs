@@ -70,7 +70,7 @@ public class AuthController : ApiBaseController
     /// <returns>The newly created app user object.</returns>
     /// <response code="201">Returns the newly created user and a Location header pointing to it.</response>
     /// <response code="400">If the request data is invalid.</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
+    [Authorize(Policy = Policies.Local_Tenant_Manage)]
     [Authorize(Policy = Policies.PasswordChanged)]
     [HttpPost("tenant-employee")]
     public async Task<ActionResult<UserWithTenantDto>> RegisterTenantEmployee(RegisterEmployeeRequest registerEmployeeRequest)
@@ -165,7 +165,7 @@ public class AuthController : ApiBaseController
     ///
     ///     POST /api/auth/confirmation-email
     ///     {
-    ///         "UserId": "12345",
+    ///         "userId": "12345",
     ///         "token": "encoded-confirmation-token"
     ///     }
     ///

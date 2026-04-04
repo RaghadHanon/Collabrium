@@ -98,23 +98,25 @@ public class TenantRepository : ITenantRepository
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(t => t.CreatedAt > parameters.Cursor.Value);
 
-        var entities = await query
+        var items = await query
             .OrderBy(t => t.CreatedAt)
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (entities.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = entities[^1].CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<Tenant, DateTime?>
         {
-            Items = entities.Select(TenantMapper.ToDomain).ToList(),
+            Items = items.Select(TenantMapper.ToDomain).ToList(),
             NextCursor = nextCursor
         };
     }

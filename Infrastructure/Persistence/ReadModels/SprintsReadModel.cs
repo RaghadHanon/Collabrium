@@ -47,7 +47,7 @@ public sealed class SprintsReadModel : ISprintsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt > parameters.Cursor.Value);
 
         var items = await query
             .OrderBy(x => x.CreatedAt)
@@ -56,10 +56,12 @@ public sealed class SprintsReadModel : ISprintsReadModel
             .ToListAsync(ct);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items[^1].CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<SprintDto, DateTime?>

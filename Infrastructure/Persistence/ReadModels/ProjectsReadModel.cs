@@ -106,19 +106,24 @@ public sealed class ProjectsReadModel : IProjectsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(p => p.CreatedAt <= parameters.Cursor.Value);
+        {
+            query = query.Where(p => p.CreatedAt < parameters.Cursor.Value);
+        }
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
             .ProjectTo<ProjectDto>(_mapper.ConfigurationProvider)
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items[^1].CreatedAt;
-            items.RemoveAt(items.Count - 1);
+            items.RemoveAt(items.Count - 1); 
+            nextCursor = items[^1].CreatedAt; 
         }
 
         return new PagedList<ProjectDto, DateTime?>

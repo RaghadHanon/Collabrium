@@ -57,23 +57,25 @@ public class ProjectHistoryRepository : IProjectHistoryRepository
         query = ApplyFilters(query, parameters, tenantId, projectId);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
 
-        var entities = await query
+        var items = await query
             .OrderBy(x => x.CreatedAt)
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (entities.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = entities[^1].CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<ProjectHistory, DateTime?>
         {
-            Items = entities.Select(ProjectHistoryMapper.ToDomain).ToList(),
+            Items = items.Select(ProjectHistoryMapper.ToDomain).ToList(),
             NextCursor = nextCursor
         };
     }

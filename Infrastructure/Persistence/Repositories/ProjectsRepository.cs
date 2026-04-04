@@ -127,23 +127,25 @@ public sealed class ProjectsRepository : IProjectsRepository
             .Where(p => p.TenantId == tId);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(p => p.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(p => p.CreatedAt > parameters.Cursor.Value);
 
-        var entities = await query
+        var items = await query
             .OrderBy(p => p.CreatedAt)
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (entities.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = entities[^1].CreatedAt;
-            entities.RemoveAt(entities.Count - 1);
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<Project, DateTime?>
         {
-            Items = entities.Select(ProjectMapper.ToDomain).ToList(),
+            Items = items.Select(ProjectMapper.ToDomain).ToList(),
             NextCursor = nextCursor
         };
     }

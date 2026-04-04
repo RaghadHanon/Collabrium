@@ -79,7 +79,5 @@ namespace Infrastructure.Persistence.ReadModels
                 .ProjectTo<ResourceDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(ct);
         }
-
-
     }
 }

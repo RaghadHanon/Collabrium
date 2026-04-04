@@ -24,8 +24,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.Rating)
                 .IsRequired();
 
-            builder.Property(x => x.Review)
-                .HasMaxLength(2000);
+
 
             builder.HasOne(x => x.Tenant)
                 .WithMany()

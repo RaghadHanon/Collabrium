@@ -342,7 +342,6 @@ namespace Infrastructure.Migrations
                     AssignedToUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     AssignedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -384,7 +383,6 @@ namespace Infrastructure.Migrations
                     UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     CourseId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Rating = table.Column<int>(type: "int", nullable: false),
-                    Review = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -412,7 +410,7 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserCourseEntity",
+                name: "UserCourses",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -428,21 +426,21 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserCourseEntity", x => x.Id);
+                    table.PrimaryKey("PK_UserCourses", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserCourseEntity_AspNetUsers_UserId",
+                        name: "FK_UserCourses_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_UserCourseEntity_Courses_CourseId",
+                        name: "FK_UserCourses_Courses_CourseId",
                         column: x => x.CourseId,
                         principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserCourseEntity_Tenants_TenantId",
+                        name: "FK_UserCourses_Tenants_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenants",
                         principalColumn: "Id",
@@ -990,7 +988,7 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status",
                 table: "CourseAssignments",
-                columns: new[] { "TenantId", "AssignedToUserId", "CourseId", "Status" });
+                columns: new[] { "TenantId", "AssignedToUserId", "CourseId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseRatings_CourseId",
@@ -1164,20 +1162,20 @@ namespace Infrastructure.Migrations
                 column: "TenantAdminId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserCourseEntity_CourseId",
-                table: "UserCourseEntity",
+                name: "IX_UserCourses_CourseId",
+                table: "UserCourses",
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserCourseEntity_UserId",
-                table: "UserCourseEntity",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UserCourses_TenantId_UserId_CourseId",
-                table: "UserCourseEntity",
+                table: "UserCourses",
                 columns: new[] { "TenantId", "UserId", "CourseId" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCourses_UserId",
+                table: "UserCourses",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkItemRelations_TargetWorkItemId",
@@ -1335,7 +1333,7 @@ namespace Infrastructure.Migrations
                 name: "TeamMembers");
 
             migrationBuilder.DropTable(
-                name: "UserCourseEntity");
+                name: "UserCourses");
 
             migrationBuilder.DropTable(
                 name: "WorkItemRelations");

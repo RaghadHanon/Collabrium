@@ -9,7 +9,6 @@ namespace Domain.Models
         public string CourseId { get; private set; } = null!;
 
         public int Rating { get; private set; }
-        public string? Review { get; private set; }
 
         private CourseRating() { }
 
@@ -17,15 +16,14 @@ namespace Domain.Models
             string tenantId,
             string userId,
             string courseId,
-            int rating,
-            string? review = null)
+            int rating
+            )
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             UserId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
             CourseId = Guard.NotNullOrWhiteSpace(courseId, nameof(courseId));
 
             SetRating(rating);
-            Review = review?.Trim();
         }
 
         public CourseRating(
@@ -33,15 +31,15 @@ namespace Domain.Models
             string tenantId,
             string userId,
             string courseId,
-            int rating,
-            string? review = null) : base(id)
+            int rating)
+            : base(id)
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             UserId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
             CourseId = Guard.NotNullOrWhiteSpace(courseId, nameof(courseId));
 
             SetRating(rating);
-            Review = review?.Trim();
+
         }
 
         public static CourseRating Rehydrate(
@@ -51,26 +49,24 @@ namespace Domain.Models
             string tenantId,
             string userId,
             string courseId,
-            int rating,
-            string? review)
+            int rating)
         {
             var courseRating = new CourseRating(
                 id: id,
                 tenantId: tenantId,
                 userId: userId,
                 courseId: courseId,
-                rating: rating,
-                review: review);
+                rating: rating);
 
             courseRating.SetTimestamps(createdAt, updatedAt);
 
             return courseRating;
         }
 
-        public void Update(int rating, string? review)
+        public void Update(int rating)
         {
             SetRating(rating);
-            Review = review?.Trim();
+
             Touch();
         }
 

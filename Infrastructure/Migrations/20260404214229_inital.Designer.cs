@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260403182345_inital")]
+    [Migration("20260404214229_inital")]
     partial class inital
     {
         /// <inheritdoc />
@@ -275,9 +275,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<string>("TenantId")
                         .IsRequired()
                         .HasMaxLength(450)
@@ -294,7 +291,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.HasIndex("TenantId", "AssignedToUserId", "CourseId", "Status")
+                    b.HasIndex("TenantId", "AssignedToUserId", "CourseId")
                         .HasDatabaseName("IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status");
 
                     b.ToTable("CourseAssignments");
@@ -374,10 +371,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
-
-                    b.Property<string>("Review")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("TenantId")
                         .IsRequired()
@@ -1020,7 +1013,7 @@ namespace Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_UserCourses_TenantId_UserId_CourseId");
 
-                    b.ToTable("UserCourseEntity");
+                    b.ToTable("UserCourses");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemEntity", b =>

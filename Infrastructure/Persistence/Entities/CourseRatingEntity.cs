@@ -7,7 +7,6 @@
         public string CourseId { get; set; } = null!;
 
         public int Rating { get; set; }
-        public string? Review { get; set; }
 
         public TenantEntity Tenant { get; set; } = null!;
         public ApplicationUserEntity User { get; set; } = null!;

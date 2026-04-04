@@ -16,7 +16,6 @@ namespace Infrastructure.Persistence.Mappers
                 UserId = domain.UserId,
                 CourseId = domain.CourseId,
                 Rating = domain.Rating,
-                Review = domain.Review,
                 CreatedAt = domain.CreatedAt,
                 UpdatedAt = domain.UpdatedAt
             };
@@ -33,8 +32,7 @@ namespace Infrastructure.Persistence.Mappers
                 tenantId: entity.TenantId,
                 userId: entity.UserId,
                 courseId: entity.CourseId,
-                rating: entity.Rating,
-                review: entity.Review
+                rating: entity.Rating
             );
         }
 
@@ -44,7 +42,6 @@ namespace Infrastructure.Persistence.Mappers
             ArgumentNullException.ThrowIfNull(domain);
 
             entity.Rating = domain.Rating;
-            entity.Review = domain.Review;
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
         }
     }

@@ -28,8 +28,6 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.AssignedAt)
                 .IsRequired();
 
-            builder.Property(x => x.Status)
-                .IsRequired();
 
             builder.HasOne(x => x.Tenant)
                 .WithMany()
@@ -51,7 +49,7 @@ namespace Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(x => new { x.TenantId, x.AssignedToUserId, x.CourseId, x.Status })
+            builder.HasIndex(x => new { x.TenantId, x.AssignedToUserId, x.CourseId })
                 .HasDatabaseName("IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status");
         }
     }

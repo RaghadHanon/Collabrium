@@ -38,6 +38,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<CourseAssignmentEntity> CourseAssignments => Set<CourseAssignmentEntity>();
     public DbSet<CourseEntity> Courses => Set<CourseEntity>();
     public DbSet<CourseRatingEntity> CourseRatings => Set<CourseRatingEntity>();
+    public DbSet<UserCourseEntity> UserCourses => Set<UserCourseEntity>();
 
     public DbSet<TagEntity> Tags => Set<TagEntity>();
     public DbSet<RoadmapTagEntity> RoadmapTags => Set<RoadmapTagEntity>(); // join table

@@ -133,8 +133,6 @@ namespace Infrastructure.Persistence.ReadModels
                 query = query.Where(x => x.AssignedByUserId == userId);
             }
 
-            if (p.Status.HasValue)
-                query = query.Where(x => x.Status == p.Status.Value);
 
             if (p.AssignedAfter.HasValue)
                 query = query.Where(x => x.AssignedAt >= p.AssignedAfter.Value);
@@ -188,7 +186,6 @@ namespace Infrastructure.Persistence.ReadModels
                     AssignedByUserName = a.AssignedByUser.FullName,
 
                     AssignedAt = a.AssignedAt,
-                    Status = a.Status,
 
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt

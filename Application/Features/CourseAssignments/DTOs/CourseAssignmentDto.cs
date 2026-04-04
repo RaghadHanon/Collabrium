@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace Application.Features.CourseAssignments.DTOs
+﻿namespace Application.Features.CourseAssignments.DTOs
 {
     public sealed class CourseAssignmentDto
     {
@@ -15,7 +13,6 @@ namespace Application.Features.CourseAssignments.DTOs
         public string? AssignedToUserName { get; set; }
         public string? CourseThumbnailUrl { get; set; }
         public DateTime AssignedAt { get; set; }
-        public CourseAssignmentStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

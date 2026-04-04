@@ -1,5 +1,4 @@
 ﻿using Domain.Common;
-using Domain.Enums;
 
 namespace Domain.Models
 {
@@ -12,7 +11,6 @@ namespace Domain.Models
 
         public DateTime AssignedAt { get; private set; }
 
-        public CourseAssignmentStatus Status { get; private set; }
 
         private CourseAssignment() { }
 
@@ -28,7 +26,6 @@ namespace Domain.Models
             AssignedByUserId = Guard.NotNullOrWhiteSpace(assignedByUserId, nameof(assignedByUserId));
 
             AssignedAt = DateTime.UtcNow;
-            Status = CourseAssignmentStatus.Active;
         }
 
         public CourseAssignment(
@@ -44,7 +41,6 @@ namespace Domain.Models
             AssignedByUserId = Guard.NotNullOrWhiteSpace(assignedByUserId, nameof(assignedByUserId));
 
             AssignedAt = DateTime.UtcNow;
-            Status = CourseAssignmentStatus.Active;
         }
 
         public static CourseAssignment Rehydrate(
@@ -55,8 +51,8 @@ namespace Domain.Models
             string courseId,
             string assignedToUserId,
             string assignedByUserId,
-            DateTime assignedAt,
-            CourseAssignmentStatus status)
+            DateTime assignedAt
+            )
         {
             var assignment = new CourseAssignment(
                 id: id,
@@ -67,50 +63,16 @@ namespace Domain.Models
 
             assignment.SetTimestamps(createdAt, updatedAt);
             assignment.AssignedAt = assignedAt;
-            assignment.Status = status;
 
             return assignment;
         }
 
-        // ============================
-        // Behavior
-        // ============================
 
-        public void MarkAsCompleted()
-        {
-            if (Status == CourseAssignmentStatus.Cancelled)
-                throw new DomainException("Cancelled assignment cannot be completed.");
 
-            if (Status == CourseAssignmentStatus.Completed)
-                return;
 
-            Status = CourseAssignmentStatus.Completed;
-            Touch();
-        }
 
-        public void Cancel()
-        {
-            if (Status == CourseAssignmentStatus.Completed)
-                throw new DomainException("Completed assignment cannot be cancelled.");
 
-            if (Status == CourseAssignmentStatus.Cancelled)
-                return;
 
-            Status = CourseAssignmentStatus.Cancelled;
-            Touch();
-        }
-
-        public void ReActivate()
-        {
-            if (Status == CourseAssignmentStatus.Completed)
-                throw new DomainException("Completed assignment cannot be re-activated.");
-
-            if (Status == CourseAssignmentStatus.Active)
-                return;
-
-            Status = CourseAssignmentStatus.Active;
-            Touch();
-        }
     }
 
 }

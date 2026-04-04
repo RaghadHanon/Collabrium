@@ -14,6 +14,8 @@ using Application.Features.Teams.DTOs;
 using Application.Features.Teams.Queries;
 using Application.Features.Tenants.DTOs;
 using Application.Features.Tenants.Queries;
+using Application.Features.UserCourses.DTOs;
+using Application.Features.UserCourses.Queries;
 using Application.Features.Users.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Comments;
@@ -42,5 +44,6 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetRoadmaps.Query, CoursesSearchAndFilterParametersDto>();
         CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>();
         CreateMap<GetCourses.Query, CoursesSearchAndFilterParametersDto>();
+        CreateMap<GetMyUserCourses.Query, UserCoursesSearchAndFilterParametersDto>();
     }
 }

@@ -14,7 +14,6 @@ namespace Application.Features.CourseAssignments.Queries
             public string? CourseId { get; set; }
             public string? AssignedToUserId { get; set; }
             public string? AssignedByUserId { get; set; }
-            public Domain.Enums.CourseAssignmentStatus? Status { get; set; }
 
             public DateTime? AssignedAfter { get; set; }
             public DateTime? AssignedBefore { get; set; }
@@ -41,7 +40,6 @@ namespace Application.Features.CourseAssignments.Queries
                     CourseId = request.CourseId,
                     AssignedToUserId = request.AssignedToUserId,
                     AssignedByUserId = request.AssignedByUserId,
-                    Status = request.Status,
                     AssignedAfter = request.AssignedAfter,
                     AssignedBefore = request.AssignedBefore,
                     PageSize = request.PageSize,

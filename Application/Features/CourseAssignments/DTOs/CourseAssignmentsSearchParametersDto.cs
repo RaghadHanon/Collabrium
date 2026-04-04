@@ -1,5 +1,4 @@
 ﻿using Application.Common.DTOs;
-using Domain.Enums;
 
 namespace Application.Features.CourseAssignments.DTOs
 {
@@ -9,7 +8,6 @@ namespace Application.Features.CourseAssignments.DTOs
         public string? CourseId { get; set; }
         public string? AssignedToUserId { get; set; }
         public string? AssignedByUserId { get; set; }
-        public CourseAssignmentStatus? Status { get; set; }
 
         public DateTime? AssignedAfter { get; set; }
         public DateTime? AssignedBefore { get; set; }

@@ -1,6 +1,4 @@
-﻿using Domain.Enums;
-
-namespace Infrastructure.Persistence.Entities
+﻿namespace Infrastructure.Persistence.Entities
 {
     public sealed class CourseAssignmentEntity : DbEntity
     {
@@ -10,7 +8,6 @@ namespace Infrastructure.Persistence.Entities
         public string AssignedByUserId { get; set; } = null!;
 
         public DateTime AssignedAt { get; set; }
-        public CourseAssignmentStatus Status { get; set; }
 
         public TenantEntity Tenant { get; set; } = null!;
         public CourseEntity Course { get; set; } = null!;

@@ -87,8 +87,8 @@ public class GetEnumMetaData
                 Enum.GetNames(typeof(CourseLanguage)).Select(AddSpace).ToArray(),
                 HttpStatusCode.OK),
 
-                MetadataType.CourseAssignmentStatus => Result<string[]>.Success(
-               Enum.GetNames(typeof(CourseAssignmentStatus)).Select(AddSpace).ToArray(),
+                MetadataType.UserCourseStatus => Result<string[]>.Success(
+               Enum.GetNames(typeof(UserCourseStatus)).Select(AddSpace).ToArray(),
                HttpStatusCode.OK),
                 _ => throw new NotImplementedException()
             };

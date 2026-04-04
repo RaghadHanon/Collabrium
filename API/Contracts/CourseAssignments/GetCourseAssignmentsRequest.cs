@@ -1,13 +1,10 @@
-﻿using Domain.Enums;
-
-namespace API.Contracts.CourseAssignments
+﻿namespace API.Contracts.CourseAssignments
 {
     public class GetCourseAssignmentsRequest
     {
         public string? CourseId { get; set; }
         public string? AssignedToUserId { get; set; }
         public string? AssignedByUserId { get; set; }
-        public CourseAssignmentStatus? Status { get; set; }
 
         public DateTime? AssignedAfter { get; set; }
         public DateTime? AssignedBefore { get; set; }

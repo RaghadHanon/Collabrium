@@ -1,0 +1,203 @@
+﻿using Application.Common;
+using Application.Features.UserCourses.DTOs;
+using Application.Interfaces.ReadModels;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Persistence.ReadModels
+{
+    public sealed class UserCoursesReadModel : IUserCoursesReadModel
+    {
+        private readonly AppDbContext _dbContext;
+        private readonly IMapper _mapper;
+
+        public UserCoursesReadModel(AppDbContext dbContext, IMapper mapper)
+        {
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        }
+
+        public Task<UserCourseDto?> GetByIdAsync(
+            string tenantId,
+            string userCourseId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(userCourseId))
+                return Task.FromResult<UserCourseDto?>(null);
+
+            var tId = tenantId.Trim();
+            var ucId = userCourseId.Trim();
+
+            return _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(x => x.TenantId == tId && x.Id == ucId)
+                .ProjectTo<UserCourseDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public Task<UserCourseDto?> GetByUserAndCourseAsync(
+            string tenantId,
+            string userId,
+            string courseId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) ||
+                string.IsNullOrWhiteSpace(userId) ||
+                string.IsNullOrWhiteSpace(courseId))
+                return Task.FromResult<UserCourseDto?>(null);
+
+            var tId = tenantId.Trim();
+            var uId = userId.Trim();
+            var cId = courseId.Trim();
+
+            return _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(x =>
+                    x.TenantId == tId &&
+                    x.UserId == uId &&
+                    x.CourseId == cId)
+                .ProjectTo<UserCourseDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public Task<UserCourseDetailsDto?> GetDetailsByIdAsync(
+            string tenantId,
+            string userCourseId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(userCourseId))
+                return Task.FromResult<UserCourseDetailsDto?>(null);
+
+            var tId = tenantId.Trim();
+            var ucId = userCourseId.Trim();
+
+            return _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(x => x.TenantId == tId && x.Id == ucId)
+                .ProjectTo<UserCourseDetailsDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public async Task<List<UserCourseDto>> GetByUserAsync(
+            string tenantId,
+            string userId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(userId))
+                return new List<UserCourseDto>();
+
+            var tId = tenantId.Trim();
+            var uId = userId.Trim();
+
+            return await _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(x => x.TenantId == tId && x.UserId == uId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ProjectTo<UserCourseDto>(_mapper.ConfigurationProvider)
+                .ToListAsync(ct);
+        }
+
+        public async Task<PagedList<UserCourseDto, DateTime?>> GetUserCoursesAsync(
+            UserCoursesSearchAndFilterParametersDto parameters,
+            CancellationToken ct = default)
+        {
+            parameters ??= new UserCoursesSearchAndFilterParametersDto();
+
+            var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+            IQueryable<UserCourseEntity> query = _dbContext.UserCourses.AsNoTracking();
+
+            query = ApplyFilters(query, parameters);
+
+            if (parameters.Cursor.HasValue)
+                query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+
+            var items = await query
+                .OrderByDescending(x => x.CreatedAt)
+                .ProjectTo<UserCourseDto>(_mapper.ConfigurationProvider)
+                .Take(pageSize + 1)
+                .ToListAsync(ct);
+
+            DateTime? nextCursor = null;
+
+            if (items.Count > pageSize)
+            {
+                nextCursor = items[^1].CreatedAt;
+                items.RemoveAt(items.Count - 1);
+            }
+
+            return new PagedList<UserCourseDto, DateTime?>
+            {
+                Items = items,
+                NextCursor = nextCursor
+            };
+        }
+
+        private static IQueryable<UserCourseEntity> ApplyFilters(
+            IQueryable<UserCourseEntity> query,
+            UserCoursesSearchAndFilterParametersDto p)
+        {
+            if (!string.IsNullOrWhiteSpace(p.TenantId))
+            {
+                var tenantId = p.TenantId.Trim();
+                query = query.Where(x => x.TenantId == tenantId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(p.UserId))
+            {
+                var userId = p.UserId.Trim();
+                query = query.Where(x => x.UserId == userId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(p.CourseId))
+            {
+                var courseId = p.CourseId.Trim();
+                query = query.Where(x => x.CourseId == courseId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(p.Search))
+            {
+                var term = p.Search.Trim();
+                query = query.Where(x =>
+                    x.Course.Title.Contains(term) ||
+                    x.Course.Description.Contains(term) ||
+                    x.Course.Provider.Contains(term) ||
+                    (x.Course.InstructorName != null && x.Course.InstructorName.Contains(term)));
+            }
+
+            if (p.Status.HasValue)
+                query = query.Where(x => x.Status == p.Status.Value);
+
+            if (p.IsSaved.HasValue)
+                query = query.Where(x => x.IsSaved == p.IsSaved.Value);
+
+            if (p.StartedAfter.HasValue)
+                query = query.Where(x => x.StartedAt != null && x.StartedAt >= p.StartedAfter.Value);
+
+            if (p.StartedBefore.HasValue)
+                query = query.Where(x => x.StartedAt != null && x.StartedAt <= p.StartedBefore.Value);
+
+            if (p.CompletedAfter.HasValue)
+                query = query.Where(x => x.CompletedAt != null && x.CompletedAt >= p.CompletedAfter.Value);
+
+            if (p.CompletedBefore.HasValue)
+                query = query.Where(x => x.CompletedAt != null && x.CompletedAt <= p.CompletedBefore.Value);
+
+            if (p.CreatedAfter.HasValue)
+                query = query.Where(x => x.CreatedAt >= p.CreatedAfter.Value);
+
+            if (p.CreatedBefore.HasValue)
+                query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
+
+            if (p.UpdatedAfter.HasValue)
+                query = query.Where(x => x.UpdatedAt != null && x.UpdatedAt >= p.UpdatedAfter.Value);
+
+            if (p.UpdatedBefore.HasValue)
+                query = query.Where(x => x.UpdatedAt != null && x.UpdatedAt <= p.UpdatedBefore.Value);
+
+            return query;
+        }
+    }
+}

@@ -38,7 +38,6 @@ namespace Application.Features.CourseAssignments.Commands
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    assignment.ReActivate();
                     await courseAssignmentsRepository.UpdateAsync(assignment, ct);
                 }, cancellationToken);
 

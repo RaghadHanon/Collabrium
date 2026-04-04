@@ -6,6 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Persistence\NewFolder\**" />
+    <EmbeddedResource Remove="Persistence\NewFolder\**" />
+    <None Remove="Persistence\NewFolder\**" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CloudinaryDotNet" Version="1.27.7" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
@@ -20,10 +26,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Persistence\NewFolder\" />
   </ItemGroup>
 
 </Project>

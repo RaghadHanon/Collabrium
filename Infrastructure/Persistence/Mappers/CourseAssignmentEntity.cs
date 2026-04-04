@@ -17,7 +17,6 @@ namespace Infrastructure.Persistence.Mappers
                 AssignedToUserId = domain.AssignedToUserId,
                 AssignedByUserId = domain.AssignedByUserId,
                 AssignedAt = domain.AssignedAt,
-                Status = domain.Status,
                 CreatedAt = domain.CreatedAt,
                 UpdatedAt = domain.UpdatedAt
             };
@@ -35,8 +34,7 @@ namespace Infrastructure.Persistence.Mappers
                 courseId: entity.CourseId,
                 assignedToUserId: entity.AssignedToUserId,
                 assignedByUserId: entity.AssignedByUserId,
-                assignedAt: entity.AssignedAt,
-                status: entity.Status
+                assignedAt: entity.AssignedAt
             );
         }
 
@@ -45,7 +43,6 @@ namespace Infrastructure.Persistence.Mappers
             ArgumentNullException.ThrowIfNull(entity);
             ArgumentNullException.ThrowIfNull(domain);
 
-            entity.Status = domain.Status;
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
         }
     }

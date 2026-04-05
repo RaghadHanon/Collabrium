@@ -22,8 +22,9 @@ namespace Application.Features.CourseAssignments.Commands
             ICourseAssignmentsRepository courseAssignmentsRepository,
             ICourseAssignmentsReadModel courseAssignmentsReadModel,
             ICoursesRepository coursesRepository,
+            IUserCoursesRepository userCoursesRepository,
             ITenantContext tenantContext,
-            ICurrentUserAccessor userContext,
+            ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<CourseAssignmentDto>>
         {
@@ -33,7 +34,7 @@ namespace Application.Features.CourseAssignments.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<CourseAssignmentDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var currentUserId = userContext.GetUserId();
+                var currentUserId = currentUserAccessor.GetUserId();
                 if (string.IsNullOrWhiteSpace(currentUserId))
                     return Result<CourseAssignmentDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
@@ -52,9 +53,11 @@ namespace Application.Features.CourseAssignments.Commands
                     cancellationToken);
 
                 if (alreadyExists)
+                {
                     return Result<CourseAssignmentDto>.Failure(
                         "This course is already assigned to the user.",
                         HttpStatusCode.BadRequest);
+                }
 
                 CourseAssignment assignment = null!;
 
@@ -64,10 +67,26 @@ namespace Application.Features.CourseAssignments.Commands
                         tenantId: tenantId,
                         courseId: request.CourseId,
                         assignedToUserId: request.AssignedToUserId,
-                        assignedByUserId: currentUserId
-                    );
+                        assignedByUserId: currentUserId);
 
                     await courseAssignmentsRepository.AddAsync(assignment, ct);
+
+                    var existingUserCourse = await userCoursesRepository.GetByUserAndCourseAsync(
+                        tenantId,
+                        request.AssignedToUserId,
+                        request.CourseId,
+                        ct);
+
+                    if (existingUserCourse is null)
+                    {
+                        var userCourse = new UserCourse(
+                            tenantId: tenantId,
+                            userId: request.AssignedToUserId,
+                            courseId: request.CourseId);
+
+                        await userCoursesRepository.AddAsync(userCourse, ct);
+                    }
+
                     await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
 

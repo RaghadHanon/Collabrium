@@ -14,10 +14,6 @@ namespace API.Controllers
     [Authorize(Policy = Policies.PasswordChanged)]
     public sealed class CourseAssignmentsController : ApiBaseController
     {
-        // ===============================
-        // Assign
-        // ===============================
-
         /// <summary>
         /// Assign a course to a user.
         /// </summary>
@@ -38,6 +34,7 @@ namespace API.Controllers
         /// <response code="400">If request is invalid or assignment already exists.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If course not found.</response>
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpPost("course/{courseId}/assign-user")]
         public async Task<ActionResult<CourseAssignmentDto>> AssignCourseToUser(
             string courseId,
@@ -51,92 +48,6 @@ namespace API.Controllers
                 nameof(GetCourseAssignment),
                 "CourseAssignments");
         }
-
-        // ===============================
-        // Status Actions
-        // ===============================
-
-        /// <summary>
-        /// Mark a course assignment as completed.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     PATCH /api/course-assignments/{assignmentId}/complete
-        ///
-        /// </remarks>
-        /// <param name="assignmentId">The assignment id.</param>
-        /// <returns>The updated assignment.</returns>
-        /// <response code="200">Assignment completed successfully.</response>
-        /// <response code="400">If assignment cannot be completed.</response>
-        /// <response code="401">If the user is not authenticated.</response>
-        /// <response code="404">If assignment not found.</response>
-        [HttpPatch("{assignmentId}/complete")]
-        public async Task<ActionResult<CourseAssignmentDto>> CompleteCourseAssignment(string assignmentId)
-        {
-            var command = new CompleteCourseAssignment.Command
-            {
-                AssignmentId = assignmentId
-            };
-
-            return HandleResult(await Mediator.Send(command));
-        }
-
-        /// <summary>
-        /// Cancel a course assignment.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     PATCH /api/course-assignments/{assignmentId}/cancel
-        ///
-        /// </remarks>
-        /// <param name="assignmentId">The assignment id.</param>
-        /// <returns>The updated assignment.</returns>
-        /// <response code="200">Assignment cancelled successfully.</response>
-        /// <response code="400">If assignment cannot be cancelled.</response>
-        /// <response code="401">If the user is not authenticated.</response>
-        /// <response code="404">If assignment not found.</response>
-        [HttpPatch("{assignmentId}/cancel")]
-        public async Task<ActionResult<CourseAssignmentDto>> CancelCourseAssignment(string assignmentId)
-        {
-            var command = new CancelCourseAssignment.Command
-            {
-                AssignmentId = assignmentId
-            };
-
-            return HandleResult(await Mediator.Send(command));
-        }
-
-        /// <summary>
-        /// Reactivate a cancelled course assignment.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     PATCH /api/course-assignments/{assignmentId}/reactivate
-        ///
-        /// </remarks>
-        /// <param name="assignmentId">The assignment id.</param>
-        /// <returns>The updated assignment.</returns>
-        /// <response code="200">Assignment reactivated successfully.</response>
-        /// <response code="400">If assignment cannot be reactivated.</response>
-        /// <response code="401">If the user is not authenticated.</response>
-        /// <response code="404">If assignment not found.</response>
-        [HttpPatch("{assignmentId}/reactivate")]
-        public async Task<ActionResult<CourseAssignmentDto>> ReactivateCourseAssignment(string assignmentId)
-        {
-            var command = new ReactivateCourseAssignment.Command
-            {
-                AssignmentId = assignmentId
-            };
-
-            return HandleResult(await Mediator.Send(command));
-        }
-
-        // ===============================
-        // Queries
-        // ===============================
 
         /// <summary>
         /// Get a course assignment by id.
@@ -152,6 +63,7 @@ namespace API.Controllers
         /// <response code="200">Assignment retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If assignment not found.</response>
+        [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet("{assignmentId}")]
         public async Task<ActionResult<CourseAssignmentDetailsDto>> GetCourseAssignment(string assignmentId)
         {
@@ -169,13 +81,14 @@ namespace API.Controllers
         /// <remarks>
         /// Sample request:
         ///
-        ///     GET /api/course-assignments?courseId=...&status=Active
+        ///     GET /api/course-assignments?courseId=...&assignedToUserId=...
         ///
         /// </remarks>
         /// <param name="request">Filtering and pagination parameters.</param>
         /// <returns>Paged list of assignments.</returns>
         /// <response code="200">Assignments retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        [Authorize(Policy = Policies.Roadmaps_Read)]
         [HttpGet]
         public async Task<ActionResult<PagedList<CourseAssignmentDto, DateTime?>>> GetCourseAssignments(
             [FromQuery] GetCourseAssignmentsRequest request)
@@ -205,10 +118,6 @@ namespace API.Controllers
             return HandleResult(await Mediator.Send(query));
         }
 
-        // ===============================
-        // Delete
-        // ===============================
-
         /// <summary>
         /// Delete a course assignment.
         /// </summary>
@@ -222,6 +131,7 @@ namespace API.Controllers
         /// <response code="200">Assignment deleted successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If assignment not found.</response>
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
         [HttpDelete("{assignmentId}")]
         public async Task<ActionResult> DeleteCourseAssignment(string assignmentId)
         {

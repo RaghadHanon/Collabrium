@@ -41,6 +41,9 @@ namespace Application.Features.CourseAssignments.Commands
                         tenantId,
                         request.AssignmentId,
                         ct);
+
+                    if (removed)
+                        await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
 
                 return !removed

@@ -11,7 +11,6 @@ namespace Domain.Models
 
         public DateTime AssignedAt { get; private set; }
 
-
         private CourseAssignment() { }
 
         public CourseAssignment(
@@ -26,6 +25,7 @@ namespace Domain.Models
             AssignedByUserId = Guard.NotNullOrWhiteSpace(assignedByUserId, nameof(assignedByUserId));
 
             AssignedAt = DateTime.UtcNow;
+            Touch();
         }
 
         public CourseAssignment(
@@ -51,8 +51,7 @@ namespace Domain.Models
             string courseId,
             string assignedToUserId,
             string assignedByUserId,
-            DateTime assignedAt
-            )
+            DateTime assignedAt)
         {
             var assignment = new CourseAssignment(
                 id: id,
@@ -66,13 +65,7 @@ namespace Domain.Models
 
             return assignment;
         }
-
-
-
-
-
-
-
     }
-
 }
+
+

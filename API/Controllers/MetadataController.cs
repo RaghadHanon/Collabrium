@@ -233,17 +233,6 @@ public sealed class MetadataController : ApiBaseController
 
     }
 
-    [IgnoreTenantContext]
-    [HttpGet("course-assignment-status")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetCourseAssignmentStatusMetadata()
-    {
-        var query = new GetEnumMetaData.Query
-        {
-            MetadataType = MetadataType.CourseAssignmentStatus,
-        };
 
-        return HandleResult(await Mediator.Send(query));
-
-    }
 
 }

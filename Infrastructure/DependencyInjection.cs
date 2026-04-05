@@ -116,7 +116,7 @@ public static class DependencyInjection
         services.AddScoped<ICoursesReadModel, CoursesReadModel>();
         services.AddScoped<ICourseAssignmentsReadModel, CourseAssignmentsReadModel>();
         services.AddScoped<IUserCoursesReadModel, UserCoursesReadModel>();
-        services.AddScoped<CourseRatingsReadModel, CourseRatingsReadModel>();
+        services.AddScoped<ICourseRatingsReadModel, CourseRatingsReadModel>();
 
 
     }

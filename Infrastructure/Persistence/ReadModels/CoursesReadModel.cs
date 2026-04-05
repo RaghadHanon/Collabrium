@@ -49,10 +49,13 @@ namespace Infrastructure.Persistence.ReadModels
                 query = query.Where(c => c.CreatedAt < parameters.Cursor.Value);
 
             var items = await query
-                .OrderByDescending(c => c.CreatedAt)
-                .ProjectTo<CourseDto>(_mapper.ConfigurationProvider)
-                .Take(pageSize + 1)
-                .ToListAsync(cancellationToken);
+                  .OrderByDescending(c => c.CourseRatings.Any()
+                      ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
+                      : 0)
+                  .ThenByDescending(c => c.CreatedAt)
+                  .ProjectTo<CourseDto>(_mapper.ConfigurationProvider)
+                  .Take(pageSize + 1)
+                  .ToListAsync(cancellationToken);
 
             DateTime? nextCursor = null;
 

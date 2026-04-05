@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -24,6 +25,7 @@ namespace Application.Features.CourseRatings.Commands
             ICoursesRepository coursesRepository,
             ITenantContext tenantContext,
             ICurrentUserAccessor currentUserAccessor,
+            IUserCoursesRepository userCoursesRepository,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<CourseRatingDto>>
         {
@@ -45,6 +47,18 @@ namespace Application.Features.CourseRatings.Commands
                 if (course is null)
                     return Result<CourseRatingDto>.Failure("Course not found.", HttpStatusCode.NotFound);
 
+                var userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
+                   tenantId,
+                   currentUserId,
+                   request.CourseId,
+                   cancellationToken);
+
+                if (userCourse is null || userCourse.Status != UserCourseStatus.Completed)
+                {
+                    return Result<CourseRatingDto>.Failure(
+                        "You can rate this course only after completing it.",
+                        HttpStatusCode.BadRequest);
+                }
                 var existing = await courseRatingsRepository.GetByUserAndCourseAsync(
                     tenantId,
                     currentUserId,

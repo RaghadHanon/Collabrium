@@ -94,6 +94,7 @@ public static class DependencyInjection
         services.AddScoped<ICoursesRepository, CoursesRepository>();
         services.AddScoped<ICourseAssignmentsRepository, CourseAssignmentsRepository>();
         services.AddScoped<IUserCoursesRepository, UserCoursesRepository>();
+        services.AddScoped<ICourseRatingsRepository, CourseRatingsRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -115,6 +116,7 @@ public static class DependencyInjection
         services.AddScoped<ICoursesReadModel, CoursesReadModel>();
         services.AddScoped<ICourseAssignmentsReadModel, CourseAssignmentsReadModel>();
         services.AddScoped<IUserCoursesReadModel, UserCoursesReadModel>();
+        services.AddScoped<CourseRatingsReadModel, CourseRatingsReadModel>();
 
 
     }

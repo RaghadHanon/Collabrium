@@ -43,10 +43,10 @@ public class AddWorkItemComment
             if (string.IsNullOrWhiteSpace(currentUserId))
                 return Result<string>.Failure("Current User not found", HttpStatusCode.NotFound);
 
-            Comment? comment = null;
+            WorkItemComment? comment = null;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
-                comment = new Comment(currentUserId, request.Content);
+                comment = new WorkItemComment(currentUserId, request.Content);
 
                 await workItemsRepository.AddCommentOnWorkItemAsync(
                     tenantId,
@@ -55,7 +55,7 @@ public class AddWorkItemComment
                     comment,
                     cancellationToken);
 
-                historyRecorder.RecordCreationChanges<Comment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
+                historyRecorder.RecordCreationChanges<WorkItemComment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
             return Result<string>.Success(comment?.Id, HttpStatusCode.OK);

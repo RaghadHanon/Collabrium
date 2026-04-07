@@ -26,20 +26,26 @@ namespace Infrastructure.Persistence.ReadModels
             parameters ??= new RoadmapsSearchAndFilterParametersDto();
             var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
             IQueryable<RoadmapEntity> query = _dbContext.Roadmaps.AsNoTracking();
+
             query = ApplyFilters(query, parameters);
             if (parameters.Cursor.HasValue)
                 query = query.Where(r => r.CreatedAt < parameters.Cursor.Value);
+
             var items = await query
                 .OrderByDescending(r => r.CreatedAt)
                 .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
                 .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
+
             DateTime? nextCursor = null;
-            if (items.Count > pageSize)
+            var hasMore = items.Count > pageSize;
+
+            if (hasMore)
             {
-                nextCursor = items[^1].CreatedAt;
                 items.RemoveAt(items.Count - 1);
+                nextCursor = items[^1].CreatedAt;
             }
+
             return new PagedList<RoadmapDto, DateTime?>
             {
                 Items = items,

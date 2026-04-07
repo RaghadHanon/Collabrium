@@ -41,6 +41,7 @@ public class GetProjects
             var parameters = mapper.Map<ProjectsSearchAndFilterParametersDto>(request);
 
             var list = await projectsReadModel.GetProjectsAsync(parameters, cancellationToken);
+
             return Result<PagedList<ProjectDto, DateTime?>>.Success(list, HttpStatusCode.OK);
         }
     }

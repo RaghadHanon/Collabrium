@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-[Route("api/projects/project/{ProjectId}/sprints")]
+[Route("api/projects/project/{projectId}/sprints")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
 public sealed class SprintsController : ApiBaseController

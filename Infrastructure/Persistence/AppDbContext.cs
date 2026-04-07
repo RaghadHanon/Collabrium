@@ -28,6 +28,7 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
 
     public DbSet<WorkItemRelationEntity> WorkItemRelations => Set<WorkItemRelationEntity>();
     public DbSet<CommentEntity> Comments => Set<CommentEntity>();
+    public DbSet<WorkItemCommentEntity> WorkItemComments => Set<WorkItemCommentEntity>();
 
     public DbSet<RoadmapEntity> Roadmaps => Set<RoadmapEntity>();
     public DbSet<RoadmapNodeEntity> RoadmapNodes => Set<RoadmapNodeEntity>();

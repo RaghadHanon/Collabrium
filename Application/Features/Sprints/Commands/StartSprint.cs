@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using Domain.Models;
 using MediatR;
 using System.Net;
@@ -47,6 +48,9 @@ public class StartSprint
             var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
             if (project is null)
                 return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
+
+            if(project.Status != ProjectStatus.InProgress && project.Status != ProjectStatus.OnHold)
+                return Result<SprintDto>.Failure("Cannot start a sprint for a project that is not in progress or on hold.", HttpStatusCode.BadRequest);
 
             var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
             if (sprint is null)

@@ -81,7 +81,7 @@ public sealed class TenantsReadModel : ITenantsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(t => t.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(t => t.CreatedAt > parameters.Cursor.Value);
 
         var items = await query
             .OrderBy(t => t.CreatedAt)
@@ -90,10 +90,12 @@ public sealed class TenantsReadModel : ITenantsReadModel
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items.Last().CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<TenantWithAdminDto, DateTime?>

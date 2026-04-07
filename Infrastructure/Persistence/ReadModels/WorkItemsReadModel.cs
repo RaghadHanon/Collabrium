@@ -103,7 +103,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 r.TargetWorkItem.Title,
                 r.TargetWorkItem.Type,
                 r.TargetWorkItem.Status,
-                null))
+                r.TargetWorkItem.Type == WorkItemType.TestCase ? ((TestCaseEntity) r.TargetWorkItem).Result : null))
             .ToListAsync(cancellationToken);
     }
 
@@ -291,18 +291,21 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
 
         var items = await query
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .OrderBy(u => u.CreatedAt)
             .Take(pageSize + 1)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items[^1].CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<WorkItemListItemDto, DateTime?>
@@ -383,10 +386,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
 
         var items = await query
-            .OrderByDescending(x => x.CreatedAt).Select(w => new WorkItemListItemDto
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(p => p.Id)
+            .Select(w => new WorkItemListItemDto
             {
                 Id = w.Id,
                 Title = w.Title,
@@ -419,10 +424,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items[^1].CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<WorkItemListItemDto, DateTime?>
@@ -651,7 +658,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
         var wId = workItemId.Trim();
-        var query = _dbContext.Comments
+        var query = _dbContext.WorkItemComments
             .AsNoTracking()
             .AsQueryable();
 

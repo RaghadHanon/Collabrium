@@ -185,10 +185,10 @@ public abstract class WorkItem : Entity
 
         Status = newStatus;
 
-        if (newStatus == WorkItemStatus.InProgress && StartDate is null)
+        if ((newStatus == WorkItemStatus.InProgress || (newStatus == WorkItemStatus.InTesting && Type == WorkItemType.TestCase)) && StartDate is null)
             StartDate = DateTime.UtcNow;
 
-        if(newStatus == WorkItemStatus.ToDo && StartDate is not null)
+        if (newStatus == WorkItemStatus.ToDo && StartDate is not null)
             StartDate = null;
 
         if (newStatus == WorkItemStatus.Done)
@@ -258,10 +258,10 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    public Comment AddComment(string commentId, string createdByUserId, string content)
+    public WorkItemComment AddComment(string commentId, string createdByUserId, string content)
     {
         Guard.Against(string.IsNullOrWhiteSpace(commentId), "Comment id is required.");
-        var comment = new Comment(commentId, createdByUserId, content);
+        var comment = new WorkItemComment(commentId, createdByUserId, content);
         _comments.Add(comment);
         Touch();
         return comment;

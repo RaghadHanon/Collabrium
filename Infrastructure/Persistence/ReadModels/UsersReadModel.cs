@@ -82,7 +82,7 @@ public class UsersReadModel : IUsersReadModel
         CancellationToken cancellationToken)
     {
         if (parameters.Cursor.HasValue)
-            query = query.Where(u => u.CreatedAt >= parameters.Cursor.Value);
+            query = query.Where(u => u.CreatedAt > parameters.Cursor.Value);
 
         var items = await query
             .OrderBy(u => u.CreatedAt)
@@ -91,10 +91,12 @@ public class UsersReadModel : IUsersReadModel
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items.Last().CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<UserDto, DateTime?>

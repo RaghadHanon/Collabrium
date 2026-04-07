@@ -116,7 +116,7 @@ public class ProjectHistoryRecorder(
             nameof(WorkItem) => ProjectHistoryScope.WorkItem,
             nameof(WorkItemRelation) => ProjectHistoryScope.WorkItemRelation,
             nameof(CodeLink) => ProjectHistoryScope.WorkItemCodeLink,
-            nameof(Comment) => ProjectHistoryScope.WorkItemComment,
+            nameof(WorkItemComment) => ProjectHistoryScope.WorkItemComment,
             nameof(Attachment) => ProjectHistoryScope.WorkItemAttachment,
             _ => throw new ArgumentException($"Unsupported type: {typeof(T).Name}")
         };

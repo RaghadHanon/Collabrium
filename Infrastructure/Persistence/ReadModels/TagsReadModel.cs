@@ -24,6 +24,7 @@ namespace Infrastructure.Persistence.ReadModels
             parameters ??= new TagsSearchAndFilterParametersDto();
             var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
             IQueryable<TagEntity> query = _dbContext.Tags.AsNoTracking();
+
             // Tenant filter
             if (!string.IsNullOrWhiteSpace(parameters.TenantId))
             {
@@ -37,16 +38,22 @@ namespace Infrastructure.Persistence.ReadModels
                 var term = parameters.NameContains.Trim();
                 query = query.Where(t => t.Name.Contains(term));
             }
+
+            if (parameters.Cursor.HasValue)
+                query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
+
             var items = await query.OrderByDescending(t => t.CreatedAt)
                 .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
 
             DateTime? nextCursor = null;
-            if (items.Count > pageSize)
+            var hasMore = items.Count > pageSize;
+
+            if (hasMore)
             {
-                nextCursor = items[^1].CreatedAt;
                 items.RemoveAt(items.Count - 1);
+                nextCursor = items[^1].CreatedAt;
             }
 
             return new PagedList<TagDto, DateTime?>

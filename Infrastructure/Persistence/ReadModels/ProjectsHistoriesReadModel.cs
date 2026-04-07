@@ -32,7 +32,7 @@ public sealed class ProjectsHistoriesReadModel : IProjectHistoriesReadModel
         query = ApplyFilters(query, parameters, tenantId, projectId);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt <= parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
 
         var items = await query
             .OrderByDescending(x => x.CreatedAt)
@@ -41,10 +41,12 @@ public sealed class ProjectsHistoriesReadModel : IProjectHistoriesReadModel
             .ToListAsync(ct);
 
         DateTime? nextCursor = null;
-        if (items.Count > pageSize)
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            nextCursor = items[^1].CreatedAt;
             items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<ProjectHistoryDto, DateTime?>

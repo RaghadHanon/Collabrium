@@ -215,22 +215,24 @@ namespace Infrastructure.Persistence.Repositories
             if (parameters.Cursor.HasValue)
                 query = query.Where(r => r.CreatedAt > parameters.Cursor.Value);
 
-            var entities = await query
+            var items = await query
                 .OrderBy(r => r.CreatedAt)
-                .Include(r => r.Tags) // لأن ToDomain تحتاج tags
+                .Include(r => r.Tags) 
                 .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
 
             DateTime? nextCursor = null;
-            if (entities.Count > pageSize)
+            var hasMore = items.Count > pageSize;
+
+            if (hasMore)
             {
-                nextCursor = entities[^1].CreatedAt;
-                entities.RemoveAt(entities.Count - 1);
+                items.RemoveAt(items.Count - 1);
+                nextCursor = items[^1].CreatedAt;
             }
 
             return new PagedList<Roadmap, DateTime?>
             {
-                Items = entities.Select(RoadmapMapper.ToDomain).ToList(),
+                Items = items.Select(RoadmapMapper.ToDomain).ToList(),
                 NextCursor = nextCursor
             };
         }

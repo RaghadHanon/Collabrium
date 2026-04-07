@@ -153,4 +153,29 @@ public sealed class ReportsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(query));
     }
+
+    /// <summary>
+    /// Retrieves Project Velocity report as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{ProjectId}/velocity-report
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/velocity-report")]
+    public async Task<ActionResult<VelocityReportDto>> GetVelocityReport(string projectId)
+    {
+        var query = new GetProjectVelocityReport.Query 
+        {
+            ProjectId = projectId 
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
 }

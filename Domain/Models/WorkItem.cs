@@ -185,10 +185,10 @@ public abstract class WorkItem : Entity
 
         Status = newStatus;
 
-        if (newStatus == WorkItemStatus.InProgress && StartDate is null)
+        if ((newStatus == WorkItemStatus.InProgress || (newStatus == WorkItemStatus.InTesting && Type == WorkItemType.TestCase)) && StartDate is null)
             StartDate = DateTime.UtcNow;
 
-        if(newStatus == WorkItemStatus.ToDo && StartDate is not null)
+        if (newStatus == WorkItemStatus.ToDo && StartDate is not null)
             StartDate = null;
 
         if (newStatus == WorkItemStatus.Done)

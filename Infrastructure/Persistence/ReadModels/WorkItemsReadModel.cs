@@ -103,7 +103,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 r.TargetWorkItem.Title,
                 r.TargetWorkItem.Type,
                 r.TargetWorkItem.Status,
-                null))
+                r.TargetWorkItem.Type == WorkItemType.TestCase ? ((TestCaseEntity) r.TargetWorkItem).Result : null))
             .ToListAsync(cancellationToken);
     }
 

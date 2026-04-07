@@ -3,7 +3,6 @@ using Application.Features.Reports.DTOs.Summaries;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using Domain.Enums;
-using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -31,7 +30,7 @@ public class ReportsReadModel : IReportsReadModel
         {
             TenantId = tenantId,
             GeneratedAt = DateTime.UtcNow,
-            UsersSummary = usersSummary,    
+            UsersSummary = usersSummary,
             TeamsSummary = teamsSummary,
             ProjectsSummary = projectsSummary,
             SprintsSummary = sprintsSummary,
@@ -164,7 +163,7 @@ public class ReportsReadModel : IReportsReadModel
         var projectKey = await _dbContext.Projects
             .AsNoTracking()
             .Where(p => p.Id == projectId && p.TenantId == tenantId)
-            .Select(p => p.Key )
+            .Select(p => p.Key)
             .FirstOrDefaultAsync();
 
         var query = _dbContext.WorkItems
@@ -177,15 +176,16 @@ public class ReportsReadModel : IReportsReadModel
                          && wi.Status == WorkItemStatus.Done)
             .AsQueryable();
 
-        if(!string.IsNullOrEmpty(sprintId))
+        if (!string.IsNullOrEmpty(sprintId))
             query = query.Where(wi => wi.SprintId == sprintId);
 
         var workItemsSnapshot = await query
-            .Select(wi => new { 
-                        Id = wi.Id,
-                        Code = wi.Code,
-                        CreatedAt = wi.CreatedAt,
-                        EndDate = wi.EndDate 
+            .Select(wi => new
+            {
+                Id = wi.Id,
+                Code = wi.Code,
+                CreatedAt = wi.CreatedAt,
+                EndDate = wi.EndDate
             })
             .ToListAsync();
 
@@ -201,6 +201,8 @@ public class ReportsReadModel : IReportsReadModel
         {
             ProjectId = projectId,
             ProjectKey = projectKey!,
+            From = from,
+            To = to,
             GeneratedAt = DateTime.UtcNow,
             AverageCycleTimeDays = items.Any() ? items.Average(i => i.CycleTimeDays) : 0,
             MedianCycleTimeDays = items.Any() ? items.OrderBy(i => i.CycleTimeDays).ElementAt(items.Count / 2).CycleTimeDays : 0,
@@ -236,8 +238,51 @@ public class ReportsReadModel : IReportsReadModel
             SprintId = sprintId,
             TotalWorkItems = totalWorkItems,
             CompletedWorkItems = completedWorkItems,
-            GeneralProgressPercentage = totalWorkItems > 0 ? (double)completedWorkItems / totalWorkItems * 100 : 0,
-            UserStoryProgressPercentage = totalStoryPoints > 0 ? (double)completedStoryPoints / totalStoryPoints * 100 : 0
+            GeneralProgressPercentage = totalWorkItems > 0 ? (double) completedWorkItems / totalWorkItems * 100 : 0,
+            UserStoryProgressPercentage = totalStoryPoints > 0 ? (double) completedStoryPoints / totalStoryPoints * 100 : 0
+        };
+    }
+
+    public async Task<VelocityReportDto> GenerateVelocityReport(string tenantId, string projectId)
+    {
+        var sprintVelocities = await _dbContext.UserStories
+            .AsNoTracking()
+            .Where(us =>
+                    us.Project.TenantId == tenantId &&
+                    us.ProjectId == projectId &&
+                    us.SprintId != null &&
+                    us.Sprint!.Status != SprintStatus.Cancelled)
+            .GroupBy(us => new { us.SprintId, us.Sprint!.Code })
+            .Select(g => new SprintVelocityDto
+            {
+                SprintId = g.Key.SprintId!,
+                SprintCode = g.Key.Code,
+                TotalStoryPoints = g.Sum(us => us.StoryPoints),
+                CompletedStoryPoints = g.Where(us => us.Status == WorkItemStatus.Done)
+                                        .Sum(us => us.StoryPoints)
+            })
+            .OrderBy(s => s.SprintCode)
+            .ToListAsync();
+
+        foreach (var v in sprintVelocities)
+        {
+            v.VelocityPercentage = v.TotalStoryPoints > 0
+                ? (double) v.CompletedStoryPoints / v.TotalStoryPoints * 100
+                : 0;
+        }
+
+        var projectInfo = await _dbContext.Projects
+            .AsNoTracking()
+            .Where(p => p.Id == projectId && p.TenantId == tenantId)
+            .Select(p => new { p.Id, p.Key, p.Name })
+            .FirstOrDefaultAsync();
+
+        return new VelocityReportDto
+        {
+            ProjectId = projectInfo!.Id,
+            ProjectKey = projectInfo.Key,
+            ProjectName = projectInfo.Name,
+            SprintVelocities = sprintVelocities
         };
     }
 }

@@ -8,4 +8,5 @@ public interface IReportsReadModel
     Task<SprintsSummary> GenerateProjectSprintsSummary(string tenantId, string projectId);
     Task<SprintProgressDto> GetSprintProgress(string tenantId, string projectId, string sprintId);
     Task<CycleTimeReport> GenerateCycleTimeReportAsync(string tenantId, string projectId, DateTime from, DateTime to, string? sprintId);
+    Task<VelocityReportDto> GenerateVelocityReport(string tenantId, string projectId);
 }

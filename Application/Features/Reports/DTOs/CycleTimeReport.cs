@@ -6,6 +6,8 @@ public class CycleTimeReport
     public required string ProjectKey { get; set; }
     public DateTime GeneratedAt { get; set; }
 
+    public DateTime From { get; set; }
+    public DateTime To { get; set; }
     public double AverageCycleTimeDays { get; set; }
     public double MedianCycleTimeDays { get; set; }
     public double MinCycleTimeDays { get; set; }

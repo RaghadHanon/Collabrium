@@ -37,7 +37,7 @@ public class ProjectAssignedEmailHandler
                 ["AssigneeFullName"] = member.FullName,
                 ["AssignerFullName"] = notification.AssignerFullName,
                 ["TeamName"] = notification.TeamName,
-                ["ProjectTitle"] = notification.ProjectTitle,
+                ["ProjectName"] = notification.ProjectTitle,
                 ["ProjectKey"] = notification.ProjectKey,
                 ["Url"] = url
             };

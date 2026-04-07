@@ -17,7 +17,13 @@
 		<PackageReference Include="ScottPlot" Version="5.1.57" />
 		<PackageReference Include="SendGrid" Version="9.29.3" />
 	</ItemGroup>
-
+	
+	<ItemGroup>
+		<Content Include="Reports\Assets\logo.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>

@@ -1,18 +1,24 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.Emails;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Reports;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.FilesStorage.Factory;
 using Infrastructure.Identity;
-using Infrastructure.Pdf;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.ReadModels;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Persistence.Seeders;
+using Infrastructure.Reports;
+using Infrastructure.Reports.Common;
+using Infrastructure.Reports.CycleTime;
+using Infrastructure.Reports.SprintProgress;
+using Infrastructure.Reports.TenantInfo;
+using Infrastructure.Reports.Velocity;
 using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.SignalR;
@@ -55,14 +61,26 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IPdfService, PdfService>();
-        services.AddScoped<IChartService, ChartService>();
+        AddReportsServices(services);
         QuestPDF.Settings.License = LicenseType.Community;
 
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
         services.AddSignalR();
 
         return services;
+    }
+
+    private static void AddReportsServices(IServiceCollection services)
+    {
+        services.AddSingleton<IReportBrandingProvider, ReportBrandingProvider>();
+        services.AddScoped<ITenantInfoChartRenderer, TenantInfoChartRenderer>();
+        services.AddScoped<ITenantInfoPdfRenderer, TenantInfoPdfRenderer>();
+        services.AddScoped<ICycleTimeChartRenderer, CycleTimeChartRenderer>();
+        services.AddScoped<ICycleTimePdfRenderer, CycleTimePdfRenderer>();
+        services.AddScoped<IVelocityChartRenderer, VelocityChartRenderer>();
+        services.AddScoped<IVelocityPdfRenderer, VelocityPdfRenderer>();
+        services.AddScoped<ISprintProgressChartRenderer, SprintProgressChartRenderer>();
+        services.AddScoped<ISprintProgressPdfRenderer, SprintProgressPdfRenderer>();
     }
 
     private static void AddStorageServices(IServiceCollection services, IConfiguration configuration)

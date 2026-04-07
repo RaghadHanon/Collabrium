@@ -15,7 +15,7 @@ public class ProjectAssignmentEmailTemplate : IEmailTemplate
         var assignerFullName = data["AssignerFullName"];
         var teamName = data["TeamName"];
         var projectKey = data["ProjectKey"];
-        var projectTitle = data["ProjectTitle"];
+        var projectTitle = data["ProjectName"];
         var url = data["Url"];
 
         return $@"Hi {assigneeFullName},
@@ -38,7 +38,7 @@ Collabrium Team";
         var assignerFullName = data["AssignerFullName"];
         var teamName = data["TeamName"];
         var projectKey = data["ProjectKey"];
-        var projectTitle = data["ProjectTitle"];
+        var projectTitle = data["ProjectName"];
         var url = data["Url"];
 
         return $@"

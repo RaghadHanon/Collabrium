@@ -36,7 +36,7 @@ public class SprintStatusChangedEmailHandler
             {
                 ["AssigneeFullName"] = member.FullName,
                 ["AssignerFullName"] = notification.AssignerFullName,
-                ["ProjectTitle"] = notification.ProjectTitle,
+                ["ProjectName"] = notification.ProjectTitle,
                 ["ProjectKey"] = notification.ProjectKey,
                 ["SprintCode"] = notification.SprintCode,
                 ["SprintName"] = notification.SprintName,

@@ -14,7 +14,7 @@ public class SprintStatusChangedEmailTemplate : IEmailTemplate
         var assigneeFullName = data["AssigneeFullName"];
         var assignerFullName = data["AssignerFullName"];
         var projectKey = data["ProjectKey"];
-        var projectTitle = data["ProjectTitle"];
+        var projectTitle = data["ProjectName"];
         var sprintCode = data["SprintCode"];
         var sprintName = data["SprintName"];
         var sprintStatus = data["SprintStatus"];
@@ -40,7 +40,7 @@ Collabrium Team";
         var assigneeFullName = data["AssigneeFullName"];
         var assignerFullName = data["AssignerFullName"];
         var projectKey = data["ProjectKey"];
-        var projectTitle = data["ProjectTitle"];
+        var projectTitle = data["ProjectName"];
         var sprintCode = data["SprintCode"];
         var sprintName = data["SprintName"];
         var sprintStatus = data["SprintStatus"];

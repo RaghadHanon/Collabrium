@@ -8,6 +8,8 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
 {
     public void Configure(EntityTypeBuilder<CommentEntity> builder)
     {
+        builder.ToTable("Comments");
+
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Content)
@@ -18,10 +20,5 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
             .WithMany()
             .HasForeignKey(c => c.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(c => c.WorkItem)
-            .WithMany(w => w.Comments)
-            .HasForeignKey(c => c.WorkItemId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

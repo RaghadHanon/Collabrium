@@ -41,17 +41,17 @@ public interface IWorkItemsRepository
         string tenantId,
         string projectId,
         string workItemId,
-        Comment comment,
+        WorkItemComment comment,
         CancellationToken cancellationToken = default);
 
-    Task<Comment?> GetCommentOnWorkItemByIdAsync(
+    Task<WorkItemComment?> GetCommentOnWorkItemByIdAsync(
         string workItemId,
         string commentId,
         CancellationToken cancellationToken = default);
 
     Task UpdateCommentOfWorkItemAsync(
         string workItemId,
-        Comment comment,
+        WorkItemComment comment,
         CancellationToken cancellationToken = default);
 
     Task RemoveCommentFromWorkItemAsync(

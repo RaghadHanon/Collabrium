@@ -658,7 +658,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
         var wId = workItemId.Trim();
-        var query = _dbContext.Comments
+        var query = _dbContext.WorkItemComments
             .AsNoTracking()
             .AsQueryable();
 

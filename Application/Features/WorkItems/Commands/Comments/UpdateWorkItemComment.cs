@@ -61,7 +61,7 @@ public class UpdateWorkItemComment
                     comment,
                     cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Comment>(request.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldCommentState, comment);
+                historyRecorder.RecordUpdatingChanges<WorkItemComment>(request.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldCommentState, comment);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

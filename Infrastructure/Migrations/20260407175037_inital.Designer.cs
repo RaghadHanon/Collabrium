@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260404214229_inital")]
+    [Migration("20260407175037_inital")]
     partial class inital
     {
         /// <inheritdoc />
@@ -237,17 +237,13 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("WorkItemId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("WorkItemId");
+                    b.ToTable("Comments", (string)null);
 
-                    b.ToTable("Comments");
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
@@ -1278,6 +1274,19 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.CommentEntity");
+
+                    b.Property<string>("WorkItemId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasIndex("WorkItemId");
+
+                    b.ToTable("WorkItemComments", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>
                 {
                     b.HasBaseType("Infrastructure.Persistence.Entities.RoadmapNodeEntity");
@@ -1525,15 +1534,7 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
-                        .WithMany("Comments")
-                        .HasForeignKey("WorkItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("CreatedByUser");
-
-                    b.Navigation("WorkItem");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
@@ -2077,6 +2078,23 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.CommentEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Infrastructure.Persistence.Entities.WorkItemCommentEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.WorkItemEntity", "WorkItem")
+                        .WithMany("Comments")
+                        .HasForeignKey("WorkItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkItem");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>

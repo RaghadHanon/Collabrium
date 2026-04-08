@@ -157,6 +157,27 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RefreshTokens",
                 columns: table => new
                 {
@@ -834,27 +855,23 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comments",
+                name: "WorkItemComments",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.PrimaryKey("PK_WorkItemComments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Comments_AspNetUsers_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "AspNetUsers",
+                        name: "FK_WorkItemComments_Comments_Id",
+                        column: x => x.Id,
+                        principalTable: "Comments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Comments_WorkItems_WorkItemId",
+                        name: "FK_WorkItemComments_WorkItems_WorkItemId",
                         column: x => x.WorkItemId,
                         principalTable: "WorkItems",
                         principalColumn: "Id",
@@ -964,11 +981,6 @@ namespace Infrastructure.Migrations
                 name: "IX_Comments_CreatedByUserId",
                 table: "Comments",
                 column: "CreatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Comments_WorkItemId",
-                table: "Comments",
-                column: "WorkItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseAssignments_AssignedByUserId",
@@ -1178,6 +1190,11 @@ namespace Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkItemComments_WorkItemId",
+                table: "WorkItemComments",
+                column: "WorkItemId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkItemRelations_TargetWorkItemId",
                 table: "WorkItemRelations",
                 column: "TargetWorkItemId");
@@ -1306,9 +1323,6 @@ namespace Infrastructure.Migrations
                 name: "CodeLinks");
 
             migrationBuilder.DropTable(
-                name: "Comments");
-
-            migrationBuilder.DropTable(
                 name: "CourseAssignments");
 
             migrationBuilder.DropTable(
@@ -1336,6 +1350,9 @@ namespace Infrastructure.Migrations
                 name: "UserCourses");
 
             migrationBuilder.DropTable(
+                name: "WorkItemComments");
+
+            migrationBuilder.DropTable(
                 name: "WorkItemRelations");
 
             migrationBuilder.DropTable(
@@ -1349,6 +1366,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Courses");
+
+            migrationBuilder.DropTable(
+                name: "Comments");
 
             migrationBuilder.DropTable(
                 name: "WorkItems");

@@ -3,6 +3,7 @@ using Application.Features.Courses.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,30 +19,35 @@ namespace Infrastructure.Persistence.ReadModels
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
+
         public async Task<CourseDto?> GetByIdAsync(
-          string tenantId,
-          string courseId,
-          CancellationToken ct = default)
+            string tenantId,
+            string courseId,
+            CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(courseId))
                 return null;
 
+            var tId = tenantId.Trim();
+            var cId = courseId.Trim();
+
             return await _dbContext.Courses
                 .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && x.Id == courseId)
+                .Where(c => c.TenantId == tId && c.Id == cId)
                 .ProjectTo<CourseDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(ct);
         }
-        public async Task<PagedList<CourseDto, DateTime?>> GetCoursesAsync(
+
+        public async Task<PagedList<CourseListItemDto, DateTime?>> GetCoursesAsync(
             CoursesSearchAndFilterParametersDto parameters,
+            string? currentUserId,
             CancellationToken cancellationToken = default)
         {
             parameters ??= new CoursesSearchAndFilterParametersDto();
 
             var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
-            IQueryable<CourseEntity> query = _dbContext.Courses
-                .AsNoTracking();
+            IQueryable<CourseEntity> query = _dbContext.Courses.AsNoTracking();
 
             query = ApplyFilters(query, parameters);
 
@@ -49,13 +55,53 @@ namespace Infrastructure.Persistence.ReadModels
                 query = query.Where(c => c.CreatedAt < parameters.Cursor.Value);
 
             var items = await query
-                  .OrderByDescending(c => c.CourseRatings.Any()
-                      ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
-                      : 0)
-                  .ThenByDescending(c => c.CreatedAt)
-                  .ProjectTo<CourseDto>(_mapper.ConfigurationProvider)
-                  .Take(pageSize + 1)
-                  .ToListAsync(cancellationToken);
+                .OrderByDescending(c => c.CourseRatings.Any()
+                    ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
+                    : 0)
+                .ThenByDescending(c => c.CreatedAt)
+                .Select(c => new CourseListItemDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    Description = c.Description,
+                    Url = c.Url,
+                    Provider = c.Provider,
+                    InstructorName = c.InstructorName,
+                    Level = c.Level,
+                    Language = c.Language,
+                    EstimatedDurationInHours = c.EstimatedDurationInHours,
+
+                    ThumbnailImageUrl = c.ThumbnailImage != null ? c.ThumbnailImage.Url : null,
+                    ThumbnailImagePublicId = c.ThumbnailImage != null ? c.ThumbnailImage.PublicId : null,
+
+                    TagIds = c.CourseTags.Select(t => t.TagId).ToList(),
+
+                    RatingsCount = c.CourseRatings.Count,
+                    AverageRating = c.CourseRatings.Any()
+                        ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
+                        : 0,
+
+                    IsSaved = !string.IsNullOrWhiteSpace(currentUserId) &&
+                              c.UserCourses.Any(uc =>
+                                  uc.UserId == currentUserId &&
+                                  uc.IsSaved),
+
+                    Status = !string.IsNullOrWhiteSpace(currentUserId)
+                        ? c.UserCourses
+                            .Where(uc => uc.UserId == currentUserId)
+                            .Select(uc => (UserCourseStatus?)uc.Status)
+                            .FirstOrDefault()
+                        : null,
+
+                    IsAssignedToMe = !string.IsNullOrWhiteSpace(currentUserId) &&
+                                     c.CourseAssignments.Any(a =>
+                                         a.AssignedToUserId == currentUserId),
+
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt
+                })
+                .Take(pageSize + 1)
+                .ToListAsync(cancellationToken);
 
             DateTime? nextCursor = null;
 
@@ -65,7 +111,7 @@ namespace Infrastructure.Persistence.ReadModels
                 items.RemoveAt(items.Count - 1);
             }
 
-            return new PagedList<CourseDto, DateTime?>
+            return new PagedList<CourseListItemDto, DateTime?>
             {
                 Items = items,
                 NextCursor = nextCursor
@@ -89,6 +135,7 @@ namespace Infrastructure.Persistence.ReadModels
                 .ProjectTo<CourseDetailsDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
         }
+
         public async Task<List<CourseTagDto>> GetTagsAsync(
             string tenantId,
             string courseId,
@@ -107,6 +154,7 @@ namespace Infrastructure.Persistence.ReadModels
                 .ProjectTo<CourseTagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }
+
         private static IQueryable<CourseEntity> ApplyFilters(
             IQueryable<CourseEntity> query,
             CoursesSearchAndFilterParametersDto parameters)
@@ -207,7 +255,5 @@ namespace Infrastructure.Persistence.ReadModels
 
             return query;
         }
-
-
     }
 }

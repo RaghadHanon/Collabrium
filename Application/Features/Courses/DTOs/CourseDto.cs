@@ -2,7 +2,7 @@
 
 namespace Application.Features.Courses.DTOs
 {
-    public sealed class CourseDto
+    public class CourseDto
     {
         public required string Id { get; set; }
 
@@ -27,5 +27,7 @@ namespace Application.Features.Courses.DTOs
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+
     }
 }

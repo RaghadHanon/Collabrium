@@ -10,14 +10,14 @@ namespace Application.Interfaces.ReadModels
            string courseId,
            CancellationToken ct = default);
 
-
         Task<CourseDetailsDto?> GetDetailsByIdAsync(
             string tenantId,
             string courseId,
             CancellationToken ct = default);
 
-        Task<PagedList<CourseDto, DateTime?>> GetCoursesAsync(
+        Task<PagedList<CourseListItemDto, DateTime?>> GetCoursesAsync(
             CoursesSearchAndFilterParametersDto parameters,
+            string? currentUserId,
             CancellationToken cancellationToken = default);
         Task<List<CourseTagDto>> GetTagsAsync(
             string tenantId,

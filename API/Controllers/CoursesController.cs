@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Courses;
+using Application.Common;
 using Application.Features.Courses.Commands;
 using Application.Features.Courses.DTOs;
 using Application.Features.Courses.Queries;
@@ -99,7 +100,7 @@ namespace API.Controllers
         /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the current tenant is not found.</response>
         [HttpGet]
-        public async Task<IActionResult> GetCourses([FromQuery] GetCoursesRequest request)
+        public async Task<ActionResult<PagedList<CourseListItemDto, DateTime?>>> GetCourses([FromQuery] GetCoursesRequest request)
         {
             var query = _mapper.Map<GetCourses.Query>(request);
             var result = await Mediator.Send(query);

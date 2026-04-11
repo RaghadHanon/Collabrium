@@ -93,9 +93,7 @@ namespace Infrastructure.Persistence.ReadModels
                             .FirstOrDefault()
                         : null,
 
-                    IsAssignedToMe = !string.IsNullOrWhiteSpace(currentUserId) &&
-                                     c.CourseAssignments.Any(a =>
-                                         a.AssignedToUserId == currentUserId),
+
 
                     CreatedAt = c.CreatedAt,
                     UpdatedAt = c.UpdatedAt

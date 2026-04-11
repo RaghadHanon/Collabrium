@@ -1,4 +1,5 @@
 ﻿using API.Contracts.CourseRatings;
+using API.SetupProgram;
 using Application.Features.CourseRatings.Commands;
 using Application.Features.CourseRatings.Queries;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +19,7 @@ namespace API.Controllers
         /// <returns>Course rating</returns>
         /// <response code="200">Rating added or updated successfully</response>
         /// <response code="404">Course not found</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpPost]
         public async Task<ActionResult> RateCourse(
             string courseId,
@@ -37,6 +39,7 @@ namespace API.Controllers
         /// <returns>Paged list of ratings</returns>
         /// <response code="200">Returns ratings</response>
         /// <response code="404">Course not found</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpGet]
         public async Task<ActionResult> GetCourseRatings(
             string courseId,
@@ -55,6 +58,7 @@ namespace API.Controllers
         /// <returns>User rating</returns>
         /// <response code="200">Returns rating</response>
         /// <response code="404">Rating not found</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet("me")]
         public async Task<ActionResult> GetMyRating(string courseId)
         {

@@ -14,6 +14,10 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                 .ForMember(d => d.CourseThumbnailUrl,
                     o => o.MapFrom(s => s.Course.ThumbnailImage != null
                         ? s.Course.ThumbnailImage.Url
+                        : null))
+                .ForMember(d => d.AssignedByUserName,
+                    o => o.MapFrom(s => s.AssignedByUser != null
+                        ? s.AssignedByUser.FullName
                         : null));
 
             CreateMap<UserCourseEntity, UserCourseDetailsDto>()
@@ -30,6 +34,25 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                 .ForMember(d => d.CourseThumbnailUrl,
                     o => o.MapFrom(s => s.Course.ThumbnailImage != null
                         ? s.Course.ThumbnailImage.Url
+                        : null))
+                .ForMember(d => d.AssignedByUserName,
+                    o => o.MapFrom(s => s.AssignedByUser != null
+                        ? s.AssignedByUser.FullName
+                        : null));
+
+
+            CreateMap<UserCourseEntity, AssignedUserCourseDto>()
+                .ForMember(d => d.UserName,
+                    o => o.MapFrom(s => s.User.FullName))
+                .ForMember(d => d.CourseTitle,
+                    o => o.MapFrom(s => s.Course.Title))
+                .ForMember(d => d.CourseThumbnailUrl,
+                    o => o.MapFrom(s => s.Course.ThumbnailImage != null
+                        ? s.Course.ThumbnailImage.Url
+                        : null))
+                .ForMember(d => d.AssignedByUserName,
+                    o => o.MapFrom(s => s.AssignedByUser != null
+                        ? s.AssignedByUser.FullName
                         : null));
         }
     }

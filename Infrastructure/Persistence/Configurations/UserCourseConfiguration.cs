@@ -27,6 +27,14 @@ namespace Infrastructure.Persistence.Configurations
             builder.Property(x => x.IsSaved)
                 .IsRequired();
 
+            builder.Property(x => x.IsAssigned)
+                .IsRequired();
+
+            builder.Property(x => x.AssignedByUserId)
+                .HasMaxLength(450);
+
+            builder.Property(x => x.AssignedAt);
+
             builder.Property(x => x.StartedAt);
 
             builder.Property(x => x.CompletedAt);
@@ -39,6 +47,11 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.AssignedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.AssignedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(x => x.Course)

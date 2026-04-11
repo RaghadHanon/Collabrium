@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Courses;
+using API.SetupProgram;
 using Application.Common;
 using Application.Features.Courses.Commands;
 using Application.Features.Courses.DTOs;
@@ -48,6 +49,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant is not found.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPost("course")]
         public async Task<IActionResult> CreateCourse([FromBody] CreateCourseRequest request)
         {
@@ -69,6 +71,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the current tenant is not found or the course does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetCourseById([FromRoute] string courseId)
         {
@@ -99,6 +102,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the current tenant is not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet]
         public async Task<ActionResult<PagedList<CourseListItemDto, DateTime?>>> GetCourses([FromQuery] GetCoursesRequest request)
         {
@@ -129,6 +133,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant is not found or the course does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPatch("course/{courseId}")]
         public async Task<IActionResult> UpdateCourse([FromRoute] string courseId, [FromBody] UpdateCourseRequest request)
         {
@@ -152,6 +157,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant is not found or the course does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpDelete("course/{courseId}")]
         public async Task<IActionResult> DeleteCourse([FromRoute] string courseId)
         {
@@ -186,6 +192,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant, course, or one of the tags does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPut("course/{courseId}/tags")]
         public async Task<IActionResult> SetCourseTags([FromRoute] string courseId, [FromBody] SetCourseTagsRequest request)
         {
@@ -218,6 +225,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant, course, or one of the tags does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPost("course/{courseId}/tags")]
         public async Task<IActionResult> AddCourseTags([FromRoute] string courseId, [FromBody] AddCourseTagsRequest request)
         {
@@ -250,6 +258,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant, course, or one of the tags does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPatch("course/{courseId}/tags")]
         public async Task<IActionResult> RemoveCourseTags([FromRoute] string courseId, [FromBody] RemoveCourseTagsRequest request)
         {
@@ -280,6 +289,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user does not have permission to manage courses.</response>
         /// <response code="404">If the current tenant or course does not exist.</response>
+        [Authorize(Policy = Policies.Courses_Manage)]
         [HttpPost("course/{courseId}/thumbnail")]
         public async Task<IActionResult> UploadCourseThumbnail([FromRoute] string courseId, [FromForm] UploadCourseThumbnailRequest request)
         {

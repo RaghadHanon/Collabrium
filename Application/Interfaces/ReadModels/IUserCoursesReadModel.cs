@@ -29,5 +29,9 @@ namespace Application.Interfaces.ReadModels
         Task<PagedList<UserCourseDto, DateTime?>> GetUserCoursesAsync(
             UserCoursesSearchAndFilterParametersDto parameters,
             CancellationToken ct = default);
+     
+        Task<PagedList<AssignedUserCourseDto, DateTime?>> GetAssignedByUserAsync(
+            AssignedUserCoursesSearchAndFilterParametersDto parameters,
+            CancellationToken cancellationToken = default);
     }
 }

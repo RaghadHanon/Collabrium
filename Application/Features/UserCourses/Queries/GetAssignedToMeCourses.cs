@@ -3,16 +3,25 @@ using Application.Features.UserCourses.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
+using AutoMapper;
 using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Application.Features.UserCourses.Queries
 {
-    public sealed class GetMySavedUserCourses
+    public sealed class GetAssignedToMeCourses
     {
         public sealed class Query : IRequest<Result<PagedList<UserCourseDto, DateTime?>>>
         {
             public string? Search { get; set; }
+
+            public DateTime? AssignedAfter { get; set; }
+            public DateTime? AssignedBefore { get; set; }
 
             public DateTime? CreatedAfter { get; set; }
             public DateTime? CreatedBefore { get; set; }
@@ -27,6 +36,7 @@ namespace Application.Features.UserCourses.Queries
         public sealed class Handler(
             IUserCoursesReadModel userCoursesReadModel,
             ITenantContext tenantContext,
+            IMapper mapper,
             ICurrentUserAccessor currentUserAccessor)
             : IRequestHandler<Query, Result<PagedList<UserCourseDto, DateTime?>>>
         {
@@ -40,22 +50,9 @@ namespace Application.Features.UserCourses.Queries
                 if (string.IsNullOrWhiteSpace(currentUserId))
                     return Result<PagedList<UserCourseDto, DateTime?>>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
-                var parameters = new UserCoursesSearchAndFilterParametersDto
-                {
-                    TenantId = tenantId,
-                    UserId = currentUserId,
-                    Search = request.Search,
-                    IsSaved = true,
-
-                    CreatedAfter = request.CreatedAfter,
-                    CreatedBefore = request.CreatedBefore,
-
-                    UpdatedAfter = request.UpdatedAfter,
-                    UpdatedBefore = request.UpdatedBefore,
-
-                    PageSize = request.PageSize,
-                    Cursor = request.Cursor
-                };
+                var parameters = mapper.Map<UserCoursesSearchAndFilterParametersDto>(request);
+                parameters.UserId = currentUserId;
+                parameters.IsAssigned = true;
 
                 var result = await userCoursesReadModel.GetUserCoursesAsync(parameters, cancellationToken);
 

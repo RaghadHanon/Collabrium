@@ -11,7 +11,9 @@ namespace Domain.Models
 
         public UserCourseStatus Status { get; private set; }
         public bool IsSaved { get; private set; }
-
+        public bool IsAssigned { get; private set; }
+        public string? AssignedByUserId { get; private set; }
+        public DateTime? AssignedAt { get; private set; }
         public DateTime? StartedAt { get; private set; }
         public DateTime? CompletedAt { get; private set; }
 
@@ -28,6 +30,7 @@ namespace Domain.Models
 
             Status = UserCourseStatus.NotStarted;
             IsSaved = false;
+            IsAssigned = false;
         }
 
         public UserCourse(
@@ -42,6 +45,7 @@ namespace Domain.Models
 
             Status = UserCourseStatus.NotStarted;
             IsSaved = false;
+            IsAssigned = false;
         }
 
         public static UserCourse Rehydrate(
@@ -53,6 +57,9 @@ namespace Domain.Models
             string courseId,
             UserCourseStatus status,
             bool isSaved,
+            bool isAssigned,
+            string? assignedByUserId,
+            DateTime? assignedAt,
             DateTime? startedAt,
             DateTime? completedAt)
         {
@@ -63,19 +70,31 @@ namespace Domain.Models
                 courseId: courseId);
 
             userCourse.SetTimestamps(createdAt, updatedAt);
-
             userCourse.Status = status;
             userCourse.IsSaved = isSaved;
+            userCourse.IsAssigned = isAssigned;
+            userCourse.AssignedByUserId = string.IsNullOrWhiteSpace(assignedByUserId) ? null : assignedByUserId.Trim();
+            userCourse.AssignedAt = assignedAt;
             userCourse.StartedAt = startedAt;
             userCourse.CompletedAt = completedAt;
-
             return userCourse;
         }
 
-        // ============================
-        // Behavior
-        // ============================
+        public void Assign(string assignedByUserId)
+        {
+            AssignedByUserId = Guard.NotNullOrWhiteSpace(assignedByUserId, nameof(assignedByUserId)).Trim();
+            AssignedAt = DateTime.UtcNow;
+            IsAssigned = true;
+            Touch();
+        }
 
+        public void Unassign()
+        {
+            IsAssigned = false;
+            AssignedByUserId = null;
+            AssignedAt = null;
+            Touch();
+        }
         public void Start()
         {
             if (Status == UserCourseStatus.Completed)
@@ -128,6 +147,13 @@ namespace Domain.Models
             CompletedAt = null;
 
             Touch();
+        }
+        public bool CanBeDeletedWhenUnassigned()
+        {
+            return !IsSaved
+                   && Status == UserCourseStatus.NotStarted
+                   && !StartedAt.HasValue
+                   && !CompletedAt.HasValue;
         }
     }
 }

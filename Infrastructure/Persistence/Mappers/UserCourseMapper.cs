@@ -17,6 +17,9 @@ namespace Infrastructure.Persistence.Mappers
                 CourseId = domain.CourseId,
                 Status = domain.Status,
                 IsSaved = domain.IsSaved,
+                IsAssigned = domain.IsAssigned,
+                AssignedByUserId = domain.AssignedByUserId,
+                AssignedAt = domain.AssignedAt,
                 StartedAt = domain.StartedAt,
                 CompletedAt = domain.CompletedAt,
                 CreatedAt = domain.CreatedAt,
@@ -37,6 +40,9 @@ namespace Infrastructure.Persistence.Mappers
                 courseId: entity.CourseId,
                 status: entity.Status,
                 isSaved: entity.IsSaved,
+                isAssigned: entity.IsAssigned,
+                assignedByUserId: entity.AssignedByUserId,
+                assignedAt: entity.AssignedAt,
                 startedAt: entity.StartedAt,
                 completedAt: entity.CompletedAt
             );
@@ -49,6 +55,9 @@ namespace Infrastructure.Persistence.Mappers
 
             entity.Status = domain.Status;
             entity.IsSaved = domain.IsSaved;
+            entity.IsAssigned = domain.IsAssigned;
+            entity.AssignedByUserId = domain.AssignedByUserId;
+            entity.AssignedAt = domain.AssignedAt;
             entity.StartedAt = domain.StartedAt;
             entity.CompletedAt = domain.CompletedAt;
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;

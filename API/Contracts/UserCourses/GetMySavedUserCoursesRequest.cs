@@ -4,6 +4,9 @@
     {
         public string? Search { get; set; }
 
+        public DateTime? AssignedAfter { get; set; }
+        public DateTime? AssignedBefore { get; set; }
+
         public DateTime? CreatedAfter { get; set; }
         public DateTime? CreatedBefore { get; set; }
 

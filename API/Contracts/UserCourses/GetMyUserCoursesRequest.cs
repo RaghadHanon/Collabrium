@@ -8,12 +8,16 @@ namespace API.Contracts.UserCourses
 
         public UserCourseStatus? Status { get; set; }
         public bool? IsSaved { get; set; }
+        public bool? IsAssigned { get; set; }
 
         public DateTime? StartedAfter { get; set; }
         public DateTime? StartedBefore { get; set; }
 
         public DateTime? CompletedAfter { get; set; }
         public DateTime? CompletedBefore { get; set; }
+
+        public DateTime? AssignedAfter { get; set; }
+        public DateTime? AssignedBefore { get; set; }
 
         public DateTime? CreatedAfter { get; set; }
         public DateTime? CreatedBefore { get; set; }

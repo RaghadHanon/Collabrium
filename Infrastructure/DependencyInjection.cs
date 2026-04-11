@@ -92,7 +92,6 @@ public static class DependencyInjection
         services.AddScoped<IRoadmapResourcesRepository, RoadmapResourcesRepository>();
         services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
         services.AddScoped<ICoursesRepository, CoursesRepository>();
-        services.AddScoped<ICourseAssignmentsRepository, CourseAssignmentsRepository>();
         services.AddScoped<IUserCoursesRepository, UserCoursesRepository>();
         services.AddScoped<ICourseRatingsRepository, CourseRatingsRepository>();
     }
@@ -114,7 +113,6 @@ public static class DependencyInjection
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
         services.AddScoped<IReportsReadModel, ReportsReadModel>();
         services.AddScoped<ICoursesReadModel, CoursesReadModel>();
-        services.AddScoped<ICourseAssignmentsReadModel, CourseAssignmentsReadModel>();
         services.AddScoped<IUserCoursesReadModel, UserCoursesReadModel>();
         services.AddScoped<ICourseRatingsReadModel, CourseRatingsReadModel>();
 

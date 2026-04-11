@@ -20,16 +20,18 @@ namespace API.Controllers
         /// <remarks>
         /// Sample request:
         ///
-        ///     GET /api/user-courses?search=sql&amp;status=InProgress&amp;isSaved=true&amp;pageSize=10
+        ///     GET /api/user-courses?search=sql&amp;status=InProgress&amp;isSaved=true&amp;isAssigned=false&amp;pageSize=10
         ///
         /// </remarks>
         /// <param name="request">Filtering and pagination parameters.</param>
         /// <returns>Paged list of my user courses.</returns>
         /// <response code="200">User courses retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet]
-        public async Task<ActionResult<PagedList<UserCourseDto, DateTime?>>> GetMyUserCourses(
+        public async Task<ActionResult<PagedList<UserCourseDto, DateTime?>>> GetMyCourses(
             [FromQuery] GetMyUserCoursesRequest request)
         {
             var query = Mapper.Map<GetMyUserCourses.Query>(request);
@@ -37,7 +39,7 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Retrieves my saved user courses only.
+        /// Retrieves my saved courses only.
         /// </summary>
         /// <remarks>
         /// Sample request:
@@ -47,19 +49,45 @@ namespace API.Controllers
         /// </remarks>
         /// <param name="request">Filtering and pagination parameters.</param>
         /// <returns>Paged list of my saved courses.</returns>
-        /// <response code="200">Saved user courses retrieved successfully.</response>
+        /// <response code="200">Saved courses retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet("saved")]
-        public async Task<ActionResult<PagedList<UserCourseDto, DateTime?>>> GetMySavedUserCourses(
+        public async Task<ActionResult<PagedList<UserCourseDto, DateTime?>>> GetMySavedCourses(
             [FromQuery] GetMySavedUserCoursesRequest request)
         {
-            var query = Mapper.Map<GetMySavedUserCourses.Query>(request);
+            var query = Mapper.Map<GetMySavedCourses.Query>(request);
             return HandleResult(await Mediator.Send(query));
         }
 
         /// <summary>
-        /// Retrieves my user course by course id.
+        /// Retrieves courses assigned to me.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /api/user-courses/assigned-to-me?search=dotnet&amp;status=InProgress&amp;pageSize=10
+        ///
+        /// </remarks>
+        /// <param name="request">Filtering and pagination parameters.</param>
+        /// <returns>Paged list of assigned courses.</returns>
+        /// <response code="200">Assigned courses retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
+        /// <response code="404">If the tenant was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
+        [HttpGet("assigned-to-me")]
+        public async Task<ActionResult<PagedList<UserCourseDto, DateTime?>>> GetAssignedToMeCourses(
+            [FromQuery] GetAssignedToMeCoursesRequest request)
+        {
+            var query = Mapper.Map<GetAssignedToMeCourses.Query>(request);
+            return HandleResult(await Mediator.Send(query));
+        }
+
+        /// <summary>
+        /// Retrieves my user-course record by course id.
         /// </summary>
         /// <remarks>
         /// Sample request:
@@ -68,10 +96,12 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <param name="courseId">The course id.</param>
-        /// <returns>The user course record for this course.</returns>
+        /// <returns>The user-course record for the current user and this course.</returns>
         /// <response code="200">User course retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant or user course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet("course/{courseId}")]
         public async Task<ActionResult<UserCourseDto>> GetMyUserCourseByCourseId(string courseId)
         {
@@ -84,7 +114,7 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Retrieves user course details by user course id.
+        /// Retrieves user-course details by user-course id.
         /// </summary>
         /// <remarks>
         /// Sample request:
@@ -92,11 +122,13 @@ namespace API.Controllers
         ///     GET /api/user-courses/{userCourseId}
         ///
         /// </remarks>
-        /// <param name="userCourseId">The user course id.</param>
-        /// <returns>User course details.</returns>
-        /// <response code="200">User course details retrieved successfully.</response>
+        /// <param name="userCourseId">The user-course id.</param>
+        /// <returns>User-course details.</returns>
+        /// <response code="200">User-course details retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant or user course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpGet("{userCourseId}")]
         public async Task<ActionResult<UserCourseDetailsDto>> GetUserCourseById(string userCourseId)
         {
@@ -118,14 +150,43 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <param name="courseId">The course id.</param>
-        /// <returns>The updated user course.</returns>
+        /// <returns>The updated user-course record.</returns>
         /// <response code="200">Course saved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant or course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpPost("course/{courseId}/save")]
         public async Task<ActionResult<UserCourseDto>> SaveCourse(string courseId)
         {
             var command = new SaveUserCourse.Command
+            {
+                CourseId = courseId
+            };
+
+            return HandleResult(await Mediator.Send(command));
+        }
+
+        /// <summary>
+        /// Removes a course from my saved list.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     PATCH /api/user-courses/course/{courseId}/unsave
+        ///
+        /// </remarks>
+        /// <param name="courseId">The course id.</param>
+        /// <returns>The updated user-course record.</returns>
+        /// <response code="200">Course unsaved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
+        /// <response code="404">If the tenant, course, or user-course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
+        [HttpPatch("course/{courseId}/unsave")]
+        public async Task<ActionResult<UserCourseDto>> UnsaveCourse(string courseId)
+        {
+            var command = new UnsaveUserCourse.Command
             {
                 CourseId = courseId
             };
@@ -143,10 +204,12 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <param name="courseId">The course id.</param>
-        /// <returns>The updated user course.</returns>
+        /// <returns>The updated user-course record.</returns>
         /// <response code="200">Course started successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant or course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpPatch("course/{courseId}/start")]
         public async Task<ActionResult<UserCourseDto>> StartCourse(string courseId)
         {
@@ -168,39 +231,16 @@ namespace API.Controllers
         ///
         /// </remarks>
         /// <param name="courseId">The course id.</param>
-        /// <returns>The updated user course.</returns>
+        /// <returns>The updated user-course record.</returns>
         /// <response code="200">Course completed successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
         /// <response code="404">If the tenant or course was not found.</response>
+        [Authorize(Policy = Policies.Courses_Read)]
         [HttpPatch("course/{courseId}/complete")]
         public async Task<ActionResult<UserCourseDto>> CompleteCourse(string courseId)
         {
             var command = new CompleteUserCourse.Command
-            {
-                CourseId = courseId
-            };
-
-            return HandleResult(await Mediator.Send(command));
-        }
-
-        /// <summary>
-        /// Removes a course from my saved list.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///
-        ///     PATCH /api/user-courses/course/{courseId}/unsave
-        ///
-        /// </remarks>
-        /// <param name="courseId">The course id.</param>
-        /// <returns>The updated user course.</returns>
-        /// <response code="200">Course unsaved successfully.</response>
-        /// <response code="401">If the user is not authenticated.</response>
-        /// <response code="404">If the tenant or user course was not found.</response>
-        [HttpPatch("course/{courseId}/unsave")]
-        public async Task<ActionResult<UserCourseDto>> UnsaveCourse(string courseId)
-        {
-            var command = new UnsaveUserCourse.Command
             {
                 CourseId = courseId
             };

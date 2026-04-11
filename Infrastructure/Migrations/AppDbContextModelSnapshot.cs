@@ -243,53 +243,6 @@ namespace Infrastructure.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("AssignedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssignedToUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CourseId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedByUserId");
-
-                    b.HasIndex("AssignedToUserId");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("TenantId", "AssignedToUserId", "CourseId")
-                        .HasDatabaseName("IX_CourseAssignments_TenantId_AssignedToUserId_CourseId_Status");
-
-                    b.ToTable("CourseAssignments");
-                });
-
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -964,6 +917,13 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssignedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -973,6 +933,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAssigned")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsSaved")
                         .HasColumnType("bit");
@@ -997,6 +960,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssignedByUserId");
 
                     b.HasIndex("CourseId");
 
@@ -1534,41 +1499,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseAssignmentEntity", b =>
-                {
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedByUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedToUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedToUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
-                        .WithMany("CourseAssignments")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AssignedByUser");
-
-                    b.Navigation("AssignedToUser");
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Tenant");
-                });
-
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
@@ -1942,6 +1872,11 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.UserCourseEntity", b =>
                 {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "AssignedByUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Infrastructure.Persistence.Entities.CourseEntity", "Course")
                         .WithMany("UserCourses")
                         .HasForeignKey("CourseId")
@@ -1959,6 +1894,8 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("AssignedByUser");
 
                     b.Navigation("Course");
 
@@ -2122,8 +2059,6 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>
                 {
-                    b.Navigation("CourseAssignments");
-
                     b.Navigation("CourseRatings");
 
                     b.Navigation("CourseTags");

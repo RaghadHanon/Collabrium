@@ -16,6 +16,11 @@ namespace Application.Features.UserCourses.DTOs
         public UserCourseStatus Status { get; set; }
         public bool IsSaved { get; set; }
 
+        public bool IsAssigned { get; set; }
+        public string? AssignedByUserId { get; set; }
+        public string? AssignedByUserName { get; set; }
+        public DateTime? AssignedAt { get; set; }
+
         public DateTime? StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
 

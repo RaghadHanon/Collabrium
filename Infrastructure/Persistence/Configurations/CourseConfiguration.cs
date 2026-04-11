@@ -72,10 +72,7 @@ namespace Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(x => x.CourseAssignments)
-                .WithOne(x => x.Course)
-                .HasForeignKey(x => x.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
+
 
             builder.HasIndex(x => x.Title)
                 .HasDatabaseName("IX_Courses_Title");

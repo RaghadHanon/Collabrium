@@ -1,4 +1,4 @@
-﻿namespace API.Contracts.CourseAssignments
+﻿namespace API.Contracts.UserCourses
 {
     public sealed class AssignCourseToUserRequest
     {

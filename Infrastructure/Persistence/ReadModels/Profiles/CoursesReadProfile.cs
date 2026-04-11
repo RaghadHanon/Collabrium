@@ -43,8 +43,7 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.CourseRatings.Any()
                         ? s.CourseRatings.Average(r => (double?)r.Rating) ?? 0
                         : 0))
-                .ForMember(d => d.AssignmentsCount,
-                    o => o.MapFrom(s => s.CourseAssignments.Count))
+
                 .ForMember(d => d.UserProgressCount,
                     o => o.MapFrom(s => s.UserCourses.Count));
         }

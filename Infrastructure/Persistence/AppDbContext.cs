@@ -36,7 +36,6 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<ReferenceNodeEntity> ReferenceNodes => Set<ReferenceNodeEntity>();
     public DbSet<SubTopicEntity> SubTopics => Set<SubTopicEntity>();
     public DbSet<ResourceEntity> Resources => Set<ResourceEntity>();
-    public DbSet<CourseAssignmentEntity> CourseAssignments => Set<CourseAssignmentEntity>();
     public DbSet<CourseEntity> Courses => Set<CourseEntity>();
     public DbSet<CourseRatingEntity> CourseRatings => Set<CourseRatingEntity>();
     public DbSet<UserCourseEntity> UserCourses => Set<UserCourseEntity>();

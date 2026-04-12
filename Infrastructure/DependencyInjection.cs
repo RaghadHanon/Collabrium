@@ -60,7 +60,6 @@ public static class DependencyInjection
         QuestPDF.Settings.License = LicenseType.Community;
 
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
-        services.AddSignalR();
 
         return services;
     }

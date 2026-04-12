@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace Infrastructure.SignalR.Hubs;
@@ -8,22 +9,35 @@ namespace Infrastructure.SignalR.Hubs;
 [Authorize]
 public sealed class PresenceHub(
     ITenantContext tenantContext,
-    IUserPresenceTracker tracker
+    IUserPresenceTracker tracker,
+    ILogger<PresenceHub> logger
 ) : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        var tenantId = tenantContext.TenantId;
+        var tenantId = Context.User?.FindFirst("tenantId")?.Value
+                       ?? tenantContext.TenantId;
+
+        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? Context.User?.FindFirstValue("sub");
+
+        logger.LogInformation("Claim tenantId = {TenantId}", Context.User?.FindFirst("tenantId")?.Value);
+        logger.LogInformation("Scoped tenantContext.TenantId = {TenantId}", tenantContext.TenantId);
+
+        logger.LogInformation(
+            "PresenceHub connect. ConnectionId={ConnectionId}, TenantId={TenantId}, UserId={UserId}",
+            Context.ConnectionId, tenantId, userId);
+
         if (string.IsNullOrWhiteSpace(tenantId))
         {
+            logger.LogWarning("PresenceHub aborted: tenantId missing. ConnectionId={ConnectionId}", Context.ConnectionId);
             Context.Abort();
             return;
         }
 
-        var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
-                     ?? Context.User?.FindFirstValue("sub");
         if (string.IsNullOrWhiteSpace(userId))
         {
+            logger.LogWarning("PresenceHub aborted: userId missing. ConnectionId={ConnectionId}", Context.ConnectionId);
             Context.Abort();
             return;
         }
@@ -33,9 +47,9 @@ public sealed class PresenceHub(
 
         var becameOnline = await tracker.UserConnectedAsync(tenantId, userId, Context.ConnectionId);
         var onlineUserIds = await tracker.GetOnlineUsersAsync(tenantId);
+
         await Clients.Caller.SendAsync("Presence:OnlineUsers", onlineUserIds);
 
-        // only if it's the first connection (tap) opened.
         if (becameOnline)
             await Clients.Group(tenantGroup).SendAsync("Presence:UserOnline", new { UserId = userId });
 
@@ -44,17 +58,21 @@ public sealed class PresenceHub(
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var tenantId = tenantContext.TenantId;
+        var tenantId = Context.User?.FindFirst("tenantId")?.Value
+                       ?? tenantContext.TenantId;
+
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
                      ?? Context.User?.FindFirstValue("sub");
+
+        logger.LogInformation(
+            "PresenceHub disconnect. ConnectionId={ConnectionId}, TenantId={TenantId}, UserId={UserId}, Error={Error}",
+            Context.ConnectionId, tenantId, userId, exception?.Message);
 
         if (!string.IsNullOrWhiteSpace(tenantId) && !string.IsNullOrWhiteSpace(userId))
         {
             var tenantGroup = BuildTenantPresenceGroup(tenantId);
-
             var becameOffline = await tracker.UserDisconnectedAsync(tenantId, userId, Context.ConnectionId);
 
-            // only if he closed all his connections (taps).
             if (becameOffline)
                 await Clients.Group(tenantGroup).SendAsync("Presence:UserOffline", new { UserId = userId });
         }
@@ -64,15 +82,19 @@ public sealed class PresenceHub(
 
     public async Task<bool> IsOnline(string userId)
     {
-        var tenantId = tenantContext.TenantId;
-        if (string.IsNullOrWhiteSpace(tenantId)) return false;
+        var tenantId = Context.User?.FindFirst("tenantId")?.Value
+                       ?? tenantContext.TenantId;
+
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return false;
 
         return await tracker.IsUserOnlineAsync(tenantId, userId);
     }
 
     public async Task<IReadOnlyCollection<string>> GetOnlineUsers()
     {
-        var tenantId = tenantContext.TenantId;
+        var tenantId = Context.User?.FindFirst("tenantId")?.Value
+                       ?? tenantContext.TenantId;
 
         if (string.IsNullOrWhiteSpace(tenantId))
             return [];

@@ -58,7 +58,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSignalR();
-        services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
         return services;

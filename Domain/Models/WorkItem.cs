@@ -251,6 +251,13 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public void SetOwner(string userId)
+    {
+        Guard.Against(IsDone, "Cannot assign a completed work item.");
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
+        Touch();
+    }
+
     public void MoveToSprint(string? sprintId)
     {
         Guard.Against(IsDone, "Cannot move a completed work item.");

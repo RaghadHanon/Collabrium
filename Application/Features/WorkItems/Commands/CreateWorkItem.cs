@@ -78,6 +78,7 @@ public sealed class CreateWorkItem
 
                 workItem.UpdateDetails(request.Title, request.Description, request.AcceptanceCriteria, request.EffortPoints);
                 workItem.SetPriority(request.Priority);
+                workItem.SetOwner(userId);
 
                 workItemsRepository.Add(workItem, cancellationToken);
                 await projectsRepository.UpdateAsync(project, cancellationToken);

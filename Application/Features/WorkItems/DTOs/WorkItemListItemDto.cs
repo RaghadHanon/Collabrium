@@ -18,6 +18,7 @@ public class WorkItemListItemDto
     public bool IsBlocked { get; set; }
 
     public string? AssignedToUserId { get; set; }
+    public string CreatedByUserId { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
     public RelationParticipantWorkItemDto? Parent { get; set; }

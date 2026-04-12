@@ -187,6 +187,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
@@ -351,6 +352,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
@@ -403,6 +405,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),

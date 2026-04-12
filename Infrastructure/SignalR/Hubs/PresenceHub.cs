@@ -21,7 +21,7 @@ public sealed class PresenceHub(
         }
 
         var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier)
-                     ?? Context.User?.FindFirstValue("sub"); 
+                     ?? Context.User?.FindFirstValue("sub");
         if (string.IsNullOrWhiteSpace(userId))
         {
             Context.Abort();
@@ -68,6 +68,16 @@ public sealed class PresenceHub(
         if (string.IsNullOrWhiteSpace(tenantId)) return false;
 
         return await tracker.IsUserOnlineAsync(tenantId, userId);
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetOnlineUsers()
+    {
+        var tenantId = tenantContext.TenantId;
+
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return [];
+
+        return await tracker.GetOnlineUsersAsync(tenantId);
     }
 
     private static string BuildTenantPresenceGroup(string tenantId)

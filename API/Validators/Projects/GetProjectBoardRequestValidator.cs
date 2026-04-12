@@ -1,4 +1,4 @@
-﻿using API.Contracts.Projects;
+﻿using API.Contracts.WorkItems;
 using Domain.Enums;
 using FluentValidation;
 

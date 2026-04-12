@@ -1,9 +1,8 @@
-﻿using API.Contracts.WorkItems;
-using Domain.Enums;
+﻿using Domain.Enums;
 
-namespace API.Contracts.Projects;
+namespace API.Contracts.WorkItems;
 
-public class GetProjectBoardRequest 
+public class GetProjectBoardRequest
 {
     /// <summary>
     /// Filters work items by type.
@@ -33,6 +32,7 @@ public class GetProjectBoardRequest
     /// Filters work items by assigned user identifier.
     /// </summary>
     public string? AssignedToUserId { get; init; }
+
     /// <summary>
     /// Filters work items based on whether they are assigned to a user or not.
     /// </summary>

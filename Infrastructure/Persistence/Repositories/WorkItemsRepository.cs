@@ -225,6 +225,13 @@ public class WorkItemsRepository : IWorkItemsRepository
             else
                 query = query.Where(x => x.AssignedToUserId == null);
         }
+
+        if (!string.IsNullOrWhiteSpace(parameters.ParentId))
+        {
+            var pId = parameters.ParentId.Trim();
+            query = query.Where(x => x.ParentId == pId);
+        }
+
         return query;
     }
 

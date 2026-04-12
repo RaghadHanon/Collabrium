@@ -28,6 +28,10 @@ public class GetProjectBacklogRequest
     /// </summary>
     public string? CreatedByUserId { get; init; }
     /// <summary>
+    /// Filters work items by parent workItem identifier.
+    /// </summary>
+    public string? ParentId { get; init; }
+    /// <summary>
     /// Filters work items based on whether they are assigned to a user or not.
     /// </summary>
     public bool? IsAssigned { get; set; }

@@ -190,7 +190,7 @@ public static class DependencyInjection
                    var path = context.HttpContext.Request.Path;
 
                    if (!string.IsNullOrEmpty(accessToken) &&
-                       path.StartsWithSegments("/hubs/presence"))
+                       path.StartsWithSegments("/hubs"))
                    {
                        context.Token = accessToken;
                    }

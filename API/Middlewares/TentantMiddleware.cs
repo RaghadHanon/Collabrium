@@ -32,8 +32,11 @@ public class TenantMiddleware
             return;
         }
 
-        if (context.User.Identity?.IsAuthenticated != true)
-            throw new UnauthorizedAccessException("User must be authenticated.");
+        if (!context.User.Identity?.IsAuthenticated ?? true)
+        {
+            await _next(context);
+            return;
+        }
 
         if (context.User.IsInRole(UserRole.SuperAdmin.ToString()))
         {

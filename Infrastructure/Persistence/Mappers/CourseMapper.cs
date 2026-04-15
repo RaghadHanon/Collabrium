@@ -1,4 +1,5 @@
 ﻿using Domain.Models;
+using Domain.ValueObjects;
 using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Mappers
@@ -23,7 +24,13 @@ namespace Infrastructure.Persistence.Mappers
                 EstimatedDurationInHours = domain.EstimatedDurationInHours,
                 ThumbnailImage = domain.ThumbnailImage,
                 CreatedAt = domain.CreatedAt,
-                UpdatedAt = domain.UpdatedAt
+                UpdatedAt = domain.UpdatedAt,
+                LearningPoints = domain.LearningPoints
+                    .Select(x => new CourseLearningPointEntity
+                    {
+                        Text = x.Text
+                    })
+                    .ToList()
             };
         }
 
@@ -48,7 +55,9 @@ namespace Infrastructure.Persistence.Mappers
                 instructorName: entity.InstructorName,
                 estimatedDurationInHours: entity.EstimatedDurationInHours,
                 thumbnailImage: entity.ThumbnailImage,
-                tagIds: tagIds
+                tagIds: tagIds,
+                learningPoints: entity.LearningPoints?.Select(x => new CourseLearningPoint(x.Text))
+
             );
         }
 
@@ -67,6 +76,15 @@ namespace Infrastructure.Persistence.Mappers
             entity.EstimatedDurationInHours = domain.EstimatedDurationInHours;
             entity.ThumbnailImage = domain.ThumbnailImage;
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
+            entity.LearningPoints.Clear();
+
+            foreach (var point in domain.LearningPoints)
+            {
+                entity.LearningPoints.Add(new CourseLearningPointEntity
+                {
+                    Text = point.Text
+                });
+            }
         }
     }
 }

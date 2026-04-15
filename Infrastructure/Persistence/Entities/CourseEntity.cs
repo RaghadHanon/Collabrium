@@ -24,6 +24,8 @@ namespace Infrastructure.Persistence.Entities
 
         public ICollection<CourseTagEntity> CourseTags { get; set; } = new List<CourseTagEntity>();
         public ICollection<UserCourseEntity> UserCourses { get; set; } = new List<UserCourseEntity>();
+        public ICollection<CourseLearningPointEntity> LearningPoints { get; set; } = new List<CourseLearningPointEntity>();
+
         public ICollection<CourseRatingEntity> CourseRatings { get; set; } = new List<CourseRatingEntity>();
     }
 }

@@ -22,7 +22,7 @@ namespace Application.Features.Courses.Commands
 
             public required CourseLevel Level { get; set; }
             public required CourseLanguage Language { get; set; }
-
+            public List<string> LearningPoints { get; set; } = new();
             public int? EstimatedDurationInHours { get; set; }
 
         }
@@ -54,9 +54,9 @@ namespace Application.Features.Courses.Commands
                         estimatedDurationInHours: request.EstimatedDurationInHours
                     );
 
+                    course.SetLearningPoints(request.LearningPoints);
 
                     await coursesRepository.AddAsync(course, ct);
-
 
                 }, cancellationToken);
 

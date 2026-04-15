@@ -43,12 +43,14 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
         CreateMap<GetTags.Query, TagsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();
-        CreateMap<GetRoadmaps.Query, CoursesSearchAndFilterParametersDto>();
+        //CreateMap<GetRoadmaps.Query, CoursesSearchAndFilterParametersDto>();
         CreateMap<GetProjectHistory.Query, ProjectHistorySearchAndFiltersParametersDto>();
         CreateMap<GetCourses.Query, CoursesSearchAndFilterParametersDto>();
         CreateMap<GetMyUserCourses.Query, UserCoursesSearchAndFilterParametersDto>();
         CreateMap<GetCourseRatings.Query, CourseRatingsSearchAndFilterParametersDto>();
         CreateMap<GetCoursesAssignedByMe.Query, AssignedUserCoursesSearchAndFilterParametersDto>();
+        CreateMap<GetMySavedCourses.Query, UserCoursesSearchAndFilterParametersDto>();
+        CreateMap<GetAssignedToMeCourses.Query, UserCoursesSearchAndFilterParametersDto>();
 
     }
 }

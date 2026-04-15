@@ -7,6 +7,7 @@ namespace Domain.Models
     public sealed class Course : Entity
     {
         private readonly List<string> _tagIds = new();
+        private readonly List<CourseLearningPoint> _learningPoints = new();
 
         public string TenantId { get; private set; } = null!;
 
@@ -24,6 +25,7 @@ namespace Domain.Models
         public StoredImage? ThumbnailImage { get; private set; }
 
         public IReadOnlyCollection<string> TagIds => _tagIds.AsReadOnly();
+        public IReadOnlyCollection<CourseLearningPoint> LearningPoints => _learningPoints.AsReadOnly();
 
         private Course() { }
 
@@ -86,7 +88,8 @@ namespace Domain.Models
             string? instructorName,
             int? estimatedDurationInHours,
             StoredImage? thumbnailImage,
-            IEnumerable<string>? tagIds)
+            IEnumerable<string>? tagIds,
+            IEnumerable<CourseLearningPoint>? learningPoints)
         {
             var course = new Course(
                 id: id,
@@ -112,6 +115,12 @@ namespace Domain.Models
                     if (!string.IsNullOrWhiteSpace(tagId))
                         course._tagIds.Add(tagId.Trim());
                 }
+            }
+            course._learningPoints.Clear();
+            if (learningPoints is not null)
+            {
+                foreach (var point in learningPoints)
+                    course._learningPoints.Add(point);
             }
 
             return course;
@@ -149,6 +158,31 @@ namespace Domain.Models
         public void RemoveThumbnailImage()
         {
             ThumbnailImage = null;
+            Touch();
+        }
+        public void SetLearningPoints(IEnumerable<string>? points)
+        {
+            _learningPoints.Clear();
+
+            if (points is null)
+            {
+                Touch();
+                return;
+            }
+
+            foreach (var point in points)
+            {
+                if (string.IsNullOrWhiteSpace(point))
+                    continue;
+
+                var vo = new CourseLearningPoint(point);
+
+                if (_learningPoints.Any(x => x.Text == vo.Text))
+                    continue;
+
+                _learningPoints.Add(vo);
+            }
+
             Touch();
         }
 

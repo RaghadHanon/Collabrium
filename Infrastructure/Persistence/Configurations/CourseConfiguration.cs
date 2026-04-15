@@ -72,7 +72,21 @@ namespace Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.OwnsMany(c => c.LearningPoints, lp =>
+            {
+                lp.ToTable("CourseLearningPoints");
 
+                lp.WithOwner().HasForeignKey("CourseId");
+
+                lp.Property<int>("Id");
+                lp.HasKey("Id");
+
+                lp.Property(x => x.Text)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                lp.HasIndex("CourseId");
+            });
 
             builder.HasIndex(x => x.Title)
                 .HasDatabaseName("IX_Courses_Title");

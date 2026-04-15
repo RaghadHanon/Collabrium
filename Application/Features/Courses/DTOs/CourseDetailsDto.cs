@@ -22,7 +22,7 @@ namespace Application.Features.Courses.DTOs
 
         public List<string> TagIds { get; set; } = new();
         public List<CourseTagDto> Tags { get; set; } = new();
-
+        public List<string> LearningPoints { get; set; } = new();
         public int RatingsCount { get; set; }
         public double AverageRating { get; set; }
 

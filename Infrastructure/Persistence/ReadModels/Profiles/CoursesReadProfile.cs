@@ -33,6 +33,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.CourseTags.Select(t => t.TagId)))
                 .ForMember(d => d.Tags,
                     o => o.MapFrom(s => s.CourseTags))
+                 .ForMember(d => d.LearningPoints,
+                    o => o.MapFrom(s => s.LearningPoints.Select(lp => lp.Text)))
                 .ForMember(d => d.ThumbnailImageUrl,
                     o => o.MapFrom(s => s.ThumbnailImage != null ? s.ThumbnailImage.Url : null))
                 .ForMember(d => d.ThumbnailImagePublicId,

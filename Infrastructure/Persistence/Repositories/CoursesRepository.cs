@@ -20,7 +20,9 @@ namespace Infrastructure.Persistence.Repositories
         public async Task AddAsync(Course course, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(course);
+
             var entity = CourseMapper.ToEntity(course);
+
             await _dbContext.Courses.AddAsync(entity, cancellationToken);
         }
 
@@ -38,6 +40,7 @@ namespace Infrastructure.Persistence.Repositories
 
             var entity = await _dbContext.Courses
                 .Include(c => c.CourseTags)
+                .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
             if (entity is null)
@@ -45,12 +48,11 @@ namespace Infrastructure.Persistence.Repositories
 
             await EnsureTagsExistInTenantAsync(tId, ids, cancellationToken);
 
-            // domain logic
             var domain = CourseMapper.ToDomain(entity);
+
             foreach (var id in ids)
                 domain.AddTag(id);
 
-            // db logic
             var existing = entity.CourseTags
                 .Select(x => x.TagId)
                 .ToHashSet(StringComparer.Ordinal);
@@ -69,7 +71,10 @@ namespace Infrastructure.Persistence.Repositories
             CourseMapper.UpdateEntity(entity, domain);
         }
 
-        public async Task<bool> DeleteAsync(string tenantId, string courseId, CancellationToken cancellationToken = default)
+        public async Task<bool> DeleteAsync(
+            string tenantId,
+            string courseId,
+            CancellationToken cancellationToken = default)
         {
             if (!TryNormalize(tenantId, courseId, out var tId, out var cId))
                 return false;
@@ -83,20 +88,24 @@ namespace Infrastructure.Persistence.Repositories
             _dbContext.Courses.Remove(entity);
             return true;
         }
-        public async Task<bool> ExistsAsync(string tenantId, string courseId, CancellationToken cancellationToken = default)
+
+        public async Task<bool> ExistsAsync(
+            string tenantId,
+            string courseId,
+            CancellationToken cancellationToken = default)
         {
             if (!TryNormalize(tenantId, courseId, out var tId, out var cId))
                 return false;
 
             return await _dbContext.Courses
                 .AsNoTracking()
-                .AnyAsync(c =>
-                    c.TenantId == tId &&
-                    c.Id == cId,
-                    cancellationToken);
+                .AnyAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
         }
 
-        public async Task<Course?> GetByIdAsync(string tenantId, string courseId, CancellationToken cancellationToken = default)
+        public async Task<Course?> GetByIdAsync(
+            string tenantId,
+            string courseId,
+            CancellationToken cancellationToken = default)
         {
             if (!TryNormalize(tenantId, courseId, out var tId, out var cId))
                 return null;
@@ -104,16 +113,17 @@ namespace Infrastructure.Persistence.Repositories
             var entity = await _dbContext.Courses
                 .AsNoTracking()
                 .Include(c => c.CourseTags)
-                .Include(c => c.ThumbnailImage)
+                .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
             return entity is null
                 ? null
                 : CourseMapper.ToDomain(entity);
         }
+
         public async Task<PagedList<Course, DateTime?>> GetPagedAsync(
-                   CoursesSearchAndFilterParametersDto parameters,
-                   CancellationToken cancellationToken = default)
+            CoursesSearchAndFilterParametersDto parameters,
+            CancellationToken cancellationToken = default)
         {
             parameters ??= new CoursesSearchAndFilterParametersDto();
 
@@ -146,13 +156,20 @@ namespace Infrastructure.Persistence.Repositories
 
             if (parameters.Cursor.HasValue)
                 query = query.Where(c => c.CreatedAt < parameters.Cursor.Value);
+
             if (!string.IsNullOrWhiteSpace(parameters.Provider))
-                query = query.Where(c => c.Provider.Contains(parameters.Provider));
+            {
+                var provider = parameters.Provider.Trim();
+                query = query.Where(c => c.Provider.Contains(provider));
+            }
 
             if (!string.IsNullOrWhiteSpace(parameters.InstructorName))
+            {
+                var instructorName = parameters.InstructorName.Trim();
                 query = query.Where(c =>
                     c.InstructorName != null &&
-                    c.InstructorName.Contains(parameters.InstructorName));
+                    c.InstructorName.Contains(instructorName));
+            }
 
             if (parameters.HasThumbnail.HasValue)
             {
@@ -172,10 +189,11 @@ namespace Infrastructure.Persistence.Repositories
                         c.CourseTags.Any(ct => ids.Contains(ct.TagId)));
                 }
             }
+
             var entities = await query
                 .OrderByDescending(c => c.CreatedAt)
                 .Include(c => c.CourseTags)
-                .Include(c => c.ThumbnailImage)
+                .Include(c => c.LearningPoints)
                 .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
 
@@ -194,12 +212,11 @@ namespace Infrastructure.Persistence.Repositories
             };
         }
 
-
         public async Task RemoveTagsAsync(
-           string tenantId,
-           string courseId,
-           IReadOnlyCollection<string> tagIds,
-           CancellationToken cancellationToken = default)
+            string tenantId,
+            string courseId,
+            IReadOnlyCollection<string> tagIds,
+            CancellationToken cancellationToken = default)
         {
             if (!TryNormalize(tenantId, courseId, out var tId, out var cId))
                 throw new ArgumentNullException("tenantId/courseId");
@@ -209,12 +226,14 @@ namespace Infrastructure.Persistence.Repositories
 
             var entity = await _dbContext.Courses
                 .Include(c => c.CourseTags)
+                .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
             if (entity is null)
                 throw new InvalidOperationException("Course not found.");
 
             var domain = CourseMapper.ToDomain(entity);
+
             foreach (var id in ids)
                 domain.RemoveTag(id);
 
@@ -229,10 +248,10 @@ namespace Infrastructure.Persistence.Repositories
         }
 
         public async Task SetTagsAsync(
-                    string tenantId,
-                    string courseId,
-                    IReadOnlyCollection<string> tagIds,
-                    CancellationToken cancellationToken = default)
+            string tenantId,
+            string courseId,
+            IReadOnlyCollection<string> tagIds,
+            CancellationToken cancellationToken = default)
         {
             if (!TryNormalize(tenantId, courseId, out var tId, out var cId))
                 throw new ArgumentNullException("tenantId/courseId");
@@ -241,6 +260,7 @@ namespace Infrastructure.Persistence.Repositories
 
             var entity = await _dbContext.Courses
                 .Include(c => c.CourseTags)
+                .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
             if (entity is null)
@@ -276,12 +296,12 @@ namespace Infrastructure.Persistence.Repositories
             CourseMapper.UpdateEntity(entity, domain);
         }
 
-
         public async Task UpdateAsync(Course course, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(course);
 
             var entity = await _dbContext.Courses
+                .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.Id == course.Id, cancellationToken);
 
             if (entity is null)
@@ -289,10 +309,11 @@ namespace Infrastructure.Persistence.Repositories
 
             CourseMapper.UpdateEntity(entity, course);
         }
+
         private static bool TryNormalize(string? tenantId, string? courseId, out string tId, out string cId)
         {
-            tId = tenantId?.Trim() ?? "";
-            cId = courseId?.Trim() ?? "";
+            tId = tenantId?.Trim() ?? string.Empty;
+            cId = courseId?.Trim() ?? string.Empty;
 
             return !string.IsNullOrWhiteSpace(tId) &&
                    !string.IsNullOrWhiteSpace(cId);
@@ -300,7 +321,8 @@ namespace Infrastructure.Persistence.Repositories
 
         private static List<string> NormalizeIds(IReadOnlyCollection<string>? ids)
         {
-            if (ids is null || ids.Count == 0) return new();
+            if (ids is null || ids.Count == 0)
+                return new List<string>();
 
             return ids
                 .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -326,8 +348,7 @@ namespace Infrastructure.Persistence.Repositories
             if (tags.Any(t => t.TenantId != tenantId))
                 throw new InvalidOperationException("One or more tags are not in this tenant.");
         }
-
-
     }
 }
+
 

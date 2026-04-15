@@ -1532,6 +1532,35 @@ namespace Infrastructure.Migrations
                                 .HasForeignKey("CourseEntityId");
                         });
 
+                    b.OwnsMany("Infrastructure.Persistence.Entities.CourseLearningPointEntity", "LearningPoints", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("CourseId")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("Text")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("CourseId");
+
+                            b1.ToTable("CourseLearningPoints", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("CourseId");
+                        });
+
+                    b.Navigation("LearningPoints");
+
                     b.Navigation("Tenant");
 
                     b.Navigation("ThumbnailImage");

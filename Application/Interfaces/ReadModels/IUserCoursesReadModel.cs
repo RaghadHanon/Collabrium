@@ -5,6 +5,14 @@ namespace Application.Interfaces.ReadModels
 {
     public interface IUserCoursesReadModel
     {
+        Task<AssignedByMeStatsDto> GetAssignedByMeStatsAsync(
+            string tenantId,
+            string currentUserId,
+            CancellationToken cancellationToken = default);
+        Task<MyLearningSummaryDto> GetMyLearningSummaryAsync(
+            string tenantId,
+            string userId,
+            CancellationToken ct = default);
         Task<UserCourseDto?> GetByIdAsync(
             string tenantId,
             string userCourseId,
@@ -29,7 +37,7 @@ namespace Application.Interfaces.ReadModels
         Task<PagedList<UserCourseDto, DateTime?>> GetUserCoursesAsync(
             UserCoursesSearchAndFilterParametersDto parameters,
             CancellationToken ct = default);
-     
+
         Task<PagedList<AssignedUserCourseDto, DateTime?>> GetAssignedByUserAsync(
             AssignedUserCoursesSearchAndFilterParametersDto parameters,
             CancellationToken cancellationToken = default);

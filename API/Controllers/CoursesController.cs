@@ -309,6 +309,34 @@ namespace API.Controllers
 
             return HandleResult(await Mediator.Send(query));
         }
+        /// <summary>
+        /// Retrieves statistics for a specific course.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /api/courses/course/{courseId}/stats
+        ///
+        /// </remarks>
+        /// <param name="courseId">The course id.</param>
+        /// <returns>Course usage and assignment statistics.</returns>
+        /// <response code="200">Course stats retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user does not have permission to read courses.</response>
+        /// <response code="404">If tenant or course not found.</response>
+
+        [Authorize(Policy = Policies.Courses_Manage)]
+        [HttpGet("course/{courseId}/stats")]
+        public async Task<ActionResult<CourseStatsDto>> GetCourseStats(string courseId)
+        {
+            var query = new GetCourseStats.Query
+            {
+                CourseId = courseId
+            };
+
+            return HandleResult(await Mediator.Send(query));
+        }
     }
 }
+
 

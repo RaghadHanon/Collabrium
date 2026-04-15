@@ -3,6 +3,7 @@ using Application.Features.UserCourses.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -210,11 +211,11 @@ namespace Infrastructure.Persistence.ReadModels
             return query;
         }
 
-        
+
         public async Task<PagedList<AssignedUserCourseDto, DateTime?>> GetAssignedByUserAsync(
         AssignedUserCoursesSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
-            {
+        {
             parameters ??= new AssignedUserCoursesSearchAndFilterParametersDto();
 
             var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
@@ -329,8 +330,76 @@ namespace Infrastructure.Persistence.ReadModels
 
             return query;
         }
+        public async Task<MyLearningSummaryDto> GetMyLearningSummaryAsync(
+            string tenantId,
+            string userId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(userId))
+                return new MyLearningSummaryDto();
 
-       
+            tenantId = tenantId.Trim();
+            userId = userId.Trim();
+
+            var query = _dbContext.UserCourses
+                 .AsNoTracking()
+                 .Where(uc => uc.TenantId == tenantId && uc.UserId == userId);
+
+            var allCoursesCount = await query.CountAsync(ct);
+
+            var savedCount = await query.CountAsync(
+                uc => uc.IsSaved,
+                ct);
+
+            var assignedCount = await query.CountAsync(
+                uc => uc.IsAssigned,
+                ct);
+
+            var inProgressCount = await query.CountAsync(
+                uc => uc.Status == UserCourseStatus.InProgress,
+               ct);
+
+            var completedCount = await query.CountAsync(
+                uc => uc.Status == UserCourseStatus.Completed,
+                ct);
+
+            return new MyLearningSummaryDto
+            {
+                AllCoursesCount = allCoursesCount,
+                SavedCount = savedCount,
+                AssignedToMeCount = assignedCount,
+                InProgressCount = inProgressCount,
+                CompletedCount = completedCount
+            };
+        }
+        public async Task<AssignedByMeStatsDto> GetAssignedByMeStatsAsync(
+            string tenantId,
+            string currentUserId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(currentUserId))
+                return new AssignedByMeStatsDto();
+            var tId = tenantId.Trim();
+            var cId = currentUserId.Trim();
+            var query = _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(uc => uc.TenantId == tId && uc.AssignedByUserId == cId);
+            var totalAssigned = await query.CountAsync(cancellationToken);
+
+            var notStarted = await query.CountAsync(uc => uc.Status == UserCourseStatus.NotStarted,
+                              cancellationToken);
+            var inProgress = await query.CountAsync(uc => uc.Status == UserCourseStatus.InProgress,
+                  cancellationToken);
+            var completed = await query.CountAsync(uc => uc.Status == UserCourseStatus.Completed,
+                    cancellationToken);
+            return new AssignedByMeStatsDto
+            {
+                TotalAssigned = totalAssigned,
+                NotStartedCount = notStarted,
+                InProgressCount = inProgress,
+                CompletedCount = completed
+
+            };
+        }
     }
 }
-

@@ -253,5 +253,47 @@ namespace Infrastructure.Persistence.ReadModels
 
             return query;
         }
+
+        public async Task<CourseStatsDto?> GetStatsByIdAsync(
+            string tenantId,
+            string courseId,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(courseId))
+                return null;
+
+            var tId = tenantId.Trim();
+            var cId = courseId.Trim();
+
+            var exists = await _dbContext.Courses
+                .AsNoTracking()
+                .AnyAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
+
+            if (!exists)
+                return null;
+
+            var userCoursesQuery = _dbContext.UserCourses
+                .AsNoTracking()
+                .Where(uc => uc.TenantId == tId && uc.CourseId == cId);
+
+            var savedCount = await userCoursesQuery
+                .CountAsync(uc => uc.IsSaved, cancellationToken);
+
+            var assignedCount = await userCoursesQuery
+                .CountAsync(uc => uc.IsAssigned, cancellationToken);
+
+            var inProgressCount = await userCoursesQuery
+                .CountAsync(uc => uc.Status == UserCourseStatus.InProgress, cancellationToken);
+
+            var completedCount = await userCoursesQuery
+                .CountAsync(uc => uc.Status == UserCourseStatus.Completed, cancellationToken);
+            return new CourseStatsDto
+            {
+                SavedCount = savedCount,
+                AssignedCount = assignedCount,
+                InProgressCount = inProgressCount,
+                CompletedCount = completedCount
+            };
+        }
     }
 }

@@ -247,5 +247,34 @@ namespace API.Controllers
 
             return HandleResult(await Mediator.Send(command));
         }
+
+        /// <summary>
+        /// Retrieves summary counts for the current user's courses.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     GET /api/user-courses/my-summary
+        ///
+        /// </remarks>
+        /// <returns>Counts of all/saved/assigned/in-progress/completed courses for the current user.</returns>
+        /// <response code="200">Summary retrieved successfully.</response>
+        /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="404">If tenant not found.</response>
+        [HttpGet("my-summary")]
+        public async Task<ActionResult<MyLearningSummaryDto>> GetMySummary()
+        {
+            var query = new GetMyUserCoursesSummary.Query();
+            return HandleResult(await Mediator.Send(query));
+        }
+        /// <summary>
+        /// Retrieves stats for courses assigned by the current user.
+        /// </summary>
+        [HttpGet("assigned-by-me-stats")]
+        public async Task<ActionResult<AssignedByMeStatsDto>> GetAssignedByMeStats()
+        {
+            var query = new GetAssignedByMeStats.Query();
+            return HandleResult(await Mediator.Send(query));
+        }
     }
 }

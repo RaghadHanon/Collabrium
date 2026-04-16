@@ -5,12 +5,7 @@ using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
 using AutoMapper;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.UserCourses.Queries
 {
@@ -63,7 +58,7 @@ namespace Application.Features.UserCourses.Queries
                     return Result<PagedList<AssignedUserCourseDto, DateTime?>>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
                 var parameters = mapper.Map<AssignedUserCoursesSearchAndFilterParametersDto>(request);
-
+                parameters.TenantId = tenantId;
                 parameters.AssignedByUserId = currentUserId;
 
                 var result = await userCoursesReadModel.GetAssignedByUserAsync(parameters, cancellationToken);

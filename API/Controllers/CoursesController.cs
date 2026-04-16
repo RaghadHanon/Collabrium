@@ -75,7 +75,7 @@ namespace API.Controllers
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetCourseById([FromRoute] string courseId)
         {
-            var query = new GetCourse.Query
+            var query = new GetCourseDetails.Query
             {
                 CourseId = courseId
             };

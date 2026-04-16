@@ -150,7 +150,7 @@ public class UsersReadModel : IUsersReadModel
 
         return query;
     }
-    public async Task<PagedList<AssignableUserDto, DateTime?>> GetAssignableUsersAsync(
+    public async Task<PagedList<UserDto, DateTime?>> GetAssignableUsersAsync(
     AssignableUsersSearchAndFilterParametersDto parameters,
     CancellationToken cancellationToken = default)
     {
@@ -167,7 +167,7 @@ public class UsersReadModel : IUsersReadModel
             query,
             cancellationToken);
     }
-    private async Task<PagedList<AssignableUserDto, DateTime?>> ApplyAssignableUsersPagination(
+    private async Task<PagedList<UserDto, DateTime?>> ApplyAssignableUsersPagination(
      AssignableUsersSearchAndFilterParametersDto parameters,
      int pageSize,
      IQueryable<ApplicationUserEntity> query,
@@ -176,18 +176,11 @@ public class UsersReadModel : IUsersReadModel
         if (parameters.Cursor.HasValue)
             query = query.Where(u => u.CreatedAt > parameters.Cursor.Value);
 
+
         var items = await query
             .OrderBy(u => u.CreatedAt)
-            .Select(u => new
-            {
-                Cursor = u.CreatedAt,
-                Item = new AssignableUserDto
-                {
-                    Id = u.Id,
-                    FullName = u.FullName
-                }
-            })
             .Take(pageSize + 1)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
@@ -196,12 +189,12 @@ public class UsersReadModel : IUsersReadModel
         if (hasMore)
         {
             items.RemoveAt(items.Count - 1);
-            nextCursor = items[^1].Cursor;
+            nextCursor = items[^1].CreatedAt;
         }
 
-        return new PagedList<AssignableUserDto, DateTime?>
+        return new PagedList<UserDto, DateTime?>
         {
-            Items = items.Select(x => x.Item).ToList(),
+            Items = items,
             NextCursor = nextCursor
         };
     }
@@ -226,22 +219,9 @@ public class UsersReadModel : IUsersReadModel
             var term = parameters.Search.Trim();
             query = query.Where(u => u.FullName.Contains(term));
         }
-
-        if (!string.IsNullOrWhiteSpace(parameters.Search))
-        {
-            var term = parameters.Search.Trim();
-            query = query.Where(u => u.FullName.Contains(term));
-        }
-        var blockedJobTitles = new[]
-        {
-        "ProductOwner",
-        "TeamLead",
-        "TenantAdmin",
-        "BusinessAnalyst"
-    };
+        var blockedJobTitles = CourseAssignmentRules.GetBlockedJobTitles();
 
         query = query.Where(u => !blockedJobTitles.Contains(u.JobTitle));
-
         return query;
     }
 }

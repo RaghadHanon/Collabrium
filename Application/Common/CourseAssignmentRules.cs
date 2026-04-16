@@ -16,5 +16,22 @@ namespace Application.Common
         {
             return role.HasValue && BlockedTargetRoles.Contains(role.Value);
         }
+
+        public static bool IsBlockedJobTitle(string? jobTitle)
+        {
+            if (string.IsNullOrWhiteSpace(jobTitle))
+                return false;
+
+            return BlockedTargetRoles
+                .Select(r => r.ToString())
+                .Contains(jobTitle);
+        }
+
+        public static string[] GetBlockedJobTitles()
+        {
+            return BlockedTargetRoles
+                .Select(r => r.ToString())
+                .ToArray();
+        }
     }
 }

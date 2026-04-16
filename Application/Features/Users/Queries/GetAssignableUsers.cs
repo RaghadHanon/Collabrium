@@ -10,7 +10,7 @@ namespace Application.Features.Users.Queries
 {
     public sealed class GetAssignableUsers
     {
-        public sealed class Query : IRequest<Result<PagedList<AssignableUserDto, DateTime?>>>
+        public sealed class Query : IRequest<Result<PagedList<UserDto, DateTime?>>>
         {
             public string? Search { get; set; }
             public int PageSize { get; set; } = 10;
@@ -21,15 +21,15 @@ namespace Application.Features.Users.Queries
             IUsersReadModel usersReadModel,
             ITenantContext tenantContext,
             ICurrentUserAccessor currentUserAccessor)
-            : IRequestHandler<Query, Result<PagedList<AssignableUserDto, DateTime?>>>
+            : IRequestHandler<Query, Result<PagedList<UserDto, DateTime?>>>
         {
-            public async Task<Result<PagedList<AssignableUserDto, DateTime?>>> Handle(
+            public async Task<Result<PagedList<UserDto, DateTime?>>> Handle(
                 Query request,
                 CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<PagedList<AssignableUserDto, DateTime?>>
+                    return Result<PagedList<UserDto, DateTime?>>
                         .Failure("Tenant not found.", HttpStatusCode.NotFound);
 
                 var currentUserId = currentUserAccessor.GetUserId();
@@ -45,7 +45,7 @@ namespace Application.Features.Users.Queries
 
                 var result = await usersReadModel.GetAssignableUsersAsync(parameters, cancellationToken);
 
-                return Result<PagedList<AssignableUserDto, DateTime?>>
+                return Result<PagedList<UserDto, DateTime?>>
                     .Success(result, HttpStatusCode.OK);
             }
         }

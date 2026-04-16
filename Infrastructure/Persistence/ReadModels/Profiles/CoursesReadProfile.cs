@@ -29,25 +29,12 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                          : 0));
 
             CreateMap<CourseEntity, CourseDetailsDto>()
-                .ForMember(d => d.TagIds,
-                    o => o.MapFrom(s => s.CourseTags.Select(t => t.TagId)))
-                .ForMember(d => d.Tags,
-                    o => o.MapFrom(s => s.CourseTags))
-                 .ForMember(d => d.LearningPoints,
-                    o => o.MapFrom(s => s.LearningPoints.Select(lp => lp.Text)))
-                .ForMember(d => d.ThumbnailImageUrl,
-                    o => o.MapFrom(s => s.ThumbnailImage != null ? s.ThumbnailImage.Url : null))
-                .ForMember(d => d.ThumbnailImagePublicId,
-                    o => o.MapFrom(s => s.ThumbnailImage != null ? s.ThumbnailImage.PublicId : null))
-                .ForMember(d => d.RatingsCount,
-                    o => o.MapFrom(s => s.CourseRatings.Count))
-                .ForMember(d => d.AverageRating,
-                    o => o.MapFrom(s => s.CourseRatings.Any()
-                        ? s.CourseRatings.Average(r => (double?)r.Rating) ?? 0
-                        : 0))
+                .IncludeBase<CourseEntity, CourseDto>();
+            CreateMap<CourseEntity, CourseDetailsDto>()
+           .IncludeBase<CourseEntity, CourseDto>()
 
-                .ForMember(d => d.UserProgressCount,
-                    o => o.MapFrom(s => s.UserCourses.Count));
+            .ForMember(d => d.LearningPoints,
+              o => o.MapFrom(s => s.LearningPoints.Select(lp => lp.Text)));
         }
     }
 }

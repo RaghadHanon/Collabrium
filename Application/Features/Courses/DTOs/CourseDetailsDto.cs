@@ -4,8 +4,6 @@
     {
         public List<string> LearningPoints { get; set; } = new();
 
-        public int AssignmentsCount { get; set; }
-        public int UserProgressCount { get; set; }
     }
 
 }

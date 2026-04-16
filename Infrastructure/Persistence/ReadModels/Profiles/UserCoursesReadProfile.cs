@@ -9,9 +9,9 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
         public UserCoursesReadProfile()
         {
             CreateMap<UserCourseEntity, UserCourseDto>()
-                .ForMember(d => d.CourseTitle,
+                .ForMember(d => d.Title,
                     o => o.MapFrom(s => s.Course.Title))
-                .ForMember(d => d.CourseThumbnailUrl,
+                .ForMember(d => d.ThumbnailImageUrl,
                     o => o.MapFrom(s => s.Course.ThumbnailImage != null
                         ? s.Course.ThumbnailImage.Url
                         : null))

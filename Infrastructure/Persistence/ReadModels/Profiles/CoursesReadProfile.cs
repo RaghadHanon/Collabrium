@@ -1,4 +1,5 @@
 ﻿using Application.Features.Courses.DTOs;
+using Application.Features.Tags.DTOs;
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 
@@ -8,15 +9,10 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
     {
         public CoursesReadProfile()
         {
-            CreateMap<CourseTagEntity, CourseTagDto>()
-                .ForMember(d => d.Id,
-                    o => o.MapFrom(s => s.Tag.Id))
-                .ForMember(d => d.Name,
-                    o => o.MapFrom(s => s.Tag.Name));
-
+            CreateMap<TagEntity, TagDto>();
             CreateMap<CourseEntity, CourseDto>()
-                 .ForMember(d => d.TagIds,
-                     o => o.MapFrom(s => s.CourseTags.Select(t => t.TagId)))
+                 .ForMember(d => d.Tags,
+                    o => o.MapFrom(s => s.Tags))
                  .ForMember(d => d.ThumbnailImageUrl,
                      o => o.MapFrom(s => s.ThumbnailImage != null ? s.ThumbnailImage.Url : null))
                  .ForMember(d => d.ThumbnailImagePublicId,
@@ -34,7 +30,7 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
            .IncludeBase<CourseEntity, CourseDto>()
 
             .ForMember(d => d.LearningPoints,
-              o => o.MapFrom(s => s.LearningPoints.Select(lp => lp.Text)));
+            o => o.MapFrom(s => s.LearningPoints.Select(lp => lp.Text)));
         }
     }
 }

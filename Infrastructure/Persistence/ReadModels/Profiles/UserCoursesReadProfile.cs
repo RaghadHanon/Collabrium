@@ -1,4 +1,5 @@
-﻿using Application.Features.UserCourses.DTOs;
+﻿using Application.Features.Tags.DTOs;
+using Application.Features.UserCourses.DTOs;
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 
@@ -8,6 +9,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
     {
         public UserCoursesReadProfile()
         {
+            CreateMap<TagEntity, TagDto>();
+
             CreateMap<UserCourseEntity, UserCourseDto>()
                 .ForMember(d => d.Id,
                     o => o.MapFrom(s => s.Id))
@@ -18,7 +21,6 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                 .ForMember(d => d.UserId,
                     o => o.MapFrom(s => s.UserId))
 
-                // fields inherited from CourseDto
                 .ForMember(d => d.Title,
                     o => o.MapFrom(s => s.Course.Title))
                 .ForMember(d => d.Description,
@@ -35,8 +37,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.Course.Language))
                 .ForMember(d => d.EstimatedDurationInHours,
                     o => o.MapFrom(s => s.Course.EstimatedDurationInHours))
-                .ForMember(d => d.TagIds,
-                    o => o.MapFrom(s => s.Course.CourseTags.Select(t => t.TagId)))
+                .ForMember(d => d.Tags,
+                    o => o.MapFrom(s => s.Course.Tags))
                 .ForMember(d => d.ThumbnailImageUrl,
                     o => o.MapFrom(s => s.Course.ThumbnailImage != null
                         ? s.Course.ThumbnailImage.Url
@@ -55,8 +57,6 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.Course.CreatedAt))
                 .ForMember(d => d.UpdatedAt,
                     o => o.MapFrom(s => s.Course.UpdatedAt))
-
-                // user-course specific fields
                 .ForMember(d => d.AssignedByUserName,
                     o => o.MapFrom(s => s.AssignedByUser != null
                         ? s.AssignedByUser.FullName
@@ -81,4 +81,5 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
         }
     }
 }
+
 

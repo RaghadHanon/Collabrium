@@ -22,7 +22,7 @@ namespace Infrastructure.Persistence.Entities
 
         public TenantEntity Tenant { get; set; } = null!;
 
-        public ICollection<CourseTagEntity> CourseTags { get; set; } = new List<CourseTagEntity>();
+        public ICollection<TagEntity> Tags { get; set; } = new List<TagEntity>();
         public ICollection<UserCourseEntity> UserCourses { get; set; } = new List<UserCourseEntity>();
         public ICollection<CourseLearningPointEntity> LearningPoints { get; set; } = new List<CourseLearningPointEntity>();
 

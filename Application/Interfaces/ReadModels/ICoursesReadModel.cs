@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Courses.DTOs;
+using Application.Features.Tags.DTOs;
 
 namespace Application.Interfaces.ReadModels
 {
@@ -19,7 +20,7 @@ namespace Application.Interfaces.ReadModels
             CoursesSearchAndFilterParametersDto parameters,
             string? currentUserId,
             CancellationToken cancellationToken = default);
-        Task<List<CourseTagDto>> GetTagsAsync(
+        Task<List<TagDto>> GetTagsAsync(
             string tenantId,
             string courseId,
             CancellationToken cancellationToken = default);

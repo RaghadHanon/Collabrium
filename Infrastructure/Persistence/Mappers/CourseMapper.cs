@@ -38,8 +38,8 @@ namespace Infrastructure.Persistence.Mappers
         {
             ArgumentNullException.ThrowIfNull(entity);
 
-            var tagIds = entity.CourseTags?.
-            Select(x => x.TagId) ?? Enumerable.Empty<string>();
+            var tagIds = entity.Tags?
+                .Select(x => x.Id) ?? Enumerable.Empty<string>();
 
             return Course.Rehydrate(
                 id: entity.Id,
@@ -57,7 +57,6 @@ namespace Infrastructure.Persistence.Mappers
                 thumbnailImage: entity.ThumbnailImage,
                 tagIds: tagIds,
                 learningPoints: entity.LearningPoints?.Select(x => new CourseLearningPoint(x.Text))
-
             );
         }
 
@@ -76,6 +75,7 @@ namespace Infrastructure.Persistence.Mappers
             entity.EstimatedDurationInHours = domain.EstimatedDurationInHours;
             entity.ThumbnailImage = domain.ThumbnailImage;
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
+
             entity.LearningPoints.Clear();
 
             foreach (var point in domain.LearningPoints)

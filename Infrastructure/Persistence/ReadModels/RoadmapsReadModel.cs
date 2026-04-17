@@ -99,7 +99,7 @@ namespace Infrastructure.Persistence.ReadModels
                 if (tagsIds.Count > 0)
                 {
                     query = query.Where(r =>
-                        r.Tags.Any(rt => tagsIds.Contains(rt.TagId)));
+                        r.Tags.Any(rt => tagsIds.Contains(rt.Id)));
                 }
             }
 
@@ -114,7 +114,7 @@ namespace Infrastructure.Persistence.ReadModels
                 {
                     query = query.Where(r =>
                         tagIds.All(tagId =>
-                            r.Tags.Any(rt => rt.TagId == tagId)));
+                            r.Tags.Any(rt => rt.Id == tagId)));
                 }
             }
 
@@ -136,7 +136,6 @@ namespace Infrastructure.Persistence.ReadModels
                 .AsNoTracking()
                 .Where(r => r.TenantId == tId && r.Id == rId)
                 .SelectMany(r => r.Tags)
-                .Select(rt => rt.Tag)
                 .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }

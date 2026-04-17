@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.Courses.DTOs;
+using Application.Features.Tags.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using MediatR;
@@ -9,23 +9,23 @@ namespace Application.Features.Courses.Queries
 {
     public sealed class GetCourseTags
     {
-        public sealed class Query : IRequest<Result<List<CourseTagDto>>>
+        public sealed class Query : IRequest<Result<List<TagDto>>>
         {
             public required string CourseId { get; set; }
         }
         public sealed class Handler(
             ICoursesReadModel coursesReadModel,
             ITenantContext tenantContext
-        ) : IRequestHandler<GetCourseTags.Query, Result<List<CourseTagDto>>>
+        ) : IRequestHandler<GetCourseTags.Query, Result<List<TagDto>>>
         {
-            public async Task<Result<List<CourseTagDto>>> Handle(
+            public async Task<Result<List<TagDto>>> Handle(
                 GetCourseTags.Query request,
                 CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
 
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<List<CourseTagDto>>.Failure(
+                    return Result<List<TagDto>>.Failure(
                         "Tenant not found.",
                         HttpStatusCode.NotFound);
 
@@ -34,7 +34,7 @@ namespace Application.Features.Courses.Queries
                     request.CourseId,
                     cancellationToken);
 
-                return Result<List<CourseTagDto>>.Success(tags, HttpStatusCode.OK);
+                return Result<List<TagDto>>.Success(tags, HttpStatusCode.OK);
             }
         }
     }

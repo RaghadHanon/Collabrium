@@ -4,6 +4,7 @@ using Application.Common;
 using Application.Features.Courses.Commands;
 using Application.Features.Courses.DTOs;
 using Application.Features.Courses.Queries;
+using Application.Features.Tags.DTOs;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -300,7 +301,7 @@ namespace API.Controllers
             return HandleResult(result);
         }
         [HttpGet("{courseId}/tags")]
-        public async Task<ActionResult<List<CourseTagDto>>> GetCourseTags(string courseId)
+        public async Task<ActionResult<List<TagDto>>> GetCourseTags(string courseId)
         {
             var query = new GetCourseTags.Query
             {

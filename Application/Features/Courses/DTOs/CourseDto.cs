@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Application.Features.Tags.DTOs;
+using Domain.Enums;
 
 namespace Application.Features.Courses.DTOs
 {
@@ -20,8 +21,7 @@ namespace Application.Features.Courses.DTOs
         public string? ThumbnailImageUrl { get; set; }
         public string? ThumbnailImagePublicId { get; set; }
 
-        public List<string> TagIds { get; set; } = new();
-
+        public List<TagDto> Tags { get; set; } = new();
         public int RatingsCount { get; set; }
         public double AverageRating { get; set; }
 

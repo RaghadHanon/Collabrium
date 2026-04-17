@@ -16,9 +16,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
 
             .ForMember(d => d.NodesCount,
                 o => o.MapFrom(s => s.Nodes.Count))
-            //ممكن تنشال بصير اثفل معها
             .ForMember(d => d.TagIds,
-                o => o.MapFrom(s => s.Tags.Select(t => t.TagId)));
+                o => o.MapFrom(s => s.Tags.Select(t => t.Id)));
 
         }
     }

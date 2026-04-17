@@ -39,9 +39,9 @@ namespace Infrastructure.Persistence.Repositories
             if (ids.Count == 0) return;
 
             var entity = await _dbContext.Courses
-                .Include(c => c.CourseTags)
-                .Include(c => c.LearningPoints)
-                .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
+            .Include(c => c.Tags)
+            .Include(c => c.LearningPoints)
+            .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
             if (entity is null)
                 throw new InvalidOperationException("Course not found.");
@@ -53,19 +53,17 @@ namespace Infrastructure.Persistence.Repositories
             foreach (var id in ids)
                 domain.AddTag(id);
 
-            var existing = entity.CourseTags
-                .Select(x => x.TagId)
-                .ToHashSet(StringComparer.Ordinal);
+            var existing = entity.Tags
+             .Select(x => x.Id)
+             .ToHashSet(StringComparer.Ordinal);
 
-            foreach (var id in ids)
+            var tagsToAdd = await _dbContext.Tags
+                .Where(t => ids.Contains(t.Id) && !existing.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var tag in tagsToAdd)
             {
-                if (existing.Contains(id)) continue;
-
-                entity.CourseTags.Add(new CourseTagEntity
-                {
-                    CourseId = entity.Id,
-                    TagId = id
-                });
+                entity.Tags.Add(tag);
             }
 
             CourseMapper.UpdateEntity(entity, domain);
@@ -112,7 +110,7 @@ namespace Infrastructure.Persistence.Repositories
 
             var entity = await _dbContext.Courses
                 .AsNoTracking()
-                .Include(c => c.CourseTags)
+                .Include(c => c.Tags)
                 .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
@@ -186,13 +184,13 @@ namespace Infrastructure.Persistence.Repositories
                 if (ids.Count > 0)
                 {
                     query = query.Where(c =>
-                        c.CourseTags.Any(ct => ids.Contains(ct.TagId)));
+                        c.Tags.Any(t => ids.Contains(t.Id)));
                 }
             }
 
             var entities = await query
                 .OrderByDescending(c => c.CreatedAt)
-                .Include(c => c.CourseTags)
+                 .Include(c => c.Tags)
                 .Include(c => c.LearningPoints)
                 .Take(pageSize + 1)
                 .ToListAsync(cancellationToken);
@@ -225,7 +223,7 @@ namespace Infrastructure.Persistence.Repositories
             if (ids.Count == 0) return;
 
             var entity = await _dbContext.Courses
-                .Include(c => c.CourseTags)
+                 .Include(c => c.Tags)
                 .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
@@ -237,12 +235,9 @@ namespace Infrastructure.Persistence.Repositories
             foreach (var id in ids)
                 domain.RemoveTag(id);
 
-            var toRemove = entity.CourseTags
-                .Where(x => ids.Contains(x.TagId))
+            entity.Tags = entity.Tags
+                .Where(t => !ids.Contains(t.Id))
                 .ToList();
-
-            foreach (var row in toRemove)
-                entity.CourseTags.Remove(row);
 
             CourseMapper.UpdateEntity(entity, domain);
         }
@@ -259,7 +254,7 @@ namespace Infrastructure.Persistence.Repositories
             var ids = NormalizeIds(tagIds);
 
             var entity = await _dbContext.Courses
-                .Include(c => c.CourseTags)
+                .Include(c => c.Tags)
                 .Include(c => c.LearningPoints)
                 .FirstOrDefaultAsync(c => c.TenantId == tId && c.Id == cId, cancellationToken);
 
@@ -272,26 +267,13 @@ namespace Infrastructure.Persistence.Repositories
             var domain = CourseMapper.ToDomain(entity);
             domain.SetTags(ids);
 
-            var desired = new HashSet<string>(ids);
+            var tags = ids.Count == 0
+                ? new List<TagEntity>()
+                : await _dbContext.Tags
+                    .Where(t => t.TenantId == tId && ids.Contains(t.Id))
+                    .ToListAsync(cancellationToken);
 
-            entity.CourseTags = entity.CourseTags
-                .Where(x => desired.Contains(x.TagId))
-                .ToList();
-
-            var existing = entity.CourseTags
-                .Select(x => x.TagId)
-                .ToHashSet();
-
-            foreach (var id in ids)
-            {
-                if (existing.Contains(id)) continue;
-
-                entity.CourseTags.Add(new CourseTagEntity
-                {
-                    CourseId = entity.Id,
-                    TagId = id
-                });
-            }
+            entity.Tags = tags;
 
             CourseMapper.UpdateEntity(entity, domain);
         }

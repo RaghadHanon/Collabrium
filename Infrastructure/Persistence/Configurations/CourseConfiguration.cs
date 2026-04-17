@@ -57,10 +57,9 @@ namespace Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(x => x.CourseTags)
-                .WithOne(x => x.Course)
-                .HasForeignKey(x => x.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(c => c.Tags)
+           .WithMany()
+           .UsingEntity(j => j.ToTable("CourseTags"));
 
             builder.HasMany(x => x.UserCourses)
                 .WithOne(x => x.Course)

@@ -1,5 +1,6 @@
 ﻿using Application.Common;
 using Application.Features.Courses.DTOs;
+using Application.Features.Tags.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -74,7 +75,14 @@ namespace Infrastructure.Persistence.ReadModels
                     ThumbnailImageUrl = c.ThumbnailImage != null ? c.ThumbnailImage.Url : null,
                     ThumbnailImagePublicId = c.ThumbnailImage != null ? c.ThumbnailImage.PublicId : null,
 
-                    TagIds = c.CourseTags.Select(t => t.TagId).ToList(),
+                    Tags = c.Tags
+                        .Select(t => new TagDto
+                        {
+                            Id = t.Id,
+                            Name = t.Name
+
+                        })
+                        .ToList(),
 
                     RatingsCount = c.CourseRatings.Count,
                     AverageRating = c.CourseRatings.Any()
@@ -134,7 +142,7 @@ namespace Infrastructure.Persistence.ReadModels
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<List<CourseTagDto>> GetTagsAsync(
+        public async Task<List<TagDto>> GetTagsAsync(
             string tenantId,
             string courseId,
             CancellationToken cancellationToken = default)
@@ -148,8 +156,8 @@ namespace Infrastructure.Persistence.ReadModels
             return await _dbContext.Courses
                 .AsNoTracking()
                 .Where(c => c.TenantId == tId && c.Id == cId)
-                .SelectMany(c => c.CourseTags)
-                .ProjectTo<CourseTagDto>(_mapper.ConfigurationProvider)
+                .SelectMany(c => c.Tags)
+                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }
 
@@ -227,7 +235,7 @@ namespace Infrastructure.Persistence.ReadModels
                 if (tagIds.Count > 0)
                 {
                     query = query.Where(c =>
-                        c.CourseTags.Any(ct => tagIds.Contains(ct.TagId)));
+                        c.Tags.Any(ct => tagIds.Contains(ct.Id)));
                 }
             }
 

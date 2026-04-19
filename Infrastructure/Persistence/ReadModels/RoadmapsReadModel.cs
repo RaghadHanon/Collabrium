@@ -169,32 +169,47 @@ namespace Infrastructure.Persistence.ReadModels
                 .Select(r => new RoadmapDetailsDto
                 {
                     Id = r.Id,
+                    TenantId = r.TenantId,
                     Title = r.Title,
                     Description = r.Description,
                     Path = r.Path,
                     Level = r.Level,
+                    IsVisible = r.IsVisible,
+                    PublishedAt = r.PublishedAt,
+                    CreatedByUserId = r.CreatedByUserId,
+                    CreatedByUserName = r.CreatedByUser != null ? r.CreatedByUser.FullName : null,
+                    TagsCount = r.Tags.Count,
+                    NodesCount = r.Nodes.Count,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt,
+                    Tags = r.Tags
+                .Select(t => new TagDto
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .ToList(),
                     Topics = r.Nodes
-                        .OfType<TopicNodeEntity>()
-                        .OrderBy(n => n.Order)
-                        .Select(t => new TopicDto
+                .OfType<TopicNodeEntity>()
+                .OrderBy(n => n.Order)
+                .Select(t => new TopicDto
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Order = t.Order,
+                    SubTopics = t.SubTopics
+                        .OrderBy(s => s.Order)
+                        .Select(s => new SubTopicDto
                         {
-                            Id = t.Id,
-                            Title = t.Title,
-                            Description = t.Description,
-                            Order = t.Order,
-
-                            SubTopics = t.SubTopics
-                                .OrderBy(s => s.Order)
-                                .Select(s => new SubTopicDto
-                                {
-                                    Id = s.Id,
-                                    Title = s.Title,
-                                    Description = s.Description,
-                                    Order = s.Order
-                                })
-                                .ToList()
+                            Id = s.Id,
+                            Title = s.Title,
+                            Description = s.Description,
+                            Order = s.Order
                         })
                         .ToList()
+                })
+                .ToList()
                 })
                 .FirstOrDefaultAsync(cancellationToken);
         }

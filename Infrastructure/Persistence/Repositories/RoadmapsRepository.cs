@@ -50,7 +50,7 @@ namespace Infrastructure.Persistence.Repositories
         {
             if (!TryNormalize(tenantId, roadmapId, out var tId, out var rId))
                 return null;
-            return await GetByIdAsync(tenantId, roadmapId, false, cancellationToken);
+            return await GetByIdAsync(tenantId, roadmapId, true, cancellationToken);
 
         }
 

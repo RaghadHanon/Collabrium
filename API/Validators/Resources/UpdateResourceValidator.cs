@@ -36,9 +36,6 @@ namespace API.Validators.Resources
                 .Must(BeAValidUrl)
                 .WithMessage("Url must be a valid absolute URL.");
 
-            RuleFor(x => x.Order)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Order must be greater than or equal to 0.");
 
             RuleFor(x => x.Type)
                 .IsInEnum()

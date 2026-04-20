@@ -21,7 +21,6 @@ namespace Application.Features.RoadmapResources.Commands
             public required string Title { get; set; }
             public required string Url { get; set; }
             public RoadmapResourceType Type { get; set; }
-            public int Order { get; set; }
         }
 
         public sealed class Handler(
@@ -39,7 +38,11 @@ namespace Application.Features.RoadmapResources.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<ResourceDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<ResourceDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -49,17 +52,6 @@ namespace Application.Features.RoadmapResources.Commands
                     topicNodeId: request.TopicNodeId,
                     subTopicId: request.SubTopicId,
                     ct: cancellationToken);
-                var isOrderUsed = await resourcesRepository.IsOrderUsedAsync(
-                    subTopicId: request.SubTopicId,
-                    order: request.Order,
-                    ct: cancellationToken);
-
-                if (isOrderUsed)
-                {
-                    return Result<ResourceDto>.Failure(
-                        "Order already exists in this subtopic.",
-                        HttpStatusCode.BadRequest);
-                }
 
                 if (subTopic is null)
                     return Result<ResourceDto>.Failure("Subtopic not found.", HttpStatusCode.NotFound);
@@ -68,12 +60,16 @@ namespace Application.Features.RoadmapResources.Commands
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    var lastOrder = await resourcesRepository.GetMaxOrderAsync(
+                        subTopicId: request.SubTopicId,
+                        ct: ct);
+
                     resource = new RoadmapResource(
                         subTopicId: request.SubTopicId,
                         title: request.Title,
                         url: request.Url,
                         type: request.Type,
-                        order: request.Order);
+                        order: lastOrder + 1);
 
                     await resourcesRepository.AddAsync(resource, ct);
                 }, cancellationToken);

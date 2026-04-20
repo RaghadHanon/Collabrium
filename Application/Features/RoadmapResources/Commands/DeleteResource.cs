@@ -31,7 +31,11 @@ namespace Application.Features.RoadmapResources.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<string>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 

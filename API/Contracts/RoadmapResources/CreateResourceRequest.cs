@@ -8,6 +8,5 @@ namespace API.Contracts.RoadmapResources
         public required string Url { get; init; }
 
         public RoadmapResourceType Type { get; init; }
-        public int Order { get; init; }
     }
 }

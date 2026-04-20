@@ -9,67 +9,67 @@ using System.Net;
 
 namespace Application.Features.RoadmapNodes.Commands
 {
-    public class CreateReferenceNode
+    public sealed class CreateReferenceNode
     {
-        public class Command : IRequest<Result<ReferenceNodeDto>>
+        public sealed class Command : IRequest<Result<ReferenceNodeDto>>
         {
             public required string RoadmapId { get; set; }
             public required string Title { get; set; }
             public string? Description { get; set; }
-            public required int Order { get; set; }
             public required string RefRoadmapId { get; set; }
         }
 
         public sealed class Handler(
-           IRoadmapNodesRepository roadmapNodesRepository,
-           IRoadmapNodesReadModel roadmapNodesReadModel,
-           IRoadmapsRepository roadmapsRepository,
-           ITenantContext tenantContext,
-           IUnitOfWork unitOfWork
-       ) : IRequestHandler<Command, Result<ReferenceNodeDto>>
+            IRoadmapNodesRepository roadmapNodesRepository,
+            IRoadmapNodesReadModel roadmapNodesReadModel,
+            IRoadmapsRepository roadmapsRepository,
+            ITenantContext tenantContext,
+            IUnitOfWork unitOfWork
+        ) : IRequestHandler<Command, Result<ReferenceNodeDto>>
         {
             public async Task<Result<ReferenceNodeDto>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
-                {
                     return Result<ReferenceNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                }
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
-                if (roadmap == null)
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
+                if (roadmap is null)
+                    return Result<ReferenceNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
+
+                if (string.Equals(request.RefRoadmapId, request.RoadmapId, StringComparison.Ordinal))
                 {
-                    return Result<ReferenceNodeDto>.Failure("Roadmap not found", HttpStatusCode.NotFound);
+                    return Result<ReferenceNodeDto>.Failure(
+                        "Reference node cannot reference the same roadmap.",
+                        HttpStatusCode.BadRequest);
                 }
+
                 var referenced = await roadmapsRepository.GetByIdAsync(
-                   tenantId,
-                   request.RefRoadmapId,
-                   cancellationToken);
+                    tenantId,
+                    request.RefRoadmapId,
+                    cancellationToken);
 
                 if (referenced is null)
                     return Result<ReferenceNodeDto>.Failure("Referenced roadmap not found.", HttpStatusCode.NotFound);
-                var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
-                   tenantId: tenantId,
-                   roadmapId: request.RoadmapId,
-                   order: request.Order,
-                   ct: cancellationToken);
-
-                if (isOrderUsed)
-                {
-                    return Result<ReferenceNodeDto>.Failure(
-                        "Order already exists in this roadmap.",
-                        HttpStatusCode.BadRequest);
-                }
 
                 ReferenceNode reference = null!;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    var lastOrder = await roadmapNodesRepository.GetMaxOrderAsync(
+                        tenantId: tenantId,
+                        roadmapId: request.RoadmapId,
+                        ct: ct);
+
                     reference = new ReferenceNode(
                         tenantId: tenantId,
                         roadmapId: request.RoadmapId,
                         title: request.Title,
-                        order: request.Order,
+                        order: lastOrder + 1,
                         refRoadmapId: request.RefRoadmapId,
                         description: request.Description
                     );
@@ -84,10 +84,11 @@ namespace Application.Features.RoadmapNodes.Commands
                     ct: cancellationToken);
 
                 return dto is null
-                    ? Result<ReferenceNodeDto>.Failure("Reference node created but could not be loaded.", HttpStatusCode.InternalServerError)
+                    ? Result<ReferenceNodeDto>.Failure(
+                        "Reference node created but could not be loaded.",
+                        HttpStatusCode.InternalServerError)
                     : Result<ReferenceNodeDto>.Success(dto, HttpStatusCode.Created);
             }
-
         }
     }
 }

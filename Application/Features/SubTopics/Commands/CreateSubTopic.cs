@@ -18,7 +18,6 @@ namespace Application.Features.SubTopics.Commands
 
             public required string Title { get; set; }
             public string? Description { get; set; }
-            public required int Order { get; set; }
         }
 
         public sealed class Handler(
@@ -33,10 +32,13 @@ namespace Application.Features.SubTopics.Commands
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
-                {
                     return Result<SubTopicDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
-                }
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<SubTopicDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -49,38 +51,29 @@ namespace Application.Features.SubTopics.Commands
                 if (!topicExists)
                     return Result<SubTopicDto>.Failure("Topic node not found.", HttpStatusCode.NotFound);
 
-                var isOrderUsed = await subTopicsRepository.IsOrderUsedAsync(
-                    topicNodeId: request.TopicNodeId,
-                    order: request.Order,
-               ct: cancellationToken);
-
-                if (isOrderUsed)
-                {
-                    return Result<SubTopicDto>.Failure(
-                        "Order already exists in this topic.",
-                        HttpStatusCode.BadRequest);
-                }
-
                 RoadmapSubTopic subTopic = null!;
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    subTopic = new RoadmapSubTopic(
-                            topicNodeId: request.TopicNodeId,
-                            title: request.Title,
-                            order: request.Order,
-                            description: request.Description);
+                    var lastOrder = await subTopicsRepository.GetMaxOrderAsync(
+                        topicNodeId: request.TopicNodeId,
+                        ct: ct);
 
+                    subTopic = new RoadmapSubTopic(
+                        topicNodeId: request.TopicNodeId,
+                        title: request.Title,
+                        order: lastOrder + 1,
+                        description: request.Description);
 
                     await subTopicsRepository.AddAsync(subTopic, ct);
                 }, cancellationToken);
 
-
                 var dto = await subTopicsReadModel.GetByIdAsync(
-                     tenantId: tenantId,
-                     roadmapId: request.RoadmapId,
-                     topicNodeId: request.TopicNodeId,
-                     subTopicId: subTopic.Id,
-                     ct: cancellationToken);
+                    tenantId: tenantId,
+                    roadmapId: request.RoadmapId,
+                    topicNodeId: request.TopicNodeId,
+                    subTopicId: subTopic.Id,
+                    ct: cancellationToken);
 
                 return dto is null
                     ? Result<SubTopicDto>.Failure("SubTopic created but could not be loaded.", HttpStatusCode.InternalServerError)

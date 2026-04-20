@@ -8,7 +8,7 @@ public class Sprint : Entity
     public string TenantId { get; private set; } = null!;
     public string ProjectId { get; private set; } = null!;
     public string Code { get; private set; } = null!;
-    public string? Name { get; private set; } 
+    public string? Name { get; private set; }
     public string? Goal { get; private set; }
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
@@ -51,9 +51,9 @@ public class Sprint : Entity
     {
         var sprint = new Sprint(id, tenantId, projectId, code);
         sprint.Name = name;
-        sprint.Goal = goal; 
+        sprint.Goal = goal;
         sprint.SetTimestamps(createdAt, updatedAt);
-        sprint.Status = status; 
+        sprint.Status = status;
         sprint.StartDate = start;
         sprint.EndDate = end;
 
@@ -104,15 +104,21 @@ public class Sprint : Entity
 
     private void Schedule(DateTime start, DateTime end)
     {
-        Guard.Against(
-            Status == SprintStatus.Active && DateTime.UtcNow >= StartDate && start != StartDate,
-            "Cannot update start date for a sprint that has already started."
-        );
-        Guard.Against(start <= DateTime.UtcNow, "Start date must be in the future.");
-        Guard.Against(end < start, "Sprint end date must be >= start date.");
+        if (StartDate != start)
+        {
+            Guard.Against(
+                Status == SprintStatus.Active && DateTime.UtcNow >= StartDate && start != StartDate,
+                "Cannot update start date for a sprint that has already started."
+            );
+            Guard.Against(start <= DateTime.UtcNow, "Start date must be in the future.");
+            StartDate = start;
+        }
 
-        StartDate = start;
-        EndDate = end;
+        if (EndDate != end)
+        {
+            Guard.Against(end < StartDate, "Sprint end date must be >= start date.");
+            EndDate = end;
+        }
     }
 
     public void Complete()

@@ -81,12 +81,12 @@ public partial class UpdateWorkItem
                     HttpStatusCode.Forbidden);
 
             var sprintDecision = PatchHelpers.DecideStringPatch(request.SprintId);
-            Sprint? sprint = null;
+
             if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
             {
                 var sprintIdToSet = sprintDecision.Value!;
 
-                sprint = await sprintsRepository.GetByIdAsync(
+                var sprint = await sprintsRepository.GetByIdAsync(
                     tenantId,
                     sprintIdToSet,
                     request.ProjectId,
@@ -133,6 +133,8 @@ public partial class UpdateWorkItem
                     else workItem.Unblock();
                 }
 
+                var sprint = await sprintsRepository.GetByIdAsync(tenantId, workItem.SprintId, request.ProjectId, ct);
+                    
                 ApplyTypeSpecificPatch(workItem, request, project, sprint);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);

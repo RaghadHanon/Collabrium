@@ -30,7 +30,11 @@ namespace Application.Features.SubTopics.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<string>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -43,7 +47,10 @@ namespace Application.Features.SubTopics.Commands
                 if (!topicExists)
                     return Result<string>.Failure("Topic node not found.", HttpStatusCode.NotFound);
 
-                var hasResources = await subTopicsRepository.HasResourcesAsync(request.SubTopicId, cancellationToken);
+                var hasResources = await subTopicsRepository.HasResourcesAsync(
+                    request.SubTopicId,
+                    cancellationToken);
+
                 if (hasResources)
                     return Result<string>.Failure("Cannot delete subtopic that has resources.", HttpStatusCode.BadRequest);
 

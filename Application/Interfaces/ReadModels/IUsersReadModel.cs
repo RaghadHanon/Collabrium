@@ -15,4 +15,7 @@ public interface IUsersReadModel
     Task<PagedList<UserDto, DateTime?>> GetUsersAsync(
         UsersSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
+    Task<PagedList<UserDto, DateTime?>> GetAssignableUsersAsync(
+     AssignableUsersSearchAndFilterParametersDto parameters,
+     CancellationToken ct);
 }

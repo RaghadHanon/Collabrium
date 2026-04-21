@@ -19,5 +19,9 @@ public enum MetadataType
     RoadmapLevel = 14,
     RoadmapPath = 15,
     RoadmapResourceType = 16,
+    CourseAssignmentStatus = 17,
+    CourseLanguage = 18,
+    CourseLevel = 19,
+    UserCourseStatus = 20,
 
 }

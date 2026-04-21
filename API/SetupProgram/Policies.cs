@@ -61,4 +61,8 @@ public static class Policies
     //Tags
     public const string Tags_Read = "Tags.Read";
     public const string Tags_Manage = "Tags.Manage";
+
+    //Courses
+    public const string Courses_Read = "Courses.Read";
+    public const string Courses_Manage = "Courses.Manage";
 }

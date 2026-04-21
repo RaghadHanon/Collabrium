@@ -16,59 +16,59 @@ namespace Application.Features.RoadmapNodes.Commands
             public required string RoadmapId { get; set; }
             public required string Title { get; set; }
             public string? Description { get; set; }
-            public required int Order { get; set; }
         }
 
-        public class Handler(
-        IRoadmapNodesRepository roadmapNodesRepository,
-        IRoadmapNodesReadModel roadmapNodesReadModel,
-        IRoadmapsRepository roadmapsRepository,
-        ITenantContext tenantContext,
-        IUnitOfWork unitOfWork
-            ) : IRequestHandler<Command, Result<TopicNodeDto>>
+        public sealed class Handler(
+            IRoadmapNodesRepository roadmapNodesRepository,
+            IRoadmapNodesReadModel roadmapNodesReadModel,
+            IRoadmapsRepository roadmapsRepository,
+            ITenantContext tenantContext,
+            IUnitOfWork unitOfWork
+        ) : IRequestHandler<Command, Result<TopicNodeDto>>
         {
             public async Task<Result<TopicNodeDto>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<TopicNodeDto>.Failure("Tenant context is missing.", HttpStatusCode.NotFound);
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<TopicNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
-                var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
-                   tenantId: tenantId,
-                   roadmapId: request.RoadmapId,
-                   order: request.Order,
-                   ct: cancellationToken);
-
-                if (isOrderUsed)
-                {
-                    return Result<TopicNodeDto>.Failure(
-                        "Order already exists in this roadmap.",
-                        HttpStatusCode.BadRequest);
-                }
 
                 TopicNode topic = null!;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    var lastOrder = await roadmapNodesRepository.GetMaxOrderAsync(
+                        tenantId: tenantId,
+                        roadmapId: request.RoadmapId,
+                        ct: ct);
+
                     topic = new TopicNode(
                         tenantId: tenantId,
                         roadmapId: request.RoadmapId,
                         title: request.Title,
-                        order: request.Order,
+                        order: lastOrder + 1,
                         description: request.Description
                     );
 
                     await roadmapNodesRepository.AddTopicAsync(topic, ct);
                 }, cancellationToken);
 
-                var dto = await roadmapNodesReadModel.GetTopicAsync(tenantId, request.RoadmapId, topic.Id, cancellationToken);
+                var dto = await roadmapNodesReadModel.GetTopicAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    topic.Id,
+                    cancellationToken);
 
                 return dto is null
                     ? Result<TopicNodeDto>.Failure("Topic node created but could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<TopicNodeDto>.Success(dto, HttpStatusCode.Created);
-
             }
         }
     }

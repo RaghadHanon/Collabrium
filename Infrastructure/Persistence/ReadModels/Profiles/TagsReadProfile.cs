@@ -9,6 +9,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
         public TagsReadProfile()
         {
             CreateMap<TagEntity, TagDto>();
+
+            CreateMap<TagEntity, TagDetailsDto>();
         }
     }
 }

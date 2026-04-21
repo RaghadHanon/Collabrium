@@ -20,8 +20,7 @@ namespace Infrastructure.Persistence.Entities
         public ApplicationUserEntity? CreatedByUser { get; set; }
 
         // Join table
-        public ICollection<RoadmapTagEntity> Tags { get; set; } = new List<RoadmapTagEntity>();
-
+        public ICollection<TagEntity> Tags { get; set; } = new List<TagEntity>();
         // Content
         public ICollection<RoadmapNodeEntity> Nodes { get; set; } = new List<RoadmapNodeEntity>();
     }

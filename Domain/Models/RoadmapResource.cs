@@ -24,12 +24,10 @@ namespace Domain.Models
         {
             SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-
             Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
             Type = type;
 
             SetOrder(order);
-
             Touch();
         }
 
@@ -44,7 +42,6 @@ namespace Domain.Models
         {
             SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-
             Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
             Type = type;
 
@@ -66,13 +63,17 @@ namespace Domain.Models
             return r;
         }
 
-        public void Update(string title, string url, RoadmapResourceType type, int order)
+        public void UpdateDetails(string title, string url, RoadmapResourceType type)
         {
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
             Type = type;
-            SetOrder(order);
+            Touch();
+        }
 
+        public void ChangeOrder(int order)
+        {
+            SetOrder(order);
             Touch();
         }
 

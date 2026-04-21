@@ -5,11 +5,11 @@ namespace Application.Interfaces.ReadModels
 {
     public interface ITagsReadModel
     {
-        Task<PagedList<TagDto, DateTime?>> GetAsync(
+        Task<PagedList<TagDetailsDto, DateTime?>> GetAsync(
         TagsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
 
-        Task<TagDto?> GetByIdAsync(
+        Task<TagDetailsDto?> GetByIdAsync(
             string tenantId,
             string tagId,
             CancellationToken cancellationToken = default);

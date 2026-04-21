@@ -18,7 +18,6 @@ namespace Application.Features.SubTopics.Commands
 
             public string? Title { get; set; }
             public string? Description { get; set; }
-            public int? Order { get; set; }
         }
 
         public sealed class Handler(
@@ -35,7 +34,11 @@ namespace Application.Features.SubTopics.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<SubTopicDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<SubTopicDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -55,22 +58,7 @@ namespace Application.Features.SubTopics.Commands
 
                 if (subTopic is null)
                     return Result<SubTopicDto>.Failure("SubTopic not found.", HttpStatusCode.NotFound);
-                if (request.Order.HasValue)
-                {
-                    var isOrderUsed = await subTopicsRepository.IsOrderUsedAsync(
-                     topicNodeId: request.TopicNodeId,
-                     order: request.Order.Value,
-                     excludeSubTopicId: request.SubTopicId,
-                     ct: cancellationToken);
 
-                    if (isOrderUsed)
-                    {
-                        return Result<SubTopicDto>.Failure(
-                            "Order already exists in this topic.",
-                            HttpStatusCode.BadRequest);
-                    }
-
-                }
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {
@@ -85,14 +73,11 @@ namespace Application.Features.SubTopics.Commands
                 var newDescription =
                     PatchHelpers.ApplyStringPatch(subTopic.Description, request.Description);
 
-                var newOrder = request.Order ?? subTopic.Order;
-
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    subTopic.Update(
+                    subTopic.UpdateDetails(
                         title: newTitleValue,
-                        description: newDescription,
-                        order: newOrder);
+                        description: newDescription);
 
                     await subTopicsRepository.UpdateAsync(subTopic, ct);
                 }, cancellationToken);

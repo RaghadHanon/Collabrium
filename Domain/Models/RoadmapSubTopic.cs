@@ -55,12 +55,10 @@ namespace Domain.Models
             return s;
         }
 
-        public void Update(string title, string? description, int order)
+        public void UpdateDetails(string title, string? description)
         {
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Description = description?.Trim();
-            SetOrder(order);
-
             Touch();
         }
 

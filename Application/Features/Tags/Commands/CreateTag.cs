@@ -11,28 +11,34 @@ namespace Application.Features.Tags.Commands
 {
     public sealed class CreateTag
     {
-        public sealed class Command : IRequest<Result<TagDto>>
+        public sealed class Command : IRequest<Result<TagDetailsDto>>
         {
             public required string Name { get; set; }
-
         }
+
         public sealed class Handler(
             ITagsRepository tagsRepository,
             ITagsReadModel tagsReadModel,
             ITenantContext tenantContext,
             IUnitOfWork unitOfWork
-            ) : IRequestHandler<Command, Result<TagDto>>
+        ) : IRequestHandler<Command, Result<TagDetailsDto>>
         {
-            public async Task<Result<TagDto>> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<TagDetailsDto>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<TagDto>.Failure("Tenant not found.",
-                        System.Net.HttpStatusCode.NotFound);
-                var isUnique = await tagsRepository.IsNameUniqueAsync(tenantId, request.Name, cancellationToken);
+                    return Result<TagDetailsDto>.Failure(
+                        "Tenant not found.",
+                        HttpStatusCode.NotFound);
+
+                var isUnique = await tagsRepository.IsNameUniqueAsync(
+                    tenantId,
+                    request.Name,
+                    cancellationToken);
+
                 if (!isUnique)
                 {
-                    return Result<TagDto>.Failure(
+                    return Result<TagDetailsDto>.Failure(
                         "A tag with this name already exists.",
                         HttpStatusCode.Conflict
                     );
@@ -53,17 +59,16 @@ namespace Application.Features.Tags.Commands
                 );
 
                 return dto is null
-                    ? Result<TagDto>.Failure(
+                    ? Result<TagDetailsDto>.Failure(
                         "Tag created but could not be loaded.",
                         HttpStatusCode.InternalServerError
                     )
-                    : Result<TagDto>.Success(
+                    : Result<TagDetailsDto>.Success(
                         dto,
                         HttpStatusCode.Created
                     );
             }
         }
-
     }
 }
 

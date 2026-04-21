@@ -23,14 +23,14 @@ namespace Infrastructure.Persistence.Repositories
             await _dbContext.SubTopics.AddAsync(entity, ct);
         }
 
-
         public async Task<RoadmapSubTopic?> GetByIdAsync(
-           string topicNodeId,
-           string subTopicId,
-           CancellationToken ct = default)
+            string topicNodeId,
+            string subTopicId,
+            CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(topicNodeId) || string.IsNullOrWhiteSpace(subTopicId))
                 return null;
+
             var tId = topicNodeId.Trim();
             var sId = subTopicId.Trim();
 
@@ -45,24 +45,61 @@ namespace Infrastructure.Persistence.Repositories
                 : SubTopicsMapper.ToDomain(entity);
         }
 
+        public async Task<List<RoadmapSubTopic>> GetByTopicIdAsync(
+            string topicNodeId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(topicNodeId))
+                return new();
+
+            var tId = topicNodeId.Trim();
+
+            var entities = await _dbContext.SubTopics
+                .AsNoTracking()
+                .Where(s => s.TopicNodeId == tId)
+                .OrderBy(s => s.Order)
+                .ToListAsync(ct);
+
+            return entities.Select(SubTopicsMapper.ToDomain).ToList();
+        }
+
+        public async Task<int> GetMaxOrderAsync(
+            string topicNodeId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(topicNodeId))
+                return 0;
+
+            var tId = topicNodeId.Trim();
+
+            var max = await _dbContext.SubTopics
+                .Where(s => s.TopicNodeId == tId)
+                .Select(s => (int?)s.Order)
+                .MaxAsync(ct);
+
+            return max ?? 0;
+        }
 
         public Task<bool> HasResourcesAsync(string subTopicId, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(subTopicId))
                 return Task.FromResult(false);
+
             var sId = subTopicId.Trim();
+
             return _dbContext.Resources
                 .AsNoTracking()
                 .AnyAsync(r => r.SubTopicId == sId, ct);
         }
 
         public async Task<bool> RemoveAsync(
-           string topicNodeId,
-           string subTopicId,
-           CancellationToken ct = default)
+            string topicNodeId,
+            string subTopicId,
+            CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(topicNodeId) || string.IsNullOrWhiteSpace(subTopicId))
                 return false;
+
             var tId = topicNodeId.Trim();
             var sId = subTopicId.Trim();
 
@@ -77,35 +114,61 @@ namespace Infrastructure.Persistence.Repositories
             _dbContext.SubTopics.Remove(entity);
             return true;
         }
+
         public async Task UpdateAsync(RoadmapSubTopic subTopic, CancellationToken ct = default)
         {
             ArgumentNullException.ThrowIfNull(subTopic);
+
             var entity = await _dbContext.SubTopics
-                .FirstOrDefaultAsync(s => s.Id == subTopic.Id && s.TopicNodeId == subTopic.TopicNodeId, ct);
+                .FirstOrDefaultAsync(s =>
+                    s.Id == subTopic.Id &&
+                    s.TopicNodeId == subTopic.TopicNodeId, ct);
 
             if (entity is null)
                 throw new InvalidOperationException("SubTopic not found.");
 
             SubTopicsMapper.UpdateEntity(entity, subTopic);
         }
-        public Task<bool> IsOrderUsedAsync(
+        public async Task SwapOrderAsync(
     string topicNodeId,
-    int order,
-    string? excludeSubTopicId = null,
+    string firstSubTopicId,
+    string secondSubTopicId,
     CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(topicNodeId) || order < 1)
-                return Task.FromResult(false);
+            if (string.IsNullOrWhiteSpace(topicNodeId) ||
+                string.IsNullOrWhiteSpace(firstSubTopicId) ||
+                string.IsNullOrWhiteSpace(secondSubTopicId))
+            {
+                throw new ArgumentException("TopicNodeId and subtopic ids are required.");
+            }
 
             var topicId = topicNodeId.Trim();
-            var excludedId = excludeSubTopicId?.Trim();
+            var firstId = firstSubTopicId.Trim();
+            var secondId = secondSubTopicId.Trim();
 
-            return _dbContext.SubTopics
-                .AsNoTracking()
-                .AnyAsync(s =>
-                    s.TopicNodeId == topicId &&
-                    s.Order == order &&
-                    (excludedId == null || s.Id != excludedId), ct);
+            if (string.Equals(firstId, secondId, StringComparison.Ordinal))
+                return;
+
+            var first = await _dbContext.SubTopics
+                .FirstOrDefaultAsync(s => s.Id == firstId && s.TopicNodeId == topicId, ct);
+
+            var second = await _dbContext.SubTopics
+                .FirstOrDefaultAsync(s => s.Id == secondId && s.TopicNodeId == topicId, ct);
+
+            if (first is null || second is null)
+                throw new InvalidOperationException("One or both subtopics were not found.");
+
+            var firstOrder = first.Order;
+            var secondOrder = second.Order;
+
+            first.Order = 0;
+            await _dbContext.SaveChangesAsync(ct);
+
+            second.Order = firstOrder;
+            await _dbContext.SaveChangesAsync(ct);
+
+            first.Order = secondOrder;
+            await _dbContext.SaveChangesAsync(ct);
         }
     }
 }

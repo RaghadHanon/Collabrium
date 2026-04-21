@@ -17,7 +17,6 @@ namespace Application.Features.RoadmapNodes.Commands
 
             public string? Title { get; set; }
             public string? Description { get; set; }
-            public int? Order { get; set; }
             public string? RefRoadmapId { get; set; }
         }
 
@@ -54,36 +53,21 @@ namespace Application.Features.RoadmapNodes.Commands
 
                 if (node is not Domain.Models.ReferenceNode reference)
                     return Result<ReferenceNodeDto>.Failure("Node is not a reference.", HttpStatusCode.BadRequest);
-                if (request.Order.HasValue)
-                {
-                    var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
-                   tenantId: tenantId,
-                   roadmapId: request.RoadmapId,
-                   order: request.Order.Value,
-                   excludeNodeId: node.Id,
-                   ct: cancellationToken);
-
-                    if (isOrderUsed)
-                    {
-                        return Result<ReferenceNodeDto>.Failure(
-                            "Order already exists in this roadmap.",
-                            HttpStatusCode.BadRequest);
-                    }
-                }
-
 
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {
-                    var newTitlee = titleDecision.Value!;
-                    if (string.IsNullOrWhiteSpace(newTitlee))
+                    var newTitle = titleDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newTitle))
                         return Result<ReferenceNodeDto>.Failure("Title cannot be empty.", HttpStatusCode.BadRequest);
                 }
 
                 if (!string.IsNullOrWhiteSpace(request.RefRoadmapId))
                 {
-                    if (request.RefRoadmapId == request.RoadmapId)
-                        return Result<ReferenceNodeDto>.Failure("Reference node cannot reference the same roadmap.", HttpStatusCode.BadRequest);
+                    if (string.Equals(request.RefRoadmapId, request.RoadmapId, StringComparison.Ordinal))
+                        return Result<ReferenceNodeDto>.Failure(
+                            "Reference node cannot reference the same roadmap.",
+                            HttpStatusCode.BadRequest);
 
                     var referencedRoadmap = await roadmapsRepository.GetByIdAsync(
                         tenantId,
@@ -91,22 +75,22 @@ namespace Application.Features.RoadmapNodes.Commands
                         cancellationToken);
 
                     if (referencedRoadmap is null)
-                        return Result<ReferenceNodeDto>.Failure("Referenced roadmap not found.", HttpStatusCode.NotFound);
+                        return Result<ReferenceNodeDto>.Failure(
+                            "Referenced roadmap not found.",
+                            HttpStatusCode.NotFound);
                 }
 
-                var newTitle = PatchHelpers.ApplyStringPatch(reference.Title, request.Title) ?? reference.Title;
-                var newDescription = PatchHelpers.ApplyStringPatch(reference.Description, request.Description);
-                var newOrder = request.Order ?? reference.Order;
-                var newRefRoadmapId = !string.IsNullOrWhiteSpace(request.RefRoadmapId)
-                    ? request.RefRoadmapId
-                    : reference.RefRoadmapId;
+                var newTitleValue =
+                    PatchHelpers.ApplyStringPatch(reference.Title, request.Title) ?? reference.Title;
+
+                var newDescription =
+                    PatchHelpers.ApplyStringPatch(reference.Description, request.Description);
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    reference.Update(
-                        title: newTitle,
-                        description: newDescription,
-                        order: newOrder);
+                    reference.UpdateDetails(
+                        title: newTitleValue,
+                        description: newDescription);
 
                     if (!string.IsNullOrWhiteSpace(request.RefRoadmapId) &&
                         !string.Equals(reference.RefRoadmapId, request.RefRoadmapId, StringComparison.Ordinal))
@@ -124,10 +108,13 @@ namespace Application.Features.RoadmapNodes.Commands
                     ct: cancellationToken);
 
                 return dto is null
-                    ? Result<ReferenceNodeDto>.Failure("Reference node updated but could not be loaded.", HttpStatusCode.InternalServerError)
+                    ? Result<ReferenceNodeDto>.Failure(
+                        "Reference node updated but could not be loaded.",
+                        HttpStatusCode.InternalServerError)
                     : Result<ReferenceNodeDto>.Success(dto, HttpStatusCode.OK);
             }
         }
     }
 }
+
 

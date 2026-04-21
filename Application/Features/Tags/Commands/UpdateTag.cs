@@ -10,7 +10,7 @@ namespace Application.Features.Tags.Commands
 {
     public sealed class UpdateTag
     {
-        public sealed class Command : IRequest<Result<TagDto>>
+        public sealed class Command : IRequest<Result<TagDetailsDto>>
         {
             public required string TagId { get; set; }
             public required string Name { get; set; }
@@ -21,14 +21,14 @@ namespace Application.Features.Tags.Commands
             ITagsReadModel tagsReadModel,
             ITenantContext tenantContext,
             IUnitOfWork unitOfWork
-        ) : IRequestHandler<Command, Result<TagDto>>
+        ) : IRequestHandler<Command, Result<TagDetailsDto>>
         {
-            public async Task<Result<TagDto>> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<TagDetailsDto>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
 
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<TagDto>.Failure(
+                    return Result<TagDetailsDto>.Failure(
                         "Tenant not found.",
                         HttpStatusCode.NotFound
                     );
@@ -40,12 +40,11 @@ namespace Application.Features.Tags.Commands
                 );
 
                 if (tag is null)
-                    return Result<TagDto>.Failure(
+                    return Result<TagDetailsDto>.Failure(
                         "Tag not found.",
                         HttpStatusCode.NotFound
                     );
 
-                // (اختياري) تحقق من uniqueness لو الاسم تغير
                 if (tag.Name != request.Name)
                 {
                     var isUnique = await tagsRepository
@@ -53,7 +52,7 @@ namespace Application.Features.Tags.Commands
 
                     if (!isUnique)
                     {
-                        return Result<TagDto>.Failure(
+                        return Result<TagDetailsDto>.Failure(
                             "A tag with this name already exists.",
                             HttpStatusCode.BadRequest
                         );
@@ -72,11 +71,11 @@ namespace Application.Features.Tags.Commands
                 );
 
                 return dto is null
-                    ? Result<TagDto>.Failure(
+                    ? Result<TagDetailsDto>.Failure(
                         "Tag updated but could not be loaded.",
                         HttpStatusCode.InternalServerError
                     )
-                    : Result<TagDto>.Success(
+                    : Result<TagDetailsDto>.Success(
                         dto,
                         HttpStatusCode.OK
                     );

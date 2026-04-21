@@ -14,8 +14,7 @@ namespace API.Validators.SubTopics
             RuleFor(x => x.Description)
                 .MaximumLength(2000);
 
-            RuleFor(x => x.Order)
-                .GreaterThanOrEqualTo(1);
+
         }
     }
 }

@@ -4,7 +4,6 @@ using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -149,6 +148,80 @@ public class UsersReadModel : IUsersReadModel
             query = query.Where(u => u.JobTitle == parameters.JobTitle.ToString());
         }
 
+        return query;
+    }
+    public async Task<PagedList<UserDto, DateTime?>> GetAssignableUsersAsync(
+    AssignableUsersSearchAndFilterParametersDto parameters,
+    CancellationToken cancellationToken = default)
+    {
+        parameters ??= new AssignableUsersSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+
+        var query = _dbContext.Users.AsNoTracking();
+
+        query = ApplyAssignableUsersFilters(query, parameters);
+
+        return await ApplyAssignableUsersPagination(
+            parameters,
+            pageSize,
+            query,
+            cancellationToken);
+    }
+    private async Task<PagedList<UserDto, DateTime?>> ApplyAssignableUsersPagination(
+     AssignableUsersSearchAndFilterParametersDto parameters,
+     int pageSize,
+     IQueryable<ApplicationUserEntity> query,
+     CancellationToken cancellationToken)
+    {
+        if (parameters.Cursor.HasValue)
+            query = query.Where(u => u.CreatedAt > parameters.Cursor.Value);
+
+
+        var items = await query
+            .OrderBy(u => u.CreatedAt)
+            .Take(pageSize + 1)
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
+        {
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
+        }
+
+        return new PagedList<UserDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+    private IQueryable<ApplicationUserEntity> ApplyAssignableUsersFilters(
+     IQueryable<ApplicationUserEntity> query,
+     AssignableUsersSearchAndFilterParametersDto parameters)
+    {
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
+        {
+            var tenantId = parameters.TenantId.Trim();
+            query = query.Where(u => u.TenantId == tenantId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.CurrentUserId))
+        {
+            var currentUserId = parameters.CurrentUserId.Trim();
+            query = query.Where(u => u.Id != currentUserId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var term = parameters.Search.Trim();
+            query = query.Where(u => u.FullName.Contains(term));
+        }
+        var blockedJobTitles = CourseAssignmentRules.GetBlockedJobTitles();
+
+        query = query.Where(u => !blockedJobTitles.Contains(u.JobTitle));
         return query;
     }
 }

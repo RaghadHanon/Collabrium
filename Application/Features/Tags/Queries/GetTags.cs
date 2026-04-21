@@ -9,7 +9,7 @@ namespace Application.Features.Tags.Queries
 {
     public sealed class GetTags
     {
-        public sealed class Query : IRequest<Result<PagedList<TagDto, DateTime?>>>
+        public sealed class Query : IRequest<Result<PagedList<TagDetailsDto, DateTime?>>>
         {
             public string? TenantId { get; set; }
             public string? NameContains { get; set; }
@@ -19,21 +19,24 @@ namespace Application.Features.Tags.Queries
 
             public DateTime? Cursor { get; set; }
             public int PageSize { get; set; }
-
         }
 
         public sealed class Handler(
             ITagsReadModel tagsReadModel,
             IMapper mapper
-        ) : IRequestHandler<Query, Result<PagedList<TagDto, DateTime?>>>
+        ) : IRequestHandler<Query, Result<PagedList<TagDetailsDto, DateTime?>>>
         {
-            public async Task<Result<PagedList<TagDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<PagedList<TagDetailsDto, DateTime?>>> Handle(
+                Query request,
+                CancellationToken cancellationToken)
             {
                 var parameters = mapper.Map<TagsSearchAndFilterParametersDto>(request);
 
                 var list = await tagsReadModel.GetAsync(parameters, cancellationToken);
 
-                return Result<PagedList<TagDto, DateTime?>>.Success(list, HttpStatusCode.OK);
+                return Result<PagedList<TagDetailsDto, DateTime?>>.Success(
+                    list,
+                    HttpStatusCode.OK);
             }
         }
     }

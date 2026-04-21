@@ -21,7 +21,6 @@ namespace Application.Features.RoadmapResources.Commands
             public string? Title { get; set; }
             public string? Url { get; set; }
             public RoadmapResourceType? Type { get; set; }
-            public int? Order { get; set; }
         }
 
         public sealed class Handler(
@@ -39,7 +38,11 @@ namespace Application.Features.RoadmapResources.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<ResourceDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
+
                 if (roadmap is null)
                     return Result<ResourceDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -63,21 +66,7 @@ namespace Application.Features.RoadmapResources.Commands
 
                 if (resource is null)
                     return Result<ResourceDto>.Failure("Resource not found.", HttpStatusCode.NotFound);
-                if (request.Order.HasValue)
-                {
-                    var isOrderUsed = await resourcesRepository.IsOrderUsedAsync(
-                        subTopicId: request.SubTopicId,
-                        order: request.Order.Value,
-                        excludeResourceId: request.ResourceId,
-                        ct: cancellationToken);
 
-                    if (isOrderUsed)
-                    {
-                        return Result<ResourceDto>.Failure(
-                            "Order already exists in this subtopic.",
-                            HttpStatusCode.BadRequest);
-                    }
-                }
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {
@@ -89,27 +78,25 @@ namespace Application.Features.RoadmapResources.Commands
                 var urlDecision = PatchHelpers.DecideStringPatch(request.Url);
                 if (urlDecision.Action == PatchHelpers.PatchStringAction.Set)
                 {
-                    var newUrll = urlDecision.Value!;
-                    if (string.IsNullOrWhiteSpace(newUrll))
+                    var newUrl = urlDecision.Value!;
+                    if (string.IsNullOrWhiteSpace(newUrl))
                         return Result<ResourceDto>.Failure("Url cannot be empty.", HttpStatusCode.BadRequest);
                 }
 
                 var newTitleValue =
                     PatchHelpers.ApplyStringPatch(resource.Title, request.Title) ?? resource.Title;
 
-                var newUrl =
+                var newUrlValue =
                     PatchHelpers.ApplyStringPatch(resource.Url, request.Url) ?? resource.Url;
 
                 var newType = request.Type ?? resource.Type;
-                var newOrder = request.Order ?? resource.Order;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    resource.Update(
+                    resource.UpdateDetails(
                         title: newTitleValue,
-                        url: newUrl,
-                        type: newType,
-                        order: newOrder);
+                        url: newUrlValue,
+                        type: newType);
 
                     await resourcesRepository.UpdateAsync(resource, ct);
                 }, cancellationToken);

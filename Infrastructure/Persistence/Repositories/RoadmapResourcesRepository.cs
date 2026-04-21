@@ -43,8 +43,13 @@ namespace Infrastructure.Persistence.Repositories
             string resourceId,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId) || string.IsNullOrWhiteSpace(topicNodeId) || string.IsNullOrWhiteSpace(subTopicId) || string.IsNullOrWhiteSpace(resourceId))
+            if (string.IsNullOrWhiteSpace(tenantId) ||
+                string.IsNullOrWhiteSpace(roadmapId) ||
+                string.IsNullOrWhiteSpace(topicNodeId) ||
+                string.IsNullOrWhiteSpace(subTopicId) ||
+                string.IsNullOrWhiteSpace(resourceId))
                 return false;
+
             var tId = tenantId.Trim();
             var rId = roadmapId.Trim();
             var tNodeId = topicNodeId.Trim();
@@ -55,14 +60,15 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(x => x.SubTopic)
                 .ThenInclude(st => st.TopicNode)
                 .FirstOrDefaultAsync(x =>
-                    x.Id == resId
-                    && x.SubTopicId == sId
-                    && x.SubTopic.TopicNodeId == tNodeId
-                    && x.SubTopic.TopicNode.RoadmapId == rId
-                    && x.SubTopic.TopicNode.TenantId == tId,
+                    x.Id == resId &&
+                    x.SubTopicId == sId &&
+                    x.SubTopic.TopicNodeId == tNodeId &&
+                    x.SubTopic.TopicNode.RoadmapId == rId &&
+                    x.SubTopic.TopicNode.TenantId == tId,
                     ct);
 
-            if (entity is null) return false;
+            if (entity is null)
+                return false;
 
             _dbContext.Resources.Remove(entity);
             return true;
@@ -76,8 +82,13 @@ namespace Infrastructure.Persistence.Repositories
             string resourceId,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId) || string.IsNullOrWhiteSpace(topicNodeId) || string.IsNullOrWhiteSpace(subTopicId) || string.IsNullOrWhiteSpace(resourceId))
+            if (string.IsNullOrWhiteSpace(tenantId) ||
+                string.IsNullOrWhiteSpace(roadmapId) ||
+                string.IsNullOrWhiteSpace(topicNodeId) ||
+                string.IsNullOrWhiteSpace(subTopicId) ||
+                string.IsNullOrWhiteSpace(resourceId))
                 return null;
+
             var tId = tenantId.Trim();
             var rId = roadmapId.Trim();
             var tNodeId = topicNodeId.Trim();
@@ -89,64 +100,92 @@ namespace Infrastructure.Persistence.Repositories
                 .Include(x => x.SubTopic)
                 .ThenInclude(st => st.TopicNode)
                 .FirstOrDefaultAsync(x =>
-                    x.Id == resId
-                    && x.SubTopicId == sId
-                    && x.SubTopic.TopicNodeId == tNodeId
-                    && x.SubTopic.TopicNode.RoadmapId == rId
-                    && x.SubTopic.TopicNode.TenantId == tId,
+                    x.Id == resId &&
+                    x.SubTopicId == sId &&
+                    x.SubTopic.TopicNodeId == tNodeId &&
+                    x.SubTopic.TopicNode.RoadmapId == rId &&
+                    x.SubTopic.TopicNode.TenantId == tId,
                     ct);
 
-            return entity is null ? null : RoadmapResourcesMapper.ToDomain(entity);
+            return entity is null
+                ? null
+                : RoadmapResourcesMapper.ToDomain(entity);
         }
 
-        public async Task<IReadOnlyList<RoadmapResource>> GetBySubTopicIdAsync(
-            string tenantId,
-            string roadmapId,
-            string topicNodeId,
+        public async Task<List<RoadmapResource>> GetBySubTopicIdAsync(
             string subTopicId,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId) || string.IsNullOrWhiteSpace(topicNodeId) || string.IsNullOrWhiteSpace(subTopicId))
-                return new List<RoadmapResource>();
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-            var tNodeId = topicNodeId.Trim();
+            if (string.IsNullOrWhiteSpace(subTopicId))
+                return new();
+
             var sId = subTopicId.Trim();
 
             var entities = await _dbContext.Resources
                 .AsNoTracking()
-                .Include(x => x.SubTopic)
-                .ThenInclude(st => st.TopicNode)
-                .Where(x =>
-                    x.SubTopicId == sId
-                    && x.SubTopic.TopicNodeId == tNodeId
-                    && x.SubTopic.TopicNode.RoadmapId == rId
-                    && x.SubTopic.TopicNode.TenantId == tId)
+                .Where(x => x.SubTopicId == sId)
                 .OrderBy(x => x.Order)
                 .ToListAsync(ct);
 
             return entities.Select(RoadmapResourcesMapper.ToDomain).ToList();
         }
-        public Task<bool> IsOrderUsedAsync(
-           string subTopicId,
-           int order,
-           string? excludeResourceId = null,
-           CancellationToken ct = default)
+
+        public async Task<int> GetMaxOrderAsync(
+            string subTopicId,
+            CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(subTopicId) || order < 1)
-                return Task.FromResult(false);
+            if (string.IsNullOrWhiteSpace(subTopicId))
+                return 0;
 
             var sId = subTopicId.Trim();
-            var excludedId = excludeResourceId?.Trim();
 
-            return _dbContext.Resources
-                .AsNoTracking()
-                .AnyAsync(r =>
-                    r.SubTopicId == sId &&
-                    r.Order == order &&
-                    (excludedId == null || r.Id != excludedId), ct);
+            var max = await _dbContext.Resources
+                .Where(r => r.SubTopicId == sId)
+                .Select(r => (int?)r.Order)
+                .MaxAsync(ct);
+
+            return max ?? 0;
         }
+        public async Task SwapOrderAsync(
+    string subTopicId,
+    string firstResourceId,
+    string secondResourceId,
+    CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(subTopicId) ||
+                string.IsNullOrWhiteSpace(firstResourceId) ||
+                string.IsNullOrWhiteSpace(secondResourceId))
+            {
+                throw new ArgumentException("SubTopicId and resource ids are required.");
+            }
 
+            var sId = subTopicId.Trim();
+            var firstId = firstResourceId.Trim();
+            var secondId = secondResourceId.Trim();
 
+            if (string.Equals(firstId, secondId, StringComparison.Ordinal))
+                return;
+
+            var first = await _dbContext.Resources
+                .FirstOrDefaultAsync(r => r.Id == firstId && r.SubTopicId == sId, ct);
+
+            var second = await _dbContext.Resources
+                .FirstOrDefaultAsync(r => r.Id == secondId && r.SubTopicId == sId, ct);
+
+            if (first is null || second is null)
+                throw new InvalidOperationException("One or both resources were not found.");
+
+            var firstOrder = first.Order;
+            var secondOrder = second.Order;
+
+            first.Order = 0;
+            await _dbContext.SaveChangesAsync(ct);
+
+            second.Order = firstOrder;
+            await _dbContext.SaveChangesAsync(ct);
+
+            first.Order = secondOrder;
+            await _dbContext.SaveChangesAsync(ct);
+        }
     }
 }

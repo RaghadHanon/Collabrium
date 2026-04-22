@@ -72,7 +72,11 @@ namespace Infrastructure.Persistence.ReadModels
             }
             if (parameters.Path.HasValue)
                 query = query.Where(r => r.Path == parameters.Path.Value);
-
+            if (!string.IsNullOrWhiteSpace(parameters.CreatedByUserId))
+            {
+                var createdByUserId = parameters.CreatedByUserId.Trim();
+                query = query.Where(r => r.CreatedByUserId == createdByUserId);
+            }
             if (parameters.Level.HasValue)
                 query = query.Where(r => r.Level == parameters.Level.Value);
 
@@ -90,6 +94,15 @@ namespace Infrastructure.Persistence.ReadModels
 
             if (parameters.UpdatedBefore.HasValue)
                 query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt <= parameters.UpdatedBefore.Value);
+            if (parameters.PublishedAfter.HasValue)
+            {
+                query = query.Where(r => r.PublishedAt != null && r.PublishedAt >= parameters.PublishedAfter);
+            }
+            if (parameters.PublishedBefore.HasValue)
+            {
+                query = query.Where(r => r.PublishedAt != null && r.PublishedAt <= parameters.PublishedBefore);
+            }
+
             if (parameters.TagIdsAny is { Count: > 0 })
             {
                 var tagsIds = parameters.TagIdsAny

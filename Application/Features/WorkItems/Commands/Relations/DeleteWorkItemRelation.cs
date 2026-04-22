@@ -53,7 +53,7 @@ public class DeleteWorkItemRelation
             if (sourceWorkItem is null)
                 return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
-            var relation = await workItemsReadModel.GetRelationByIdAsync(tenantId, request.ProjectId, request.RelationId, cancellationToken);
+            var relation = await workItemsReadModel.GetRelationByIdAsync(request.ProjectId, sourceWorkItem.Id, request.RelationId, cancellationToken);
             if (relation is null)
                 return Result<Unit>.Failure("Relation not found in this project.", HttpStatusCode.NotFound);
             

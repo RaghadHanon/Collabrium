@@ -17,7 +17,6 @@ namespace Application.Features.RoadmapNodes.Commands
 
             public string? Title { get; set; }
             public string? Description { get; set; }
-            public int? Order { get; set; }
         }
 
         public sealed class Handler(
@@ -34,8 +33,11 @@ namespace Application.Features.RoadmapNodes.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<TopicNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
                 if (roadmap is null)
                     return Result<TopicNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
@@ -50,24 +52,6 @@ namespace Application.Features.RoadmapNodes.Commands
 
                 if (node is not Domain.Models.TopicNode topic)
                     return Result<TopicNodeDto>.Failure("Node is not a topic.", HttpStatusCode.BadRequest);
-                if (request.Order.HasValue)
-                {
-                    var isOrderUsed = await roadmapNodesRepository.IsOrderUsedAsync(
-                   tenantId: tenantId,
-                   roadmapId: request.RoadmapId,
-                   order: request.Order.Value,
-                   excludeNodeId: request.TopicNodeId,
-                   ct: cancellationToken);
-
-                    if (isOrderUsed)
-                    {
-                        return Result<TopicNodeDto>.Failure(
-                            "Order already exists in this roadmap.",
-                            HttpStatusCode.BadRequest);
-                    }
-                }
-
-
 
                 var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
                 if (titleDecision.Action == PatchHelpers.PatchStringAction.Set)
@@ -83,18 +67,14 @@ namespace Application.Features.RoadmapNodes.Commands
                 var newDescription =
                     PatchHelpers.ApplyStringPatch(topic.Description, request.Description);
 
-                var newOrder = request.Order ?? topic.Order;
-
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    topic.Update(
+                    topic.UpdateDetails(
                         title: newTitleValue,
-                        description: newDescription,
-                        order: newOrder);
+                        description: newDescription);
 
                     await roadmapNodesRepository.UpdateAsync(topic, ct);
                 }, cancellationToken);
-
 
                 var dto = await roadmapNodesReadModel.GetTopicAsync(
                     tenantId: tenantId,
@@ -103,7 +83,9 @@ namespace Application.Features.RoadmapNodes.Commands
                     ct: cancellationToken);
 
                 return dto is null
-                    ? Result<TopicNodeDto>.Failure("Topic node updated but could not be loaded.", HttpStatusCode.InternalServerError)
+                    ? Result<TopicNodeDto>.Failure(
+                        "Topic node updated but could not be loaded.",
+                        HttpStatusCode.InternalServerError)
                     : Result<TopicNodeDto>.Success(dto, HttpStatusCode.OK);
             }
         }

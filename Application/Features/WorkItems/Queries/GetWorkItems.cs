@@ -27,6 +27,7 @@ public sealed class GetWorkItems
         public string? SprintId { get; set; }
         public string? AssignedToUserId { get; set; }
         public string? CreatedByUserId { get; init; }
+        public string? ParentId { get; init; }
         public string? TitleContains { get; set; }
 
         public bool? IsAssigned { get; set; }

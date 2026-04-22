@@ -251,6 +251,13 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
+    public void SetOwner(string userId)
+    {
+        Guard.Against(IsDone, "Cannot assign a completed work item.");
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(userId, nameof(userId));
+        Touch();
+    }
+
     public void MoveToSprint(string? sprintId)
     {
         Guard.Against(IsDone, "Cannot move a completed work item.");
@@ -258,10 +265,10 @@ public abstract class WorkItem : Entity
         Touch();
     }
 
-    public Comment AddComment(string commentId, string createdByUserId, string content)
+    public WorkItemComment AddComment(string commentId, string createdByUserId, string content)
     {
         Guard.Against(string.IsNullOrWhiteSpace(commentId), "Comment id is required.");
-        var comment = new Comment(commentId, createdByUserId, content);
+        var comment = new WorkItemComment(commentId, createdByUserId, content);
         _comments.Add(comment);
         Touch();
         return comment;

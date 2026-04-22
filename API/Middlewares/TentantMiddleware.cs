@@ -15,10 +15,16 @@ public class TenantMiddleware
     }
 
     public async Task InvokeAsync(
-        HttpContext context,
-        ITenantContext tenantContext,
-        ITenantRepository tenantRepository)
+     HttpContext context,
+     ITenantContext tenantContext,
+     ITenantRepository tenantRepository)
     {
+        if (context.Request.Path.StartsWithSegments("/hubs"))
+        {
+            await _next(context);
+            return;
+        }
+
         var endpoint = context.GetEndpoint();
         if (endpoint?.Metadata.GetMetadata<IgnoreTenantContextAttribute>() != null)
         {
@@ -26,8 +32,11 @@ public class TenantMiddleware
             return;
         }
 
-        if (context.User.Identity?.IsAuthenticated != true)
-            throw new UnauthorizedAccessException("User must be authenticated.");
+        if (!context.User.Identity?.IsAuthenticated ?? true)
+        {
+            await _next(context);
+            return;
+        }
 
         if (context.User.IsInRole(UserRole.SuperAdmin.ToString()))
         {
@@ -49,9 +58,6 @@ public class TenantMiddleware
 
         if (!tenant.IsActive)
             throw new TenantNotActiveException("The tenant is not active.");
-
-        if (!string.Equals(tenantId, tenant.Id, StringComparison.Ordinal))
-            throw new UnauthorizedAccessException("User does not belong to the specified tenant.");
 
         tenantContext.TenantId = tenant.Id;
         tenantContext.CurrentTenant = tenant;

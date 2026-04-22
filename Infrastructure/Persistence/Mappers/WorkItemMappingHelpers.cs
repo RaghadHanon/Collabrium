@@ -12,7 +12,7 @@ internal static class WorkItemMappingHelpers
         if (entity.Comments is not null)
         {
             foreach (var c in entity.Comments)
-                domain.RehydrateAddComment(CommentMapper.ToDomain(c));
+                domain.RehydrateAddComment(WorkItemCommentMapper.ToDomain(c));
         }
 
         if (entity.Relations is not null)

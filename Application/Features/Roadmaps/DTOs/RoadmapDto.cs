@@ -1,8 +1,9 @@
-﻿using Domain.Enums;
+﻿using Application.Features.Tags.DTOs;
+using Domain.Enums;
 
 namespace Application.Features.Roadmaps.DTOs
 {
-    public sealed class RoadmapDto
+    public class RoadmapDto
     {
         public required string Id { get; set; }
         public required string TenantId { get; set; }
@@ -13,20 +14,18 @@ namespace Application.Features.Roadmaps.DTOs
         public RoadmapPath Path { get; set; }
         public RoadmapLevel Level { get; set; }
 
-        public bool IsVisible { get; set; } = false;
-        public DateTime? PublishedAt { get; set; } = null;
-
+        public bool IsVisible { get; set; }
+        public DateTime? PublishedAt { get; set; }
 
         public string? CreatedByUserId { get; set; }
-
         public string? CreatedByUserName { get; set; }
 
         public int TagsCount { get; set; }
         public int NodesCount { get; set; }
 
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public DateTime? CreatedAt { get; set; }
 
-        public IReadOnlyCollection<string> TagIds { get; set; } = Array.Empty<string>();
+        public IReadOnlyCollection<TagDto> Tags { get; set; } = Array.Empty<TagDto>();
     }
 }

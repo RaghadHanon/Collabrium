@@ -225,6 +225,13 @@ public class WorkItemsRepository : IWorkItemsRepository
             else
                 query = query.Where(x => x.AssignedToUserId == null);
         }
+
+        if (!string.IsNullOrWhiteSpace(parameters.ParentId))
+        {
+            var pId = parameters.ParentId.Trim();
+            query = query.Where(x => x.ParentId == pId);
+        }
+
         return query;
     }
 
@@ -356,7 +363,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         string tenantId,
         string projectId,
         string workItemId,
-        Comment comment,
+        WorkItemComment comment,
         CancellationToken cancellationToken = default)
     {
         tenantId = tenantId.Trim();
@@ -373,18 +380,18 @@ public class WorkItemsRepository : IWorkItemsRepository
         if (workItemEntity == null)
             return;
 
-        var commentEntity = CommentMapper.ToEntity(comment, workItemId);
+        var commentEntity = WorkItemCommentMapper.ToEntity(comment, workItemId);
         workItemEntity.Comments.Add(commentEntity);
     }
 
     public async Task UpdateCommentOfWorkItemAsync(
         string workItemId,
-        Comment comment, 
+        WorkItemComment comment, 
         CancellationToken cancellationToken = default)
     {
         workItemId = workItemId.Trim();
 
-        var commentEntity = await _dbContext.Comments
+        var commentEntity = await _dbContext.WorkItemComments
             .Include(c => c.WorkItem)
             .FirstOrDefaultAsync(
                 c => c.Id == comment.Id &&
@@ -394,7 +401,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         if (commentEntity == null)
             return;
 
-        CommentMapper.UpdateEntity(comment, commentEntity);
+        WorkItemCommentMapper.UpdateEntity(comment, commentEntity);
     }
 
     public async Task RemoveCommentFromWorkItemAsync(
@@ -405,7 +412,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         commentId = commentId.Trim();
         workItemId = workItemId.Trim();
 
-        var commentEntity = await _dbContext.Comments
+        var commentEntity = await _dbContext.WorkItemComments
            .Include(c => c.WorkItem)
            .FirstOrDefaultAsync(
                c => c.Id == commentId &&
@@ -418,7 +425,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         _dbContext.Comments.Remove(commentEntity);
     }
 
-    public async Task<Comment?> GetCommentOnWorkItemByIdAsync(
+    public async Task<WorkItemComment?> GetCommentOnWorkItemByIdAsync(
         string workItemId,
         string commentId,
         CancellationToken cancellationToken = default)
@@ -426,7 +433,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         commentId = commentId.Trim();
         workItemId = workItemId.Trim();
 
-        var commentEntity = await _dbContext.Comments
+        var commentEntity = await _dbContext.WorkItemComments
             .FirstOrDefaultAsync(
             r => r.Id == commentId &&
                  r.WorkItemId == workItemId
@@ -434,7 +441,7 @@ public class WorkItemsRepository : IWorkItemsRepository
         if (commentEntity == null)
             return null;
 
-        return CommentMapper.ToDomain(commentEntity);
+        return WorkItemCommentMapper.ToDomain(commentEntity);
     }
 
     // codeLinkes

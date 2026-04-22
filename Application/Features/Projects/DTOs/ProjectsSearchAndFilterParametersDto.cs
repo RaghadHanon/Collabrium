@@ -5,9 +5,10 @@ namespace Application.Features.Projects.DTOs;
 
 public class ProjectsSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
 {
+
     public string? TeamId { get; set; }
     public string? NameContains { get; set; }
-    public string? Key { get; set; } 
+    public string? Key { get; set; }
     public bool AssignedToTeam { get; set; }
 
     public ProjectStatus? Status { get; set; }

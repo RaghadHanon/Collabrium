@@ -19,6 +19,7 @@ public class GetProjectBacklog
         public WorkItemPriority? Priority { get; init; }
         public string? AssignedToUserId { get; init; }
         public string? CreatedByUserId { get; init; }
+        public string? ParentId { get; init; }
         public bool? IsAssigned { get; set; }
         public string? TitleContains { get; init; }
         public string? Code { get; set; }

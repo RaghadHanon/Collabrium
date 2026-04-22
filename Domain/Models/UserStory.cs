@@ -67,9 +67,6 @@ public sealed class UserStory : WorkItem
             Guard.Against(!allTasksDone,
                 "Cannot move UserStory to InTesting until all linked Tasks are Done.");
 
-            Guard.Against(!noOpenBugs,
-                "Cannot move UserStory to InTesting while there are open Bugs.");
-
             return;
         }
 

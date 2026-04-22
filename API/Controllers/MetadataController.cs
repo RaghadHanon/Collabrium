@@ -13,7 +13,7 @@ public sealed class MetadataController : ApiBaseController
 {
     [IgnoreTenantContext]
     [HttpGet("user-roles")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetUserRoleMetadata()
+    public async Task<ActionResult> GetUserRoleMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -25,7 +25,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("workItem-type")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemTypeMetadata()
+    public async Task<ActionResult> GetWorkItemTypeMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -61,7 +61,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("workItem-priority")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetWorkItemPriorityMetadata()
+    public async Task<ActionResult> GetWorkItemPriorityMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -73,7 +73,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("test-environment")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestEnvironmentMetadata()
+    public async Task<ActionResult> GetTestEnvironmentMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -85,7 +85,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("testCase-result")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetTestCaseResultMetadata()
+    public async Task<ActionResult> GetTestCaseResultMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -97,7 +97,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("sprint-status")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetSprintStatusMetadata()
+    public async Task<ActionResult> GetSprintStatusMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -109,7 +109,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("project-status")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetProjectStatusMetadata()
+    public async Task<ActionResult> GetProjectStatusMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -121,7 +121,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("department")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetDepartmentMetadata()
+    public async Task<ActionResult> GetDepartmentMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -133,7 +133,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("codeLink-type")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetCodeLinkTypeMetadata()
+    public async Task<ActionResult> GetCodeLinkTypeMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -145,7 +145,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("attachment-type")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetAttachmentTypeMetadata()
+    public async Task<ActionResult> GetAttachmentTypeMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -166,7 +166,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("workItems-workflow")]
-    public async Task<ActionResult<List<WorkItemWorkflowDto>>> GetWorkItemWorkflow()
+    public async Task<ActionResult> GetWorkItemWorkflow()
     {
         var query = new GetWorkItemsWorkFlowMetadata.Query();
 
@@ -174,7 +174,7 @@ public sealed class MetadataController : ApiBaseController
     }
     [IgnoreTenantContext]
     [HttpGet("roadmap-levels")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapLevelMetadata()
+    public async Task<ActionResult> GetRoadmapLevelMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -186,7 +186,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("roadmap-paths")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapPathMetadata()
+    public async Task<ActionResult> GetRoadmapPathMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -198,7 +198,7 @@ public sealed class MetadataController : ApiBaseController
 
     [IgnoreTenantContext]
     [HttpGet("roadmap-resource-types")]
-    public async Task<ActionResult<List<WorkItemRelationDto>>> GetRoadmapResourceTypeMetadata()
+    public async Task<ActionResult> GetRoadmapResourceTypeMetadata()
     {
         var query = new GetEnumMetaData.Query
         {
@@ -206,6 +206,44 @@ public sealed class MetadataController : ApiBaseController
         };
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    [IgnoreTenantContext]
+    [HttpGet("course-levels")]
+    public async Task<ActionResult> GetCourseLevelMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.CourseLevel,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+    [IgnoreTenantContext]
+    [HttpGet("course-languages")]
+    public async Task<ActionResult> GetCourseLanguageMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.CourseLanguage,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+    //UserCourseStatus
+    [IgnoreTenantContext]
+    [HttpGet("User-Course-Status")]
+    public async Task<ActionResult> GetUserCourseStatusMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.UserCourseStatus,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
     }
 
 }

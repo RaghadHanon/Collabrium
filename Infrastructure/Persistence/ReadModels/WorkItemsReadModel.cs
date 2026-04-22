@@ -187,6 +187,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
@@ -351,6 +352,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
@@ -403,6 +405,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 ProjectId = w.ProjectId,
                 IsBlocked = w.IsBlocked,
                 AssignedToUserId = w.AssignedToUserId,
+                CreatedByUserId = w.CreatedByUserId,
                 CreatedAt = w.CreatedAt,
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
@@ -505,6 +508,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                 query = query.Where(x => x.AssignedToUserId != null);
             else
                 query = query.Where(x => x.AssignedToUserId == null);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.ParentId))
+        {
+            var pId = parameters.ParentId.Trim();
+            query = query.Where(x => x.ParentId == pId);
         }
 
         return query;
@@ -658,7 +667,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
         var wId = workItemId.Trim();
-        var query = _dbContext.Comments
+        var query = _dbContext.WorkItemComments
             .AsNoTracking()
             .AsQueryable();
 

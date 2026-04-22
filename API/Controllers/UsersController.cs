@@ -154,4 +154,14 @@ public class UsersController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+
+    /// <summary>
+    /// Get users that can be assigned (exclude managers + current user)
+    /// </summary>
+    [HttpGet("assignable-users")]
+    public async Task<IActionResult> GetAssignableUsers(
+        [FromQuery] GetAssignableUsers.Query query)
+    {
+        return HandleResult(await Mediator.Send(query));
+    }
 }

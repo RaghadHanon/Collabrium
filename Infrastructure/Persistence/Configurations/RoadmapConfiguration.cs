@@ -42,13 +42,8 @@ namespace Infrastructure.Persistence.Configurations
             .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(r => r.Tags)
-           .WithOne(rt => rt.Roadmap)
-           .HasForeignKey(rt => rt.RoadmapId)
-           .OnDelete(DeleteBehavior.Cascade);
-
-
+               .WithMany()
+               .UsingEntity(j => j.ToTable("RoadmapTags"));
         }
-
-
     }
 }

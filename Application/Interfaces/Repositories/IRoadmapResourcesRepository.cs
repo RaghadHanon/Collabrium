@@ -28,16 +28,17 @@ namespace Application.Interfaces.Repositories
             string resourceId,
             CancellationToken ct = default);
 
-        Task<IReadOnlyList<RoadmapResource>> GetBySubTopicIdAsync(
-            string tenantId,
-            string roadmapId,
-            string topicNodeId,
+        Task<List<RoadmapResource>> GetBySubTopicIdAsync(
             string subTopicId,
             CancellationToken ct = default);
-        Task<bool> IsOrderUsedAsync(
-        string subTopicId,
-        int order,
-        string? excludeResourceId = null,
-        CancellationToken ct = default);
+
+        Task<int> GetMaxOrderAsync(
+            string subTopicId,
+            CancellationToken ct = default);
+        Task SwapOrderAsync(
+            string subTopicId,
+            string firstResourceId,
+            string secondResourceId,
+            CancellationToken ct = default);
     }
 }

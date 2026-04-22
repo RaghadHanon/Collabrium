@@ -65,7 +65,6 @@ public static class DependencyInjection
         QuestPDF.Settings.License = LicenseType.Community;
 
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
-        services.AddSignalR();
 
         return services;
     }
@@ -109,6 +108,9 @@ public static class DependencyInjection
         services.AddScoped<IRoadmapSubTopicsRepository, RoadmapSubTopicsRepository>();
         services.AddScoped<IRoadmapResourcesRepository, RoadmapResourcesRepository>();
         services.AddScoped<IProjectHistoryRepository, ProjectHistoryRepository>();
+        services.AddScoped<ICoursesRepository, CoursesRepository>();
+        services.AddScoped<IUserCoursesRepository, UserCoursesRepository>();
+        services.AddScoped<ICourseRatingsRepository, CourseRatingsRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -127,6 +129,11 @@ public static class DependencyInjection
 
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
         services.AddScoped<IReportsReadModel, ReportsReadModel>();
+        services.AddScoped<ICoursesReadModel, CoursesReadModel>();
+        services.AddScoped<IUserCoursesReadModel, UserCoursesReadModel>();
+        services.AddScoped<ICourseRatingsReadModel, CourseRatingsReadModel>();
+
+
     }
 
     private static void AddAutoMapper(IServiceCollection services)
@@ -186,51 +193,68 @@ public static class DependencyInjection
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings?.Issuer,
-                ValidAudience = jwtSettings?.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.SecretKey!))
-            };
+       .AddJwtBearer(options =>
+       {
+           options.TokenValidationParameters = new TokenValidationParameters
+           {
+               ValidateIssuer = true,
+               ValidateAudience = true,
+               ValidateLifetime = true,
+               ValidateIssuerSigningKey = true,
+               ValidIssuer = jwtSettings?.Issuer,
+               ValidAudience = jwtSettings?.Audience,
+               IssuerSigningKey = new SymmetricSecurityKey(
+                   Encoding.UTF8.GetBytes(jwtSettings?.SecretKey!)
+               )
+           };
 
-            options.Events = new JwtBearerEvents
-            {
-                OnChallenge = async context =>
-                {
-                    context.HandleResponse();
+           options.Events = new JwtBearerEvents
+           {
+               OnMessageReceived = context =>
+               {
+                   var accessToken = context.Request.Query["access_token"];
+                   var path = context.HttpContext.Request.Path;
 
-                    var problem = new ProblemDetails
-                    {
-                        Title = "Unauthorized",
-                        Detail = "You must provide a valid access token.",
-                        Status = StatusCodes.Status401Unauthorized
-                    };
+                   if (!string.IsNullOrEmpty(accessToken) &&
+                       path.StartsWithSegments("/hubs"))
+                   {
+                       context.Token = accessToken;
+                   }
 
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
-                },
-                OnForbidden = async context =>
-                {
-                    var problem = new ProblemDetails
-                    {
-                        Title = "Forbidden",
-                        Detail = "You do not have permission to access this resource.",
-                        Status = StatusCodes.Status403Forbidden
-                    };
+                   return Task.CompletedTask;
+               },
 
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
-                }
-            };
-        });
+               OnChallenge = async context =>
+               {
+                   context.HandleResponse();
+
+                   var problem = new ProblemDetails
+                   {
+                       Title = "Unauthorized",
+                       Detail = "You must provide a valid access token.",
+                       Status = StatusCodes.Status401Unauthorized
+                   };
+
+                   context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                   context.Response.ContentType = "application/json";
+                   await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+               },
+
+               OnForbidden = async context =>
+               {
+                   var problem = new ProblemDetails
+                   {
+                       Title = "Forbidden",
+                       Detail = "You do not have permission to access this resource.",
+                       Status = StatusCodes.Status403Forbidden
+                   };
+
+                   context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                   context.Response.ContentType = "application/json";
+                   await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
+               }
+           };
+       });
 
         services.AddScoped<RoleSeeder>();
         services.AddScoped<IIdentityService, IdentityService>();

@@ -77,8 +77,6 @@ public sealed class TestCase : WorkItem
         Result = result;
         ActualResult = actualResult?.Trim();
 
-        ChangeStatus(WorkItemStatus.Done, project, sprint);
-
         if (!string.IsNullOrWhiteSpace(note))
             AddComment(Guid.NewGuid().ToString(), executedByUserId, $"Test Outcome: {result}. {note}");
     }

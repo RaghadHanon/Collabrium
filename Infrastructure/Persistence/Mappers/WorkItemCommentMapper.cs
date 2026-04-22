@@ -3,13 +3,13 @@ using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.Mappers;
 
-public static class CommentMapper
+public static class WorkItemCommentMapper
 {
-    public static Comment ToDomain(CommentEntity entity)
+    public static WorkItemComment ToDomain(WorkItemCommentEntity entity)
     {
         return entity is null
             ? throw new ArgumentNullException(nameof(entity))
-            : Comment.Rehydrate(
+            : WorkItemComment.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
@@ -18,13 +18,13 @@ public static class CommentMapper
         );
     }
 
-    public static CommentEntity ToEntity(Comment domain, string workItemId)
+    public static WorkItemCommentEntity ToEntity(WorkItemComment domain, string workItemId)
     {
         return domain is null
             ? throw new ArgumentNullException(nameof(domain))
             : string.IsNullOrWhiteSpace(workItemId)
             ? throw new ArgumentNullException(nameof(workItemId))
-            : new CommentEntity
+            : new WorkItemCommentEntity
             {
                 Id = domain.Id,
                 CreatedAt = domain.CreatedAt,
@@ -36,7 +36,7 @@ public static class CommentMapper
             };
     }
 
-    public static void UpdateEntity(Comment domain, CommentEntity entity)
+    public static void UpdateEntity(WorkItemComment domain, WorkItemCommentEntity entity)
     {
         if (domain is null) throw new ArgumentNullException(nameof(domain));
         if (entity is null) throw new ArgumentNullException(nameof(entity));

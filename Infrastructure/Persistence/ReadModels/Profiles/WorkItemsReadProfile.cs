@@ -55,6 +55,9 @@ public sealed class WorkItemsReadProfile : Profile
         CreateMap<CommentEntity, CommentDto>()
             .ForMember(d => d.RelatedUser, opt => opt.MapFrom(s => s.CreatedByUser));
 
+        CreateMap<WorkItemCommentEntity, CommentDto>()
+            .IncludeBase<CommentEntity, CommentDto>();
+
         // code links
         CreateMap<CodeLinkEntity, CodeLinkDto>()
             .ForMember(d => d.RelatedUser, opt => opt.MapFrom(s => s.CreatedByUser));

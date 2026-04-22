@@ -9,26 +9,21 @@ namespace Infrastructure.Persistence.Mapping
         {
             ArgumentNullException.ThrowIfNull(entity);
 
-            var tagIds = entity.Tags?.
-             Select(x => x.TagId) ?? Enumerable.Empty<string>();
+            var tagIds = entity.Tags?
+                .Select(x => x.Id) ?? Enumerable.Empty<string>();
 
             return Roadmap.Rehydrate(
                 id: entity.Id,
                 createdAt: entity.CreatedAt,
                 updatedAt: entity.UpdatedAt,
-
                 path: entity.Path,
                 level: entity.Level,
-
                 title: entity.Title,
                 description: entity.Description,
-
                 publishedAt: entity.PublishedAt,
                 IsVisible: entity.IsVisible,
-
                 tenantId: entity.TenantId,
                 createdByUserId: entity.CreatedByUserId,
-
                 tagIds: tagIds
             );
         }
@@ -42,19 +37,14 @@ namespace Infrastructure.Persistence.Mapping
                 Id = domain.Id,
                 CreatedAt = domain.CreatedAt,
                 UpdatedAt = domain.UpdatedAt,
-
                 Path = domain.Path,
                 Level = domain.Level,
-
                 Title = domain.Title,
                 Description = domain.Description,
-
                 PublishedAt = domain.PublishedAt,
                 IsVisible = domain.IsVisible,
-
                 TenantId = domain.TenantId,
                 CreatedByUserId = domain.CreatedByUserId,
-
             };
         }
 
@@ -65,16 +55,12 @@ namespace Infrastructure.Persistence.Mapping
 
             entity.Path = domain.Path;
             entity.Level = domain.Level;
-
             entity.Title = domain.Title;
             entity.Description = domain.Description;
-
             entity.PublishedAt = domain.PublishedAt;
             entity.IsVisible = domain.IsVisible;
-
             entity.CreatedByUserId = domain.CreatedByUserId;
             entity.TenantId = domain.TenantId;
-
             entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
         }
     }

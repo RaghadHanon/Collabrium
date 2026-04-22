@@ -20,12 +20,14 @@ public static class ApplicationBuilderExtensions
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection(); 
+        app.UseHttpsRedirection();
         app.UseRouting();
         app.UseCors();
+
         app.UseAuthentication();
-        app.UseAuthorization();
         app.UseMiddleware<TenantMiddleware>();
+        app.UseAuthorization();
+
         app.MapHub<PresenceHub>("/hubs/presence");
         app.MapHub<CommentHub>("/hubs/comments");
         app.MapControllers();

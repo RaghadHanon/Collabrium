@@ -7,6 +7,5 @@
 
         public string Name { get; set; } = null!;
 
-        public ICollection<RoadmapTagEntity> Roadmaps { get; set; } = new List<RoadmapTagEntity>();
     }
 }

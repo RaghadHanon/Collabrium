@@ -163,7 +163,64 @@ namespace Infrastructure.Persistence.ReadModels
                 item.IsLikedByCurrentUser = likedSet.Contains(item.Id);
             }
         }
+        public async Task<PagedList<ArticleLikeUserDto, DateTime?>> GetArticleLikesAsync(
+    string tenantId,
+    string articleId,
+    int pageSize,
+    DateTime? cursor,
+    CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(articleId))
+            {
+                return new PagedList<ArticleLikeUserDto, DateTime?>
+                {
+                    Items = new(),
+                    NextCursor = null
+                };
+            }
 
+            var tId = tenantId.Trim();
+            var aId = articleId.Trim();
+
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+
+            var query = _dbContext.ArticleLikes
+                .AsNoTracking()
+                .Where(l =>
+                    l.ArticleId == aId &&
+                    l.Article.TenantId == tId);
+
+            if (cursor.HasValue)
+                query = query.Where(l => l.CreatedAt < cursor.Value);
+
+            var items = await query
+                .OrderByDescending(l => l.CreatedAt)
+                .Select(l => new ArticleLikeUserDto
+                {
+                    UserId = l.CreatedByUserId,
+                    UserName = l.CreatedByUser != null ? l.CreatedByUser.FullName : "",
+                    UserProfileImageUrl = l.CreatedByUser.ProfileImage != null
+                        ? l.CreatedByUser.ProfileImage.Url
+                        : null,
+                    LikedAt = l.CreatedAt
+                })
+                .Take(pageSize + 1)
+                .ToListAsync(cancellationToken);
+
+            DateTime? nextCursor = null;
+
+            if (items.Count > pageSize)
+            {
+                nextCursor = items[^1].LikedAt;
+                items.RemoveAt(items.Count - 1);
+            }
+
+            return new PagedList<ArticleLikeUserDto, DateTime?>
+            {
+                Items = items,
+                NextCursor = nextCursor
+            };
+        }
         private static IQueryable<ArticleEntity> ApplyFilters(
             IQueryable<ArticleEntity> query,
             ArticlesSearchAndFilterParametersDto p)

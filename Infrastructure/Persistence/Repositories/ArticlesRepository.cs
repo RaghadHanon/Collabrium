@@ -62,7 +62,7 @@ namespace Infrastructure.Persistence.Repositories
 
         public async Task<Article?> GetByIdAsync(string tenantId, string articleId, CancellationToken cancellationToken = default)
         {
-            if (TryNormalize(tenantId, articleId, out var tId, out var aId))
+            if (!TryNormalize(tenantId, articleId, out var tId, out var aId))
                 return null;
             var entity = await _dbContext.Articles
                 .AsNoTracking()

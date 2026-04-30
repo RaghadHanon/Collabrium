@@ -11,7 +11,7 @@ namespace Infrastructure.Persistence.Configurations
             builder.ToTable("Articles");
             builder.HasKey(a => a.Id);
             builder.Property(a => a.Id).HasMaxLength(50);
-            builder.Property(a => a.TenantId).IsRequired().HasMaxLength(50);
+            builder.Property(a => a.TenantId).IsRequired().HasMaxLength(450);
             builder.Property(a => a.Title).IsRequired().HasMaxLength(200);
             builder.Property(a => a.Content).IsRequired();
             builder.Property(a => a.CreatedByUserId).IsRequired().HasMaxLength(450);

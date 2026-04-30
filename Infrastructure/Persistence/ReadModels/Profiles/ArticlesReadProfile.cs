@@ -58,6 +58,21 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.CreatedByUser.ProfileImage != null
                         ? s.CreatedByUser.ProfileImage.Url
                         : null));
+            CreateMap<ArticleLikeEntity, ArticleLikeUserDto>()
+                .ForMember(d => d.UserId,
+                    o => o.MapFrom(s => s.CreatedByUserId))
+                .ForMember(d => d.UserName,
+                    o => o.MapFrom(s =>
+                        s.CreatedByUser != null
+                            ? s.CreatedByUser.FullName
+                            : ""))
+                .ForMember(d => d.UserProfileImageUrl,
+                    o => o.MapFrom(s =>
+                        s.CreatedByUser.ProfileImage != null
+                            ? s.CreatedByUser.ProfileImage.Url
+                            : null))
+                .ForMember(d => d.LikedAt,
+                    o => o.MapFrom(s => s.CreatedAt));
         }
     }
 }

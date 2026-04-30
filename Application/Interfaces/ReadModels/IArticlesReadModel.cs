@@ -21,5 +21,11 @@ namespace Application.Interfaces.ReadModels
             ArticlesSearchAndFilterParametersDto parameters,
             string? currentUserId = null,
             CancellationToken cancellationToken = default);
+        Task<PagedList<ArticleLikeUserDto, DateTime?>> GetArticleLikesAsync(
+            string tenantId,
+            string articleId,
+            int pageSize,
+            DateTime? cursor,
+            CancellationToken cancellationToken = default);
     }
 }

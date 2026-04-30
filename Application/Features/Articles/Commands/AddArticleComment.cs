@@ -10,7 +10,7 @@ using System.Net;
 
 namespace Application.Features.Articles.Commands
 {
-    public sealed class AddArticle
+    public sealed class AddArticleComment
     {
         public sealed class Command : IRequest<Result<ArticleCommentDto>>
         {
@@ -46,12 +46,14 @@ namespace Application.Features.Articles.Commands
                    createdByUserId: userId);
                     await commentsRepository.AddAsync(comment, ct);
                 }, cancellationToken);
-                var dto = await commentsReadModel.GetByIdAsync(tenantId, comment.Id, cancellationToken);
+                var dto = await commentsReadModel.GetByIdAsync(
+                      request.ArticleId,
+                      comment.Id,
+                      cancellationToken);
+
                 return dto is null
                     ? Result<ArticleCommentDto>.Failure("Article comment added but could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<ArticleCommentDto>.Success(dto, HttpStatusCode.OK);
-
-
             }
         }
     }

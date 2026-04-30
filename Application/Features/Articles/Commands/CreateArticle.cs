@@ -40,18 +40,29 @@ namespace Application.Features.Articles.Commands
                 Article article = null!;
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    article = new Article
-                    (
+                    article = new Article(
                         tenantId: tenantId,
                         title: request.Title,
                         content: request.Content,
-                        isPublished: request.IsPublished,
-                        createdByUserId: currentUserId
-                    );
-                    article.SetTags(request.TagIds);
+                        createdByUserId: currentUserId,
+                        isPublished: request.IsPublished);
+
                     await articlesRepository.AddAsync(article, ct);
-                    await articlesRepository.SetTagsAsync(tenantId, article.Id, request.TagIds, ct);
+                    await unitOfWork.SaveChangesAsync(ct);
+
+                    if (request.TagIds is { Count: > 0 })
+                    {
+                        article.SetTags(request.TagIds);
+
+                        await articlesRepository.SetTagsAsync(
+                            tenantId,
+                            article.Id,
+                            request.TagIds,
+                            ct);
+                    }
+
                 }, cancellationToken);
+
                 var dto = await articlesReadModel.GetDetailsAsync(
                  tenantId,
                  article.Id,

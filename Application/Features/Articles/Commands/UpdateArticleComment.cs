@@ -33,7 +33,10 @@ namespace Application.Features.Articles.Commands
                 var userId = currentUserAccessor.GetUserId();
                 if (string.IsNullOrWhiteSpace(userId))
                     return Result<ArticleCommentDto>.Failure("Current user not found.", System.Net.HttpStatusCode.Unauthorized);
-                var comment = await commentsRepository.GetByIdAsync(tenantId, request.CommentId, cancellationToken);
+                var comment = await commentsRepository.GetByIdAsync(
+                     request.ArticleId,
+                     request.CommentId,
+                     cancellationToken);
                 if (comment is null)
                     return Result<ArticleCommentDto>.Failure("Comment not found.", HttpStatusCode.NotFound);
                 if (!string.Equals(comment.CreatedByUserId, userId, StringComparison.Ordinal))
@@ -44,8 +47,10 @@ namespace Application.Features.Articles.Commands
                     await commentsRepository.UpdateAsync(comment, ct);
 
                 }, cancellationToken);
-                var dto = await commentsReadModel.GetByIdAsync(tenantId, comment.Id, cancellationToken);
-                return dto is null
+                var dto = await commentsReadModel.GetByIdAsync(
+                    request.ArticleId,
+                    comment.Id,
+                    cancellationToken); return dto is null
                     ? Result<ArticleCommentDto>.Failure("Article comment updated but could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<ArticleCommentDto>.Success(dto, HttpStatusCode.OK);
 

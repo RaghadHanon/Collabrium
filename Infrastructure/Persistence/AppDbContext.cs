@@ -43,6 +43,9 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<TagEntity> Tags => Set<TagEntity>();
 
     public DbSet<RefreshTokenEntity> RefreshTokens => Set<RefreshTokenEntity>();
+    public DbSet<ArticleEntity> Articles => Set<ArticleEntity>();
+    public DbSet<ArticleLikeEntity> ArticleLikes => Set<ArticleLikeEntity>();
+    public DbSet<ArticleCommentEntity> ArticleComments => Set<ArticleCommentEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

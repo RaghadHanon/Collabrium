@@ -15,5 +15,8 @@
         public bool IsPublished { get; set; } = true;
 
         public ICollection<TagEntity> Tags { get; set; } = new List<TagEntity>();
+
+        public ICollection<ArticleLikeEntity> Likes { get; set; } = new List<ArticleLikeEntity>();
+        public ICollection<ArticleCommentEntity> Comments { get; set; } = new List<ArticleCommentEntity>();
     }
 }

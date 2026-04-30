@@ -13,6 +13,7 @@ namespace Application.Features.Articles.DTOs
         public string? CoverImagePublicId { get; set; }
 
         public bool IsPublished { get; set; }
+        public string? Description { get; set; }
 
         public required string CreatedByUserId { get; set; }
         public string CreatedByUserName { get; set; } = string.Empty;

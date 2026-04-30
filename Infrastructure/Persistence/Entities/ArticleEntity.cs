@@ -8,6 +8,9 @@ namespace Infrastructure.Persistence.Entities
         public TenantEntity Tenant { get; set; } = null!;
 
         public string Title { get; set; } = null!;
+
+        public string? Description { get; set; }
+
         public string Content { get; set; } = null!;
 
         public string CreatedByUserId { get; set; } = null!;

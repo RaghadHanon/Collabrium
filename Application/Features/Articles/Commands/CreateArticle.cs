@@ -12,19 +12,22 @@ namespace Application.Features.Articles.Commands
 {
     public sealed class CreateArticle
     {
+
         public sealed class Command : IRequest<Result<ArticleDetailsDto>>
         {
             public required string Title { get; set; }
+            public string? Description { get; set; }
             public required string Content { get; set; }
             public bool IsPublished { get; set; } = true;
             public List<string> TagIds { get; set; } = new();
         }
+
         public sealed class Handler(
-             IArticlesRepository articlesRepository,
-        IArticlesReadModel articlesReadModel,
-        ITenantContext tenantContext,
-        ICurrentUserAccessor currentUserAccessor,
-        IUnitOfWork unitOfWork)
+            IArticlesRepository articlesRepository,
+            IArticlesReadModel articlesReadModel,
+            ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor,
+            IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<ArticleDetailsDto>>
         {
             public async Task<Result<ArticleDetailsDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -35,14 +38,18 @@ namespace Application.Features.Articles.Commands
                     return Result<ArticleDetailsDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
                 var currentUserId = currentUserAccessor.GetUserId();
+
                 if (string.IsNullOrWhiteSpace(currentUserId))
                     return Result<ArticleDetailsDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+
                 Article article = null!;
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     article = new Article(
                         tenantId: tenantId,
                         title: request.Title,
+                        description: request.Description,
                         content: request.Content,
                         createdByUserId: currentUserId,
                         isPublished: request.IsPublished);
@@ -64,14 +71,16 @@ namespace Application.Features.Articles.Commands
                 }, cancellationToken);
 
                 var dto = await articlesReadModel.GetDetailsAsync(
-                 tenantId,
-                 article.Id,
-                 currentUserId,
-                 cancellationToken);
-                return dto is null ?
-                   Result<ArticleDetailsDto>.Failure("Article created but could not be loaded.", HttpStatusCode.InternalServerError) :
-                   Result<ArticleDetailsDto>.Success(dto, HttpStatusCode.Created);
+                    tenantId,
+                    article.Id,
+                    currentUserId,
+                    cancellationToken);
+
+                return dto is null
+                    ? Result<ArticleDetailsDto>.Failure("Article created but could not be loaded.", HttpStatusCode.InternalServerError)
+                    : Result<ArticleDetailsDto>.Success(dto, HttpStatusCode.Created);
             }
         }
     }
 }
+

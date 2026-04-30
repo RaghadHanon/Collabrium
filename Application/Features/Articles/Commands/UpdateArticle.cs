@@ -17,6 +17,7 @@ namespace Application.Features.Articles.Commands
             public required string ArticleId { get; set; }
 
             public string? Title { get; set; }
+            public string? Description { get; set; }
             public string? Content { get; set; }
 
             public bool? IsPublished { get; set; }
@@ -60,8 +61,13 @@ namespace Application.Features.Articles.Commands
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    var finalDescription = request.Description is null
+                        ? article.Description
+                        : PatchHelpers.ApplyStringPatch(article.Description, request.Description);
+
                     article.UpdateDetails(
                         title: PatchHelpers.ApplyStringPatch(article.Title, request.Title) ?? article.Title,
+                        description: finalDescription,
                         content: PatchHelpers.ApplyStringPatch(article.Content, request.Content) ?? article.Content,
                         isPublished: request.IsPublished
                     );

@@ -29,7 +29,9 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                 .ForMember(d => d.CommentsCount,
                     o => o.MapFrom(s => s.Comments.Count))
                 .ForMember(d => d.IsLikedByCurrentUser,
-                    o => o.Ignore());
+                    o => o.Ignore())
+                  .ForMember(d => d.Description,
+                    o => o.MapFrom(s => s.Description));
 
             CreateMap<ArticleEntity, ArticleDetailsDto>()
                 .ForMember(d => d.CoverImageUrl,
@@ -38,6 +40,8 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                     o => o.MapFrom(s => s.CoverImage != null ? s.CoverImage.PublicId : null))
                 .ForMember(d => d.CreatedByUserName,
                     o => o.MapFrom(s => s.CreatedByUser != null ? s.CreatedByUser.FullName : ""))
+                  .ForMember(d => d.Description,
+                    o => o.MapFrom(s => s.Description))
                 .ForMember(d => d.CreatedByUserProfileImageUrl,
                     o => o.MapFrom(s => s.CreatedByUser.ProfileImage != null
                         ? s.CreatedByUser.ProfileImage.Url

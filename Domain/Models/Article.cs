@@ -11,6 +11,8 @@ namespace Domain.Models
 
         public string Title { get; private set; } = null!;
 
+        public string? Description { get; private set; }
+
         public string Content { get; private set; } = null!;
 
         public string CreatedByUserId { get; private set; } = null!;
@@ -28,12 +30,18 @@ namespace Domain.Models
             string title,
             string content,
             string createdByUserId,
+            string? description = null,
             bool isPublished = true)
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
             CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
+
             IsPublished = isPublished;
 
             Touch();
@@ -46,12 +54,18 @@ namespace Domain.Models
             string content,
             string createdByUserId,
             StoredImage? coverImage,
+            string? description = null,
             bool isPublished = true) : base(id)
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
             CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
+
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
+
             CoverImage = coverImage;
             IsPublished = isPublished;
         }
@@ -62,6 +76,7 @@ namespace Domain.Models
             DateTime? updatedAt,
             string tenantId,
             string title,
+            string description,
             string content,
             string createdByUserId,
             StoredImage? coverImage,
@@ -72,6 +87,7 @@ namespace Domain.Models
                 id: id,
                 tenantId: tenantId,
                 title: title,
+                description: description,
                 content: content,
                 createdByUserId: createdByUserId,
                 coverImage: coverImage,
@@ -98,10 +114,15 @@ namespace Domain.Models
         public void UpdateDetails(
             string title,
             string content,
+            string? description = null,
             bool? isPublished = null)
         {
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
+
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
 
             if (isPublished.HasValue)
                 IsPublished = isPublished.Value;

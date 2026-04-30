@@ -8,19 +8,22 @@ namespace Infrastructure.Persistence.Mappers
         public static ArticleEntity ToEntity(Article domain)
         {
             ArgumentNullException.ThrowIfNull(domain);
+
             return new ArticleEntity
             {
                 Id = domain.Id,
                 TenantId = domain.TenantId,
                 Title = domain.Title,
+                Description = domain.Description,
                 Content = domain.Content,
                 CreatedByUserId = domain.CreatedByUserId,
                 CoverImage = domain.CoverImage,
                 IsPublished = domain.IsPublished,
                 CreatedAt = domain.CreatedAt,
-                UpdatedAt = domain.UpdatedAt,
+                UpdatedAt = domain.UpdatedAt
             };
         }
+
         public static Article ToDomain(ArticleEntity entity)
         {
             ArgumentNullException.ThrowIfNull(entity);
@@ -31,6 +34,7 @@ namespace Infrastructure.Persistence.Mappers
                 updatedAt: entity.UpdatedAt,
                 tenantId: entity.TenantId,
                 title: entity.Title,
+                description: entity.Description,
                 content: entity.Content,
                 createdByUserId: entity.CreatedByUserId,
                 coverImage: entity.CoverImage,
@@ -38,12 +42,14 @@ namespace Infrastructure.Persistence.Mappers
                 tagIds: entity.Tags?.Select(t => t.Id)
             );
         }
+
         public static void UpdateEntity(Article domain, ArticleEntity entity)
         {
             ArgumentNullException.ThrowIfNull(domain);
             ArgumentNullException.ThrowIfNull(entity);
 
             entity.Title = domain.Title;
+            entity.Description = domain.Description;
             entity.Content = domain.Content;
             entity.CoverImage = domain.CoverImage;
             entity.IsPublished = domain.IsPublished;

@@ -1,16 +1,11 @@
 ﻿using Application.Features.Tags.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Features.Articles.DTOs
 {
     public sealed class ArticleDto
     {
         public required string Id { get; set; }
-        public required string Tilte { get; set; }
+        public required string Title { get; set; }
         public string? CoverImageUrl { get; set; }
         public string? CoverImagePublicId { get; set; }
 

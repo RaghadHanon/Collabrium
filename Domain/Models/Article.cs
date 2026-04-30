@@ -1,60 +1,72 @@
 ﻿using Domain.Common;
+using Domain.ValueObjects;
 
 namespace Domain.Models
 {
     public sealed class Article : Entity
     {
         private readonly HashSet<string> _tagIds = new();
+
         public string TenantId { get; private set; } = null!;
+
         public string Title { get; private set; } = null!;
+
         public string Content { get; private set; } = null!;
+
         public string CreatedByUserId { get; private set; } = null!;
+
         public StoredImage? CoverImage { get; private set; }
+
         public bool IsPublished { get; private set; }
-        public IReadOnlyCollection<string> TagIds => _tagsIds;
+
+        public IReadOnlyCollection<string> TagIds => _tagIds;
+
         public Article() { }
+
         public Article(
             string tenantId,
             string title,
             string content,
             string createdByUserId,
-            string? coverImageUrl = null,
             bool isPublished = true)
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
             CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
-            this.IsPublished = isPublished;
-            Touch();
+            IsPublished = isPublished;
 
+            Touch();
         }
+
         public Article(
-           string id,
-           string tenantId,
-           string title,
-           string content,
-           string createdByUserId,
-           string? coverImageUrl = null,
-           bool isPublished = true) : base(id)
+            string id,
+            string tenantId,
+            string title,
+            string content,
+            string createdByUserId,
+            StoredImage? coverImage,
+            bool isPublished = true) : base(id)
         {
             TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content));
             CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId));
-            this.IsPublished = isPublished;
+            CoverImage = coverImage;
+            IsPublished = isPublished;
         }
+
         public static Article Rehydrate(
-           string id,
-           DateTime createdAt,
-           DateTime? updatedAt,
-           string tenantId,
-           string title,
-           string content,
-           string createdByUserId,
-           string? coverImageUrl,
-           bool isPublished,
-           IEnumerable<string>? tagIds)
+            string id,
+            DateTime createdAt,
+            DateTime? updatedAt,
+            string tenantId,
+            string title,
+            string content,
+            string createdByUserId,
+            StoredImage? coverImage,
+            bool isPublished,
+            IEnumerable<string>? tagIds)
         {
             var article = new Article(
                 id: id,
@@ -62,12 +74,12 @@ namespace Domain.Models
                 title: title,
                 content: content,
                 createdByUserId: createdByUserId,
-                coverImageUrl: coverImageUrl,
+                coverImage: coverImage,
                 isPublished: isPublished);
 
             article.SetTimestamps(createdAt, updatedAt);
 
-            article._tagsIds.Clear();
+            article._tagIds.Clear();
 
             if (tagIds is not null)
             {
@@ -76,21 +88,20 @@ namespace Domain.Models
                     if (string.IsNullOrWhiteSpace(tagId))
                         continue;
 
-                    article._tagsIds.Add(tagId.Trim());
+                    article._tagIds.Add(tagId.Trim());
                 }
             }
 
             return article;
         }
+
         public void UpdateDetails(
-           string title,
-           string content,
-           string? coverImageUrl = null,
-           bool? isPublished = null)
+            string title,
+            string content,
+            bool? isPublished = null)
         {
             Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
             Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
-            CoverImageUrl = string.IsNullOrWhiteSpace(coverImageUrl) ? null : coverImageUrl.Trim();
 
             if (isPublished.HasValue)
                 IsPublished = isPublished.Value;
@@ -116,40 +127,53 @@ namespace Domain.Models
             Touch();
         }
 
-        public void SetCoverImage(string? coverImageUrl)
+        public void SetCoverImage(string url, string publicId)
         {
-            CoverImageUrl = string.IsNullOrWhiteSpace(coverImageUrl) ? null : coverImageUrl.Trim();
+            CoverImage = new StoredImage(url, publicId);
             Touch();
         }
+
+        public void RemoveCoverImage()
+        {
+            CoverImage = null;
+            Touch();
+        }
+
         public void AddTag(string tagId)
         {
             var clean = Guard.NotNullOrWhiteSpace(tagId, nameof(tagId)).Trim();
-            if (_tagsIds.Add(clean))
+
+            if (_tagIds.Add(clean))
                 Touch();
         }
+
         public void RemoveTag(string tagId)
         {
             var clean = Guard.NotNullOrWhiteSpace(tagId, nameof(tagId)).Trim();
 
-            if (_tagsIds.Remove(clean))
+            if (_tagIds.Remove(clean))
                 Touch();
         }
-        public void setTags(IEnumerable<string> tagIds)
+
+        public void SetTags(IEnumerable<string>? tagIds)
         {
-            _tagsIds.Clear();
+            _tagIds.Clear();
+
             if (tagIds is null)
             {
                 Touch();
                 return;
             }
+
             foreach (var tagId in tagIds)
             {
                 if (string.IsNullOrWhiteSpace(tagId))
                     continue;
-                _tagsIds.Add(tagId.Trim());
+
+                _tagIds.Add(tagId.Trim());
             }
+
             Touch();
         }
-
     }
 }

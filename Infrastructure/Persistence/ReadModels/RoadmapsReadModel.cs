@@ -82,6 +82,13 @@ namespace Infrastructure.Persistence.ReadModels
 
             if (parameters.IsVisible.HasValue)
                 query = query.Where(r => r.IsVisible == parameters.IsVisible.Value);
+            if (parameters.IsPublished.HasValue)
+            {
+                if (parameters.IsPublished.Value)
+                    query = query.Where(r => r.PublishedAt != null);
+                else
+                    query = query.Where(r => r.PublishedAt == null);
+            }
 
             if (parameters.CreatedAfter.HasValue)
                 query = query.Where(r => r.CreatedAt >= parameters.CreatedAfter.Value);

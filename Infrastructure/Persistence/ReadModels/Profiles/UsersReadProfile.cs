@@ -20,6 +20,7 @@ public sealed class UsersReadProfile : Profile
         CreateMap<SocialLinksOwned, SocialLinksDto>();
         CreateMap<ApplicationUserEntity, UserWithTenantDto>()
             .IncludeBase<ApplicationUserEntity, UserDto>();
+        CreateMap<ApplicationUserEntity, UserSnapshotDto>();
         CreateMap<TeamMemberEntity, UserSnapshotDto>()
             .ForMember(d => d.Id, o => o.MapFrom(s => s.User.Id))
             .ForMember(d => d.FullName, o => o.MapFrom(s => s.User.FullName))

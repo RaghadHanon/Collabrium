@@ -16,9 +16,17 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
             .IsRequired()
             .HasMaxLength(1000);
 
+        builder.Property(c => c.CreatedByUserId)
+            .IsRequired()
+            .HasMaxLength(450);
+
         builder.HasOne(c => c.CreatedByUser)
             .WithMany()
             .HasForeignKey(c => c.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasDiscriminator<string>("CommentType")
+            .HasValue<PostCommentEntity>("Post")
+            .HasValue<ArticleCommentEntity>("Article");
     }
 }

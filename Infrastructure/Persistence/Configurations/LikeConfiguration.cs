@@ -10,7 +10,12 @@ namespace Infrastructure.Persistence.Configurations
         {
             builder.ToTable("Likes");
 
+            builder.UseTptMappingStrategy();
+
             builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Id)
+                .HasMaxLength(50);
 
             builder.Property(x => x.CreatedByUserId)
                 .IsRequired()
@@ -20,10 +25,6 @@ namespace Infrastructure.Persistence.Configurations
                 .WithMany()
                 .HasForeignKey(x => x.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasDiscriminator<string>("LikeType")
-                .HasValue<PostLikeEntity>("Post")
-                .HasValue<ArticleLikeEntity>("Article");
         }
     }
 }

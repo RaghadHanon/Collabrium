@@ -10,28 +10,14 @@ namespace Infrastructure.Persistence.Configurations
         {
             builder.ToTable("ArticleComments");
 
-            builder.Property(c => c.Content)
-                .IsRequired()
-                .HasMaxLength(2000);
-
-            builder.Property(c => c.CreatedByUserId)
-                .IsRequired()
-                .HasMaxLength(450);
-
-            builder.Property(c => c.ArticleId)
+            builder.Property(x => x.ArticleId)
                 .IsRequired()
                 .HasMaxLength(50);
 
-            builder.HasOne(c => c.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(c => c.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(c => c.Article)
-                .WithMany(a => a.Comments)
-                .HasForeignKey(c => c.ArticleId)
+            builder.HasOne(x => x.Article)
+                .WithMany(x => x.Comments)
+                .HasForeignKey(x => x.ArticleId)
                 .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

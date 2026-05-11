@@ -3,6 +3,7 @@ using Application.Features.Posts.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
+using AutoMapper;
 using MediatR;
 using System.Net;
 
@@ -37,6 +38,7 @@ namespace Application.Features.Posts.Queries
         public sealed class Handler(
             IPostsReadModel postsReadModel,
             ITenantContext tenantContext,
+            IMapper mapper,
             ICurrentUserAccessor currentUserAccessor)
             : IRequestHandler<Query, Result<PagedList<PostDto, DateTime?>>>
         {
@@ -51,31 +53,10 @@ namespace Application.Features.Posts.Queries
                         "Tenant not found.",
                         HttpStatusCode.NotFound);
 
-                var parameters = new PostsSearchAndFilterParametersDto
-                {
-                    TenantId = tenantId,
-                    CurrentUserId = currentUserAccessor.GetUserId(),
+                var parameters = mapper.Map<PostsSearchAndFilterParametersDto>(request);
 
-                    Search = request.Search,
-                    CreatedByUserId = request.CreatedByUserId,
-                    Type = request.Type,
-                    IsPinned = request.IsPinned,
-
-                    TagIdsAny = request.TagIdsAny,
-                    TagIdsAll = request.TagIdsAll,
-
-                    HasImages = request.HasImages,
-                    HasLinks = request.HasLinks,
-
-                    CreatedAfter = request.CreatedAfter,
-                    CreatedBefore = request.CreatedBefore,
-
-                    UpdatedAfter = request.UpdatedAfter,
-                    UpdatedBefore = request.UpdatedBefore,
-
-                    PageSize = request.PageSize,
-                    Cursor = request.Cursor
-                };
+                parameters.TenantId = tenantId;
+                parameters.CurrentUserId = currentUserAccessor.GetUserId();
 
                 var result = await postsReadModel.GetPostsAsync(parameters, cancellationToken);
 

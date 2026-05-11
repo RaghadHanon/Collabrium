@@ -105,52 +105,6 @@ namespace Infrastructure.Persistence.ReadModels
                 .FirstOrDefaultAsync(ct);
         }
 
-        public async Task<PagedList<PostCommentDto, DateTime?>> GetCommentsAsync(
-    string tenantId,
-    string postId,
-    int pageSize,
-    DateTime? cursor,
-    CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(postId))
-                return new PagedList<PostCommentDto, DateTime?>
-                {
-                    Items = new(),
-                    NextCursor = null
-                };
-
-            var tId = tenantId.Trim();
-            var pId = postId.Trim();
-
-            pageSize = pageSize <= 0 ? 10 : pageSize;
-
-            var query = _dbContext.PostComments
-                .AsNoTracking()
-                .Where(x => x.Post.TenantId == tId && x.PostId == pId);
-
-            if (cursor.HasValue)
-                query = query.Where(x => x.CreatedAt < cursor.Value);
-
-            var items = await query
-                .OrderByDescending(x => x.CreatedAt)
-                .ProjectTo<PostCommentDto>(_mapper.ConfigurationProvider)
-                .Take(pageSize + 1)
-                .ToListAsync(ct);
-
-            DateTime? nextCursor = null;
-
-            if (items.Count > pageSize)
-            {
-                nextCursor = items[^1].CreatedAt;
-                items.RemoveAt(items.Count - 1);
-            }
-
-            return new PagedList<PostCommentDto, DateTime?>
-            {
-                Items = items,
-                NextCursor = nextCursor
-            };
-        }
 
         private static IQueryable<PostEntity> ApplyFilters(
             IQueryable<PostEntity> query,

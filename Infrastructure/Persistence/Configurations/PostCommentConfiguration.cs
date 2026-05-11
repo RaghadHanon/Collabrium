@@ -8,6 +8,8 @@ namespace Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<PostCommentEntity> builder)
         {
+            builder.ToTable("PostComments");
+
             builder.Property(x => x.PostId)
                 .IsRequired()
                 .HasMaxLength(450);
@@ -16,8 +18,6 @@ namespace Infrastructure.Persistence.Configurations
                 .WithMany(x => x.Comments)
                 .HasForeignKey(x => x.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasIndex(x => x.PostId);
         }
     }
 }

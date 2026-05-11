@@ -21,11 +21,6 @@ namespace Application.Interfaces.ReadModels
             string? currentUserId,
             CancellationToken ct = default);
 
-        Task<PagedList<PostCommentDto, DateTime?>> GetCommentsAsync(
-             string tenantId,
-             string postId,
-             int pageSize,
-             DateTime? cursor,
-             CancellationToken ct = default);
+
     }
 }

@@ -8,6 +8,8 @@ namespace Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ArticleLikeEntity> builder)
         {
+            builder.ToTable("ArticleLikes");
+
             builder.Property(x => x.ArticleId)
                 .IsRequired()
                 .HasMaxLength(50);
@@ -17,10 +19,8 @@ namespace Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.ArticleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasIndex(x => new { x.ArticleId, x.CreatedByUserId })
-                .IsUnique();
 
-            builder.HasIndex(x => new { x.ArticleId, x.CreatedAt });
+            builder.HasIndex(x => x.ArticleId);
         }
     }
 }

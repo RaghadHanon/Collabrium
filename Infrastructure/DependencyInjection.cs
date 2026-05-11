@@ -97,6 +97,8 @@ public static class DependencyInjection
         services.AddScoped<IArticleLikesRepository, ArticleLikesRepository>();
         services.AddScoped<IArticleCommentsRepository, ArticleCommentsRepository>();
         services.AddScoped<IPostsRepository, PostsRepository>();
+        services.AddScoped<IPostCommentsRepository, PostCommentsRepository>();
+
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -121,6 +123,7 @@ public static class DependencyInjection
         services.AddScoped<IArticlesReadModel, ArticlesReadModel>();
         services.AddScoped<IArticleCommentsReadModel, ArticleCommentsReadModel>();
         services.AddScoped<IPostsReadModel, PostsReadModel>();
+        services.AddScoped<IPostCommentsReadModel, PostCommentsReadModel>();
 
 
 

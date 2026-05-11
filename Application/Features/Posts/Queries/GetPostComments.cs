@@ -18,7 +18,7 @@ namespace Application.Features.Posts.Queries
         }
 
         public sealed class Handler(
-            IPostsReadModel postsReadModel,
+        IPostCommentsReadModel postCommentsReadModel,
             ITenantContext tenantContext)
             : IRequestHandler<Query, Result<PagedList<PostCommentDto, DateTime?>>>
         {
@@ -33,7 +33,7 @@ namespace Application.Features.Posts.Queries
                         "Tenant not found.",
                         HttpStatusCode.NotFound);
 
-                var comments = await postsReadModel.GetCommentsAsync(
+                var comments = await postCommentsReadModel.GetCommentsAsync(
                     tenantId,
                     request.PostId,
                     request.PageSize,

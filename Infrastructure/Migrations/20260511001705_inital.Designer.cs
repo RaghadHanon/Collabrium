@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260430011713_inital")]
+    [Migration("20260511001705_inital")]
     partial class inital
     {
         /// <inheritdoc />
@@ -175,6 +175,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -202,40 +206,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TenantId", "Title");
 
                     b.ToTable("Articles", (string)null);
-                });
-
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("ArticleId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("ArticleId", "CreatedAt");
-
-                    b.HasIndex("ArticleId", "CreatedByUserId")
-                        .IsUnique();
-
-                    b.ToTable("ArticleLikes", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
@@ -331,7 +301,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CommentEntity", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -457,6 +428,89 @@ namespace Infrastructure.Migrations
                         .HasDatabaseName("IX_CourseRatings_TenantId_UserId_CourseId");
 
                     b.ToTable("CourseRatings");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.LikeEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("Likes", (string)null);
+
+                    b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PinnedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PinnedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("PinnedByUserId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "IsPinned");
+
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -1319,6 +1373,23 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("PostTags", b =>
+                {
+                    b.Property<string>("PostId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TagId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("PostId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("PostTags", (string)null);
+                });
+
             modelBuilder.Entity("RoadmapEntityTagEntity", b =>
                 {
                     b.Property<string>("RoadmapEntityId")
@@ -1348,6 +1419,20 @@ namespace Infrastructure.Migrations
                     b.ToTable("ArticleComments", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostCommentEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.CommentEntity");
+
+                    b.Property<string>("PostId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostComments", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
                 {
                     b.HasBaseType("Infrastructure.Persistence.Entities.CommentEntity");
@@ -1359,6 +1444,34 @@ namespace Infrastructure.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("WorkItemComments", (string)null);
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.LikeEntity");
+
+                    b.Property<string>("ArticleId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("ArticleLikes", (string)null);
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostLikeEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.LikeEntity");
+
+                    b.Property<string>("PostId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostLikes", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>
@@ -1638,25 +1751,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
-                {
-                    b.HasOne("Infrastructure.Persistence.Entities.ArticleEntity", "Article")
-                        .WithMany("Likes")
-                        .HasForeignKey("ArticleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Article");
-
-                    b.Navigation("CreatedByUser");
-                });
-
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "UploadedByUser")
@@ -1798,6 +1892,108 @@ namespace Infrastructure.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.LikeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "PinnedByUser")
+                        .WithMany()
+                        .HasForeignKey("PinnedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsMany("Infrastructure.Persistence.Entities.StoredImageOwned", "Images", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("PostId")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("PublicId")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("nvarchar(1000)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("PostId");
+
+                            b1.ToTable("PostImages", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PostId");
+                        });
+
+                    b.OwnsMany("Infrastructure.Persistence.Entities.PostLinkOwned", "Links", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("PostId")
+                                .IsRequired()
+                                .HasMaxLength(450)
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("nvarchar(1000)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("PostId");
+
+                            b1.ToTable("PostLinks", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PostId");
+                        });
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Images");
+
+                    b.Navigation("Links");
+
+                    b.Navigation("PinnedByUser");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>
@@ -2212,6 +2408,21 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PostTags", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.PostEntity", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TagEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("RoadmapEntityTagEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.RoadmapEntity", null)
@@ -2244,6 +2455,23 @@ namespace Infrastructure.Migrations
                     b.Navigation("Article");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostCommentEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.CommentEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Infrastructure.Persistence.Entities.PostCommentEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.PostEntity", "Post")
+                        .WithMany("Comments")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.CommentEntity", null)
@@ -2259,6 +2487,40 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("WorkItem");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ArticleEntity", "Article")
+                        .WithMany("Likes")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.LikeEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Infrastructure.Persistence.Entities.ArticleLikeEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostLikeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.LikeEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Infrastructure.Persistence.Entities.PostLikeEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.PostEntity", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ReferenceNodeEntity", b =>
@@ -2299,6 +2561,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("CourseRatings");
 
                     b.Navigation("UserCourses");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.PostEntity", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ProjectEntity", b =>

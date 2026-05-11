@@ -10,7 +10,12 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
     {
         builder.ToTable("Comments");
 
+        builder.UseTptMappingStrategy();
+
         builder.HasKey(c => c.Id);
+
+        builder.Property(c => c.Id)
+            .HasMaxLength(50);
 
         builder.Property(c => c.Content)
             .IsRequired()
@@ -24,9 +29,5 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
             .WithMany()
             .HasForeignKey(c => c.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasDiscriminator<string>("CommentType")
-            .HasValue<PostCommentEntity>("Post")
-            .HasValue<ArticleCommentEntity>("Article");
     }
 }

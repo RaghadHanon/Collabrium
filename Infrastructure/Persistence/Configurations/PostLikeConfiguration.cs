@@ -8,19 +8,19 @@ namespace Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<PostLikeEntity> builder)
         {
+            builder.ToTable("PostLikes");
+
             builder.Property(x => x.PostId)
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasMaxLength(450);
 
             builder.HasOne(x => x.Post)
                 .WithMany(x => x.Likes)
                 .HasForeignKey(x => x.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasIndex(x => new { x.PostId, x.CreatedByUserId })
-                .IsUnique();
 
-            builder.HasIndex(x => new { x.PostId, x.CreatedAt });
+            builder.HasIndex(x => x.PostId);
         }
     }
 }

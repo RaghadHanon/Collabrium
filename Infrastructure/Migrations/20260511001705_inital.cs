@@ -50,7 +50,7 @@ namespace Infrastructure.Migrations
                 name: "ArticleComments",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -63,10 +63,7 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,6 +77,7 @@ namespace Infrastructure.Migrations
                     Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     CoverImageUrl = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
@@ -225,7 +223,7 @@ namespace Infrastructure.Migrations
                 name: "Comments",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -236,6 +234,26 @@ namespace Infrastructure.Migrations
                     table.PrimaryKey("PK_Comments", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Comments_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Likes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Likes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Likes_AspNetUsers_CreatedByUserId",
                         column: x => x.CreatedByUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -326,6 +344,45 @@ namespace Infrastructure.Migrations
                     table.PrimaryKey("PK_Courses", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Courses_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    IsPinned = table.Column<bool>(type: "bit", nullable: false),
+                    PinnedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    PinnedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_PinnedByUserId",
+                        column: x => x.PinnedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Posts_Tenants_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenants",
                         principalColumn: "Id",
@@ -521,6 +578,95 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PostComments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PostId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostComments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PostComments_Comments_Id",
+                        column: x => x.Id,
+                        principalTable: "Comments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostComments_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    PublicId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    PostId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PostImages_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostLikes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PostId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostLikes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Likes_Id",
+                        column: x => x.Id,
+                        principalTable: "Likes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostLinks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Url = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    PostId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostLinks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PostLinks_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoadmapNodes",
                 columns: table => new
                 {
@@ -571,6 +717,30 @@ namespace Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_CourseTags_Tags_TagsId",
                         column: x => x.TagsId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PostTags",
+                columns: table => new
+                {
+                    PostId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    TagId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostTags", x => new { x.PostId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_PostTags_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PostTags_Tags_TagId",
+                        column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -910,7 +1080,7 @@ namespace Infrastructure.Migrations
                 name: "WorkItemComments",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     WorkItemId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -964,20 +1134,9 @@ namespace Infrastructure.Migrations
                 column: "ArticleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ArticleLikes_ArticleId_CreatedAt",
+                name: "IX_ArticleLikes_ArticleId",
                 table: "ArticleLikes",
-                columns: new[] { "ArticleId", "CreatedAt" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ArticleLikes_ArticleId_CreatedByUserId",
-                table: "ArticleLikes",
-                columns: new[] { "ArticleId", "CreatedByUserId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ArticleLikes_CreatedByUserId",
-                table: "ArticleLikes",
-                column: "CreatedByUserId");
+                column: "ArticleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Articles_CreatedByUserId",
@@ -1115,6 +1274,56 @@ namespace Infrastructure.Migrations
                 name: "IX_CourseTags_TagsId",
                 table: "CourseTags",
                 column: "TagsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_CreatedByUserId",
+                table: "Likes",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostComments_PostId",
+                table: "PostComments",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostImages_PostId",
+                table: "PostImages",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostLikes_PostId",
+                table: "PostLikes",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostLinks_PostId",
+                table: "PostLinks",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_CreatedByUserId",
+                table: "Posts",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_PinnedByUserId",
+                table: "Posts",
+                column: "PinnedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_TenantId_CreatedAt",
+                table: "Posts",
+                columns: new[] { "TenantId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_TenantId_IsPinned",
+                table: "Posts",
+                columns: new[] { "TenantId", "IsPinned" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostTags_TagId",
+                table: "PostTags",
+                column: "TagId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectHistories_MadeByUserId",
@@ -1374,12 +1583,12 @@ namespace Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ArticleLikes_AspNetUsers_CreatedByUserId",
+                name: "FK_ArticleLikes_Likes_Id",
                 table: "ArticleLikes",
-                column: "CreatedByUserId",
-                principalTable: "AspNetUsers",
+                column: "Id",
+                principalTable: "Likes",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Articles_AspNetUsers_CreatedByUserId",
@@ -1485,6 +1694,21 @@ namespace Infrastructure.Migrations
                 name: "CourseTags");
 
             migrationBuilder.DropTable(
+                name: "PostComments");
+
+            migrationBuilder.DropTable(
+                name: "PostImages");
+
+            migrationBuilder.DropTable(
+                name: "PostLikes");
+
+            migrationBuilder.DropTable(
+                name: "PostLinks");
+
+            migrationBuilder.DropTable(
+                name: "PostTags");
+
+            migrationBuilder.DropTable(
                 name: "ProjectHistories");
 
             migrationBuilder.DropTable(
@@ -1513,6 +1737,12 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Likes");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "SubTopics");

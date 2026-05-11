@@ -53,18 +53,6 @@ namespace Application.Interfaces.Repositories
             string userId,
             CancellationToken ct = default);
 
-        Task AddCommentAsync(PostComment comment, CancellationToken ct = default);
 
-        Task<PostComment?> GetCommentByIdAsync(
-            string postId,
-            string commentId,
-            CancellationToken ct = default);
-
-        Task UpdateCommentAsync(PostComment comment, CancellationToken ct = default);
-
-        Task<bool> DeleteCommentAsync(
-            string postId,
-            string commentId,
-            CancellationToken ct = default);
     }
 }

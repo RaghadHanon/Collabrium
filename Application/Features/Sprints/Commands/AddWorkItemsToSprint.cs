@@ -4,7 +4,6 @@ using Application.Interfaces.Repositories;
 using Domain.Enums;
 using Domain.Models;
 using MediatR;
-using Microsoft.EntityFrameworkCore.Migrations;
 using System.Net;
 
 namespace Application.Features.Sprints.Commands;

@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.UserCourses
+﻿namespace API.Contracts.UserCourses;
+
+public sealed class AssignCourseToUserRequest
 {
-    public sealed class AssignCourseToUserRequest
-    {
-        public required string AssignedToUserId { get; set; }
-    }
+    public required string AssignedToUserId { get; set; }
 }

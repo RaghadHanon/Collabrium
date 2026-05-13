@@ -1,9 +1,8 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum CourseLevel
 {
-    public enum CourseLevel
-    {
-        Beginner = 0,
-        Intermediate = 1,
-        Advanced = 2
-    }
+    Beginner = 0,
+    Intermediate = 1,
+    Advanced = 2
 }

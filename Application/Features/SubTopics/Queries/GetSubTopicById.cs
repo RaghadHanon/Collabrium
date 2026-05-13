@@ -7,63 +7,62 @@ using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.SubTopics.Queries
+namespace Application.Features.SubTopics.Queries;
+
+public sealed class GetSubTopicById
 {
-    public sealed class GetSubTopicById
+    public sealed class Query : IRequest<Result<SubTopicDto>>
     {
-        public sealed class Query : IRequest<Result<SubTopicDto>>
+        public required string RoadmapId { get; set; }
+        public required string TopicNodeId { get; set; }
+        public required string SubTopicId { get; set; }
+    }
+
+    public sealed class Handler(
+        IRoadmapSubTopicsReadModel subTopicsReadModel,
+        IRoadmapsRepository roadmapsRepository,
+        ITenantContext tenantContext,
+        ICurrentUserAccessor currentUserAccessor
+    ) : IRequestHandler<Query, Result<SubTopicDto>>
+    {
+        public async Task<Result<SubTopicDto>> Handle(Query request, CancellationToken cancellationToken)
         {
-            public required string RoadmapId { get; set; }
-            public required string TopicNodeId { get; set; }
-            public required string SubTopicId { get; set; }
-        }
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<SubTopicDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-        public sealed class Handler(
-            IRoadmapSubTopicsReadModel subTopicsReadModel,
-            IRoadmapsRepository roadmapsRepository,
-            ITenantContext tenantContext,
-            ICurrentUserAccessor currentUserAccessor
-        ) : IRequestHandler<Query, Result<SubTopicDto>>
-        {
-            public async Task<Result<SubTopicDto>> Handle(Query request, CancellationToken cancellationToken)
-            {
-                var tenantId = tenantContext.CurrentTenant?.Id;
-                if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<SubTopicDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            var userId = currentUserAccessor.GetUserId();
+            var canViewHidden = await RoadmapAccessHelper.CanCurrentUserViewHiddenAsync(
+                 currentUserAccessor,
+                 cancellationToken);
 
-                var userId = currentUserAccessor.GetUserId();
-                var canViewHidden = await RoadmapAccessHelper.CanCurrentUserViewHiddenAsync(
-                     currentUserAccessor,
-                     cancellationToken);
+            var roadmap = await roadmapsRepository.GetByIdAsync(
+            tenantId,
+            request.RoadmapId,
+            includeHidden: canViewHidden,
+            cancellationToken);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(
-                tenantId,
-                request.RoadmapId,
-                includeHidden: canViewHidden,
-                cancellationToken);
+            if (roadmap is null)
+                return Result<SubTopicDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
+            var topicExists = await subTopicsReadModel.TopicExistsInRoadmapAsync(
+                tenantId: tenantId,
+                roadmapId: request.RoadmapId,
+                topicNodeId: request.TopicNodeId,
+                ct: cancellationToken);
 
-                if (roadmap is null)
-                    return Result<SubTopicDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
-                var topicExists = await subTopicsReadModel.TopicExistsInRoadmapAsync(
-                    tenantId: tenantId,
-                    roadmapId: request.RoadmapId,
-                    topicNodeId: request.TopicNodeId,
-                    ct: cancellationToken);
+            if (!topicExists)
+                return Result<SubTopicDto>.Failure("Topic node not found.", HttpStatusCode.NotFound);
 
-                if (!topicExists)
-                    return Result<SubTopicDto>.Failure("Topic node not found.", HttpStatusCode.NotFound);
+            var dto = await subTopicsReadModel.GetByIdAsync(
+                tenantId: tenantId,
+                roadmapId: request.RoadmapId,
+                topicNodeId: request.TopicNodeId,
+                subTopicId: request.SubTopicId,
+                ct: cancellationToken);
 
-                var dto = await subTopicsReadModel.GetByIdAsync(
-                    tenantId: tenantId,
-                    roadmapId: request.RoadmapId,
-                    topicNodeId: request.TopicNodeId,
-                    subTopicId: request.SubTopicId,
-                    ct: cancellationToken);
-
-                return dto is null
-                    ? Result<SubTopicDto>.Failure("SubTopic not found.", HttpStatusCode.NotFound)
-                    : Result<SubTopicDto>.Success(dto, HttpStatusCode.OK);
-            }
+            return dto is null
+                ? Result<SubTopicDto>.Failure("SubTopic not found.", HttpStatusCode.NotFound)
+                : Result<SubTopicDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

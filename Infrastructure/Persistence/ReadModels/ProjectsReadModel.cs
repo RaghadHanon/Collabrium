@@ -122,8 +122,8 @@ public sealed class ProjectsReadModel : IProjectsReadModel
 
         if (hasMore)
         {
-            items.RemoveAt(items.Count - 1); 
-            nextCursor = items[^1].CreatedAt; 
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
 
         return new PagedList<ProjectDto, DateTime?>

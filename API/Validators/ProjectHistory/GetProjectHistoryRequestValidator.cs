@@ -1,6 +1,4 @@
 ﻿using API.Contracts.ProjectHistory;
-using Domain.Enums;
-using Domain.Models;
 using FluentValidation;
 
 namespace API.Validators.ProjectHistory;

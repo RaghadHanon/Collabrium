@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -20,7 +20,7 @@ public class Attachment : Entity
         string id,
         string fileName,
         string storagePath,
-        string url, 
+        string url,
         string contentType,
         AttachmentType type,
         string uploadedByUserId) : base(id)

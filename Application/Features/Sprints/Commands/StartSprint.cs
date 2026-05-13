@@ -49,7 +49,7 @@ public class StartSprint
             if (project is null)
                 return Result<SprintDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            if(project.Status != ProjectStatus.InProgress && project.Status != ProjectStatus.OnHold)
+            if (project.Status != ProjectStatus.InProgress && project.Status != ProjectStatus.OnHold)
                 return Result<SprintDto>.Failure("Cannot start a sprint for a project that is not in progress or on hold.", HttpStatusCode.BadRequest);
 
             var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
@@ -72,7 +72,7 @@ public class StartSprint
 
                 historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code, oldSprintState, sprint);
             }), cancellationToken);
-            
+
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
 
             if (project.TeamId is not null)

@@ -1,7 +1,6 @@
 ﻿using Application.Common;
 using Application.Events;
 using Application.Features.Sprints.DTOs;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -50,7 +49,7 @@ public class CompleteSprint
             if (sprint is null)
                 return Result<SprintDto>.Failure("Sprint not found.", HttpStatusCode.NotFound);
 
-            if(!(await sprintsRepository.CanSprintBeCompletedAsync(tenantId, request.SprintId, cancellationToken)))
+            if (!await sprintsRepository.CanSprintBeCompletedAsync(tenantId, request.SprintId, cancellationToken))
                 return Result<SprintDto>.Failure("Sprint cannot be completed. Please ensure all work items are closed.",
                     HttpStatusCode.BadRequest);
 

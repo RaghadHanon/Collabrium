@@ -5,7 +5,6 @@ using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
 using Application.Features.WorkItems.DTOs.WorkItemsTypes;
 using AutoMapper;
-using Domain.Models;
 using Infrastructure.Persistence.Entities;
 
 namespace Infrastructure.Persistence.ReadModels.Profiles;

@@ -1,14 +1,13 @@
 ﻿using API.Contracts.Roadmaps;
 using FluentValidation;
 
-namespace API.Validators.Roadmaps
+namespace API.Validators.Roadmaps;
+
+public sealed class PublishRoadmapRequestValidator : AbstractValidator<PublishRoadmapRequest>
 {
-    public sealed class PublishRoadmapRequestValidator : AbstractValidator<PublishRoadmapRequest>
+    public PublishRoadmapRequestValidator()
     {
-        public PublishRoadmapRequestValidator()
-        {
-            RuleFor(x => x.RoadmapId)
-                .NotEmpty().WithMessage("RoadmapId is required.");
-        }
+        RuleFor(x => x.RoadmapId)
+            .NotEmpty().WithMessage("RoadmapId is required.");
     }
 }

@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -33,7 +33,7 @@ public class CodeLink : Entity
         DateTime createdAt,
         DateTime? updatedAt,
         string url,
-        CodeLinkType linkType, 
+        CodeLinkType linkType,
         string createdByUserId,
         string? displayName)
     {

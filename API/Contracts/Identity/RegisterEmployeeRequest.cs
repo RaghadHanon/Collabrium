@@ -1,6 +1,4 @@
-﻿using API.Common;
-using Domain.Enums;
-using System.Text.Json.Serialization;
+﻿using Domain.Enums;
 
 namespace API.Contracts.Identity;
 

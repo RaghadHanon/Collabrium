@@ -30,9 +30,9 @@ public class ToggleTenantActiveStatus
             if (tenant is null)
                 return Result<bool>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if(tenant.IsActive)
+            if (tenant.IsActive)
                 tenant.Deactivate();
-            else if(request.IsSuper)
+            else if (request.IsSuper)
                 tenant.Activate();
 
             await tenantRepository.UpdateAsync(tenant, cancellationToken);

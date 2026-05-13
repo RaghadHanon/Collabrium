@@ -1,8 +1,7 @@
-﻿namespace API.Contracts.Roadmaps
+﻿namespace API.Contracts.Roadmaps;
+
+public sealed class AddTagsRequest
 {
-    public sealed class AddTagsRequest
-    {
-        public required string RoadmapId { get; set; }
-        public required string[] TagIds { get; set; }
-    }
+    public required string RoadmapId { get; set; }
+    public required string[] TagIds { get; set; }
 }

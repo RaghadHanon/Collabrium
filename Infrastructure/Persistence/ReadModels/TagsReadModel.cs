@@ -3,84 +3,82 @@ using Application.Features.Tags.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence.ReadModels
+namespace Infrastructure.Persistence.ReadModels;
+
+public sealed class TagsReadModel : ITagsReadModel
 {
-    public sealed class TagsReadModel : ITagsReadModel
+    private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
+
+    public TagsReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        private readonly AppDbContext _dbContext;
-        private readonly IMapper _mapper;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    }
 
-        public TagsReadModel(AppDbContext dbContext, IMapper mapper)
+    public async Task<PagedList<TagDetailsDto, DateTime?>> GetAsync(
+        TagsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
+    {
+        parameters ??= new TagsSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+        var query = _dbContext.Tags.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            var tenantId = parameters.TenantId.Trim();
+            query = query.Where(t => t.TenantId == tenantId);
         }
 
-        public async Task<PagedList<TagDetailsDto, DateTime?>> GetAsync(
-            TagsSearchAndFilterParametersDto parameters,
-            CancellationToken cancellationToken = default)
+        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
         {
-            parameters ??= new TagsSearchAndFilterParametersDto();
-            var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
-            IQueryable<TagEntity> query = _dbContext.Tags.AsNoTracking();
-
-            if (!string.IsNullOrWhiteSpace(parameters.TenantId))
-            {
-                var tenantId = parameters.TenantId.Trim();
-                query = query.Where(t => t.TenantId == tenantId);
-            }
-
-            if (!string.IsNullOrWhiteSpace(parameters.NameContains))
-            {
-                var term = parameters.NameContains.Trim();
-                query = query.Where(t => t.Name.Contains(term));
-            }
-
-            if (parameters.Cursor.HasValue)
-                query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
-
-            var items = await query
-                .OrderByDescending(t => t.CreatedAt)
-                .ProjectTo<TagDetailsDto>(_mapper.ConfigurationProvider)
-                .Take(pageSize + 1)
-                .ToListAsync(cancellationToken);
-
-            DateTime? nextCursor = null;
-            var hasMore = items.Count > pageSize;
-
-            if (hasMore)
-            {
-                items.RemoveAt(items.Count - 1);
-                nextCursor = items[^1].CreatedAt;
-            }
-
-            return new PagedList<TagDetailsDto, DateTime?>
-            {
-                Items = items,
-                NextCursor = nextCursor
-            };
+            var term = parameters.NameContains.Trim();
+            query = query.Where(t => t.Name.Contains(term));
         }
 
-        public Task<TagDetailsDto?> GetByIdAsync(
-            string tenantId,
-            string tagId,
-            CancellationToken cancellationToken = default)
+        if (parameters.Cursor.HasValue)
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
+
+        var items = await query
+            .OrderByDescending(t => t.CreatedAt)
+            .ProjectTo<TagDetailsDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(tagId))
-                return Task.FromResult<TagDetailsDto?>(null);
-
-            var tId = tenantId.Trim();
-            var id = tagId.Trim();
-
-            return _dbContext.Tags
-                .AsNoTracking()
-                .Where(t => t.TenantId == tId && t.Id == id)
-                .ProjectTo<TagDetailsDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(cancellationToken);
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
+
+        return new PagedList<TagDetailsDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
+
+    public Task<TagDetailsDto?> GetByIdAsync(
+        string tenantId,
+        string tagId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(tagId))
+            return Task.FromResult<TagDetailsDto?>(null);
+
+        var tId = tenantId.Trim();
+        var id = tagId.Trim();
+
+        return _dbContext.Tags
+            .AsNoTracking()
+            .Where(t => t.TenantId == tId && t.Id == id)
+            .ProjectTo<TagDetailsDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }
 

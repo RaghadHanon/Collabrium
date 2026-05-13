@@ -140,10 +140,7 @@ public sealed class UsersRepository : IUsersRepository
         }
 
         var addResult = await _userManager.AddToRoleAsync(user, role);
-        if (!addResult.Succeeded)
-            throw new InvalidOperationException($"Failed to assign new role: {JoinErrors(addResult)}");
-
-        return true;
+        return !addResult.Succeeded ? throw new InvalidOperationException($"Failed to assign new role: {JoinErrors(addResult)}") : true;
     }
 
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)

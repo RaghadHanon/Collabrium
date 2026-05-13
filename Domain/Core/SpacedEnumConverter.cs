@@ -14,10 +14,9 @@ public class SpacedEnumConverter<T> : JsonConverter<T> where T : struct, Enum
 
         var normalized = value.Replace(" ", "");
 
-        if (Enum.TryParse<T>(normalized, true, out var result))
-            return result;
-
-        throw new JsonException($"Invalid value '{value}' for enum {typeof(T).Name}");
+        return Enum.TryParse<T>(normalized, true, out var result)
+            ? result
+            : throw new JsonException($"Invalid value '{value}' for enum {typeof(T).Name}");
     }
 
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)

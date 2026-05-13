@@ -1,9 +1,8 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum RoadmapLevel
 {
-    public enum RoadmapLevel
-    {
-        Junior = 0,
-        Mid = 1,
-        Senior = 2
-    }
+    Junior = 0,
+    Mid = 1,
+    Senior = 2
 }

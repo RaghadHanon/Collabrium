@@ -2,14 +2,13 @@
 using Application.Features.SubTopics.Commands;
 using AutoMapper;
 
-namespace API.MappingProfiles
+namespace API.MappingProfiles;
+
+public sealed class SubTopicsProfile : Profile
 {
-    public sealed class SubTopicsProfile : Profile
+    public SubTopicsProfile()
     {
-        public SubTopicsProfile()
-        {
-            CreateMap<CreateSubTopicRequest, CreateSubTopic.Command>();
-            CreateMap<UpdateSubTopicRequest, UpdateSubTopic.Command>();
-        }
+        CreateMap<CreateSubTopicRequest, CreateSubTopic.Command>();
+        CreateMap<UpdateSubTopicRequest, UpdateSubTopic.Command>();
     }
 }

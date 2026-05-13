@@ -1,14 +1,13 @@
 ﻿using API.Contracts.Roadmaps;
 using FluentValidation;
 
-namespace API.Validators.Roadmaps
+namespace API.Validators.Roadmaps;
+
+public sealed class GetManagerRoadmapsRequestValidator
+ : AbstractValidator<GetManagerRoadmapsRequest>
 {
-    public sealed class GetManagerRoadmapsRequestValidator
-     : AbstractValidator<GetManagerRoadmapsRequest>
+    public GetManagerRoadmapsRequestValidator()
     {
-        public GetManagerRoadmapsRequestValidator()
-        {
-            Include(new GetPublicRoadmapsRequestValidator());
-        }
+        Include(new GetPublicRoadmapsRequestValidator());
     }
 }

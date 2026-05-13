@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.ProjectHistories.DTOs;
+using Application.Features.ProjectsHistories.DTOs;
 
 namespace Application.Interfaces.ReadModels;
 public interface IProjectHistoriesReadModel

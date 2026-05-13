@@ -95,7 +95,7 @@ public partial class UpdateWorkItem
                 if (sprint is null)
                     return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
 
-                if(sprint.Status == SprintStatus.Cancelled || sprint.Status == SprintStatus.Completed)
+                if (sprint.Status == SprintStatus.Cancelled || sprint.Status == SprintStatus.Completed)
                     return Result<WorkItemDto>.Failure($"Can't assign workItems to a {sprint.Status} sprint.", HttpStatusCode.BadRequest);
             }
 
@@ -134,7 +134,7 @@ public partial class UpdateWorkItem
                 }
 
                 var sprint = await sprintsRepository.GetByIdAsync(tenantId, workItem.SprintId, request.ProjectId, ct);
-                    
+
                 ApplyTypeSpecificPatch(workItem, request, project, sprint);
 
                 await workItemsRepository.UpdateAsync(workItem, ct);

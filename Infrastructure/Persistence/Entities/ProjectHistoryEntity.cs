@@ -1,5 +1,4 @@
 ﻿using Domain.Enums;
-using Domain.Models;
 
 namespace Infrastructure.Persistence.Entities;
 

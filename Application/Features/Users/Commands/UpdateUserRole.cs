@@ -1,12 +1,9 @@
 ﻿using Application.Common;
 using Application.Events;
-using Application.Features.Sprints.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces;
-using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -44,7 +41,7 @@ public class UpdateUserRole
                 return Result<Unit>.Failure("User not found in this tenant.", HttpStatusCode.Forbidden);
             }
 
-            var oldRole = user.JobTitle;    
+            var oldRole = user.JobTitle;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 await usersRepository.ReplaceUserRoleAsync(
@@ -57,10 +54,11 @@ public class UpdateUserRole
             }, cancellationToken);
 
             await mediator.Publish(new UserRoleChangedEvent(
-                       new UserSnapshotDto {
+                       new UserSnapshotDto
+                       {
                            Id = user.Id,
                            FullName = user.FullName,
-                           Email = user.Email, 
+                           Email = user.Email,
                            JobTitle = user.JobTitle
                        },
                         oldRole,

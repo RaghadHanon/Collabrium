@@ -1258,24 +1258,12 @@ public class ReportsReadModel : IReportsReadModel
 
     private static double ClampScore(double score)
     {
-        if (score < 0)
-            return 0;
-
-        if (score > 100)
-            return 100;
-
-        return score;
+        return score < 0 ? 0 : score > 100 ? 100 : score;
     }
 
     private static string GetHealthStatus(double score)
     {
-        if (score >= 80)
-            return HealthStatusHealthy;
-
-        if (score >= 60)
-            return HealthStatusAtRisk;
-
-        return HealthStatusCritical;
+        return score >= 80 ? HealthStatusHealthy : score >= 60 ? HealthStatusAtRisk : HealthStatusCritical;
     }
 
     private sealed class ProjectLookup

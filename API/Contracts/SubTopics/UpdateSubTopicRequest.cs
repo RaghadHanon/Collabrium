@@ -1,8 +1,7 @@
-﻿namespace API.Contracts.SubTopics
+﻿namespace API.Contracts.SubTopics;
+
+public sealed class UpdateSubTopicRequest
 {
-    public sealed class UpdateSubTopicRequest
-    {
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-    }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
 }

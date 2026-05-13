@@ -15,7 +15,7 @@ public class GetCycleTimeReport
         public string? TenantId { get; set; }
         public required string ProjectId { get; set; }
         public string? SprintId { get; set; }
-        public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-14);
+        public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-30);
         public DateTime To { get; set; } = DateTime.UtcNow;
     }
 

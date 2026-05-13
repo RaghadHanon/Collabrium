@@ -1,20 +1,19 @@
 ﻿using API.Contracts.SubTopics;
 using FluentValidation;
 
-namespace API.Validators.SubTopics
+namespace API.Validators.SubTopics;
+
+public sealed class CreateSubTopicRequestValidator : AbstractValidator<CreateSubTopicRequest>
 {
-    public sealed class CreateSubTopicRequestValidator : AbstractValidator<CreateSubTopicRequest>
+    public CreateSubTopicRequestValidator()
     {
-        public CreateSubTopicRequestValidator()
-        {
-            RuleFor(x => x.Title)
-                .NotEmpty()
-                .MaximumLength(200);
+        RuleFor(x => x.Title)
+            .NotEmpty()
+            .MaximumLength(200);
 
-            RuleFor(x => x.Description)
-                .MaximumLength(2000);
+        RuleFor(x => x.Description)
+            .MaximumLength(2000);
 
 
-        }
     }
 }

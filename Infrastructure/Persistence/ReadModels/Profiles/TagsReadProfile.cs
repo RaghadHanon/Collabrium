@@ -2,15 +2,14 @@
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.ReadModels.Profiles
-{
-    public sealed class TagsReadProfile : Profile
-    {
-        public TagsReadProfile()
-        {
-            CreateMap<TagEntity, TagDto>();
+namespace Infrastructure.Persistence.ReadModels.Profiles;
 
-            CreateMap<TagEntity, TagDetailsDto>();
-        }
+public sealed class TagsReadProfile : Profile
+{
+    public TagsReadProfile()
+    {
+        CreateMap<TagEntity, TagDto>();
+
+        CreateMap<TagEntity, TagDetailsDto>();
     }
 }

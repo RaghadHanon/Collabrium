@@ -1,5 +1,4 @@
 ﻿using API.Contracts.WorkItems.Relations;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.WorkItems.Relations;

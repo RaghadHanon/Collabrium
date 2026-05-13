@@ -1,14 +1,12 @@
 ﻿using Application.Common;
-using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
-using Domain.Models;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.WorkItems.Commands.Comments;
+namespace Application.Features.WorkItems.Commands.CodeLinks;
 
 public class UpdateWorkItemCodeLink
 {
@@ -74,7 +72,7 @@ public class UpdateWorkItemCodeLink
                     codeLink,
                     cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<CodeLink>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemCodeLinkState, codeLink);
+                historyRecorder.RecordUpdatingChanges(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemCodeLinkState, codeLink);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

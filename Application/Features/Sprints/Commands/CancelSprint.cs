@@ -35,8 +35,8 @@ public class CancelSprint
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound); 
-            
+                return Result<SprintDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
             var currentUser = await currentUserAccessor.GetCurrentUserAsync();
             if (currentUser == null)
                 return Result<SprintDto>.Failure("Current user is not found.", HttpStatusCode.NotFound);
@@ -55,7 +55,7 @@ public class CancelSprint
                 await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name?? sprint.Code, sprint.Code, oldSprintState, sprint);
+                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code, oldSprintState, sprint);
 
             }), cancellationToken);
 

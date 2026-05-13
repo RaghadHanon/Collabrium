@@ -325,7 +325,7 @@ public sealed class SprintsController : ApiBaseController
     [HttpPost("sprint/{sprintId}/work-items")]
     public async Task<ActionResult<WorkItemListItemDto>> AddWorkItemsToSprint(string projectId, string sprintId, AddWorkItemsToSprintRequest request)
     {
-       var command = Mapper.Map<AddWorkItemsToSprint.Command>(request);
+        var command = Mapper.Map<AddWorkItemsToSprint.Command>(request);
         command.ProjectId = projectId;
         command.SprintId = sprintId;
 

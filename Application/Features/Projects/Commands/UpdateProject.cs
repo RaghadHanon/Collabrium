@@ -74,7 +74,7 @@ public class UpdateProject
                 var projectsWorkItems = await projectsReadModel.GetProjectWorkItemSnapshotAsync(tenantId, project.Id, cancellationToken);
 
                 if (request.Status.HasValue)
-                    project.ChangeStatusWithValidation(request.Status.Value, projectsWorkItems); 
+                    project.ChangeStatusWithValidation(request.Status.Value, projectsWorkItems);
 
                 await projectsRepository.UpdateAsync(project, cancellationToken);
 

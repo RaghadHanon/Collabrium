@@ -15,7 +15,7 @@ public class GetEnumMetaData
 
     public class Handler : IRequestHandler<Query, Result<string[]>>
     {
-        public async Task<Result<string[]>> Handle(Query request, CancellationToken cancellationToken)
+        public Result<string[]> Handle(Query request, CancellationToken cancellationToken)
         {
             return request.MetadataType switch
             {
@@ -98,6 +98,11 @@ public class GetEnumMetaData
         {
             var spaced = Regex.Replace(value, "(\\B[A-Z])", " $1");
             return value.Length > 3 ? spaced : value;
+        }
+
+        Task<Result<string[]>> IRequestHandler<Query, Result<string[]>>.Handle(Query request, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

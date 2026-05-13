@@ -3,11 +3,11 @@ using API.Contracts.Projects;
 using API.Contracts.WorkItems;
 using API.SetupProgram;
 using Application.Common;
-using Application.Features.ProjectHistories.DTOs;
 using Application.Features.Projects.Commands;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.DTOs.Boards;
 using Application.Features.Projects.Queries;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Features.ProjectsHistories.Queries;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.Queries;
@@ -240,7 +240,7 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("project/{projectId}/backlog")]
-    public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId,[FromQuery] GetProjectBacklogRequest request)
+    public async Task<ActionResult<IReadOnlyList<WorkItemDto>>> GetProjectBacklog(string projectId, [FromQuery] GetProjectBacklogRequest request)
     {
         var query = Mapper.Map<GetProjectBacklog.Query>(request);
         query.ProjectId = projectId;

@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -34,7 +33,7 @@ public sealed class GetWorkItems
         public DateTime? CreatedAfter { get; set; }
         public DateTime? CreatedBefore { get; set; }
 
-        public int PageSize { get; init; } 
+        public int PageSize { get; init; }
         public DateTime? Cursor { get; init; }
     }
 
@@ -50,8 +49,8 @@ public sealed class GetWorkItems
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<PagedList<WorkItemListItemDto, DateTime?>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
-                return Result< PagedList<WorkItemListItemDto, DateTime?>>.Failure("Project not found.", HttpStatusCode.NotFound);
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+                return Result<PagedList<WorkItemListItemDto, DateTime?>>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var parameters = mapper.Map<WorkItemsSearchAndFilterParametersDto>(request);
             parameters.TenantId = tenantId;

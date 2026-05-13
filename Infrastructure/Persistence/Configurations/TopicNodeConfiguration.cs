@@ -2,16 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Persistence.Configurations
+namespace Infrastructure.Persistence.Configurations;
+
+public class TopicNodeConfiguration : IEntityTypeConfiguration<TopicNodeEntity>
 {
-    public class TopicNodeConfiguration : IEntityTypeConfiguration<TopicNodeEntity>
+    public void Configure(EntityTypeBuilder<TopicNodeEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<TopicNodeEntity> builder)
-        {
-            builder.HasMany(t => t.SubTopics)
-                .WithOne(st => st.TopicNode)
-                .HasForeignKey(st => st.TopicNodeId)
-                .OnDelete(DeleteBehavior.Cascade);
-        }
+        builder.HasMany(t => t.SubTopics)
+            .WithOne(st => st.TopicNode)
+            .HasForeignKey(st => st.TopicNodeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

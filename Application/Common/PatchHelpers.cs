@@ -8,13 +8,11 @@ internal static class PatchHelpers
 
     public static PatchStringDecision DecideStringPatch(string? input)
     {
-        if (input is null)
-            return new PatchStringDecision(PatchStringAction.Ignore, null);
-
-        if (string.IsNullOrWhiteSpace(input))
-            return new PatchStringDecision(PatchStringAction.Clear, null);
-
-        return new PatchStringDecision(PatchStringAction.Set, input.Trim());
+        return input is null
+            ? new PatchStringDecision(PatchStringAction.Ignore, null)
+            : string.IsNullOrWhiteSpace(input)
+            ? new PatchStringDecision(PatchStringAction.Clear, null)
+            : new PatchStringDecision(PatchStringAction.Set, input.Trim());
     }
 
     public static string? ApplyStringPatch(string? current, string? input)
@@ -23,8 +21,8 @@ internal static class PatchHelpers
         return d.Action switch
         {
             PatchStringAction.Ignore => current,
-            PatchStringAction.Clear  => null,
-            PatchStringAction.Set    => d.Value,
+            PatchStringAction.Clear => null,
+            PatchStringAction.Set => d.Value,
             _ => current
         };
     }

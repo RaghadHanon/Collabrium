@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace API.Contracts.WorkItems.Comments;
+namespace API.Contracts.WorkItems.CodeLinkes;
 
 public class UpdateWorkItemCodeLinkRequest
 {

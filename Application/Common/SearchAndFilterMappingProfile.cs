@@ -2,9 +2,9 @@
 using Application.Features.CourseRatings.Queries;
 using Application.Features.Courses.DTOs;
 using Application.Features.Courses.Queries;
-using Application.Features.ProjectHistories.DTOs;
 using Application.Features.Projects.DTOs;
 using Application.Features.Projects.Queries;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Features.ProjectsHistories.Queries;
 using Application.Features.Roadmaps.DTOs;
 using Application.Features.Roadmaps.Queries;

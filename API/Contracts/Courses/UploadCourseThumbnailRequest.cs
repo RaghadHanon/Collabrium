@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.Courses
+﻿namespace API.Contracts.Courses;
+
+public sealed class UploadCourseThumbnailRequest
 {
-    public sealed class UploadCourseThumbnailRequest
-    {
-        public required IFormFile File { get; set; }
-    }
+    public required IFormFile File { get; set; }
 }

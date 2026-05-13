@@ -1,9 +1,8 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum UserCourseStatus
 {
-    public enum UserCourseStatus
-    {
-        NotStarted = 0,
-        InProgress = 1,
-        Completed = 2
-    }
+    NotStarted = 0,
+    InProgress = 1,
+    Completed = 2
 }

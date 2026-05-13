@@ -24,7 +24,7 @@ public sealed class InMemoryUserPresenceTracker : IUserPresenceTracker
             var wasOffline = connections.Count == 0;
             connections.Add(connectionId);
 
-            return Task.FromResult(wasOffline); 
+            return Task.FromResult(wasOffline);
         }
     }
 
@@ -57,8 +57,8 @@ public sealed class InMemoryUserPresenceTracker : IUserPresenceTracker
 
     public Task<bool> IsUserOnlineAsync(string tenantId, string userId)
     {
-        return !_store.TryGetValue(tenantId, out var tenantUsers) 
-            ? Task.FromResult(false) 
+        return !_store.TryGetValue(tenantId, out var tenantUsers)
+            ? Task.FromResult(false)
             : Task.FromResult(tenantUsers.ContainsKey(userId));
     }
 }

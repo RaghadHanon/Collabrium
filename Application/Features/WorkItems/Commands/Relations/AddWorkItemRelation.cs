@@ -61,7 +61,7 @@ public class AddWorkItemRelation
             if (targetWorkItem is null)
                 return Result<Unit>.Failure("Target Work item not found in this project.", HttpStatusCode.NotFound);
 
-            if(sourceWorkItem.SprintId != targetWorkItem.SprintId)
+            if (sourceWorkItem.SprintId != targetWorkItem.SprintId)
                 return Result<Unit>.Failure("Work items must be in the same sprint to create a relation.", HttpStatusCode.BadRequest);
 
             var isCurrentAssignee = string.Equals(sourceWorkItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
@@ -84,8 +84,8 @@ public class AddWorkItemRelation
                     ct);
 
                 if (request.RelationType == WorkItemRelationType.Parent)
-                    sourceWorkItem.SetParent(targetWorkItem.Id); 
-                
+                    sourceWorkItem.SetParent(targetWorkItem.Id);
+
                 if (request.RelationType == WorkItemRelationType.Child)
                     targetWorkItem.SetParent(sourceWorkItem.Id);
 

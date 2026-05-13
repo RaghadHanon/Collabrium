@@ -9,6 +9,7 @@ namespace Infrastructure.Reports.TenantInfo;
 
 public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 {
+    [Obsolete]
     public byte[] RenderMainChart(TenantInfoReport data)
     {
         var totalTeams = data.TeamsSummary.TotalTeamsCount;
@@ -48,7 +49,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 
         var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N0}", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
@@ -67,6 +68,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
         return plt.GetImageBytes(1400, 700);
     }
 
+    [Obsolete]
     public byte[] RenderSecondaryChart(TenantInfoReport data)
     {
         var values = new[]
@@ -91,7 +93,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
         var plt = BaseChartFactory.CreateModernPlot();
 
         double[] xs = { 0, 1, 2, 3, 4 };
-        double[] ys = values.Select(x => (double) x).ToArray();
+        var ys = values.Select(x => (double) x).ToArray();
         string[] labels = { "Not Started", "In Progress", "Completed", "On Hold", "Cancelled" };
 
         ScottPlot.Color[] colors =
@@ -105,7 +107,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
@@ -113,7 +115,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 
         var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N0}", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
@@ -132,6 +134,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
         return plt.GetImageBytes(900, 450);
     }
 
+    [Obsolete]
     public byte[] RenderSummaryChart(TenantInfoReport data)
     {
         var values = new[]
@@ -155,7 +158,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
         var plt = BaseChartFactory.CreateModernPlot();
 
         double[] xs = { 0, 1, 2, 3 };
-        double[] ys = values.Select(x => (double) x).ToArray();
+        var ys = values.Select(x => (double) x).ToArray();
         string[] labels = { "Planned", "Active", "Completed", "Cancelled" };
 
         ScottPlot.Color[] colors =
@@ -168,7 +171,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
@@ -176,7 +179,7 @@ public class TenantInfoChartRenderer : ITenantInfoChartRenderer
 
         var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N0}", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;

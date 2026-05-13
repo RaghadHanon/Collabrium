@@ -151,19 +151,19 @@ public sealed class ReportsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(query));
     }
-    
+
     /// <summary>
-     /// Retrieves Sprint Progress report as a PDF.
-     /// </summary>
-     /// <remarks>
-     /// Sample request:
-     ///
-     ///     GET /api/reports/projects/{projectId}/sprints/{sprintId}/sprint-progress-report/pdf
-     ///
-     /// </remarks>
-     /// <response code="200">Returns the PDF report.</response>
-     /// <response code="401">If the user is not authenticated.</response>
-     /// <response code="404">If entities not found.</response>
+    /// Retrieves Sprint Progress report as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/projects/{projectId}/sprints/{sprintId}/sprint-progress-report/pdf
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("projects/{projectId}/sprints/{sprintId}/sprint-progress-report/pdf")]
@@ -241,26 +241,26 @@ public sealed class ReportsController : ApiBaseController
     [HttpGet("{projectId}/velocity-report")]
     public async Task<ActionResult<VelocityReportDto>> GetVelocityReport(string projectId)
     {
-        var query = new GetProjectVelocityReport.Query 
+        var query = new GetProjectVelocityReport.Query
         {
-            ProjectId = projectId 
+            ProjectId = projectId
         };
 
         return HandleResult(await Mediator.Send(query));
     }
-    
+
     /// <summary>
-     /// Retrieves Project Velocity report as a PDF.
-     /// </summary>
-     /// <remarks>
-     /// Sample request:
-     ///
-     ///     GET /api/reports/{projectId}/velocity-report/pdf
-     ///
-     /// </remarks>
-     /// <response code="200">Returns the PDF report.</response>
-     /// <response code="401">If the user is not authenticated.</response>
-     /// <response code="404">If entities not found.</response>
+    /// Retrieves Project Velocity report as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/velocity-report/pdf
+    ///
+    /// </remarks>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/velocity-report/pdf")]
@@ -270,6 +270,372 @@ public sealed class ReportsController : ApiBaseController
         {
             ProjectId = projectId
         };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the bug severity distribution report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/bug-severity-distribution-report?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This report groups project bugs by severity using the work item priority values:
+    /// Low, Medium, High, and Critical.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the bug severity distribution report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/bug-severity-distribution-report")]
+    public async Task<ActionResult<BugSeverityDistributionReportDto>> GetBugSeverityDistributionReport(
+        string projectId,
+        [FromQuery] GetBugSeverityDistributionReportRequest request)
+    {
+        var query = Mapper.Map<GetBugSeverityDistributionReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the bug severity distribution report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/bug-severity-distribution-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This PDF report visualizes bug counts and percentages by severity.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/bug-severity-distribution-report/pdf")]
+    public async Task<IActionResult> GetBugSeverityDistributionReportPdf(
+        string projectId,
+        [FromQuery] GetBugSeverityDistributionReportRequest request)
+    {
+        var query = Mapper.Map<GetBugSeverityDistributionReportPdf.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the developer productivity report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/developer-productivity-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
+    ///
+    /// This report summarizes developer workload, completed work items, completed effort points,
+    /// blocked items, overdue items, completion percentage, and average cycle time.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range and optional team filter query parameters.</param>
+    /// <response code="200">Returns the developer productivity report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project or team does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/developer-productivity-report")]
+    public async Task<ActionResult<DeveloperProductivityReportDto>> GetDeveloperProductivityReport(
+        string projectId,
+        [FromQuery] GetDeveloperProductivityReportRequest request)
+    {
+        var query = Mapper.Map<GetDeveloperProductivityReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the developer productivity report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/developer-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
+    ///
+    /// This PDF report ranks developers by completed effort and highlights delivery risks.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range and optional team filter query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project or team does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/developer-productivity-report/pdf")]
+    public async Task<IActionResult> GetDeveloperProductivityReportPdf(
+        string projectId,
+        [FromQuery] GetDeveloperProductivityReportRequest request)
+    {
+        var query = Mapper.Map<GetDeveloperProductivityReportPdf.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the teams productivity report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/teams-productivity-report?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This report summarizes team-level completed work items, completed effort points,
+    /// completion percentage, blocked items, overdue items, and average cycle time.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the teams productivity report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/teams-productivity-report")]
+    public async Task<ActionResult<TeamsProductivityReportDto>> GetTeamsProductivityReport(
+        string projectId,
+        [FromQuery] GetTeamsProductivityReportRequest request)
+    {
+        var query = Mapper.Map<GetTeamsProductivityReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the teams productivity report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/teams-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This PDF report ranks teams by completed effort and highlights team workload risks.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/teams-productivity-report/pdf")]
+    public async Task<IActionResult> GetTeamsProductivityReportPdf(
+        string projectId,
+        [FromQuery] GetTeamsProductivityReportRequest request)
+    {
+        var query = Mapper.Map<GetTeamsProductivityReportPdf.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the blocked work items report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/blocked-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///
+    /// This report lists currently blocked work items and groups them by priority and status.
+    /// Optional filters can narrow the result by team or assigned user.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
+    /// <response code="200">Returns the blocked work items report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project, team, or user does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/blocked-work-items-report")]
+    public async Task<ActionResult<BlockedWorkItemsReportDto>> GetBlockedWorkItemsReport(
+        string projectId,
+        [FromQuery] GetBlockedWorkItemsReportRequest request)
+    {
+        var query = Mapper.Map<GetBlockedWorkItemsReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the blocked work items report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/blocked-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///
+    /// This PDF report visualizes blockers by priority, status, and blocked age.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project, team, or user does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/blocked-work-items-report/pdf")]
+    public async Task<IActionResult> GetBlockedWorkItemsReportPdf(
+        string projectId,
+        [FromQuery] GetBlockedWorkItemsReportRequest request)
+    {
+        var query = Mapper.Map<GetBlockedWorkItemsReportPdf.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the overdue work items report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/overdue-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///
+    /// This report lists work items whose end date has passed and are not done.
+    /// Optional filters can narrow the result by team or assigned user.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
+    /// <response code="200">Returns the overdue work items report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project, team, or user does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/overdue-work-items-report")]
+    public async Task<ActionResult<OverdueWorkItemsReportDto>> GetOverdueWorkItemsReport(
+        string projectId,
+        [FromQuery] GetOverdueWorkItemsReportRequest request)
+    {
+        var query = Mapper.Map<GetOverdueWorkItemsReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the overdue work items report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/overdue-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///
+    /// This PDF report visualizes overdue work items by priority, status, and days overdue.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project, team, or user does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/overdue-work-items-report/pdf")]
+    public async Task<IActionResult> GetOverdueWorkItemsReportPdf(
+        string projectId,
+        [FromQuery] GetOverdueWorkItemsReportRequest request)
+    {
+        var query = Mapper.Map<GetOverdueWorkItemsReportPdf.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the project health report for a project.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/project-health-report?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This report calculates a health score based on completion percentage, blocked work,
+    /// overdue work, critical bugs, and high-priority bugs.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the project health report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/project-health-report")]
+    public async Task<ActionResult<ProjectHealthReportDto>> GetProjectHealthReport(
+        string projectId,
+        [FromQuery] GetProjectHealthReportRequest request)
+    {
+        var query = Mapper.Map<GetProjectHealthReport.Query>(request);
+        query.ProjectId = projectId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the project health report for a project as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/reports/{projectId}/project-health-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///
+    /// This PDF report visualizes project health score, health status, and risk factors.
+    /// </remarks>
+    /// <param name="projectId">The project id.</param>
+    /// <param name="request">The report date range query parameters.</param>
+    /// <response code="200">Returns the PDF report.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the project does not exist.</response>
+    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Project_Access)]
+    [HttpGet("{projectId}/project-health-report/pdf")]
+    public async Task<IActionResult> GetProjectHealthReportPdf(
+        string projectId,
+        [FromQuery] GetProjectHealthReportRequest request)
+    {
+        var query = Mapper.Map<GetProjectHealthReportPdf.Query>(request);
+        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }

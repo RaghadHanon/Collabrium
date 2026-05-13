@@ -1,9 +1,7 @@
-﻿using API.Contracts.Users;
-using API.Contracts.WorkItems.Comments;
-using Domain.Enums;
+﻿using API.Contracts.WorkItems.CodeLinkes;
 using FluentValidation;
 
-namespace API.Validators.WorkItems.Comments;
+namespace API.Validators.WorkItems.CodeLinkes;
 
 public class UpdateWorkItemCodeLinkRequestValidator : AbstractValidator<UpdateWorkItemCodeLinkRequest>
 {
@@ -22,7 +20,7 @@ public class UpdateWorkItemCodeLinkRequestValidator : AbstractValidator<UpdateWo
         RuleFor(x => x)
             .Must(HasAnyField)
             .WithMessage("At least one field must be provided to update the code link.");
-        }
+    }
 
     private static bool HasAnyField(UpdateWorkItemCodeLinkRequest r)
     {

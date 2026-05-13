@@ -9,25 +9,25 @@ public static class ProjectMapper
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-       return Project.Rehydrate(
-            id: entity.Id,
-            createdAt: entity.CreatedAt,
-            updatedAt: entity.UpdatedAt,
+        return Project.Rehydrate(
+             id: entity.Id,
+             createdAt: entity.CreatedAt,
+             updatedAt: entity.UpdatedAt,
 
-            name: entity.Name,
-            key: entity.Key,
-            lastWorkItemNumber: entity.LastWorkItemNumber,
-            lastSprintNumber: entity.LastSprintNumber,
-            description: entity.Description,
+             name: entity.Name,
+             key: entity.Key,
+             lastWorkItemNumber: entity.LastWorkItemNumber,
+             lastSprintNumber: entity.LastSprintNumber,
+             description: entity.Description,
 
-            status: entity.Status,
-            startDate: entity.StartDate,
-            endDate: entity.EndDate,
+             status: entity.Status,
+             startDate: entity.StartDate,
+             endDate: entity.EndDate,
 
-            createdByUserId: entity.CreatedByUserId,
-            teamId: entity.TeamId,
-            tenantId: entity.TenantId
-        );
+             createdByUserId: entity.CreatedByUserId,
+             teamId: entity.TeamId,
+             tenantId: entity.TenantId
+         );
     }
 
     public static ProjectEntity ToEntity(Project domain)

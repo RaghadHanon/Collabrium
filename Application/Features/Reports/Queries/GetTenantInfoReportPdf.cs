@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Reports.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Reports;

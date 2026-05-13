@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -28,7 +27,7 @@ public class GetWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var dto = await workItemsReadModel.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);

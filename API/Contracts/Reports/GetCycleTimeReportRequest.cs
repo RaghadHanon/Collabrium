@@ -1,8 +1,6 @@
 ﻿namespace API.Contracts.Reports;
 
-public class GetCycleTimeReportRequest
+public class GetCycleTimeReportRequest : ReportDateRangeRequest
 {
     public string? SprintId { get; set; }
-    public DateTime? From { get; set; } = DateTime.UtcNow.AddDays(-14);
-    public DateTime? To { get; set; } = DateTime.UtcNow;
 }

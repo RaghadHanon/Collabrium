@@ -2,14 +2,13 @@
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.ReadModels.Profiles
-{
-    public sealed class SubTopicsReadProfile : Profile
-    {
-        public SubTopicsReadProfile()
-        {
-            CreateMap<SubTopicEntity, SubTopicDto>();
+namespace Infrastructure.Persistence.ReadModels.Profiles;
 
-        }
+public sealed class SubTopicsReadProfile : Profile
+{
+    public SubTopicsReadProfile()
+    {
+        CreateMap<SubTopicEntity, SubTopicDto>();
+
     }
 }

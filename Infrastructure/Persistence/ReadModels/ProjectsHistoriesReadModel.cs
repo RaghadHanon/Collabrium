@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.ProjectHistories.DTOs;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;

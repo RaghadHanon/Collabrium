@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Reports.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Reports;
@@ -44,7 +43,7 @@ public class GetSprintProgressReportPdf
                 return Result<FileContentResult>.Failure("Sprint is not found.", HttpStatusCode.BadRequest);
             }
 
-            SprintProgressDto report = await reportsReadModel.GenerateSprintProgressReport(
+            var report = await reportsReadModel.GenerateSprintProgressReport(
                 tenantId,
                 request.ProjectId,
                 request.SprintId);

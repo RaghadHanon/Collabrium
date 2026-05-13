@@ -4,7 +4,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 
 namespace Infrastructure.SignalR.Hubs;
 
@@ -162,15 +161,18 @@ public sealed class CommentHub(
             throw new HubException("Invalid workItemId.");
 
         var tenantId = GetTenantId();
-        if (string.IsNullOrWhiteSpace(tenantId))
-            throw new HubException("Tenant Id is missing from token.");
-
-        return (tenantId, BuildCommentsGroup(tenantId, projectId, workItemId));
+        return string.IsNullOrWhiteSpace(tenantId)
+            ? throw new HubException("Tenant Id is missing from token.")
+            : ((string tenantId, string commentsGroup)) (tenantId, BuildCommentsGroup(tenantId, projectId, workItemId));
     }
 
     private string? GetTenantId()
-        => Context.User?.FindFirst("tenantId")?.Value;
+    {
+        return Context.User?.FindFirst("tenantId")?.Value;
+    }
 
     private static string BuildCommentsGroup(string tenantId, string projectId, string workItemId)
-        => $"tenants:{tenantId}:projects:{projectId}:workitems:{workItemId}:comments";
+    {
+        return $"tenants:{tenantId}:projects:{projectId}:workitems:{workItemId}:comments";
+    }
 }

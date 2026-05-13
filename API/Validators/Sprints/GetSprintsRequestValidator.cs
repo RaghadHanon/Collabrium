@@ -1,5 +1,4 @@
 ﻿using API.Contracts.Sprints;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.Sprints;

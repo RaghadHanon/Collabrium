@@ -32,10 +32,7 @@ public class NullableSpacedEnumConverter<T> : JsonConverter<T?> where T : struct
 
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-            return null;
-
-        return _converter.Read(ref reader, typeof(T), options);
+        return reader.TokenType == JsonTokenType.Null ? null : _converter.Read(ref reader, typeof(T), options);
     }
 
     public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)

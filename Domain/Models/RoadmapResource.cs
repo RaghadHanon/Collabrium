@@ -1,86 +1,85 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
-namespace Domain.Models
+namespace Domain.Models;
+
+public sealed class RoadmapResource : Entity
 {
-    public sealed class RoadmapResource : Entity
+    public string SubTopicId { get; private set; } = null!;
+
+    public string Title { get; private set; } = null!;
+    public string Url { get; private set; } = null!;
+    public RoadmapResourceType Type { get; private set; }
+
+    public int Order { get; private set; }
+
+    private RoadmapResource() { } // EF
+
+    public RoadmapResource(
+        string subTopicId,
+        string title,
+        string url,
+        RoadmapResourceType type,
+        int order)
     {
-        public string SubTopicId { get; private set; } = null!;
+        SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
+        Type = type;
 
-        public string Title { get; private set; } = null!;
-        public string Url { get; private set; } = null!;
-        public RoadmapResourceType Type { get; private set; }
+        SetOrder(order);
+        Touch();
+    }
 
-        public int Order { get; private set; }
+    public RoadmapResource(
+        string id,
+        string subTopicId,
+        string title,
+        string url,
+        RoadmapResourceType type,
+        int order)
+        : base(id)
+    {
+        SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
+        Type = type;
 
-        private RoadmapResource() { } // EF
+        SetOrder(order);
+    }
 
-        public RoadmapResource(
-            string subTopicId,
-            string title,
-            string url,
-            RoadmapResourceType type,
-            int order)
-        {
-            SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
-            Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-            Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
-            Type = type;
+    public static RoadmapResource Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string subTopicId,
+        string title,
+        string url,
+        RoadmapResourceType type,
+        int order)
+    {
+        var r = new RoadmapResource(id, subTopicId, title, url, type, order);
+        r.SetTimestamps(createdAt, updatedAt);
+        return r;
+    }
 
-            SetOrder(order);
-            Touch();
-        }
+    public void UpdateDetails(string title, string url, RoadmapResourceType type)
+    {
+        Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
+        Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
+        Type = type;
+        Touch();
+    }
 
-        public RoadmapResource(
-            string id,
-            string subTopicId,
-            string title,
-            string url,
-            RoadmapResourceType type,
-            int order)
-            : base(id)
-        {
-            SubTopicId = Guard.NotNullOrWhiteSpace(subTopicId, nameof(subTopicId)).Trim();
-            Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-            Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
-            Type = type;
+    public void ChangeOrder(int order)
+    {
+        SetOrder(order);
+        Touch();
+    }
 
-            SetOrder(order);
-        }
-
-        public static RoadmapResource Rehydrate(
-            string id,
-            DateTime createdAt,
-            DateTime? updatedAt,
-            string subTopicId,
-            string title,
-            string url,
-            RoadmapResourceType type,
-            int order)
-        {
-            var r = new RoadmapResource(id, subTopicId, title, url, type, order);
-            r.SetTimestamps(createdAt, updatedAt);
-            return r;
-        }
-
-        public void UpdateDetails(string title, string url, RoadmapResourceType type)
-        {
-            Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-            Url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
-            Type = type;
-            Touch();
-        }
-
-        public void ChangeOrder(int order)
-        {
-            SetOrder(order);
-            Touch();
-        }
-
-        private void SetOrder(int order)
-        {
-            Guard.Against(order < 1, "Order must be >= 1.");
-            Order = order;
-        }
+    private void SetOrder(int order)
+    {
+        Guard.Against(order < 1, "Order must be >= 1.");
+        Order = order;
     }
 }

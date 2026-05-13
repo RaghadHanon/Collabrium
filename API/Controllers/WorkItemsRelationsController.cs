@@ -155,10 +155,11 @@ public sealed class WorkItemsRelationsController : ApiBaseController
       string workItemId,
       string relationId)
     {
-        var command = new DeleteWorkItemRelation.Command{
+        var command = new DeleteWorkItemRelation.Command
+        {
             ProjectId = projectId,
             SourceWorkItemId = workItemId,
-            RelationId = relationId 
+            RelationId = relationId
         };
 
         return HandleResult(await Mediator.Send(command));

@@ -24,7 +24,7 @@ public sealed class IdentityService : IIdentityService
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IEmailService _emailService;
     private readonly IdentitySettings _identitySettings;
-    private readonly IEmailTemplateFactory _emailTemplateFactory; 
+    private readonly IEmailTemplateFactory _emailTemplateFactory;
     private readonly AppDbContext _dbContext;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
 

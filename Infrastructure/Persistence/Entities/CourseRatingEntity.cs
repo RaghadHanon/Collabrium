@@ -1,15 +1,14 @@
-﻿namespace Infrastructure.Persistence.Entities
+﻿namespace Infrastructure.Persistence.Entities;
+
+public sealed class CourseRatingEntity : DbEntity
 {
-    public sealed class CourseRatingEntity : DbEntity
-    {
-        public string TenantId { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public string CourseId { get; set; } = null!;
+    public string TenantId { get; set; } = null!;
+    public string UserId { get; set; } = null!;
+    public string CourseId { get; set; } = null!;
 
-        public int Rating { get; set; }
+    public int Rating { get; set; }
 
-        public TenantEntity Tenant { get; set; } = null!;
-        public ApplicationUserEntity User { get; set; } = null!;
-        public CourseEntity Course { get; set; } = null!;
-    }
+    public TenantEntity Tenant { get; set; } = null!;
+    public ApplicationUserEntity User { get; set; } = null!;
+    public CourseEntity Course { get; set; } = null!;
 }

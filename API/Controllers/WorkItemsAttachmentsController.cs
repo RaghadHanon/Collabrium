@@ -1,5 +1,4 @@
 ﻿using API.Common.Attributes;
-using API.Contracts.Tenants;
 using API.Contracts.WorkItems.Attachments;
 using API.SetupProgram;
 using Application.Features.WorkItems.Commands.Attachments;

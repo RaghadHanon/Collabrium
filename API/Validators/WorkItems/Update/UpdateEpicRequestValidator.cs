@@ -7,7 +7,7 @@ public sealed class UpdateEpicRequestValidator : AbstractValidator<UpdateEpicReq
 {
     public UpdateEpicRequestValidator()
     {
-        Include(new UpdateWorkItemRequestValidator()); 
+        Include(new UpdateWorkItemRequestValidator());
 
         RuleFor(x => x)
             .Must(HasAnyField)

@@ -2,13 +2,12 @@
 using AutoMapper;
 using Infrastructure.Persistence.Entities;
 
-namespace Infrastructure.Persistence.ReadModels.Profiles
+namespace Infrastructure.Persistence.ReadModels.Profiles;
+
+public sealed class RoadmapResourcesReadProfile : Profile
 {
-    public sealed class RoadmapResourcesReadProfile : Profile
+    public RoadmapResourcesReadProfile()
     {
-        public RoadmapResourcesReadProfile()
-        {
-            CreateMap<ResourceEntity, ResourceDto>();
-        }
+        CreateMap<ResourceEntity, ResourceDto>();
     }
 }

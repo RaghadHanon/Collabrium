@@ -29,7 +29,10 @@ public class VelocityReportDocument : IDocument
         _logoBytes = logoBytes;
     }
 
-    public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
+    public DocumentMetadata GetMetadata()
+    {
+        return DocumentMetadata.Default;
+    }
 
     public void Compose(IDocumentContainer container)
     {
@@ -263,7 +266,7 @@ public class VelocityReportDocument : IDocument
                     header.Cell().Background(ReportPalette.Soft).Padding(10).AlignRight().Text("Velocity %").Style(ReportTextStyles.TableHeader);
                 });
 
-                for (int i = 0; i < ordered.Count; i++)
+                for (var i = 0; i < ordered.Count; i++)
                 {
                     var sprint = ordered[i];
                     var bg = i % 2 == 0 ? ReportPalette.White : ReportPalette.Soft;

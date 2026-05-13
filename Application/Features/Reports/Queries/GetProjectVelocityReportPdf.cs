@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Reports.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Reports;
@@ -41,7 +40,7 @@ public class GetProjectVelocityReportPdf
                     HttpStatusCode.BadRequest);
             }
 
-            VelocityReportDto report = await reportsReadModel.GenerateVelocityReport(
+            var report = await reportsReadModel.GenerateVelocityReport(
                 tenantId,
                 request.ProjectId);
 

@@ -1,6 +1,5 @@
-﻿namespace Application.Features.UserCourses.DTOs
+﻿namespace Application.Features.UserCourses.DTOs;
+
+public sealed class UserCourseDetailsDto : UserCourseDto
 {
-    public sealed class UserCourseDetailsDto : UserCourseDto
-    {
-    }
 }

@@ -1,6 +1,5 @@
 ﻿using Application.Features.Reports.DTOs;
 using Application.Interfaces.Reports;
-using Infrastructure.Reports.Common;
 using Infrastructure.Reports.Common.Charts;
 using ScottPlot;
 using ScottPlot.Statistics;
@@ -10,6 +9,7 @@ namespace Infrastructure.Reports.CycleTime;
 
 public class CycleTimeChartRenderer : ICycleTimeChartRenderer
 {
+    [Obsolete]
     public byte[] RenderMainChart(CycleTimeReport data)
     {
         if (data.Items == null || data.Items.Count == 0)
@@ -28,9 +28,9 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
             .OrderByDescending(x => x.CycleTimeDays)
             .ToList();
 
-        double[] xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
-        double[] ys = ordered.Select(x => (double) x.CycleTimeDays).ToArray();
-        string[] labels = ordered.Select(x => x.Code).ToArray();
+        var xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
+        var ys = ordered.Select(x => (double) x.CycleTimeDays).ToArray();
+        var labels = ordered.Select(x => x.Code).ToArray();
 
         var bars = plt.Add.Bars(xs, ys);
 
@@ -40,10 +40,10 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
             bar.LineStyle.Width = 0;
         }
 
-        double maxY = ys.Max();
-        double offset = Math.Max(0.5, maxY * 0.03);
+        var maxY = ys.Max();
+        var offset = Math.Max(0.5, maxY * 0.03);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N0}d", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
@@ -68,6 +68,7 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
         return plt.GetImageBytes(1400, 700);
     }
 
+    [Obsolete]
     public byte[] RenderSecondaryChart(CycleTimeReport data)
     {
         var values = GetValidValues(data);
@@ -87,8 +88,8 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
         BaseChartFactory.ApplyTitle(plt, "Distribution", 17);
         BaseChartFactory.ApplyAxisLabels(plt, "Cycle Time (Days)", "Items");
 
-        double min = values.Min();
-        double max = values.Max();
+        var min = values.Min();
+        var max = values.Max();
 
         if (min == max)
         {
@@ -111,7 +112,7 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
             return plt.GetImageBytes(900, 450);
         }
 
-        int binCount = Math.Min(10, Math.Max(5, values.Length));
+        var binCount = Math.Min(10, Math.Max(5, values.Length));
         var hist = Histogram.WithBinCount(binCount, values);
         var histogramBars = plt.Add.Bars(hist.Bins, hist.Counts);
 
@@ -127,6 +128,7 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
         return plt.GetImageBytes(900, 450);
     }
 
+    [Obsolete]
     public byte[] RenderSummaryChart(CycleTimeReport data)
     {
         if (data.Items == null || data.Items.Count == 0)
@@ -161,15 +163,15 @@ public class CycleTimeChartRenderer : ICycleTimeChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
         }
 
-        double offset = Math.Max(0.4, ys.Max() * 0.04);
+        var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N1}d", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;

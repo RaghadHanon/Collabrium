@@ -1,9 +1,8 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum CourseLanguage
 {
-    public enum CourseLanguage
-    {
-        Arabic = 0,
-        English = 1,
-        Other = 2
-    }
+    Arabic = 0,
+    English = 1,
+    Other = 2
 }

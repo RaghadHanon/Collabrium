@@ -1,20 +1,19 @@
 ﻿using Application.Interfaces.Services;
 
-namespace Application.Common
+namespace Application.Common;
+
+public static class RoadmapAccessHelper
 {
-    public static class RoadmapAccessHelper
+    public static async Task<bool> CanCurrentUserViewHiddenAsync(
+        ICurrentUserAccessor currentUserAccessor,
+        CancellationToken cancellationToken = default)
     {
-        public static async Task<bool> CanCurrentUserViewHiddenAsync(
-            ICurrentUserAccessor currentUserAccessor,
-            CancellationToken cancellationToken = default)
-        {
-            var userId = currentUserAccessor.GetUserId();
-            if (string.IsNullOrWhiteSpace(userId))
-                return false;
+        var userId = currentUserAccessor.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
 
-            var role = await currentUserAccessor.GetUserRole(userId, cancellationToken);
+        var role = await currentUserAccessor.GetUserRole(userId, cancellationToken);
 
-            return RoadmapVisibilityRules.CanViewHidden(role);
-        }
+        return RoadmapVisibilityRules.CanViewHidden(role);
     }
 }

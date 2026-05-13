@@ -1,15 +1,14 @@
 ﻿using API.Contracts.CourseRatings;
 using FluentValidation;
 
-namespace API.Validators.CourseRatings
+namespace API.Validators.CourseRatings;
+
+public sealed class RateCourseRequestValidator : AbstractValidator<RateCourseRequest>
 {
-    public sealed class RateCourseRequestValidator : AbstractValidator<RateCourseRequest>
+    public RateCourseRequestValidator()
     {
-        public RateCourseRequestValidator()
-        {
-            RuleFor(x => x.Rating)
-                .InclusiveBetween(1, 5)
-                .WithMessage("Rating must be between 1 and 5.");
-        }
+        RuleFor(x => x.Rating)
+            .InclusiveBetween(1, 5)
+            .WithMessage("Rating must be between 1 and 5.");
     }
 }

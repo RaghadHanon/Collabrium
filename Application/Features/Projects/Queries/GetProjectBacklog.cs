@@ -25,7 +25,7 @@ public class GetProjectBacklog
         public string? Code { get; set; }
         public DateTime? CreatedAfter { get; init; }
         public DateTime? CreatedBefore { get; init; }
-        public int PageSize { get; init; } 
+        public int PageSize { get; init; }
         public DateTime? Cursor { get; init; }
     }
 

@@ -66,11 +66,10 @@ public class TenantRepository : ITenantRepository
 
     public async Task<bool> IsExistAsync(string tenantId, CancellationToken cancellationToken = default)
     {
-        if (!TryNormalize(tenantId, out var id))
-            return false;
-
-        return await _dbContext.Tenants
-            .AnyAsync(t => t.Id ==  tenantId, cancellationToken);   
+        return !TryNormalize(tenantId, out var id)
+            ? false
+            : await _dbContext.Tenants
+            .AnyAsync(t => t.Id == tenantId, cancellationToken);
     }
 
     public async Task<Tenant?> GetByDomainAsync(string domain, CancellationToken cancellationToken = default)

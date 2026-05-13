@@ -6,6 +6,7 @@ using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
+using Infrastructure.FilesStorage;
 using Infrastructure.FilesStorage.Factory;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
@@ -13,16 +14,20 @@ using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.ReadModels;
 using Infrastructure.Persistence.Repositories;
 using Infrastructure.Persistence.Seeders;
-using Infrastructure.Reports;
+using Infrastructure.Reports.BlockedWorkItems;
+using Infrastructure.Reports.BugSeverityDistribution;
 using Infrastructure.Reports.Common;
 using Infrastructure.Reports.CycleTime;
+using Infrastructure.Reports.DeveloperProductivity;
+using Infrastructure.Reports.OverdueWorkItems;
+using Infrastructure.Reports.ProjectHealth;
 using Infrastructure.Reports.SprintProgress;
+using Infrastructure.Reports.TeamsProductivity;
 using Infrastructure.Reports.TenantInfo;
 using Infrastructure.Reports.Velocity;
 using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.SignalR;
-using Infrastructure.Storage;
 using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -68,18 +73,39 @@ public static class DependencyInjection
 
         return services;
     }
-
     private static void AddReportsServices(IServiceCollection services)
     {
         services.AddSingleton<IReportBrandingProvider, ReportBrandingProvider>();
+
         services.AddScoped<ITenantInfoChartRenderer, TenantInfoChartRenderer>();
         services.AddScoped<ITenantInfoPdfRenderer, TenantInfoPdfRenderer>();
+
         services.AddScoped<ICycleTimeChartRenderer, CycleTimeChartRenderer>();
         services.AddScoped<ICycleTimePdfRenderer, CycleTimePdfRenderer>();
+
         services.AddScoped<IVelocityChartRenderer, VelocityChartRenderer>();
         services.AddScoped<IVelocityPdfRenderer, VelocityPdfRenderer>();
+
         services.AddScoped<ISprintProgressChartRenderer, SprintProgressChartRenderer>();
         services.AddScoped<ISprintProgressPdfRenderer, SprintProgressPdfRenderer>();
+
+        services.AddScoped<IBugSeverityDistributionChartRenderer, BugSeverityDistributionChartRenderer>();
+        services.AddScoped<IBugSeverityDistributionPdfRenderer, BugSeverityDistributionPdfRenderer>();
+
+        services.AddScoped<IDeveloperProductivityChartRenderer, DeveloperProductivityChartRenderer>();
+        services.AddScoped<IDeveloperProductivityPdfRenderer, DeveloperProductivityPdfRenderer>();
+
+        services.AddScoped<ITeamsProductivityChartRenderer, TeamsProductivityChartRenderer>();
+        services.AddScoped<ITeamsProductivityPdfRenderer, TeamsProductivityPdfRenderer>();
+
+        services.AddScoped<IBlockedWorkItemsChartRenderer, BlockedWorkItemsChartRenderer>();
+        services.AddScoped<IBlockedWorkItemsPdfRenderer, BlockedWorkItemsPdfRenderer>();
+
+        services.AddScoped<IOverdueWorkItemsChartRenderer, OverdueWorkItemsChartRenderer>();
+        services.AddScoped<IOverdueWorkItemsPdfRenderer, OverdueWorkItemsPdfRenderer>();
+
+        services.AddScoped<IProjectHealthChartRenderer, ProjectHealthChartRenderer>();
+        services.AddScoped<IProjectHealthPdfRenderer, ProjectHealthPdfRenderer>();
     }
 
     private static void AddStorageServices(IServiceCollection services, IConfiguration configuration)

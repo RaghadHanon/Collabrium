@@ -29,7 +29,10 @@ public class TenantInfoReportDocument : IDocument
         _logoBytes = logoBytes;
     }
 
-    public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
+    public DocumentMetadata GetMetadata()
+    {
+        return DocumentMetadata.Default;
+    }
 
     public void Compose(IDocumentContainer container)
     {

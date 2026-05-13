@@ -40,6 +40,15 @@ namespace Application.Features.Posts.Commands
                 var post = await postsRepository.GetByIdAsync(tenantId, request.PostId, cancellationToken);
                 if (post is null)
                     return Result<PostDto>.Failure("Post not found.", HttpStatusCode.NotFound);
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<PostDto>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
+
+                if (!string.Equals(post.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<PostDto>.Failure(
+                        "You can upload images only to your own post.",
+                        HttpStatusCode.Forbidden);
 
                 if (request.Images is null || request.Images.Count == 0)
                     return Result<PostDto>.Failure("No images uploaded.", HttpStatusCode.BadRequest);

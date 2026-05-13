@@ -245,5 +245,18 @@ public sealed class MetadataController : ApiBaseController
         return HandleResult(await Mediator.Send(query));
 
     }
+    //PostType
+    [IgnoreTenantContext]
+    [HttpGet("Post-Type")]
+    public async Task<ActionResult> GetPostTypeMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.PostType,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
 
 }

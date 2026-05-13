@@ -31,7 +31,11 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                         s.CreatedByUser.ProfileImage != null
                             ? s.CreatedByUser.ProfileImage.Url
                             : null))
-
+                .ForMember(d => d.PinnedByUserName,
+                    o => o.MapFrom(s =>
+                        s.PinnedByUser != null
+                            ? s.PinnedByUser.FullName ?? s.PinnedByUser.UserName
+                            : null))
                 .ForMember(d => d.Tags,
                     o => o.MapFrom(s => s.Tags))
 

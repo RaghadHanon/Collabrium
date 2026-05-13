@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using System.Net;
 
@@ -45,18 +46,57 @@ namespace Application.Features.Posts.Commands
                 if (!postExists)
                     return Result<Unit>.Failure("Post not found.", HttpStatusCode.NotFound);
 
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<Unit>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
+
+                var post = await postsRepository.GetByIdAsync(
+                    tenantId,
+                    request.PostId,
+                    cancellationToken);
+
+                if (post is null)
+                    return Result<Unit>.Failure(
+                        "Post not found.",
+                        HttpStatusCode.NotFound);
+
                 var comment = await postCommentsRepository.GetByIdAsync(
                     request.PostId,
                     request.CommentId,
                     cancellationToken);
 
                 if (comment is null)
-                    return Result<Unit>.Failure("Comment not found.", HttpStatusCode.NotFound);
-
-                if (!string.Equals(comment.CreatedByUserId, currentUserId, StringComparison.Ordinal))
                     return Result<Unit>.Failure(
-                        "You can delete only your own comment.",
+                        "Comment not found.",
+                        HttpStatusCode.NotFound);
+
+                var isCommentOwner = string.Equals(
+                    comment.CreatedByUserId,
+                    currentUserId,
+                    StringComparison.Ordinal);
+
+                var isPostOwner = string.Equals(
+                    post.CreatedByUserId,
+                    currentUserId,
+                    StringComparison.Ordinal);
+
+                var role = await currentUserAccessor.GetUserRole(
+                    currentUserId,
+                    cancellationToken);
+
+                var isManager =
+                    role is UserRole.TenantAdmin
+                        or UserRole.CEO
+                        or UserRole.HR
+                        or UserRole.IT;
+
+                if (!isCommentOwner && !isPostOwner && !isManager)
+                {
+                    return Result<Unit>.Failure(
+                        "You are not allowed to delete this comment.",
                         HttpStatusCode.Forbidden);
+                }
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

@@ -171,9 +171,9 @@ public sealed class ReportsController : ApiBaseController
     [HttpGet("{projectId}/velocity-report")]
     public async Task<ActionResult<VelocityReportDto>> GetVelocityReport(string projectId)
     {
-        var query = new GetProjectVelocityReport.Query 
+        var query = new GetProjectVelocityReport.Query
         {
-            ProjectId = projectId 
+            ProjectId = projectId
         };
 
         return HandleResult(await Mediator.Send(query));

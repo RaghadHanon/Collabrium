@@ -34,12 +34,16 @@ namespace Application.Features.Posts.Commands
                 var tenantId = tenantContext.CurrentTenant?.Id;
 
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<PostCommentDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                    return Result<PostCommentDto>.Failure(
+                        "Tenant not found.",
+                        HttpStatusCode.NotFound);
 
                 var currentUserId = currentUserAccessor.GetUserId();
 
                 if (string.IsNullOrWhiteSpace(currentUserId))
-                    return Result<PostCommentDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+                    return Result<PostCommentDto>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
 
                 var postExists = await postsRepository.ExistsAsync(
                     tenantId,
@@ -47,7 +51,9 @@ namespace Application.Features.Posts.Commands
                     cancellationToken);
 
                 if (!postExists)
-                    return Result<PostCommentDto>.Failure("Post not found.", HttpStatusCode.NotFound);
+                    return Result<PostCommentDto>.Failure(
+                        "Post not found.",
+                        HttpStatusCode.NotFound);
 
                 var comment = await postCommentsRepository.GetByIdAsync(
                     request.PostId,
@@ -55,12 +61,19 @@ namespace Application.Features.Posts.Commands
                     cancellationToken);
 
                 if (comment is null)
-                    return Result<PostCommentDto>.Failure("Comment not found.", HttpStatusCode.NotFound);
+                    return Result<PostCommentDto>.Failure(
+                        "Comment not found.",
+                        HttpStatusCode.NotFound);
 
-                if (!string.Equals(comment.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                if (!string.Equals(
+                        comment.CreatedByUserId,
+                        currentUserId,
+                        StringComparison.Ordinal))
+                {
                     return Result<PostCommentDto>.Failure(
                         "You can update only your own comment.",
                         HttpStatusCode.Forbidden);
+                }
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
@@ -78,9 +91,12 @@ namespace Application.Features.Posts.Commands
                     cancellationToken);
 
                 return dto is null
-                    ? Result<PostCommentDto>.Failure("Comment updated but could not be loaded.", HttpStatusCode.InternalServerError)
+                    ? Result<PostCommentDto>.Failure(
+                        "Comment updated but could not be loaded.",
+                        HttpStatusCode.InternalServerError)
                     : Result<PostCommentDto>.Success(dto, HttpStatusCode.OK);
             }
         }
     }
 }
+

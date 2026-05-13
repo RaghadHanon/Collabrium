@@ -24,30 +24,54 @@ namespace Application.Features.Posts.Commands
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<PostDto>>
         {
-            public async Task<Result<PostDto>> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<PostDto>> Handle(
+                Command request,
+                CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
+
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<PostDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                    return Result<PostDto>.Failure(
+                        "Tenant not found.",
+                        HttpStatusCode.NotFound);
 
                 var currentUserId = currentUserAccessor.GetUserId();
-                if (string.IsNullOrWhiteSpace(currentUserId))
-                    return Result<PostDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
-                var postExists = await postsRepository.ExistsAsync(tenantId, request.PostId, cancellationToken);
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<PostDto>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
+
+                var postExists = await postsRepository.ExistsAsync(
+                    tenantId,
+                    request.PostId,
+                    cancellationToken);
+
                 if (!postExists)
-                    return Result<PostDto>.Failure("Post not found.", HttpStatusCode.NotFound);
+                    return Result<PostDto>.Failure(
+                        "Post not found.",
+                        HttpStatusCode.NotFound);
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    await postsRepository.RemoveLikeAsync(request.PostId, currentUserId, ct);
+                    await postsRepository.RemoveLikeAsync(
+                        request.PostId,
+                        currentUserId,
+                        ct);
+
                     await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
 
-                var dto = await postsReadModel.GetByIdAsync(tenantId, request.PostId, currentUserId, cancellationToken);
+                var dto = await postsReadModel.GetByIdAsync(
+                    tenantId,
+                    request.PostId,
+                    currentUserId,
+                    cancellationToken);
 
                 return dto is null
-                    ? Result<PostDto>.Failure("Post unliked but could not be loaded.", HttpStatusCode.InternalServerError)
+                    ? Result<PostDto>.Failure(
+                        "Post unliked but could not be loaded.",
+                        HttpStatusCode.InternalServerError)
                     : Result<PostDto>.Success(dto, HttpStatusCode.OK);
             }
         }

@@ -26,6 +26,7 @@ namespace API.Controllers
         /// <response code="200">Posts retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpGet]
         public async Task<ActionResult<PagedList<PostDto, DateTime?>>> GetPosts(
             [FromQuery] GetPostsRequest request)
@@ -47,6 +48,7 @@ namespace API.Controllers
         /// <response code="200">Post retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpGet("{postId}")]
         public async Task<ActionResult<PostDto>> GetPostById(string postId)
         {
@@ -70,6 +72,7 @@ namespace API.Controllers
         /// <response code="200">Post details retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpGet("{postId}/details")]
         public async Task<ActionResult<PostDetailsDto>> GetPostDetails(string postId)
         {
@@ -101,6 +104,7 @@ namespace API.Controllers
         /// <response code="400">If request data is invalid.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPost]
         public async Task<ActionResult<PostDto>> CreatePost(CreatePostRequest request)
         {
@@ -130,7 +134,9 @@ namespace API.Controllers
         /// <response code="200">Post updated successfully.</response>
         /// <response code="400">If request data is invalid.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to update the post.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPatch("{postId}")]
         public async Task<ActionResult<PostDto>> UpdatePost(
             string postId,
@@ -153,7 +159,9 @@ namespace API.Controllers
         /// </remarks>
         /// <response code="200">Post deleted successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to delete the post.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpDelete("{postId}")]
         public async Task<ActionResult> DeletePost(string postId)
         {
@@ -178,7 +186,9 @@ namespace API.Controllers
         /// <response code="200">Images uploaded successfully.</response>
         /// <response code="400">If no images were uploaded or max images exceeded.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to modify the post.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPost("{postId}/images")]
         public async Task<ActionResult<PostDto>> UploadPostImages(
             string postId,
@@ -204,7 +214,9 @@ namespace API.Controllers
         /// </remarks>
         /// <response code="200">Image removed successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to modify the post.</response>
         /// <response code="404">If tenant, post, or image not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpDelete("{postId}/images")]
         public async Task<ActionResult<PostDto>> RemovePostImage(
             string postId,
@@ -230,7 +242,9 @@ namespace API.Controllers
         /// </remarks>
         /// <response code="200">Post pinned successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to pin posts.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Manage)]
         [HttpPost("{postId}/pin")]
         public async Task<ActionResult<PostDto>> PinPost(string postId)
         {
@@ -253,7 +267,9 @@ namespace API.Controllers
         /// </remarks>
         /// <response code="200">Post unpinned successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to unpin posts.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Manage)]
         [HttpDelete("{postId}/pin")]
         public async Task<ActionResult<PostDto>> UnpinPost(string postId)
         {
@@ -277,6 +293,7 @@ namespace API.Controllers
         /// <response code="200">Post liked successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPost("{postId}/like")]
         public async Task<ActionResult<PostDto>> LikePost(string postId)
         {
@@ -300,6 +317,7 @@ namespace API.Controllers
         /// <response code="200">Post unliked successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpDelete("{postId}/like")]
         public async Task<ActionResult<PostDto>> UnlikePost(string postId)
         {
@@ -326,7 +344,9 @@ namespace API.Controllers
         /// <response code="200">Tags added successfully.</response>
         /// <response code="400">If max tags exceeded.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to modify the post.</response>
         /// <response code="404">If tenant, post, or tags not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPost("{postId}/tags")]
         public async Task<ActionResult<PostDto>> AddPostTags(
             string postId,
@@ -353,7 +373,9 @@ namespace API.Controllers
         /// <response code="200">Tags updated successfully.</response>
         /// <response code="400">If max tags exceeded.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to modify the post.</response>
         /// <response code="404">If tenant, post, or tags not found.</response>
+        [Authorize(Policy = Policies.Posts_Manage)]
         [HttpPut("{postId}/tags")]
         public async Task<ActionResult<PostDto>> SetPostTags(
             string postId,
@@ -379,7 +401,9 @@ namespace API.Controllers
         /// </remarks>
         /// <response code="200">Tags removed successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
+        /// <response code="403">If the user is not allowed to modify the post.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpDelete("{postId}/tags")]
         public async Task<ActionResult<PostDto>> RemovePostTags(
             string postId,
@@ -403,6 +427,7 @@ namespace API.Controllers
         /// <response code="200">Comments retrieved successfully.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpGet("{postId}/comments")]
         public async Task<ActionResult<PagedList<PostCommentDto, DateTime?>>> GetPostComments(
             string postId,
@@ -430,6 +455,7 @@ namespace API.Controllers
         /// <response code="400">If request data is invalid.</response>
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="404">If tenant or post not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPost("{postId}/comments")]
         public async Task<ActionResult<PostCommentDto>> AddPostComment(
             string postId,
@@ -457,6 +483,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user is not allowed to update the comment.</response>
         /// <response code="404">If tenant, post, or comment not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpPatch("{postId}/comments/{commentId}")]
         public async Task<ActionResult<PostCommentDto>> UpdatePostComment(
             string postId,
@@ -483,6 +510,7 @@ namespace API.Controllers
         /// <response code="401">If the user is not authenticated.</response>
         /// <response code="403">If the user is not allowed to delete the comment.</response>
         /// <response code="404">If tenant, post, or comment not found.</response>
+        [Authorize(Policy = Policies.Posts_Read)]
         [HttpDelete("{postId}/comments/{commentId}")]
         public async Task<ActionResult> DeletePostComment(
             string postId,

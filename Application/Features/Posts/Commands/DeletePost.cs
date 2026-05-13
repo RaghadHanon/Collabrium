@@ -1,6 +1,8 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
+using Domain.Enums;
 using MediatR;
 using System.Net;
 
@@ -16,6 +18,7 @@ namespace Application.Features.Posts.Commands
         public sealed class Handler(
             IPostsRepository postsRepository,
             ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<Unit>>
         {
@@ -39,6 +42,33 @@ namespace Application.Features.Posts.Commands
                     return Result<Unit>.Failure(
                         "Post not found.",
                         HttpStatusCode.NotFound);
+                var currentUserId = currentUserAccessor.GetUserId();
+
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<Unit>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
+
+                var isOwner = string.Equals(
+                    post.CreatedByUserId,
+                    currentUserId,
+                    StringComparison.Ordinal);
+
+                var role = await currentUserAccessor.GetUserRole(
+                 currentUserId,
+                 cancellationToken);
+
+                var isManager =
+                    role is UserRole.TenantAdmin
+                        or UserRole.CEO
+                        or UserRole.HR
+                        or UserRole.IT;
+                if (!isOwner && !isManager)
+                {
+                    return Result<Unit>.Failure(
+                        "You can delete only your own post unless you are a manager.",
+                        HttpStatusCode.Forbidden);
+                }
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

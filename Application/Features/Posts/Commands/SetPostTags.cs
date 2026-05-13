@@ -3,6 +3,7 @@ using Application.Features.Posts.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
@@ -20,6 +21,7 @@ namespace Application.Features.Posts.Commands
             IPostsRepository postsRepository,
             IPostsReadModel postsReadModel,
             ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<PostDto>>
         {
@@ -39,6 +41,17 @@ namespace Application.Features.Posts.Commands
 
                 if (post is null)
                     return Result<PostDto>.Failure("Post not found.", HttpStatusCode.NotFound);
+                var currentUserId = currentUserAccessor.GetUserId();
+
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<PostDto>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
+
+                if (!string.Equals(post.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<PostDto>.Failure(
+                        "You can modify tags only on your own post.",
+                        HttpStatusCode.Forbidden);
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

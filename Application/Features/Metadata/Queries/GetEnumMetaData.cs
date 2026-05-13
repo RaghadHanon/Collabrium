@@ -90,6 +90,9 @@ public class GetEnumMetaData
                 MetadataType.UserCourseStatus => Result<string[]>.Success(
                Enum.GetNames(typeof(UserCourseStatus)).Select(AddSpace).ToArray(),
                HttpStatusCode.OK),
+                MetadataType.PostType => Result<string[]>.Success(
+              Enum.GetNames(typeof(PostType)).Select(AddSpace).ToArray(),
+              HttpStatusCode.OK),
                 _ => throw new NotImplementedException()
             };
         }

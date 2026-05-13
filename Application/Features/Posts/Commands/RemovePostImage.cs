@@ -36,7 +36,16 @@ namespace Application.Features.Posts.Commands
                 var post = await postsRepository.GetByIdAsync(tenantId, request.PostId, cancellationToken);
                 if (post is null)
                     return Result<PostDto>.Failure("Post not found.", HttpStatusCode.NotFound);
+                var currentUserId = currentUserAccessor.GetUserId();
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<PostDto>.Failure(
+                        "Current user not found.",
+                        HttpStatusCode.Unauthorized);
 
+                if (!string.Equals(post.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<PostDto>.Failure(
+                        "You can remove images only from your own post.",
+                        HttpStatusCode.Forbidden);
                 var storagePath = request.StoragePath.Trim();
 
                 if (!post.Images.Any(x => x.PublicId == storagePath))

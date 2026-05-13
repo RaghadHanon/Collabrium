@@ -23,5 +23,6 @@ public enum MetadataType
     CourseLanguage = 18,
     CourseLevel = 19,
     UserCourseStatus = 20,
+    PostType = 21
 
 }

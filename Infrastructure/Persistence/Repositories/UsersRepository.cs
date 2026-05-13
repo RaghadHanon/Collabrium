@@ -179,4 +179,11 @@ public sealed class UsersRepository : IUsersRepository
     {
         return string.Join("; ", result.Errors.Select(e => e.Description));
     }
+
+    public async Task<bool> IsUserExists(string tenantId, string userId)
+    {
+        return await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.TenantId == tenantId && u.Id == userId);
+    }
 }

@@ -11,7 +11,7 @@ public sealed class GetCycleTimeReportRequestValidator : AbstractValidator<GetCy
             .GreaterThanOrEqualTo(x => x.From!.Value)
             .When(x => x.From.HasValue && x.To.HasValue)
             .WithMessage("To date must be greater than or equal to From date.")
-            .LessThanOrEqualTo(DateTime.UtcNow)
+            .LessThanOrEqualTo(DateTime.UtcNow.AddHours(12))
             .WithMessage("To date cannot be in the future.");
     }
 }

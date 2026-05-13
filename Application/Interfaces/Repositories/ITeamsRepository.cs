@@ -16,6 +16,8 @@ public interface ITeamsRepository
         string teamId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> IsTeamExists(string tenantId, string teamId);
+
     Task AddMembersAsync(
         string tenantId,
         string teamId,

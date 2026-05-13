@@ -2,7 +2,7 @@
 
 public class WorkItemsSummary
 {
-    public int TotalTasksCount { get; set; }
+    public int TotalWorkItemsCount { get; set; }
     public int EpicsCount { get; set; }
     public int UserStoriesCount { get; set; }
     public int TaskItemCount { get; set; }

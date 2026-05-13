@@ -191,4 +191,11 @@ public sealed class TeamsRepository : ITeamsRepository
         if (users.Any(u => !string.Equals(u.TenantId, tenantId, StringComparison.Ordinal)))
             throw new InvalidOperationException("One or more users are not in the current tenant.");
     }
+
+    public async Task<bool> IsTeamExists(string tenantId, string teamId)
+    {
+        return await _dbContext.Teams
+            .AsNoTracking()
+            .AnyAsync(t => t.TenantId == tenantId && t.Id == teamId);
+    }
 }

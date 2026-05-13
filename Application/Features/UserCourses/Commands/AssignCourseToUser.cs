@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.UserCourses.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -12,7 +13,6 @@ namespace Application.Features.UserCourses.Commands
 {
     public sealed class AssignCourseToUser
     {
-
         public sealed class Command : IRequest<Result<UserCourseDto>>
         {
             public required string CourseId { get; set; }
@@ -25,7 +25,9 @@ namespace Application.Features.UserCourses.Commands
             ICoursesRepository coursesRepository,
             ITenantContext tenantContext,
             ICurrentUserAccessor currentUserAccessor,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IUsersReadModel usersReadModel,
+            IMediator mediator)
             : IRequestHandler<Command, Result<UserCourseDto>>
         {
             public async Task<Result<UserCourseDto>> Handle(Command request, CancellationToken cancellationToken)
@@ -46,7 +48,7 @@ namespace Application.Features.UserCourses.Commands
                 if (course is null)
                     return Result<UserCourseDto>.Failure("Course not found.", HttpStatusCode.NotFound);
 
-                if (string.Equals(request.AssignedToUserId, currentUserId, StringComparison.Ordinal))
+                if (request.AssignedToUserId == currentUserId)
                     return Result<UserCourseDto>.Failure("You cannot assign a course to yourself.", HttpStatusCode.BadRequest);
 
                 var targetRole = await currentUserAccessor.GetUserRole(request.AssignedToUserId, cancellationToken);
@@ -54,14 +56,31 @@ namespace Application.Features.UserCourses.Commands
                 if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
                     return Result<UserCourseDto>.Failure("You cannot assign a course to a manager.", HttpStatusCode.BadRequest);
 
-                var userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
-                            tenantId,
-                            request.AssignedToUserId,
-                            request.CourseId,
-                            cancellationToken);
+
+                var assignedUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                    request.AssignedToUserId,
+                    cancellationToken);
+
+                if (assignedUser is null)
+                    return Result<UserCourseDto>.Failure("Assigned user not found.", HttpStatusCode.NotFound);
+
+                var assignerUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                if (assignerUser is null)
+                    return Result<UserCourseDto>.Failure("Assigner user not found.", HttpStatusCode.NotFound);
+
+                UserCourse? userCourse = null;
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
+                        tenantId,
+                        request.AssignedToUserId,
+                        request.CourseId,
+                        ct);
+
                     if (userCourse is null)
                     {
                         userCourse = new UserCourse(
@@ -70,16 +89,27 @@ namespace Application.Features.UserCourses.Commands
                             courseId: request.CourseId);
 
                         userCourse.Assign(currentUserId);
+
                         await userCoursesRepository.AddAsync(userCourse, ct);
                     }
                     else
                     {
                         userCourse.Assign(currentUserId);
+
                         await userCoursesRepository.UpdateAsync(userCourse, ct);
                     }
 
                     await unitOfWork.SaveChangesAsync(ct);
+
                 }, cancellationToken);
+
+                await mediator.Publish(new CourseAssignedEvent(
+                    CourseId: course.Id,
+                    CourseTitle: course.Title,
+                    CourseProvider: course.Provider,
+                    AssignerFullName: assignerUser.FullName,
+                    AssignedTo: assignedUser
+                ), cancellationToken);
 
                 var dto = await userCoursesReadModel.GetByUserAndCourseAsync(
                     tenantId,

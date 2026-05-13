@@ -47,9 +47,12 @@ namespace Application.Features.RoadmapNodes.Commands
                 if (current is null)
                     return Result<RoadmapNodeDto>.Failure("Node not found.", HttpStatusCode.NotFound);
 
-                var maxOrder = nodes.Max(n => n.Order);
+                var next = nodes
+                    .Where(n => n.Order > current.Order)
+                    .OrderBy(n => n.Order)
+                    .FirstOrDefault();
 
-                if (current.Order == maxOrder)
+                if (next is null)
                 {
                     var dto = await roadmapNodesReadModel.GetByIdAsync(
                         tenantId,
@@ -61,10 +64,6 @@ namespace Application.Features.RoadmapNodes.Commands
                         ? Result<RoadmapNodeDto>.Failure("Node could not be loaded.", HttpStatusCode.InternalServerError)
                         : Result<RoadmapNodeDto>.Success(dto, HttpStatusCode.OK);
                 }
-
-                var next = nodes.FirstOrDefault(n => n.Order == current.Order + 1);
-                if (next is null)
-                    return Result<RoadmapNodeDto>.Failure("Next node not found.", HttpStatusCode.InternalServerError);
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

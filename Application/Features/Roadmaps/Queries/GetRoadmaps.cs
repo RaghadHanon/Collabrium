@@ -33,6 +33,7 @@ namespace Application.Features.Roadmaps.Queries
 
             public DateTime? Cursor { get; set; }
             public int PageSize { get; set; }
+            public string? CreatedByUserId { get; set; }
 
             public IReadOnlyCollection<string>? TagIdsAny { get; set; }
             public IReadOnlyCollection<string>? TagIdsAll { get; set; }

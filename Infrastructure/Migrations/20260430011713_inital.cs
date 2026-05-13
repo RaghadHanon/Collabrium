@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class setupdatabase : Migration
+    public partial class inital : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -42,6 +42,71 @@ namespace Infrastructure.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArticleComments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleComments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArticleLikes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleLikes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Articles",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CoverImageUrl = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CoverImagePublicId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Articles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArticleTags",
+                columns: table => new
+                {
+                    ArticleEntityId = table.Column<string>(type: "nvarchar(50)", nullable: false),
+                    TagsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleTags", x => new { x.ArticleEntityId, x.TagsId });
+                    table.ForeignKey(
+                        name: "FK_ArticleTags_Articles_ArticleEntityId",
+                        column: x => x.ArticleEntityId,
+                        principalTable: "Articles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -162,7 +227,7 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -894,6 +959,52 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ArticleComments_ArticleId",
+                table: "ArticleComments",
+                column: "ArticleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_ArticleId_CreatedAt",
+                table: "ArticleLikes",
+                columns: new[] { "ArticleId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_ArticleId_CreatedByUserId",
+                table: "ArticleLikes",
+                columns: new[] { "ArticleId", "CreatedByUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_CreatedByUserId",
+                table: "ArticleLikes",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_CreatedByUserId",
+                table: "Articles",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_CreatedAt",
+                table: "Articles",
+                columns: new[] { "TenantId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_IsPublished",
+                table: "Articles",
+                columns: new[] { "TenantId", "IsPublished" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_Title",
+                table: "Articles",
+                columns: new[] { "TenantId", "Title" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleTags_TagsId",
+                table: "ArticleTags",
+                column: "TagsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
                 column: "RoleId");
@@ -1239,6 +1350,62 @@ namespace Infrastructure.Migrations
                 column: "SprintId");
 
             migrationBuilder.AddForeignKey(
+                name: "FK_ArticleComments_Articles_ArticleId",
+                table: "ArticleComments",
+                column: "ArticleId",
+                principalTable: "Articles",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleComments_Comments_Id",
+                table: "ArticleComments",
+                column: "Id",
+                principalTable: "Comments",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleLikes_Articles_ArticleId",
+                table: "ArticleLikes",
+                column: "ArticleId",
+                principalTable: "Articles",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleLikes_AspNetUsers_CreatedByUserId",
+                table: "ArticleLikes",
+                column: "CreatedByUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Articles_AspNetUsers_CreatedByUserId",
+                table: "Articles",
+                column: "CreatedByUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Articles_Tenants_TenantId",
+                table: "Articles",
+                column: "TenantId",
+                principalTable: "Tenants",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleTags_Tags_TagsId",
+                table: "ArticleTags",
+                column: "TagsId",
+                principalTable: "Tags",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
                 table: "AspNetUserClaims",
                 column: "UserId",
@@ -1277,6 +1444,15 @@ namespace Infrastructure.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Tenants_AspNetUsers_TenantAdminId",
                 table: "Tenants");
+
+            migrationBuilder.DropTable(
+                name: "ArticleComments");
+
+            migrationBuilder.DropTable(
+                name: "ArticleLikes");
+
+            migrationBuilder.DropTable(
+                name: "ArticleTags");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -1331,6 +1507,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "WorkItemRelations");
+
+            migrationBuilder.DropTable(
+                name: "Articles");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

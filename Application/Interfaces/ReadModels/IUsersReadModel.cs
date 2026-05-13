@@ -18,4 +18,7 @@ public interface IUsersReadModel
     Task<PagedList<UserDto, DateTime?>> GetAssignableUsersAsync(
      AssignableUsersSearchAndFilterParametersDto parameters,
      CancellationToken ct);
+    Task<UserSnapshotDto?> GetUserSnapshotByIdAsync(
+      string userId,
+      CancellationToken ct);
 }

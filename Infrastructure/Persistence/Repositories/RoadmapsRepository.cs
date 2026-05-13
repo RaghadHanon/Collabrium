@@ -253,6 +253,17 @@ namespace Infrastructure.Persistence.Repositories
                     r.Title.ToLower() == normalized,
                     cancellationToken);
         }
+
+        public async Task DeleteReferencingNodesAsync(string tenantId, string roadmapId, CancellationToken ct = default)
+        {
+            var tId = tenantId.Trim();
+            var rId = roadmapId.Trim();
+            var references = await _dbContext.Set<ReferenceNodeEntity>()
+                 .Where(n => n.TenantId == tId && n.RefRoadmapId == rId)
+                .ToListAsync(ct);
+
+            _dbContext.RemoveRange(references);
+        }
     }
 }
 

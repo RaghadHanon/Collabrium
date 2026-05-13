@@ -1,4 +1,6 @@
 ﻿using Application.Common;
+using Application.Events;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -23,7 +25,9 @@ namespace Application.Features.UserCourses.Commands
             ICoursesRepository coursesRepository,
             ITenantContext tenantContext,
             ICurrentUserAccessor currentUserAccessor,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IUsersReadModel usersReadModel,
+            IMediator mediator)
             : IRequestHandler<Command, Result<string>>
         {
             public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
@@ -60,6 +64,15 @@ namespace Application.Features.UserCourses.Commands
                 if (members is null || members.Count == 0)
                     return Result<string>.Failure("Team has no members.", HttpStatusCode.BadRequest);
 
+                var assignerUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                if (assignerUser is null)
+                    return Result<string>.Failure("Assigner user not found.", HttpStatusCode.NotFound);
+
+                var assignedMembers = new List<UserSnapshotDto>();
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     foreach (var member in members)
@@ -68,12 +81,15 @@ namespace Application.Features.UserCourses.Commands
                             continue;
 
                         var userId = member.Id.Trim();
+
                         if (string.Equals(userId, currentUserId, StringComparison.Ordinal))
                             continue;
-                        var targetRole = await currentUserAccessor.GetUserRole(userId, cancellationToken);
+
+                        var targetRole = await currentUserAccessor.GetUserRole(userId, ct);
 
                         if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
                             continue;
+
                         var userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
                             tenantId,
                             userId,
@@ -95,12 +111,27 @@ namespace Application.Features.UserCourses.Commands
                             userCourse.Assign(currentUserId);
                             await userCoursesRepository.UpdateAsync(userCourse, ct);
                         }
+
+                        assignedMembers.Add(member);
                     }
 
                     await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
 
-                return Result<string>.Success("Course assigned to team successfully.", HttpStatusCode.OK);
+                if (assignedMembers.Count > 0)
+                {
+                    await mediator.Publish(new CourseAssignedToTeamEvent(
+                        CourseId: course.Id,
+                        CourseTitle: course.Title,
+                        CourseProvider: course.Provider,
+                        AssignerFullName: assignerUser.FullName,
+                        Members: assignedMembers
+                    ), cancellationToken);
+                }
+
+                return Result<string>.Success(
+                    "Course assigned to team successfully.",
+                    HttpStatusCode.OK);
             }
         }
     }

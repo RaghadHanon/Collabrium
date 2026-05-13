@@ -1,7 +1,9 @@
 ﻿using Application.Features.Reports.DTOs;
 using Application.Features.Reports.DTOs.Summaries;
+using Application.Features.Tenants.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,10 +27,20 @@ public class ReportsReadModel : IReportsReadModel
         var sprintsSummary = await GenerateSprintsSummary(tenantId);
         var workItemsSummary = await GenerateWorkItemsSummary(tenantId);
         var usersSummary = await GenerateUsersSummary(tenantId);
+        
+        var tenant = await _dbContext.Tenants
+            .AsNoTracking()
+            .Where(t => t.Id == tenantId)
+            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider, t => t.Name)
+            .FirstOrDefaultAsync();
+
+        if (tenant is null)
+            throw new InvalidOperationException($"Tenant with id {tenantId} not found.");
 
         return new TenantInfoReport
         {
             TenantId = tenantId,
+            Tenant = tenant,
             GeneratedAt = DateTime.UtcNow,
             UsersSummary = usersSummary,
             TeamsSummary = teamsSummary,
@@ -213,7 +225,7 @@ public class ReportsReadModel : IReportsReadModel
         };
     }
 
-    public async Task<SprintProgressDto> GetSprintProgress(string tenantId, string projectId, string sprintId)
+    public async Task<SprintProgressDto> GenerateSprintProgressReport(string tenantId, string projectId, string sprintId)
     {
         var workItems = await _dbContext.WorkItems
             .AsNoTracking()
@@ -233,25 +245,33 @@ public class ReportsReadModel : IReportsReadModel
         var totalStoryPoints = userStories.Sum(us => us.StoryPoints);
         var completedStoryPoints = userStories.Where(us => us.Status == WorkItemStatus.Done).Sum(wi => wi.StoryPoints);
 
+        var sprintInfo = await _dbContext.Sprints
+            .AsNoTracking()
+            .Where(s => s.Id == sprintId && s.ProjectId == projectId && s.TenantId == tenantId)
+            .Select(s => new { s.Id, s.Code, s.Project.Key, s.Project.Name })
+            .FirstOrDefaultAsync();
+
         return new SprintProgressDto
         {
             SprintId = sprintId,
+            SprintCode = sprintInfo!.Code,
+            ProjectKey = sprintInfo.Key,
+            ProjectName = sprintInfo.Name,
             TotalWorkItems = totalWorkItems,
             CompletedWorkItems = completedWorkItems,
             GeneralProgressPercentage = totalWorkItems > 0 ? (double) completedWorkItems / totalWorkItems * 100 : 0,
             UserStoryProgressPercentage = totalStoryPoints > 0 ? (double) completedStoryPoints / totalStoryPoints * 100 : 0
         };
     }
-
     public async Task<VelocityReportDto> GenerateVelocityReport(string tenantId, string projectId)
     {
         var sprintVelocities = await _dbContext.UserStories
             .AsNoTracking()
             .Where(us =>
-                    us.Project.TenantId == tenantId &&
-                    us.ProjectId == projectId &&
-                    us.SprintId != null &&
-                    us.Sprint!.Status != SprintStatus.Cancelled)
+                us.Project.TenantId == tenantId &&
+                us.ProjectId == projectId &&
+                us.SprintId != null &&
+                us.Sprint!.Status != SprintStatus.Cancelled)
             .GroupBy(us => new { us.SprintId, us.Sprint!.Code })
             .Select(g => new SprintVelocityDto
             {
@@ -264,10 +284,10 @@ public class ReportsReadModel : IReportsReadModel
             .OrderBy(s => s.SprintCode)
             .ToListAsync();
 
-        foreach (var v in sprintVelocities)
+        foreach (var sprint in sprintVelocities)
         {
-            v.VelocityPercentage = v.TotalStoryPoints > 0
-                ? (double) v.CompletedStoryPoints / v.TotalStoryPoints * 100
+            sprint.VelocityPercentage = sprint.TotalStoryPoints > 0
+                ? (double) sprint.CompletedStoryPoints / sprint.TotalStoryPoints * 100
                 : 0;
         }
 
@@ -277,11 +297,20 @@ public class ReportsReadModel : IReportsReadModel
             .Select(p => new { p.Id, p.Key, p.Name })
             .FirstOrDefaultAsync();
 
+        var totalStoryPoints = sprintVelocities.Sum(x => x.TotalStoryPoints);
+        var completedStoryPoints = sprintVelocities.Sum(x => x.CompletedStoryPoints);
+        var avgVelocityPercentage = sprintVelocities.Count > 0
+            ? sprintVelocities.Average(x => x.VelocityPercentage)
+            : 0;
+
         return new VelocityReportDto
         {
             ProjectId = projectInfo!.Id,
             ProjectKey = projectInfo.Key,
             ProjectName = projectInfo.Name,
+            TotalStoryPoints = totalStoryPoints,
+            CompletedStoryPoints = completedStoryPoints,
+            AvgVelocityPercentage = avgVelocityPercentage,
             SprintVelocities = sprintVelocities
         };
     }

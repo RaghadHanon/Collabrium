@@ -72,6 +72,9 @@ public class UpdateWorkItemStatus
             if (!allowedStatuses.Contains(request.NewStatus))
                 return Result<WorkItemDto>.Failure($"Invalid status transition. Allowed statuses: {string.Join(", ", allowedStatuses)}.", HttpStatusCode.BadRequest);
 
+            if (workItem.Type == WorkItemType.TestCase && ((TestCase) workItem).Result != TestCaseResult.Passed && request.NewStatus == WorkItemStatus.Done)
+                return Result<WorkItemDto>.Failure("Test case must be marked as Passed before it can be marked as Done.", HttpStatusCode.BadRequest);
+
             var oldWorkItemState = workItem.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {

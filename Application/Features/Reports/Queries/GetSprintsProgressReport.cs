@@ -35,7 +35,7 @@ public class GetSprintsProgressReport
             if (!await sprintsRepository.IsExistsAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken))
                 return Result<SprintProgressDto>.Failure("Sprint is not found.", HttpStatusCode.BadRequest);
 
-            var report = await reportsReadModel.GetSprintProgress(tenantId, request.ProjectId, request.SprintId);
+            var report = await reportsReadModel.GenerateSprintProgressReport(tenantId, request.ProjectId, request.SprintId);
 
             return Result<SprintProgressDto>.Success(report, HttpStatusCode.OK);
         }

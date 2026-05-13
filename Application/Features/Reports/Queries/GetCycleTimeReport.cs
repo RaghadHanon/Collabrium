@@ -3,7 +3,6 @@ using Application.Features.Reports.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
-using Infrastructure.Pdf;
 using MediatR;
 using System.Net;
 
@@ -43,7 +42,7 @@ public class GetCycleTimeReport
                 return Result<CycleTimeReport>.Failure($"Project with id {request.ProjectId} does not exist.", HttpStatusCode.NotFound);
             }
 
-            if(request.SprintId != null)
+            if (request.SprintId != null)
             {
                 if (!await sprintsRepository.IsExistsAsync(request.TenantId, request.SprintId, request.ProjectId))
                 {

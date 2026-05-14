@@ -1,26 +1,22 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 
-namespace Domain.ValueObjects
+namespace Domain.ValueObjects;
+
+public sealed record PostLink
 {
-    public sealed record PostLink
+    public string Url { get; init; } = null!;
+
+    private PostLink() { }
+
+    private PostLink(string url)
     {
-        public string Url { get; init; } = null!;
+        Url = url;
+    }
 
-        private PostLink() { }
+    public static PostLink Create(string url)
+    {
+        url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
 
-        private PostLink(string url)
-        {
-            Url = url;
-        }
-
-        public static PostLink Create(string url)
-        {
-            url = Guard.NotNullOrWhiteSpace(url, nameof(url)).Trim();
-
-            if (!Uri.TryCreate(url, UriKind.Absolute, out _))
-                throw new DomainException("Invalid post link.");
-
-            return new PostLink(url);
-        }
+        return !Uri.TryCreate(url, UriKind.Absolute, out _) ? throw new DomainException("Invalid post link.") : new PostLink(url);
     }
 }

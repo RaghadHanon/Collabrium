@@ -3,24 +3,23 @@ using Application.Features.Posts.Commands;
 using Application.Features.Posts.Queries;
 using AutoMapper;
 
-namespace API.MappingProfiles
+namespace API.MappingProfiles;
+
+public sealed class PostsApiMappingProfile : Profile
 {
-    public sealed class PostsApiMappingProfile : Profile
+    public PostsApiMappingProfile()
     {
-        public PostsApiMappingProfile()
-        {
-            CreateMap<CreatePostRequest, CreatePost.Command>();
-            CreateMap<UpdatePostRequest, UpdatePost.Command>();
+        CreateMap<CreatePostRequest, CreatePost.Command>();
+        CreateMap<UpdatePostRequest, UpdatePost.Command>();
 
-            CreateMap<GetPostsRequest, GetPosts.Query>();
-            CreateMap<GetPostCommentsRequest, GetPostComments.Query>();
+        CreateMap<GetPostsRequest, GetPosts.Query>();
+        CreateMap<GetPostCommentsRequest, GetPostComments.Query>();
 
-            CreateMap<AddPostCommentRequest, AddPostComment.Command>();
-            CreateMap<UpdatePostCommentRequest, UpdatePostComment.Command>();
+        CreateMap<AddPostCommentRequest, AddPostComment.Command>();
+        CreateMap<UpdatePostCommentRequest, UpdatePostComment.Command>();
 
-            CreateMap<PostTagsRequest, AddPostTags.Command>();
-            CreateMap<PostTagsRequest, RemovePostTags.Command>();
-            CreateMap<PostTagsRequest, SetPostTags.Command>();
-        }
+        CreateMap<PostTagsRequest, AddPostTags.Command>();
+        CreateMap<PostTagsRequest, RemovePostTags.Command>();
+        CreateMap<PostTagsRequest, SetPostTags.Command>();
     }
 }

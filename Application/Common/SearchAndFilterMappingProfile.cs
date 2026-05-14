@@ -57,6 +57,5 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetAssignedToMeCourses.Query, UserCoursesSearchAndFilterParametersDto>();
         CreateMap<GetArticles.Query, ArticlesSearchAndFilterParametersDto>();
         CreateMap<GetPosts.Query, PostsSearchAndFilterParametersDto>();
-
     }
 }

@@ -40,7 +40,7 @@ public static class GlobalTenantSeeder
                 {
                     Email = "",
                     PhoneNumber = "",
-                    Socials = new SocialLinksOwned()
+                    Socials = new SocialLinksOwned
                     {
                         LinkedIn = "",
                         Facebook = "",
@@ -55,17 +55,18 @@ public static class GlobalTenantSeeder
         }
 
         var existingSuperAdmin = await dbContext.Users
-            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == SuperAdminEmail && u.TenantId == globalTenant.Id);
 
         if (existingSuperAdmin is not null)
         {
+            existingSuperAdmin.EmailConfirmed = true;
+
             if (string.IsNullOrWhiteSpace(globalTenant.TenantAdminId))
             {
                 globalTenant.TenantAdminId = existingSuperAdmin.Id;
-                await dbContext.SaveChangesAsync();
             }
 
+            await dbContext.SaveChangesAsync();
             return;
         }
 
@@ -80,6 +81,14 @@ public static class GlobalTenantSeeder
             email: SuperAdminEmail,
             phoneNumber: string.Empty
         );
+
+        var createdSuperAdmin = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Id == superAdminDomain.Id);
+
+        if (createdSuperAdmin is not null)
+        {
+            createdSuperAdmin.EmailConfirmed = true;
+        }
 
         globalTenant.TenantAdminId = superAdminDomain.Id;
         await dbContext.SaveChangesAsync();

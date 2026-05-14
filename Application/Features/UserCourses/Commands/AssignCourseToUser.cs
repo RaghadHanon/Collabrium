@@ -36,25 +36,25 @@ namespace Application.Features.UserCourses.Commands
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<UserCourseDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var currentUserId = currentUserAccessor.GetUserId();
-            if (string.IsNullOrWhiteSpace(currentUserId))
-                return Result<UserCourseDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+                var currentUserId = currentUserAccessor.GetUserId();
+                if (string.IsNullOrWhiteSpace(currentUserId))
+                    return Result<UserCourseDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
 
-            var course = await coursesRepository.GetByIdAsync(
-                tenantId,
-                request.CourseId,
-                cancellationToken);
+                var course = await coursesRepository.GetByIdAsync(
+                    tenantId,
+                    request.CourseId,
+                    cancellationToken);
 
-            if (course is null)
-                return Result<UserCourseDto>.Failure("Course not found.", HttpStatusCode.NotFound);
+                if (course is null)
+                    return Result<UserCourseDto>.Failure("Course not found.", HttpStatusCode.NotFound);
 
                 if (request.AssignedToUserId == currentUserId)
                     return Result<UserCourseDto>.Failure("You cannot assign a course to yourself.", HttpStatusCode.BadRequest);
 
-            var targetRole = await currentUserAccessor.GetUserRole(request.AssignedToUserId, cancellationToken);
+                var targetRole = await currentUserAccessor.GetUserRole(request.AssignedToUserId, cancellationToken);
 
-            if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
-                return Result<UserCourseDto>.Failure("You cannot assign a course to a manager.", HttpStatusCode.BadRequest);
+                if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
+                    return Result<UserCourseDto>.Failure("You cannot assign a course to a manager.", HttpStatusCode.BadRequest);
 
 
                 var assignedUser = await usersReadModel.GetUserSnapshotByIdAsync(
@@ -117,9 +117,10 @@ namespace Application.Features.UserCourses.Commands
                     request.CourseId,
                     cancellationToken);
 
-            return dto is null
-                ? Result<UserCourseDto>.Failure("Course assigned but could not be loaded.", HttpStatusCode.InternalServerError)
-                : Result<UserCourseDto>.Success(dto, HttpStatusCode.OK);
+                return dto is null
+                    ? Result<UserCourseDto>.Failure("Course assigned but could not be loaded.", HttpStatusCode.InternalServerError)
+                    : Result<UserCourseDto>.Success(dto, HttpStatusCode.OK);
+            }
         }
     }
 }

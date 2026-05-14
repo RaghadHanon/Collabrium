@@ -23,12 +23,13 @@ namespace Infrastructure.Persistence.ReadModels.Profiles
                 .ForMember(d => d.RefRoadmapTitle,
                     o => o.MapFrom(s => s.RefRoadmap != null ? s.RefRoadmap.Title : null))
                 .ForMember(d => d.RefRoadmapIsVisible,
-                    o => o.MapFrom(s => s.RefRoadmap != null ? s.RefRoadmap.IsVisible : (bool?)null));
+                    o => o.MapFrom(s => s.RefRoadmap != null ? s.RefRoadmap.IsVisible : (bool?) null));
 
             CreateMap<TopicNodeEntity, TopicNodeDetailsDto>()
                 .ForMember(d => d.SubTopicsCount, o => o.MapFrom(s => s.SubTopics.Count))
                 .ForMember(d => d.SubTopics, o => o.MapFrom(s => s.SubTopics));
 
-        CreateMap<SubTopicEntity, SubTopicDto>();
+            CreateMap<SubTopicEntity, SubTopicDto>();
+        }
     }
 }

@@ -47,34 +47,33 @@ public sealed class MoveRoadmapNodeDown
             if (current is null)
                 return Result<RoadmapNodeDto>.Failure("Node not found.", HttpStatusCode.NotFound);
 
-            var maxOrder = nodes.Max(n => n.Order);
+                var next = nodes
+                    .Where(n => n.Order > current.Order)
+                    .OrderBy(n => n.Order)
+                    .FirstOrDefault();
 
-            if (current.Order == maxOrder)
-            {
-                var dto = await roadmapNodesReadModel.GetByIdAsync(
-                    tenantId,
-                    request.RoadmapId,
-                    current.Id,
-                    cancellationToken);
+                if (next is null)
+                {
+                    var dto = await roadmapNodesReadModel.GetByIdAsync(
+                        tenantId,
+                        request.RoadmapId,
+                        current.Id,
+                        cancellationToken);
 
                 return dto is null
                     ? Result<RoadmapNodeDto>.Failure("Node could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<RoadmapNodeDto>.Success(dto, HttpStatusCode.OK);
             }
 
-            var next = nodes.FirstOrDefault(n => n.Order == current.Order + 1);
-            if (next is null)
-                return Result<RoadmapNodeDto>.Failure("Next node not found.", HttpStatusCode.InternalServerError);
-
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
-            {
-                await roadmapNodesRepository.SwapOrderAsync(
-                    tenantId: tenantId,
-                    roadmapId: request.RoadmapId,
-                    firstNodeId: current.Id,
-                    secondNodeId: next.Id,
-                    ct: ct);
-            }, cancellationToken);
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    await roadmapNodesRepository.SwapOrderAsync(
+                        tenantId: tenantId,
+                        roadmapId: request.RoadmapId,
+                        firstNodeId: current.Id,
+                        secondNodeId: next.Id,
+                        ct: ct);
+                }, cancellationToken);
 
             var updatedDto = await roadmapNodesReadModel.GetByIdAsync(
                 tenantId,

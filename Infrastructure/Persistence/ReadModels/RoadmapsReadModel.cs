@@ -46,38 +46,49 @@ public sealed class RoadmapsReadModel : IRoadmapsReadModel
             nextCursor = items[^1].CreatedAt;
         }
 
-        return new PagedList<RoadmapDto, DateTime?>
-        {
-            Items = items,
-            NextCursor = nextCursor,
-        };
-    }
-    private IQueryable<RoadmapEntity> ApplyFilters(IQueryable<RoadmapEntity> query,
-        RoadmapsSearchAndFilterParametersDto parameters)
-    {
-        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
-        {
-            var tenantId = parameters.TenantId.Trim();
-            query = query.Where(r => r.TenantId == tenantId);
+            return new PagedList<RoadmapDto, DateTime?>
+            {
+                Items = items,
+                NextCursor = nextCursor,
+            };
         }
-        if (!string.IsNullOrWhiteSpace(parameters.TitleContains))
+        private IQueryable<RoadmapEntity> ApplyFilters(IQueryable<RoadmapEntity> query,
+            RoadmapsSearchAndFilterParametersDto parameters)
         {
-            var term = parameters.TitleContains.Trim();
-            query = query.Where(r => r.Title != null && r.Title.Contains(term));
-        }
-        if (!string.IsNullOrWhiteSpace(parameters.DescriptionContains))
-        {
-            var term = parameters.DescriptionContains.Trim();
-            query = query.Where(r => r.Description != null && r.Description.Contains(term));
-        }
-        if (parameters.Path.HasValue)
-            query = query.Where(r => r.Path == parameters.Path.Value);
+            if (!string.IsNullOrWhiteSpace(parameters.TenantId))
+            {
+                var tenantId = parameters.TenantId.Trim();
+                query = query.Where(r => r.TenantId == tenantId);
+            }
+            if (!string.IsNullOrWhiteSpace(parameters.TitleContains))
+            {
+                var term = parameters.TitleContains.Trim();
+                query = query.Where(r => r.Title != null && r.Title.Contains(term));
+            }
+            if (!string.IsNullOrWhiteSpace(parameters.DescriptionContains))
+            {
+                var term = parameters.DescriptionContains.Trim();
+                query = query.Where(r => r.Description != null && r.Description.Contains(term));
+            }
+            if (parameters.Path.HasValue)
+                query = query.Where(r => r.Path == parameters.Path.Value);
+            if (!string.IsNullOrWhiteSpace(parameters.CreatedByUserId))
+            {
+                var createdByUserId = parameters.CreatedByUserId.Trim();
+                query = query.Where(r => r.CreatedByUserId == createdByUserId);
+            }
+            if (parameters.Level.HasValue)
+                query = query.Where(r => r.Level == parameters.Level.Value);
 
-        if (parameters.Level.HasValue)
-            query = query.Where(r => r.Level == parameters.Level.Value);
-
-        if (parameters.IsVisible.HasValue)
-            query = query.Where(r => r.IsVisible == parameters.IsVisible.Value);
+            if (parameters.IsVisible.HasValue)
+                query = query.Where(r => r.IsVisible == parameters.IsVisible.Value);
+            if (parameters.IsPublished.HasValue)
+            {
+                if (parameters.IsPublished.Value)
+                    query = query.Where(r => r.PublishedAt != null);
+                else
+                    query = query.Where(r => r.PublishedAt == null);
+            }
 
         if (parameters.CreatedAfter.HasValue)
             query = query.Where(r => r.CreatedAt >= parameters.CreatedAfter.Value);
@@ -88,20 +99,29 @@ public sealed class RoadmapsReadModel : IRoadmapsReadModel
         if (parameters.UpdatedAfter.HasValue)
             query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt >= parameters.UpdatedAfter.Value);
 
-        if (parameters.UpdatedBefore.HasValue)
-            query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt <= parameters.UpdatedBefore.Value);
-        if (parameters.TagIdsAny is { Count: > 0 })
-        {
-            var tagsIds = parameters.TagIdsAny
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
-                .ToList();
-            if (tagsIds.Count > 0)
+            if (parameters.UpdatedBefore.HasValue)
+                query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt <= parameters.UpdatedBefore.Value);
+            if (parameters.PublishedAfter.HasValue)
             {
-                query = query.Where(r =>
-                    r.Tags.Any(rt => tagsIds.Contains(rt.Id)));
+                query = query.Where(r => r.PublishedAt != null && r.PublishedAt >= parameters.PublishedAfter);
             }
-        }
+            if (parameters.PublishedBefore.HasValue)
+            {
+                query = query.Where(r => r.PublishedAt != null && r.PublishedAt <= parameters.PublishedBefore);
+            }
+
+            if (parameters.TagIdsAny is { Count: > 0 })
+            {
+                var tagsIds = parameters.TagIdsAny
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => x.Trim())
+                    .ToList();
+                if (tagsIds.Count > 0)
+                {
+                    query = query.Where(r =>
+                        r.Tags.Any(rt => tagsIds.Contains(rt.Id)));
+                }
+            }
 
         if (parameters.TagIdsAll is { Count: > 0 })
         {

@@ -2,6 +2,7 @@
 
 public class GetOverdueWorkItemsReportRequest : ReportDateRangeRequest
 {
+    public string? ProjectId { get; set; }
     public string? TeamId { get; set; }
     public string? AssignedToUserId { get; set; }
     public int MaxItems { get; set; } = 100;

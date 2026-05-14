@@ -2,4 +2,5 @@
 
 public class GetTeamsProductivityReportRequest : ReportDateRangeRequest
 {
+    public string? ProjectId { get; set; }
 }

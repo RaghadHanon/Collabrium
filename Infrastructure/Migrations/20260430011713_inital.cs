@@ -2,27 +2,27 @@
 
 #nullable disable
 
-namespace Infrastructure.Migrations;
-
-/// <inheritdoc />
-public partial class setupdatabase : Migration
+namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    protected override void Up(MigrationBuilder migrationBuilder)
+    public partial class inital : Migration
     {
-        migrationBuilder.CreateTable(
-            name: "AspNetRoles",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_AspNetRoles", x => x.Id);
-            });
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "AspNetRoles",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetRoles", x => x.Id);
+                });
 
         migrationBuilder.CreateTable(
             name: "AspNetRoleClaims",
@@ -45,20 +45,85 @@ public partial class setupdatabase : Migration
                     onDelete: ReferentialAction.Cascade);
             });
 
-        migrationBuilder.CreateTable(
-            name: "AspNetUserClaims",
-            columns: table => new
-            {
-                Id = table.Column<int>(type: "int", nullable: false)
-                    .Annotation("SqlServer:Identity", "1, 1"),
-                UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
-            });
+            migrationBuilder.CreateTable(
+                name: "ArticleComments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleComments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArticleLikes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ArticleId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleLikes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Articles",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    TenantId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CoverImageUrl = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CoverImagePublicId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsPublished = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Articles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ArticleTags",
+                columns: table => new
+                {
+                    ArticleEntityId = table.Column<string>(type: "nvarchar(50)", nullable: false),
+                    TagsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleTags", x => new { x.ArticleEntityId, x.TagsId });
+                    table.ForeignKey(
+                        name: "FK_ArticleTags_Articles_ArticleEntityId",
+                        column: x => x.ArticleEntityId,
+                        principalTable: "Articles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+                });
 
         migrationBuilder.CreateTable(
             name: "AspNetUserLogins",
@@ -155,26 +220,26 @@ public partial class setupdatabase : Migration
                     onDelete: ReferentialAction.Cascade);
             });
 
-        migrationBuilder.CreateTable(
-            name: "Comments",
-            columns: table => new
-            {
-                Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-            },
-            constraints: table =>
-            {
-                table.PrimaryKey("PK_Comments", x => x.Id);
-                table.ForeignKey(
-                    name: "FK_Comments_AspNetUsers_CreatedByUserId",
-                    column: x => x.CreatedByUserId,
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Restrict);
-            });
+            migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
 
         migrationBuilder.CreateTable(
             name: "RefreshTokens",
@@ -892,10 +957,56 @@ public partial class setupdatabase : Migration
                     onDelete: ReferentialAction.Cascade);
             });
 
-        migrationBuilder.CreateIndex(
-            name: "IX_AspNetRoleClaims_RoleId",
-            table: "AspNetRoleClaims",
-            column: "RoleId");
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleComments_ArticleId",
+                table: "ArticleComments",
+                column: "ArticleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_ArticleId_CreatedAt",
+                table: "ArticleLikes",
+                columns: new[] { "ArticleId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_ArticleId_CreatedByUserId",
+                table: "ArticleLikes",
+                columns: new[] { "ArticleId", "CreatedByUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleLikes_CreatedByUserId",
+                table: "ArticleLikes",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_CreatedByUserId",
+                table: "Articles",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_CreatedAt",
+                table: "Articles",
+                columns: new[] { "TenantId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_IsPublished",
+                table: "Articles",
+                columns: new[] { "TenantId", "IsPublished" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Articles_TenantId_Title",
+                table: "Articles",
+                columns: new[] { "TenantId", "Title" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ArticleTags_TagsId",
+                table: "ArticleTags",
+                column: "TagsId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetRoleClaims_RoleId",
+                table: "AspNetRoleClaims",
+                column: "RoleId");
 
         migrationBuilder.CreateIndex(
             name: "RoleNameIndex",
@@ -1237,13 +1348,69 @@ public partial class setupdatabase : Migration
             table: "WorkItems",
             column: "SprintId");
 
-        migrationBuilder.AddForeignKey(
-            name: "FK_AspNetUserClaims_AspNetUsers_UserId",
-            table: "AspNetUserClaims",
-            column: "UserId",
-            principalTable: "AspNetUsers",
-            principalColumn: "Id",
-            onDelete: ReferentialAction.Cascade);
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleComments_Articles_ArticleId",
+                table: "ArticleComments",
+                column: "ArticleId",
+                principalTable: "Articles",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleComments_Comments_Id",
+                table: "ArticleComments",
+                column: "Id",
+                principalTable: "Comments",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleLikes_Articles_ArticleId",
+                table: "ArticleLikes",
+                column: "ArticleId",
+                principalTable: "Articles",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleLikes_AspNetUsers_CreatedByUserId",
+                table: "ArticleLikes",
+                column: "CreatedByUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Articles_AspNetUsers_CreatedByUserId",
+                table: "Articles",
+                column: "CreatedByUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Articles_Tenants_TenantId",
+                table: "Articles",
+                column: "TenantId",
+                principalTable: "Tenants",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ArticleTags_Tags_TagsId",
+                table: "ArticleTags",
+                column: "TagsId",
+                principalTable: "Tags",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                table: "AspNetUserClaims",
+                column: "UserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
 
         migrationBuilder.AddForeignKey(
             name: "FK_AspNetUserLogins_AspNetUsers_UserId",
@@ -1277,8 +1444,17 @@ public partial class setupdatabase : Migration
             name: "FK_Tenants_AspNetUsers_TenantAdminId",
             table: "Tenants");
 
-        migrationBuilder.DropTable(
-            name: "AspNetRoleClaims");
+            migrationBuilder.DropTable(
+                name: "ArticleComments");
+
+            migrationBuilder.DropTable(
+                name: "ArticleLikes");
+
+            migrationBuilder.DropTable(
+                name: "ArticleTags");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoleClaims");
 
         migrationBuilder.DropTable(
             name: "AspNetUserClaims");
@@ -1331,8 +1507,11 @@ public partial class setupdatabase : Migration
         migrationBuilder.DropTable(
             name: "WorkItemRelations");
 
-        migrationBuilder.DropTable(
-            name: "AspNetRoles");
+            migrationBuilder.DropTable(
+                name: "Articles");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles");
 
         migrationBuilder.DropTable(
             name: "SubTopics");

@@ -56,19 +56,11 @@ public class DeveloperProductivityReportDocument : IDocument
 
     private void BuildHeader(IContainer container)
     {
-        var scope = _data.ProjectKey is not null
-            ? $"Project {_data.ProjectKey}"
-            : "All Projects";
-
-        var teamScope = _data.TeamId is not null
-            ? $" • Team {_data.TeamId}"
-            : "";
-
         ReportLayoutHelpers.BuildStandardHeader(
             container,
             title: "Developer Productivity Report",
             subtitle: $"Delivery productivity analytics • Period: {_data.From:dd MMM yyyy} → {_data.To:dd MMM yyyy}",
-            rightTop: $"{scope}{teamScope}",
+            rightTop: GetScopeLabel(),
             rightBottom: $"Generated: {_data.GeneratedAt:dd MMM yyyy}",
             logoBytes: _logoBytes);
     }
@@ -173,7 +165,7 @@ public class DeveloperProductivityReportDocument : IDocument
                 .Style(ReportTextStyles.CardTitle);
 
             col.Item().Component(new InsightRow("Period", $"{_data.From:dd MMM} - {_data.To:dd MMM yyyy}"));
-            col.Item().Component(new InsightRow("Scope", _data.ProjectKey ?? "All Projects"));
+            col.Item().Component(new InsightRow("Scope", GetScopeLabel()));
             col.Item().Component(new InsightRow("Developers", $"{_data.DevelopersCount:N0}"));
             col.Item().Component(new InsightRow("Avg Completion", $"{_data.AverageCompletionPercentage:N1}%"));
             col.Item().Component(new InsightRow("Avg Cycle Time", $"{_data.AverageCycleTimeDays:N1} days"));
@@ -189,6 +181,40 @@ public class DeveloperProductivityReportDocument : IDocument
                     .Style(ReportTextStyles.Label);
             }
         });
+    }
+
+    private string GetScopeLabel()
+    {
+        var parts = new List<string>
+    {
+        _data.ProjectKey is not null
+            ? $"Project {_data.ProjectKey}"
+            : "All Projects"
+    };
+
+        if (!string.IsNullOrWhiteSpace(_data.UserId))
+        {
+            var userName = _data.Developers?.FirstOrDefault()?.FullName;
+
+            parts.Add(!string.IsNullOrWhiteSpace(userName)
+                ? $"User {userName}"
+                : $"User {_data.UserId}");
+        }
+        else if (!string.IsNullOrWhiteSpace(_data.TeamId))
+        {
+            parts.Add($"Team {_data.TeamId}");
+        }
+        else
+        {
+            parts.Add("All Users");
+        }
+
+        return string.Join(" • ", parts);
+    }
+
+    private bool IsSingleUserReport()
+    {
+        return !string.IsNullOrWhiteSpace(_data.UserId);
     }
 
     private void BuildKpiRow(IContainer container)
@@ -239,8 +265,8 @@ public class DeveloperProductivityReportDocument : IDocument
         {
             col.Spacing(10);
 
-            col.Item().Text("Top Performers")
-                .Style(ReportTextStyles.CardTitle);
+            col.Item().Text(IsSingleUserReport() ? "Developer Summary" : "Top Performers")
+                    .Style(ReportTextStyles.CardTitle); 
 
             if (topDevelopers.Count == 0)
             {
@@ -296,8 +322,8 @@ public class DeveloperProductivityReportDocument : IDocument
         {
             col.Spacing(10);
 
-            col.Item().Text("Developer Details")
-                .Style(ReportTextStyles.CardTitle);
+            col.Item().Text(IsSingleUserReport() ? "Selected Developer Details" : "Developer Details")
+                    .Style(ReportTextStyles.CardTitle);
 
             if (developers.Count == 0)
             {

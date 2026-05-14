@@ -262,7 +262,6 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/velocity-report/pdf")]
     public async Task<IActionResult> GetVelocityReportPdf(string projectId)
     {
@@ -280,12 +279,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/bug-severity-distribution-report?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/bug-severity-distribution-report?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This report groups project bugs by severity using the work item priority values:
     /// Low, Medium, High, and Critical.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the bug severity distribution report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -293,14 +291,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/bug-severity-distribution-report")]
+    [HttpGet("bug-severity-distribution-report")]
     public async Task<ActionResult<BugSeverityDistributionReportDto>> GetBugSeverityDistributionReport(
-        string projectId,
         [FromQuery] GetBugSeverityDistributionReportRequest request)
     {
         var query = Mapper.Map<GetBugSeverityDistributionReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -311,11 +306,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/bug-severity-distribution-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/bug-severity-distribution-report/pdf?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This PDF report visualizes bug counts and percentages by severity.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -323,14 +317,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/bug-severity-distribution-report/pdf")]
+    [HttpGet("bug-severity-distribution-report/pdf")]
     public async Task<IActionResult> GetBugSeverityDistributionReportPdf(
-        string projectId,
         [FromQuery] GetBugSeverityDistributionReportRequest request)
     {
         var query = Mapper.Map<GetBugSeverityDistributionReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -341,12 +332,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/developer-productivity-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
+    ///     GET /api/reports/developer-productivity-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
     ///
     /// This report summarizes developer workload, completed work items, completed effort points,
     /// blocked items, overdue items, completion percentage, and average cycle time.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range and optional team filter query parameters.</param>
     /// <response code="200">Returns the developer productivity report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -354,14 +344,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project or team does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/developer-productivity-report")]
+    [HttpGet("developer-productivity-report")]
     public async Task<ActionResult<DeveloperProductivityReportDto>> GetDeveloperProductivityReport(
-        string projectId,
         [FromQuery] GetDeveloperProductivityReportRequest request)
     {
         var query = Mapper.Map<GetDeveloperProductivityReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -372,11 +359,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/developer-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
+    ///     GET /api/reports/developer-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id
     ///
     /// This PDF report ranks developers by completed effort and highlights delivery risks.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range and optional team filter query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -384,14 +370,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project or team does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/developer-productivity-report/pdf")]
+    [HttpGet("developer-productivity-report/pdf")]
     public async Task<IActionResult> GetDeveloperProductivityReportPdf(
-        string projectId,
         [FromQuery] GetDeveloperProductivityReportRequest request)
     {
         var query = Mapper.Map<GetDeveloperProductivityReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -402,12 +385,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/teams-productivity-report?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/teams-productivity-report?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This report summarizes team-level completed work items, completed effort points,
     /// completion percentage, blocked items, overdue items, and average cycle time.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the teams productivity report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -415,14 +397,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/teams-productivity-report")]
+    [HttpGet("teams-productivity-report")]
     public async Task<ActionResult<TeamsProductivityReportDto>> GetTeamsProductivityReport(
-        string projectId,
         [FromQuery] GetTeamsProductivityReportRequest request)
     {
         var query = Mapper.Map<GetTeamsProductivityReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -433,11 +412,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/teams-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/teams-productivity-report/pdf?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This PDF report ranks teams by completed effort and highlights team workload risks.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -445,14 +423,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/teams-productivity-report/pdf")]
+    [HttpGet("teams-productivity-report/pdf")]
     public async Task<IActionResult> GetTeamsProductivityReportPdf(
-        string projectId,
         [FromQuery] GetTeamsProductivityReportRequest request)
     {
         var query = Mapper.Map<GetTeamsProductivityReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -463,12 +438,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/blocked-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///     GET /api/reports/blocked-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
     ///
     /// This report lists currently blocked work items and groups them by priority and status.
     /// Optional filters can narrow the result by team or assigned user.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
     /// <response code="200">Returns the blocked work items report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -476,14 +450,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/blocked-work-items-report")]
+    [HttpGet("blocked-work-items-report")]
     public async Task<ActionResult<BlockedWorkItemsReportDto>> GetBlockedWorkItemsReport(
-        string projectId,
         [FromQuery] GetBlockedWorkItemsReportRequest request)
     {
         var query = Mapper.Map<GetBlockedWorkItemsReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -494,11 +465,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/blocked-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///     GET /api/reports/blocked-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
     ///
     /// This PDF report visualizes blockers by priority, status, and blocked age.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -506,14 +476,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/blocked-work-items-report/pdf")]
+    [HttpGet("blocked-work-items-report/pdf")]
     public async Task<IActionResult> GetBlockedWorkItemsReportPdf(
-        string projectId,
         [FromQuery] GetBlockedWorkItemsReportRequest request)
     {
         var query = Mapper.Map<GetBlockedWorkItemsReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -524,12 +491,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/overdue-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///     GET /api/reports/overdue-work-items-report?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
     ///
     /// This report lists work items whose end date has passed and are not done.
     /// Optional filters can narrow the result by team or assigned user.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
     /// <response code="200">Returns the overdue work items report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -537,14 +503,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/overdue-work-items-report")]
+    [HttpGet("overdue-work-items-report")]
     public async Task<ActionResult<OverdueWorkItemsReportDto>> GetOverdueWorkItemsReport(
-        string projectId,
         [FromQuery] GetOverdueWorkItemsReportRequest request)
     {
         var query = Mapper.Map<GetOverdueWorkItemsReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -555,11 +518,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/overdue-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
+    ///     GET /api/reports/overdue-work-items-report/pdf?from=2026-05-01&amp;to=2026-05-31&amp;teamId=team-id&amp;assignedToUserId=user-id&amp;maxItems=100
     ///
     /// This PDF report visualizes overdue work items by priority, status, and days overdue.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range, optional team/user filters, and max items query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -567,14 +529,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/overdue-work-items-report/pdf")]
+    [HttpGet("overdue-work-items-report/pdf")]
     public async Task<IActionResult> GetOverdueWorkItemsReportPdf(
-        string projectId,
         [FromQuery] GetOverdueWorkItemsReportRequest request)
     {
         var query = Mapper.Map<GetOverdueWorkItemsReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -585,12 +544,11 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/project-health-report?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/project-health-report?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This report calculates a health score based on completion percentage, blocked work,
     /// overdue work, critical bugs, and high-priority bugs.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the project health report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -598,14 +556,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/project-health-report")]
+    [HttpGet("project-health-report")]
     public async Task<ActionResult<ProjectHealthReportDto>> GetProjectHealthReport(
-        string projectId,
         [FromQuery] GetProjectHealthReportRequest request)
     {
         var query = Mapper.Map<GetProjectHealthReport.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -616,11 +571,10 @@ public sealed class ReportsController : ApiBaseController
     /// <remarks>
     /// Sample request:
     ///
-    ///     GET /api/reports/{projectId}/project-health-report/pdf?from=2026-05-01&amp;to=2026-05-31
+    ///     GET /api/reports/project-health-report/pdf?from=2026-05-01&amp;to=2026-05-31
     ///
     /// This PDF report visualizes project health score, health status, and risk factors.
     /// </remarks>
-    /// <param name="projectId">The project id.</param>
     /// <param name="request">The report date range query parameters.</param>
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="400">If the request is invalid.</response>
@@ -628,14 +582,11 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
     [Authorize(Policy = Policies.Projects_Manage)]
-    [Authorize(Policy = Policies.Project_Access)]
-    [HttpGet("{projectId}/project-health-report/pdf")]
+    [HttpGet("project-health-report/pdf")]
     public async Task<IActionResult> GetProjectHealthReportPdf(
-        string projectId,
         [FromQuery] GetProjectHealthReportRequest request)
     {
         var query = Mapper.Map<GetProjectHealthReportPdf.Query>(request);
-        query.ProjectId = projectId;
 
         return HandleResult(await Mediator.Send(query));
     }

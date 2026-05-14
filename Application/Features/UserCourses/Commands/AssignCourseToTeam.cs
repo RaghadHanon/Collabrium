@@ -1,4 +1,6 @@
 ﻿using Application.Common;
+using Application.Events;
+using Application.Features.Users.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
@@ -17,20 +19,22 @@ public sealed class AssignCourseToTeam
         public required string TeamId { get; set; }
     }
 
-    public sealed class Handler(
-        IUserCoursesRepository userCoursesRepository,
-        ITeamsReadModel teamsReadModel,
-        ICoursesRepository coursesRepository,
-        ITenantContext tenantContext,
-        ICurrentUserAccessor currentUserAccessor,
-        IUnitOfWork unitOfWork)
-        : IRequestHandler<Command, Result<string>>
-    {
-        public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
+        public sealed class Handler(
+            IUserCoursesRepository userCoursesRepository,
+            ITeamsReadModel teamsReadModel,
+            ICoursesRepository coursesRepository,
+            ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor,
+            IUnitOfWork unitOfWork,
+            IUsersReadModel usersReadModel,
+            IMediator mediator)
+            : IRequestHandler<Command, Result<string>>
         {
-            var tenantId = tenantContext.CurrentTenant?.Id;
-            if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
+            {
+                var tenantId = tenantContext.CurrentTenant?.Id;
+                if (string.IsNullOrWhiteSpace(tenantId))
+                    return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
@@ -60,25 +64,37 @@ public sealed class AssignCourseToTeam
             if (members is null || members.Count == 0)
                 return Result<string>.Failure("Team has no members.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
-            {
-                foreach (var member in members)
+                var assignerUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                if (assignerUser is null)
+                    return Result<string>.Failure("Assigner user not found.", HttpStatusCode.NotFound);
+
+                var assignedMembers = new List<UserSnapshotDto>();
+
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    if (string.IsNullOrWhiteSpace(member.Id))
-                        continue;
+                    foreach (var member in members)
+                    {
+                        if (string.IsNullOrWhiteSpace(member.Id))
+                            continue;
 
-                    var userId = member.Id.Trim();
-                    if (string.Equals(userId, currentUserId, StringComparison.Ordinal))
-                        continue;
-                    var targetRole = await currentUserAccessor.GetUserRole(userId, cancellationToken);
+                        var userId = member.Id.Trim();
 
-                    if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
-                        continue;
-                    var userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
-                        tenantId,
-                        userId,
-                        request.CourseId,
-                        ct);
+                        if (string.Equals(userId, currentUserId, StringComparison.Ordinal))
+                            continue;
+
+                        var targetRole = await currentUserAccessor.GetUserRole(userId, ct);
+
+                        if (CourseAssignmentRules.IsBlockedTargetRole(targetRole))
+                            continue;
+
+                        var userCourse = await userCoursesRepository.GetByUserAndCourseAsync(
+                            tenantId,
+                            userId,
+                            request.CourseId,
+                            ct);
 
                     if (userCourse is null)
                     {
@@ -87,20 +103,36 @@ public sealed class AssignCourseToTeam
                             userId: userId,
                             courseId: request.CourseId);
 
-                        userCourse.Assign(currentUserId);
-                        await userCoursesRepository.AddAsync(userCourse, ct);
+                            userCourse.Assign(currentUserId);
+                            await userCoursesRepository.AddAsync(userCourse, ct);
+                        }
+                        else
+                        {
+                            userCourse.Assign(currentUserId);
+                            await userCoursesRepository.UpdateAsync(userCourse, ct);
+                        }
+
+                        assignedMembers.Add(member);
                     }
-                    else
-                    {
-                        userCourse.Assign(currentUserId);
-                        await userCoursesRepository.UpdateAsync(userCourse, ct);
-                    }
-                }
 
                 await unitOfWork.SaveChangesAsync(ct);
             }, cancellationToken);
 
-            return Result<string>.Success("Course assigned to team successfully.", HttpStatusCode.OK);
+                if (assignedMembers.Count > 0)
+                {
+                    await mediator.Publish(new CourseAssignedToTeamEvent(
+                        CourseId: course.Id,
+                        CourseTitle: course.Title,
+                        CourseProvider: course.Provider,
+                        AssignerFullName: assignerUser.FullName,
+                        Members: assignedMembers
+                    ), cancellationToken);
+                }
+
+                return Result<string>.Success(
+                    "Course assigned to team successfully.",
+                    HttpStatusCode.OK);
+            }
         }
     }
 }

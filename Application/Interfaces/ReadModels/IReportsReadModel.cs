@@ -19,7 +19,8 @@ public interface IReportsReadModel
         DateTime from,
         DateTime to,
         string? projectId = null,
-        string? teamId = null);
+        string? teamId = null,
+        string? userId = null);
     Task<TeamsProductivityReportDto> GenerateTeamsProductivityReportAsync(
         string tenantId,
         DateTime from,

@@ -287,8 +287,22 @@ public sealed class RoadmapsController : ApiBaseController
             CurrentRoadmapId = currentRoadmapId
         };
 
-        return HandleResult(await Mediator.Send(query));
-    }
+            return HandleResult(await Mediator.Send(query));
+        }
+        /// <summary>
+        /// Deletes a roadmap by id.
+        /// </summary>
+        [HttpDelete("{roadmapId}")]
+        public async Task<IActionResult> DeleteRoadmap(string roadmapId)
+        {
+            var command = new DeleteRoadmap.Command
+            {
+                RoadmapId = roadmapId
+            };
+
+            var result = await Mediator.Send(command);
+            return HandleResult(result);
+        }
 
 
 }

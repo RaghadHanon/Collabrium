@@ -36,11 +36,14 @@ public class GetBugSeverityDistributionReport
                 }
             }
 
-            if (!await projectsRepository.IsProjectExists(request.TenantId, request.ProjectId))
+            if (request.ProjectId is not null)
             {
-                return Result<BugSeverityDistributionReportDto>.Failure(
-                    $"Project with id {request.ProjectId} does not exist.",
-                    HttpStatusCode.NotFound);
+                if (!await projectsRepository.IsProjectExists(request.TenantId, request.ProjectId))
+                {
+                    return Result<BugSeverityDistributionReportDto>.Failure(
+                        $"Project with id {request.ProjectId} does not exist.",
+                        HttpStatusCode.NotFound);
+                }
             }
 
             var report = await reportsReadModel.GenerateBugSeverityDistributionReportAsync(

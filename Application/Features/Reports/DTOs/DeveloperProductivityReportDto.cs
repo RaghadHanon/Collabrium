@@ -7,6 +7,7 @@ public class DeveloperProductivityReportDto
     public string? ProjectKey { get; set; }
     public string? ProjectName { get; set; }
     public string? TeamId { get; set; }
+    public string? UserId { get; set; }
 
     public DateTime From { get; set; }
     public DateTime To { get; set; }

@@ -1,0 +1,57 @@
+﻿using Application.Common;
+using Application.Events;
+using Application.Interfaces.Emails;
+using MediatR;
+using Microsoft.Extensions.Options;
+
+namespace Application.EventsHandlers
+{
+    public class CourseAssignedToTeamEmailHandler
+      : INotificationHandler<CourseAssignedToTeamEvent>
+    {
+        private readonly IEmailService emailService;
+        private readonly IEmailTemplateFactory templateFactory;
+        private readonly WebAppSettings settings;
+
+        public CourseAssignedToTeamEmailHandler(
+            IEmailService emailService,
+            IEmailTemplateFactory templateFactory,
+            IOptions<WebAppSettings> settings)
+        {
+            this.emailService = emailService;
+            this.templateFactory = templateFactory;
+            this.settings = settings.Value;
+        }
+
+        public async Task Handle(CourseAssignedToTeamEvent notification, CancellationToken ct)
+        {
+            var template = templateFactory.GetTemplate("CourseAssignment");
+
+            var url = $"{settings.BaseUrl}/dashboard/courses/{notification.CourseId}";
+
+            foreach (var member in notification.Members)
+            {
+                if (string.IsNullOrWhiteSpace(member.Email))
+                    continue;
+
+                var data = new Dictionary<string, string>
+                {
+                    ["AssigneeFullName"] = member.FullName,
+                    ["AssignerFullName"] = notification.AssignerFullName,
+                    ["CourseTitle"] = notification.CourseTitle,
+                    ["CourseProvider"] = notification.CourseProvider,
+                    ["Url"] = url
+                };
+
+                var message = new EmailMessageBuilder()
+                    .To(member.Email)
+                    .Subject(template.GetSubject())
+                    .PlainTextBody(template.GetPlainTextBody(data))
+                    .HtmlBody(template.GetHtmlBody(data))
+                    .Build();
+
+                await emailService.SendAsync(message, ct);
+            }
+        }
+    }
+}

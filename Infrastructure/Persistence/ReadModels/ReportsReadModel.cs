@@ -346,11 +346,12 @@ public class ReportsReadModel : IReportsReadModel
     }
 
     public async Task<DeveloperProductivityReportDto> GenerateDeveloperProductivityReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null,
-        string? teamId = null)
+    string tenantId,
+    DateTime from,
+    DateTime to,
+    string? projectId = null,
+    string? teamId = null,
+    string? userId = null)
     {
         ValidateDateRange(from, to);
 
@@ -358,13 +359,14 @@ public class ReportsReadModel : IReportsReadModel
         var now = DateTime.UtcNow;
         var project = await GetOptionalProjectAsync(tenantId, projectId);
 
-        var users = await GetDeveloperCandidatesAsync(tenantId, teamId);
+        var users = await GetDeveloperCandidatesAsync(tenantId, teamId, userId);
         var userIds = users.Select(user => user.Id).ToList();
 
         var workItemsQuery = QueryTenantWorkItems(tenantId);
         workItemsQuery = ApplyProjectFilter(workItemsQuery, projectId);
         workItemsQuery = ApplyTeamFilter(workItemsQuery, teamId);
         workItemsQuery = ApplyOverlappingDateRange(workItemsQuery, from, to);
+
         workItemsQuery = workItemsQuery.Where(workItem =>
             userIds.Contains(workItem.CreatedByUserId) ||
             (workItem.AssignedToUserId != null && userIds.Contains(workItem.AssignedToUserId)));
@@ -373,7 +375,7 @@ public class ReportsReadModel : IReportsReadModel
 
         var developers = users
             .Select(user => BuildDeveloperProductivityItem(user, workItems, from, to, now))
-            .Where(HasDeveloperActivity)
+            .Where(developer => !string.IsNullOrWhiteSpace(userId) || HasDeveloperActivity(developer))
             .OrderByDescending(developer => developer.CompletedEffortPoints)
             .ThenByDescending(developer => developer.CompletedWorkItemsCount)
             .ToList();
@@ -385,17 +387,23 @@ public class ReportsReadModel : IReportsReadModel
             ProjectKey = project?.Key,
             ProjectName = project?.Name,
             TeamId = teamId,
+            UserId = userId,
+
             From = from,
             To = to,
             GeneratedAt = generatedAt,
+
             DevelopersCount = developers.Count,
+
             TotalAssignedWorkItems = developers.Sum(developer => developer.AssignedWorkItemsCount),
             TotalCompletedWorkItems = developers.Sum(developer => developer.CompletedWorkItemsCount),
             TotalBlockedWorkItems = developers.Sum(developer => developer.BlockedWorkItemsCount),
             TotalOverdueWorkItems = developers.Sum(developer => developer.OverdueWorkItemsCount),
             TotalCompletedEffortPoints = developers.Sum(developer => developer.CompletedEffortPoints),
+
             AverageCompletionPercentage = AverageOrZero(developers, developer => developer.CompletionPercentage),
             AverageCycleTimeDays = AverageForItemsWithCompletedWork(developers),
+
             Developers = developers
         };
     }
@@ -664,14 +672,25 @@ public class ReportsReadModel : IReportsReadModel
             .Where(workItem => workItem.Project.TenantId == tenantId);
     }
 
-    private async Task<List<UserProjection>> GetDeveloperCandidatesAsync(string tenantId, string? teamId)
+    private async Task<List<UserProjection>> GetDeveloperCandidatesAsync(
+        string tenantId,
+        string? teamId,
+        string? userId)
     {
         var query = _dbContext.Users
             .AsNoTracking()
             .Where(user => user.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(teamId))
-            query = query.Where(user => user.TeamMemberships.Any(member => member.TeamId == teamId));
+        {
+            query = query.Where(user =>
+                user.TeamMemberships.Any(member => member.TeamId == teamId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            query = query.Where(user => user.Id == userId);
+        }
 
         return await query
             .Select(user => new UserProjection

@@ -74,7 +74,21 @@ public class UsersReadModel : IUsersReadModel
         query = ApplyFilters(query, parameters);
         return await ApplyPagination(parameters, pageSize, query, cancellationToken);
     }
+    public async Task<UserSnapshotDto?> GetUserSnapshotByIdAsync(
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return null;
 
+        var id = userId.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+             .ProjectTo<UserSnapshotDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
     private async Task<PagedList<UserDto, DateTime?>> ApplyPagination(
         UsersSearchAndFilterParametersDto parameters, int pageSize,
         IQueryable<ApplicationUserEntity> query,

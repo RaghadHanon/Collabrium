@@ -15,6 +15,7 @@ public class GetDeveloperProductivityReportPdf
     {
         public string? TenantId { get; set; }
         public string? ProjectId { get; set; }
+        public string? UserId { get; set; }
         public string? TeamId { get; set; }
         public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-30);
         public DateTime To { get; set; } = DateTime.UtcNow;
@@ -24,6 +25,7 @@ public class GetDeveloperProductivityReportPdf
         IReportsReadModel reportsReadModel,
         IProjectsRepository projectsRepository,
         ITeamsRepository teamsRepository,
+        IUsersRepository usersRepository,
         ITenantContext tenantContext,
         IDeveloperProductivityPdfRenderer developerProductivityPdfRenderer
     ) : IRequestHandler<Query, Result<FileContentResult>>
@@ -47,6 +49,13 @@ public class GetDeveloperProductivityReportPdf
                     HttpStatusCode.BadRequest);
             }
 
+            if (request.TeamId is not null && request.UserId is not null)
+            {
+                return Result<FileContentResult>.Failure(
+                    "Choose either TeamId or UserId, not both.",
+                    HttpStatusCode.BadRequest);
+            }
+
             if (request.ProjectId is not null)
             {
                 if (!await projectsRepository.IsProjectExists(request.TenantId, request.ProjectId))
@@ -67,24 +76,46 @@ public class GetDeveloperProductivityReportPdf
                 }
             }
 
+            if (request.UserId is not null)
+            {
+                if (!await usersRepository.IsUserExists(request.TenantId, request.UserId))
+                {
+                    return Result<FileContentResult>.Failure(
+                        $"User with id {request.UserId} does not exist.",
+                        HttpStatusCode.NotFound);
+                }
+            }
+
             var report = await reportsReadModel.GenerateDeveloperProductivityReportAsync(
                 request.TenantId,
                 request.From,
                 request.To,
                 request.ProjectId,
-                request.TeamId);
+                request.TeamId,
+                request.UserId);
 
             var pdfBytes = developerProductivityPdfRenderer.Render(report);
 
             var projectPart = report.ProjectKey ?? "AllProjects";
-            var teamPart = report.TeamId ?? "AllTeams";
+            var scopePart = GetScopeFilePart(report.TeamId, report.UserId);
 
             var fileResult = new FileContentResult(pdfBytes, "application/pdf")
             {
-                FileDownloadName = $"DeveloperProductivityReport_{projectPart}_{teamPart}_{DateTime.UtcNow:yyyyMMddHHmm}.pdf"
+                FileDownloadName = $"DeveloperProductivityReport_{projectPart}_{scopePart}_{DateTime.UtcNow:yyyyMMddHHmm}.pdf"
             };
 
             return Result<FileContentResult>.Success(fileResult, HttpStatusCode.OK);
+        }
+
+        private static string GetScopeFilePart(string? teamId, string? userId)
+        {
+            if (!string.IsNullOrWhiteSpace(userId))
+                return $"User_{userId}";
+
+            if (!string.IsNullOrWhiteSpace(teamId))
+                return $"Team_{teamId}";
+
+            return "AllUsers";
         }
     }
 }

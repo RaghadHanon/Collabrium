@@ -15,6 +15,7 @@ public class GetDeveloperProductivityReport
         public string? TenantId { get; set; }
         public string? ProjectId { get; set; }
         public string? TeamId { get; set; }
+        public string? UserId { get; set; }
         public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-30);
         public DateTime To { get; set; } = DateTime.UtcNow;
     }
@@ -23,6 +24,7 @@ public class GetDeveloperProductivityReport
         IReportsReadModel reportsReadModel,
         IProjectsRepository projectsRepository,
         ITeamsRepository teamsRepository,
+        IUsersRepository usersRepository,
         ITenantContext tenantContext
     ) : IRequestHandler<Query, Result<DeveloperProductivityReportDto>>
     {
@@ -34,13 +36,24 @@ public class GetDeveloperProductivityReport
 
                 if (request.TenantId is null)
                 {
-                    return Result<DeveloperProductivityReportDto>.Failure("TenantId is not found.", HttpStatusCode.BadRequest);
+                    return Result<DeveloperProductivityReportDto>.Failure(
+                        "TenantId is not found.",
+                        HttpStatusCode.BadRequest);
                 }
             }
 
             if (request.From > request.To)
             {
-                return Result<DeveloperProductivityReportDto>.Failure("From date cannot be after To date.", HttpStatusCode.BadRequest);
+                return Result<DeveloperProductivityReportDto>.Failure(
+                    "From date cannot be after To date.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            if (request.TeamId is not null && request.UserId is not null)
+            {
+                return Result<DeveloperProductivityReportDto>.Failure(
+                    "Choose either TeamId or UserId, not both.",
+                    HttpStatusCode.BadRequest);
             }
 
             if (request.ProjectId is not null)
@@ -63,12 +76,23 @@ public class GetDeveloperProductivityReport
                 }
             }
 
+            if (request.UserId is not null)
+            {
+                if (!await usersRepository.IsUserExists(request.TenantId, request.UserId))
+                {
+                    return Result<DeveloperProductivityReportDto>.Failure(
+                        $"User with id {request.UserId} does not exist.",
+                        HttpStatusCode.NotFound);
+                }
+            }
+
             var report = await reportsReadModel.GenerateDeveloperProductivityReportAsync(
                 request.TenantId,
                 request.From,
                 request.To,
                 request.ProjectId,
-                request.TeamId);
+                request.TeamId,
+                request.UserId);
 
             return Result<DeveloperProductivityReportDto>.Success(report, HttpStatusCode.OK);
         }

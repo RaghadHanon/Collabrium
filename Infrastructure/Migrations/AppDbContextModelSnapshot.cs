@@ -22,6 +22,21 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ArticleEntityTagEntity", b =>
+                {
+                    b.Property<string>("ArticleEntityId")
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TagsId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ArticleEntityId", "TagsId");
+
+                    b.HasIndex("TagsId");
+
+                    b.ToTable("ArticleTags", (string)null);
+                });
+
             modelBuilder.Entity("CourseEntityTagEntity", b =>
                 {
                     b.Property<string>("CourseEntityId")
@@ -139,6 +154,91 @@ namespace Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "IsPublished");
+
+                    b.HasIndex("TenantId", "Title");
+
+                    b.ToTable("Articles", (string)null);
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ArticleId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ArticleId", "CreatedAt");
+
+                    b.HasIndex("ArticleId", "CreatedByUserId")
+                        .IsUnique();
+
+                    b.ToTable("ArticleLikes", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -244,6 +344,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1234,6 +1335,20 @@ namespace Infrastructure.Migrations
                     b.ToTable("RoadmapTags", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleCommentEntity", b =>
+                {
+                    b.HasBaseType("Infrastructure.Persistence.Entities.CommentEntity");
+
+                    b.Property<string>("ArticleId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasIndex("ArticleId");
+
+                    b.ToTable("ArticleComments", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
                 {
                     b.HasBaseType("Infrastructure.Persistence.Entities.CommentEntity");
@@ -1344,6 +1459,21 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue(2);
+                });
+
+            modelBuilder.Entity("ArticleEntityTagEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ArticleEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TagEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CourseEntityTagEntity", b =>
@@ -1461,6 +1591,71 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProfileImage");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("Domain.ValueObjects.StoredImage", "CoverImage", b1 =>
+                        {
+                            b1.Property<string>("ArticleEntityId")
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<string>("PublicId")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("CoverImagePublicId");
+
+                            b1.Property<string>("Url")
+                                .IsRequired()
+                                .HasMaxLength(2000)
+                                .HasColumnType("nvarchar(2000)")
+                                .HasColumnName("CoverImageUrl");
+
+                            b1.HasKey("ArticleEntityId");
+
+                            b1.ToTable("Articles");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ArticleEntityId");
+                        });
+
+                    b.Navigation("CoverImage");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleLikeEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ArticleEntity", "Article")
+                        .WithMany("Likes")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.AttachmentEntity", b =>
@@ -2033,6 +2228,23 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleCommentEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ArticleEntity", "Article")
+                        .WithMany("Comments")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.CommentEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Infrastructure.Persistence.Entities.ArticleCommentEntity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.WorkItemCommentEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.CommentEntity", null)
@@ -2074,6 +2286,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("TeamMemberships");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleEntity", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.CourseEntity", b =>

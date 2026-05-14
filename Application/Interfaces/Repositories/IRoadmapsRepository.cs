@@ -2,13 +2,17 @@
 using Application.Common.DTOs;
 using Domain.Models;
 
-namespace Application.Interfaces.Repositories;
-
-public interface IRoadmapsRepository
+namespace Application.Interfaces.Repositories
 {
-    Task AddAsync(Roadmap roadmap, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Roadmap roadmap, CancellationToken cancellationToken = default);
-    Task<bool> RemoveAsync(string tenantId, string roadmapId, CancellationToken cancellationToken = default);
+    public interface IRoadmapsRepository
+    {
+        Task AddAsync(Roadmap roadmap, CancellationToken cancellationToken = default);
+        Task UpdateAsync(Roadmap roadmap, CancellationToken cancellationToken = default);
+        Task<bool> RemoveAsync(string tenantId, string roadmapId, CancellationToken cancellationToken = default);
+        Task DeleteReferencingNodesAsync(
+            string tenantId,
+            string roadmapId,
+            CancellationToken ct = default);
 
     Task<Roadmap?> GetByIdAsync(
         string tenantId,

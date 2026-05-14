@@ -30,45 +30,56 @@ public sealed class MoveRoadmapNodeUp
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<RoadmapNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var roadmap = await roadmapsRepository.GetByIdAsync(
-                tenantId, request.RoadmapId, cancellationToken);
+                var roadmap = await roadmapsRepository.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
 
             if (roadmap is null)
                 return Result<RoadmapNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
-            var nodes = await roadmapNodesRepository.GetByRoadmapIdAsync(
-                tenantId, request.RoadmapId, cancellationToken);
+                var nodes = await roadmapNodesRepository.GetByRoadmapIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    cancellationToken);
 
             var current = nodes.FirstOrDefault(n => n.Id == request.NodeId);
             if (current is null)
                 return Result<RoadmapNodeDto>.Failure("Node not found.", HttpStatusCode.NotFound);
 
-            if (current.Order == 1)
-            {
-                var dto = await roadmapNodesReadModel.GetByIdAsync(
-                    tenantId, request.RoadmapId, current.Id, cancellationToken);
+                var previous = nodes
+                    .Where(n => n.Order < current.Order)
+                    .OrderByDescending(n => n.Order)
+                    .FirstOrDefault();
+
+                if (previous is null)
+                {
+                    var dto = await roadmapNodesReadModel.GetByIdAsync(
+                        tenantId,
+                        request.RoadmapId,
+                        current.Id,
+                        cancellationToken);
 
                 return dto is null
                     ? Result<RoadmapNodeDto>.Failure("Node could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<RoadmapNodeDto>.Success(dto, HttpStatusCode.OK);
             }
 
-            var previous = nodes.FirstOrDefault(n => n.Order == current.Order - 1);
-            if (previous is null)
-                return Result<RoadmapNodeDto>.Failure("Previous node not found.", HttpStatusCode.InternalServerError);
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    await roadmapNodesRepository.SwapOrderAsync(
+                        tenantId: tenantId,
+                        roadmapId: request.RoadmapId,
+                        firstNodeId: previous.Id,
+                        secondNodeId: current.Id,
+                        ct: ct);
+                }, cancellationToken);
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
-            {
-                await roadmapNodesRepository.SwapOrderAsync(
-                    tenantId: tenantId,
-                    roadmapId: request.RoadmapId,
-                    firstNodeId: previous.Id,
-                    secondNodeId: current.Id,
-                    ct: ct);
-            }, cancellationToken);
-
-            var updatedDto = await roadmapNodesReadModel.GetByIdAsync(
-                tenantId, request.RoadmapId, current.Id, cancellationToken);
+                var updatedDto = await roadmapNodesReadModel.GetByIdAsync(
+                    tenantId,
+                    request.RoadmapId,
+                    current.Id,
+                    cancellationToken);
 
             return updatedDto is null
                 ? Result<RoadmapNodeDto>.Failure("Move up succeeded but reload failed.", HttpStatusCode.InternalServerError)

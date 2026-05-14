@@ -247,12 +247,24 @@ public sealed class RoadmapsRepository : IRoadmapsRepository
         var tId = tenantId.Trim();
         var normalized = title.Trim().ToLowerInvariant();
 
-        return !await _dbContext.Roadmaps
-            .AsNoTracking()
-            .AnyAsync(r =>
-                r.TenantId == tId &&
-                r.Title.ToLower() == normalized,
-                cancellationToken);
+            return !await _dbContext.Roadmaps
+                .AsNoTracking()
+                .AnyAsync(r =>
+                    r.TenantId == tId &&
+                    r.Title.ToLower() == normalized,
+                    cancellationToken);
+        }
+
+        public async Task DeleteReferencingNodesAsync(string tenantId, string roadmapId, CancellationToken ct = default)
+        {
+            var tId = tenantId.Trim();
+            var rId = roadmapId.Trim();
+            var references = await _dbContext.Set<ReferenceNodeEntity>()
+                 .Where(n => n.TenantId == tId && n.RefRoadmapId == rId)
+                .ToListAsync(ct);
+
+            _dbContext.RemoveRange(references);
+        }
     }
 }
 

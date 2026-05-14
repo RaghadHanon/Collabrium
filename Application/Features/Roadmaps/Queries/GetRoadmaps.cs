@@ -31,8 +31,9 @@ public class GetRoadmaps
         public DateTime? CreatedAfter { get; set; }
         public DateTime? CreatedBefore { get; set; }
 
-        public DateTime? Cursor { get; set; }
-        public int PageSize { get; set; }
+            public DateTime? Cursor { get; set; }
+            public int PageSize { get; set; }
+            public string? CreatedByUserId { get; set; }
 
         public IReadOnlyCollection<string>? TagIdsAny { get; set; }
         public IReadOnlyCollection<string>? TagIdsAll { get; set; }

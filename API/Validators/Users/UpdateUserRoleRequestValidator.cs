@@ -1,5 +1,4 @@
 ﻿using API.Contracts.Users;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.Users;

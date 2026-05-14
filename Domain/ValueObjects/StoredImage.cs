@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 
 namespace Domain.ValueObjects;
 

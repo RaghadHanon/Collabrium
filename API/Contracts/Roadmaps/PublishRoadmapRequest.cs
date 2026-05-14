@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.Roadmaps
+﻿namespace API.Contracts.Roadmaps;
+
+public sealed class PublishRoadmapRequest
 {
-    public sealed class PublishRoadmapRequest
-    {
-        public required string RoadmapId { get; set; }
-    }
+    public required string RoadmapId { get; set; }
 }

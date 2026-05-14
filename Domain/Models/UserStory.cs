@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -34,7 +34,7 @@ public sealed class UserStory : WorkItem
     }
 
     public override void ChangeStatusWithValidation(
-         WorkItemStatus newStatus, 
+         WorkItemStatus newStatus,
          Project project,
          Sprint? sprint,
          IEnumerable<WorkItemSnapshot>? linked)
@@ -58,7 +58,7 @@ public sealed class UserStory : WorkItem
             items.Where(x => x.Type == WorkItemType.Bug)
                  .All(x => x.Status == WorkItemStatus.Done);
 
-        var allTestsPassed = 
+        var allTestsPassed =
             items.Where(x => x.Type == WorkItemType.TestCase)
                  .All(x => x.Status == WorkItemStatus.Done && x.TestCaseResult == TestCaseResult.Passed);
 

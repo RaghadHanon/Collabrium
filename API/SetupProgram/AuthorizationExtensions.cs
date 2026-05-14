@@ -1,7 +1,6 @@
-using API.SetupProgram;
 using Domain.Enums;
 
-namespace Application.Common;
+namespace API.SetupProgram;
 
 public static class AuthorizationExtensions
 {

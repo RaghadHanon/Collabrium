@@ -1,8 +1,6 @@
 using API.Common.EnumHandlers;
 using API.Middlewares;
 using Application;
-using Application.Common;
-using Domain.Enums;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure;

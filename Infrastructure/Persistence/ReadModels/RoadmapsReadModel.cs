@@ -7,44 +7,44 @@ using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence.ReadModels
+namespace Infrastructure.Persistence.ReadModels;
+
+public sealed class RoadmapsReadModel : IRoadmapsReadModel
 {
-    public sealed class RoadmapsReadModel : IRoadmapsReadModel
+    private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
+
+    public RoadmapsReadModel(AppDbContext dbContext, IMapper mapper)
     {
-        private readonly AppDbContext _dbContext;
-        private readonly IMapper _mapper;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    }
+    public async Task<PagedList<RoadmapDto, DateTime?>> GetRoadmapsAsync(
+        RoadmapsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
+    {
+        parameters ??= new RoadmapsSearchAndFilterParametersDto();
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+        var query = _dbContext.Roadmaps.AsNoTracking();
 
-        public RoadmapsReadModel(AppDbContext dbContext, IMapper mapper)
+        query = ApplyFilters(query, parameters);
+        if (parameters.Cursor.HasValue)
+            query = query.Where(r => r.CreatedAt < parameters.Cursor.Value);
+
+        var items = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+
+        DateTime? nextCursor = null;
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
         }
-        public async Task<PagedList<RoadmapDto, DateTime?>> GetRoadmapsAsync(
-            RoadmapsSearchAndFilterParametersDto parameters,
-            CancellationToken cancellationToken = default)
-        {
-            parameters ??= new RoadmapsSearchAndFilterParametersDto();
-            var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
-            IQueryable<RoadmapEntity> query = _dbContext.Roadmaps.AsNoTracking();
-
-            query = ApplyFilters(query, parameters);
-            if (parameters.Cursor.HasValue)
-                query = query.Where(r => r.CreatedAt < parameters.Cursor.Value);
-
-            var items = await query
-                .OrderByDescending(r => r.CreatedAt)
-                .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
-                .Take(pageSize + 1)
-                .ToListAsync(cancellationToken);
-
-            DateTime? nextCursor = null;
-            var hasMore = items.Count > pageSize;
-
-            if (hasMore)
-            {
-                items.RemoveAt(items.Count - 1);
-                nextCursor = items[^1].CreatedAt;
-            }
 
             return new PagedList<RoadmapDto, DateTime?>
             {
@@ -90,14 +90,14 @@ namespace Infrastructure.Persistence.ReadModels
                     query = query.Where(r => r.PublishedAt == null);
             }
 
-            if (parameters.CreatedAfter.HasValue)
-                query = query.Where(r => r.CreatedAt >= parameters.CreatedAfter.Value);
+        if (parameters.CreatedAfter.HasValue)
+            query = query.Where(r => r.CreatedAt >= parameters.CreatedAfter.Value);
 
-            if (parameters.CreatedBefore.HasValue)
-                query = query.Where(r => r.CreatedAt <= parameters.CreatedBefore.Value);
+        if (parameters.CreatedBefore.HasValue)
+            query = query.Where(r => r.CreatedAt <= parameters.CreatedBefore.Value);
 
-            if (parameters.UpdatedAfter.HasValue)
-                query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt >= parameters.UpdatedAfter.Value);
+        if (parameters.UpdatedAfter.HasValue)
+            query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt >= parameters.UpdatedAfter.Value);
 
             if (parameters.UpdatedBefore.HasValue)
                 query = query.Where(r => r.UpdatedAt != null && r.UpdatedAt <= parameters.UpdatedBefore.Value);
@@ -123,130 +123,129 @@ namespace Infrastructure.Persistence.ReadModels
                 }
             }
 
-            if (parameters.TagIdsAll is { Count: > 0 })
+        if (parameters.TagIdsAll is { Count: > 0 })
+        {
+            var tagIds = parameters.TagIdsAll
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .ToList();
+
+            if (tagIds.Count > 0)
             {
-                var tagIds = parameters.TagIdsAll
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Trim())
-                    .ToList();
-
-                if (tagIds.Count > 0)
-                {
-                    query = query.Where(r =>
-                        tagIds.All(tagId =>
-                            r.Tags.Any(rt => rt.Id == tagId)));
-                }
+                query = query.Where(r =>
+                    tagIds.All(tagId =>
+                        r.Tags.Any(rt => rt.Id == tagId)));
             }
-
-            return query;
-
-        }
-        public async Task<List<TagDto>> GetTagsAsync(
-           string tenantId,
-           string roadmapId,
-           CancellationToken cancellationToken = default)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
-                return new();
-
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-
-            return await _dbContext.Roadmaps
-                .AsNoTracking()
-                .Where(r => r.TenantId == tId && r.Id == rId)
-                .SelectMany(r => r.Tags)
-                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(cancellationToken);
         }
 
-        public Task<RoadmapDto?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
-                return Task.FromResult<RoadmapDto?>(null);
-
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-            return _dbContext.Roadmaps.
-              AsNoTracking()
-             .Where(r => r.TenantId == tId && r.Id == rId)
-            .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        public async Task<RoadmapDetailsDto?> GetDetailsAsync(
-            string tenantId,
-            string roadmapId,
-            CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
-                return null;
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-            return await _dbContext.Roadmaps
-                .AsNoTracking()
-                .Where(r => r.TenantId == tId && r.Id == rId)
-                .Select(r => new RoadmapDetailsDto
-                {
-                    Id = r.Id,
-                    TenantId = r.TenantId,
-                    Title = r.Title,
-                    Description = r.Description,
-                    Path = r.Path,
-                    Level = r.Level,
-                    IsVisible = r.IsVisible,
-                    PublishedAt = r.PublishedAt,
-                    CreatedByUserId = r.CreatedByUserId,
-                    CreatedByUserName = r.CreatedByUser != null ? r.CreatedByUser.FullName : null,
-                    TagsCount = r.Tags.Count,
-                    NodesCount = r.Nodes.Count,
-                    CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt,
-                    Tags = r.Tags
-                .Select(t => new TagDto
-                {
-                    Id = t.Id,
-                    Name = t.Name
-                })
-                .ToList(),
-                    Topics = r.Nodes
-                .OfType<TopicNodeEntity>()
-                .OrderBy(n => n.Order)
-                .Select(t => new TopicDto
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Description = t.Description,
-                    Order = t.Order,
-                    SubTopics = t.SubTopics
-                        .OrderBy(s => s.Order)
-                        .Select(s => new SubTopicDto
-                        {
-                            Id = s.Id,
-                            Title = s.Title,
-                            Description = s.Description,
-                            Order = s.Order
-                        })
-                        .ToList()
-                })
-                .ToList()
-                })
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-        public async Task<List<RoadmapDto>> GetOtherRoadmapsAsync(
-            string tenantId,
-            string currentRoadmapId,
-            CancellationToken ct = default)
-        {
-            return await _dbContext.Roadmaps
-                .AsNoTracking()
-                .Where(r =>
-                    r.TenantId == tenantId &&
-                    r.Id != currentRoadmapId)
-                .OrderBy(r => r.Title)
-                .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(ct);
-        }
+        return query;
 
     }
+    public async Task<List<TagDto>> GetTagsAsync(
+       string tenantId,
+       string roadmapId,
+       CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+            return new();
+
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+
+        return await _dbContext.Roadmaps
+            .AsNoTracking()
+            .Where(r => r.TenantId == tId && r.Id == rId)
+            .SelectMany(r => r.Tags)
+            .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<RoadmapDto?> GetByIdAsync(string tenantId, string roadmapId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+            return Task.FromResult<RoadmapDto?>(null);
+
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+        return _dbContext.Roadmaps.
+          AsNoTracking()
+         .Where(r => r.TenantId == tId && r.Id == rId)
+        .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
+        .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<RoadmapDetailsDto?> GetDetailsAsync(
+        string tenantId,
+        string roadmapId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+            return null;
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+        return await _dbContext.Roadmaps
+            .AsNoTracking()
+            .Where(r => r.TenantId == tId && r.Id == rId)
+            .Select(r => new RoadmapDetailsDto
+            {
+                Id = r.Id,
+                TenantId = r.TenantId,
+                Title = r.Title,
+                Description = r.Description,
+                Path = r.Path,
+                Level = r.Level,
+                IsVisible = r.IsVisible,
+                PublishedAt = r.PublishedAt,
+                CreatedByUserId = r.CreatedByUserId,
+                CreatedByUserName = r.CreatedByUser != null ? r.CreatedByUser.FullName : null,
+                TagsCount = r.Tags.Count,
+                NodesCount = r.Nodes.Count,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+                Tags = r.Tags
+            .Select(t => new TagDto
+            {
+                Id = t.Id,
+                Name = t.Name
+            })
+            .ToList(),
+                Topics = r.Nodes
+            .OfType<TopicNodeEntity>()
+            .OrderBy(n => n.Order)
+            .Select(t => new TopicDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                Order = t.Order,
+                SubTopics = t.SubTopics
+                    .OrderBy(s => s.Order)
+                    .Select(s => new SubTopicDto
+                    {
+                        Id = s.Id,
+                        Title = s.Title,
+                        Description = s.Description,
+                        Order = s.Order
+                    })
+                    .ToList()
+            })
+            .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+    public async Task<List<RoadmapDto>> GetOtherRoadmapsAsync(
+        string tenantId,
+        string currentRoadmapId,
+        CancellationToken ct = default)
+    {
+        return await _dbContext.Roadmaps
+            .AsNoTracking()
+            .Where(r =>
+                r.TenantId == tenantId &&
+                r.Id != currentRoadmapId)
+            .OrderBy(r => r.Title)
+            .ProjectTo<RoadmapDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(ct);
+    }
+
 }

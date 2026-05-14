@@ -1,5 +1,4 @@
 ﻿using API.Contracts.WorkItems.Create;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.WorkItems.Create;

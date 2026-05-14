@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -39,7 +39,7 @@ public class ProjectHistory : Entity
         MadeByUserId = Guard.NotNullOrWhiteSpace(madeByUserId, nameof(madeByUserId));
         Scope = scope;
         ActionType = actionType;
-        PropertyName =propertyName;
+        PropertyName = propertyName;
 
         OldValue = oldValue;
         NewValue = newValue;
@@ -52,10 +52,10 @@ public class ProjectHistory : Entity
       string relatedEntityCode,
       string madeByUserId,
       ProjectHistoryScope scope,
-      ActionType actionType, 
+      ActionType actionType,
       string? propertyName,
       string? oldValue,
-      string? newValue) 
+      string? newValue)
     {
         ProjectId = Guard.NotNullOrWhiteSpace(projectId, nameof(projectId));
         RelatedEntityId = Guard.NotNullOrWhiteSpace(relatedEntityId, nameof(relatedEntityId));
@@ -98,7 +98,7 @@ public class ProjectHistory : Entity
             oldValue,
             newValue);
 
-        history.SetTimestamps(createdAt, updatedAt); 
+        history.SetTimestamps(createdAt, updatedAt);
         return history;
     }
 }

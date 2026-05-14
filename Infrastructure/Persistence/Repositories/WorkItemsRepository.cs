@@ -220,10 +220,7 @@ public class WorkItemsRepository : IWorkItemsRepository
 
         if (parameters.IsAssigned.HasValue)
         {
-            if (parameters.IsAssigned.Value)
-                query = query.Where(x => x.AssignedToUserId != null);
-            else
-                query = query.Where(x => x.AssignedToUserId == null);
+            query = parameters.IsAssigned.Value ? query.Where(x => x.AssignedToUserId != null) : query.Where(x => x.AssignedToUserId == null);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.ParentId))
@@ -291,8 +288,8 @@ public class WorkItemsRepository : IWorkItemsRepository
     }
 
     private static WorkItemRelationEntity CreateRelationRow(
-        string sourceWorkItemId, 
-        string targetWorkItemId, 
+        string sourceWorkItemId,
+        string targetWorkItemId,
         WorkItemRelationType relationType)
     {
         return new WorkItemRelationEntity
@@ -318,7 +315,7 @@ public class WorkItemsRepository : IWorkItemsRepository
             .Include(r => r.SourceWorkItem)
                 .ThenInclude(w => w.Project)
             .Include(r => r.SourceWorkItem)
-                .ThenInclude(w => w.Relations) 
+                .ThenInclude(w => w.Relations)
             .FirstOrDefaultAsync(r =>
                 r.Id == relationId &&
                 r.SourceWorkItem.ProjectId == projectId &&
@@ -386,7 +383,7 @@ public class WorkItemsRepository : IWorkItemsRepository
 
     public async Task UpdateCommentOfWorkItemAsync(
         string workItemId,
-        WorkItemComment comment, 
+        WorkItemComment comment,
         CancellationToken cancellationToken = default)
     {
         workItemId = workItemId.Trim();
@@ -438,10 +435,7 @@ public class WorkItemsRepository : IWorkItemsRepository
             r => r.Id == commentId &&
                  r.WorkItemId == workItemId
             );
-        if (commentEntity == null)
-            return null;
-
-        return WorkItemCommentMapper.ToDomain(commentEntity);
+        return commentEntity == null ? null : WorkItemCommentMapper.ToDomain(commentEntity);
     }
 
     // codeLinkes
@@ -524,10 +518,7 @@ public class WorkItemsRepository : IWorkItemsRepository
                  r => r.Id == codeLinkId &&
                  r.WorkItemId == workItemId
             );
-        if (codeLinkEntity == null)
-            return null;
-
-        return CodeLinkMapper.ToDomain(codeLinkEntity);
+        return codeLinkEntity == null ? null : CodeLinkMapper.ToDomain(codeLinkEntity);
     }
 
     // attachments
@@ -590,9 +581,6 @@ public class WorkItemsRepository : IWorkItemsRepository
                  r => r.Id == attachmentId &&
                  r.WorkItemId == workItemId
             );
-        if (attachmentEntity == null)
-            return null;
-
-        return AttachmentMapper.ToDomain(attachmentEntity);
+        return attachmentEntity == null ? null : AttachmentMapper.ToDomain(attachmentEntity);
     }
 }

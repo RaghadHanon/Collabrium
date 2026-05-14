@@ -54,7 +54,7 @@ public sealed class CurrentUserAccessor : ICurrentUserAccessor
             return null;
 
         var roles = await _userManager.GetRolesAsync(user);
-        var role = Enum.TryParse(roles.FirstOrDefault(), true, out UserRole userRole) ? userRole : (UserRole?)null; 
+        var role = Enum.TryParse(roles.FirstOrDefault(), true, out UserRole userRole) ? userRole : (UserRole?) null;
 
         return role;
     }

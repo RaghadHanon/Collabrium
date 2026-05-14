@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Services;
 using Domain.Enums;
 
-namespace Infrastructure.Storage;
+namespace Infrastructure.FilesStorage.Factory;
 
 public class AttachmentStorageFactory : IAttachmentStorageFactory
 {
@@ -20,11 +20,13 @@ public class AttachmentStorageFactory : IAttachmentStorageFactory
     }
 
     public IAttachmentStorage Get(AttachmentType type)
-        => type switch
+    {
+        return type switch
         {
             AttachmentType.Image => _imageStorage,
             AttachmentType.Video => _videoStorage,
             AttachmentType.Document or AttachmentType.Log => _fileStorage,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported attachment type.")
         };
+    }
 }

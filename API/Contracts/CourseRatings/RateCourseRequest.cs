@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.CourseRatings
+﻿namespace API.Contracts.CourseRatings;
+
+public sealed class RateCourseRequest
 {
-    public sealed class RateCourseRequest
-    {
-        public int Rating { get; set; }
-    }
+    public int Rating { get; set; }
 }

@@ -1,55 +1,54 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 
-namespace Domain.Models
+namespace Domain.Models;
+
+public sealed class ArticleComment : Entity
 {
-    public sealed class ArticleComment : Entity
+    public string ArticleId { get; private set; } = null!;
+    public string Content { get; private set; } = null!;
+    public string CreatedByUserId { get; private set; } = null!;
+
+    private ArticleComment() { }
+
+    public ArticleComment(
+        string articleId,
+        string content,
+        string createdByUserId)
     {
-        public string ArticleId { get; private set; } = null!;
-        public string Content { get; private set; } = null!;
-        public string CreatedByUserId { get; private set; } = null!;
+        ArticleId = Guard.NotNullOrWhiteSpace(articleId, nameof(articleId)).Trim();
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
 
-        private ArticleComment() { }
+        Touch();
+    }
 
-        public ArticleComment(
-            string articleId,
-            string content,
-            string createdByUserId)
-        {
-            ArticleId = Guard.NotNullOrWhiteSpace(articleId, nameof(articleId)).Trim();
-            Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
-            CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
+    public ArticleComment(
+        string id,
+        string articleId,
+        string content,
+        string createdByUserId) : base(id)
+    {
+        ArticleId = Guard.NotNullOrWhiteSpace(articleId, nameof(articleId)).Trim();
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
+        CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
+    }
 
-            Touch();
-        }
+    public static ArticleComment Rehydrate(
+        string id,
+        DateTime createdAt,
+        DateTime? updatedAt,
+        string articleId,
+        string content,
+        string createdByUserId)
+    {
+        var comment = new ArticleComment(id, articleId, content, createdByUserId);
+        comment.SetTimestamps(createdAt, updatedAt);
+        return comment;
+    }
 
-        public ArticleComment(
-            string id,
-            string articleId,
-            string content,
-            string createdByUserId) : base(id)
-        {
-            ArticleId = Guard.NotNullOrWhiteSpace(articleId, nameof(articleId)).Trim();
-            Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
-            CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
-        }
-
-        public static ArticleComment Rehydrate(
-            string id,
-            DateTime createdAt,
-            DateTime? updatedAt,
-            string articleId,
-            string content,
-            string createdByUserId)
-        {
-            var comment = new ArticleComment(id, articleId, content, createdByUserId);
-            comment.SetTimestamps(createdAt, updatedAt);
-            return comment;
-        }
-
-        public void UpdateContent(string content)
-        {
-            Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
-            Touch();
-        }
+    public void UpdateContent(string content)
+    {
+        Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
+        Touch();
     }
 }

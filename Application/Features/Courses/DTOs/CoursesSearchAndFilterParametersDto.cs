@@ -1,30 +1,29 @@
 ﻿using Application.Common.DTOs;
 using Domain.Enums;
 
-namespace Application.Features.Courses.DTOs
+namespace Application.Features.Courses.DTOs;
+
+public sealed class CoursesSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
 {
-    public sealed class CoursesSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
-    {
-        public string? Search { get; set; }
-        public string? Provider { get; set; }
-        public string? InstructorName { get; set; }
+    public string? Search { get; set; }
+    public string? Provider { get; set; }
+    public string? InstructorName { get; set; }
 
-        public CourseLevel? Level { get; set; }
-        public CourseLanguage? Language { get; set; }
-        public string? TenantId { get; set; }
+    public CourseLevel? Level { get; set; }
+    public CourseLanguage? Language { get; set; }
+    public string? TenantId { get; set; }
 
-        public List<string>? TagIds { get; set; }
+    public List<string>? TagIds { get; set; }
 
-        public int? MinEstimatedDurationInHours { get; set; }
-        public int? MaxEstimatedDurationInHours { get; set; }
+    public int? MinEstimatedDurationInHours { get; set; }
+    public int? MaxEstimatedDurationInHours { get; set; }
 
-        public bool? HasThumbnail { get; set; }
+    public bool? HasThumbnail { get; set; }
 
-        public DateTime? CreatedAfter { get; set; }
-        public DateTime? CreatedBefore { get; set; }
+    public DateTime? CreatedAfter { get; set; }
+    public DateTime? CreatedBefore { get; set; }
 
-        public DateTime? UpdatedAfter { get; set; }
-        public DateTime? UpdatedBefore { get; set; }
+    public DateTime? UpdatedAfter { get; set; }
+    public DateTime? UpdatedBefore { get; set; }
 
-    }
 }

@@ -4,193 +4,194 @@ using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.Persistence.Repositories
+namespace Infrastructure.Persistence.Repositories;
+
+public sealed class RoadmapNodesRepository : IRoadmapNodesRepository
 {
-    public sealed class RoadmapNodesRepository : IRoadmapNodesRepository
+    private readonly AppDbContext _dbContext;
+
+    public RoadmapNodesRepository(AppDbContext dbContext)
     {
-        private readonly AppDbContext _dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
-        public RoadmapNodesRepository(AppDbContext dbContext)
-            => _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    // ---------- Create ----------
+    public async Task AddTopicAsync(TopicNode topic, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(topic);
+        var entity = (TopicNodeEntity) RoadmapNodeMapper.ToEntity(topic);
+        await _dbContext.Set<TopicNodeEntity>().AddAsync(entity, ct);
+    }
 
-        // ---------- Create ----------
-        public async Task AddTopicAsync(TopicNode topic, CancellationToken ct = default)
+    public async Task AddReferenceAsync(ReferenceNode reference, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(reference);
+        var entity = (ReferenceNodeEntity) RoadmapNodeMapper.ToEntity(reference);
+        await _dbContext.Set<ReferenceNodeEntity>().AddAsync(entity, ct);
+    }
+
+    // ---------- Update ----------
+    public async Task UpdateAsync(RoadmapNode node, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+
+        var entity = await _dbContext.Set<RoadmapNodeEntity>()
+            .FirstOrDefaultAsync(n =>
+                n.Id == node.Id &&
+                n.RoadmapId == node.RoadmapId &&
+                n.TenantId == node.TenantId, ct);
+
+        if (entity is null)
+            throw new InvalidOperationException("Node not found.");
+
+        RoadmapNodeMapper.UpdateEntity(node, entity);
+    }
+
+    // ---------- Delete ----------
+    public async Task<bool> RemoveAsync(string tenantId, string roadmapId, string nodeId, CancellationToken ct = default)
+    {
+        if (!TryNormalize(tenantId, roadmapId, nodeId, out var tId, out var rId, out var nId))
+            return false;
+
+        var entity = await _dbContext.Set<RoadmapNodeEntity>()
+            .FirstOrDefaultAsync(n =>
+                n.Id == nId &&
+                n.RoadmapId == rId &&
+                n.TenantId == tId, ct);
+
+        if (entity is null) return false;
+
+        _dbContext.Remove(entity);
+        return true;
+    }
+
+    // ---------- Queries ----------
+    public async Task<RoadmapNode?> GetByIdAsync(
+        string tenantId,
+        string roadmapId,
+        string nodeId,
+        CancellationToken ct = default)
+    {
+        if (!TryNormalize(tenantId, roadmapId, nodeId, out var tId, out var rId, out var nId))
+            return null;
+
+        var entity = await _dbContext.Set<RoadmapNodeEntity>()
+            .AsNoTracking()
+            .Include(n => n.Roadmap)
+            .FirstOrDefaultAsync(n =>
+                n.Id == nId &&
+                n.RoadmapId == rId &&
+                n.Roadmap.TenantId == tId, ct);
+
+        return entity is null ? null : RoadmapNodeMapper.ToDomain(entity);
+    }
+
+    public async Task<List<RoadmapNode>> GetByRoadmapIdAsync(
+        string tenantId,
+        string roadmapId,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+            return new();
+
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+
+        var entities = await _dbContext.Set<RoadmapNodeEntity>()
+            .AsNoTracking()
+            .Where(n => n.RoadmapId == rId && n.TenantId == tId)
+            .OrderBy(n => n.Order)
+            .ToListAsync(ct);
+
+        return entities.Select(RoadmapNodeMapper.ToDomain).ToList();
+    }
+
+    // ---------- NEW: Get Max Order ----------
+    public async Task<int> GetMaxOrderAsync(
+        string tenantId,
+        string roadmapId,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
+            return 0;
+
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+
+        var max = await _dbContext.Set<RoadmapNodeEntity>()
+            .Where(n => n.TenantId == tId && n.RoadmapId == rId)
+            .Select(n => (int?) n.Order)
+            .MaxAsync(ct);
+
+        return max ?? 0;
+    }
+
+    // ---------- Helpers ----------
+    private static bool TryNormalize(
+        string? tenantId,
+        string? roadmapId,
+        string? nodeId,
+        out string tId,
+        out string rId,
+        out string nId)
+    {
+        tId = tenantId?.Trim() ?? "";
+        rId = roadmapId?.Trim() ?? "";
+        nId = nodeId?.Trim() ?? "";
+
+        return !string.IsNullOrWhiteSpace(tId)
+            && !string.IsNullOrWhiteSpace(rId)
+            && !string.IsNullOrWhiteSpace(nId);
+    }
+    public async Task SwapOrderAsync(
+string tenantId,
+string roadmapId,
+string firstNodeId,
+string secondNodeId,
+CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(roadmapId) ||
+            string.IsNullOrWhiteSpace(firstNodeId) ||
+            string.IsNullOrWhiteSpace(secondNodeId))
         {
-            ArgumentNullException.ThrowIfNull(topic);
-            var entity = (TopicNodeEntity)RoadmapNodeMapper.ToEntity(topic);
-            await _dbContext.Set<TopicNodeEntity>().AddAsync(entity, ct);
+            throw new ArgumentException("TenantId, RoadmapId, and node ids are required.");
         }
 
-        public async Task AddReferenceAsync(ReferenceNode reference, CancellationToken ct = default)
-        {
-            ArgumentNullException.ThrowIfNull(reference);
-            var entity = (ReferenceNodeEntity)RoadmapNodeMapper.ToEntity(reference);
-            await _dbContext.Set<ReferenceNodeEntity>().AddAsync(entity, ct);
-        }
+        var tId = tenantId.Trim();
+        var rId = roadmapId.Trim();
+        var firstId = firstNodeId.Trim();
+        var secondId = secondNodeId.Trim();
 
-        // ---------- Update ----------
-        public async Task UpdateAsync(RoadmapNode node, CancellationToken ct = default)
-        {
-            ArgumentNullException.ThrowIfNull(node);
+        if (string.Equals(firstId, secondId, StringComparison.Ordinal))
+            return;
 
-            var entity = await _dbContext.Set<RoadmapNodeEntity>()
-                .FirstOrDefaultAsync(n =>
-                    n.Id == node.Id &&
-                    n.RoadmapId == node.RoadmapId &&
-                    n.TenantId == node.TenantId, ct);
+        var first = await _dbContext.Set<RoadmapNodeEntity>()
+            .FirstOrDefaultAsync(n =>
+                n.Id == firstId &&
+                n.RoadmapId == rId &&
+                n.TenantId == tId, ct);
 
-            if (entity is null)
-                throw new InvalidOperationException("Node not found.");
+        var second = await _dbContext.Set<RoadmapNodeEntity>()
+            .FirstOrDefaultAsync(n =>
+                n.Id == secondId &&
+                n.RoadmapId == rId &&
+                n.TenantId == tId, ct);
 
-            RoadmapNodeMapper.UpdateEntity(node, entity);
-        }
+        if (first is null || second is null)
+            throw new InvalidOperationException("One or both nodes were not found.");
 
-        // ---------- Delete ----------
-        public async Task<bool> RemoveAsync(string tenantId, string roadmapId, string nodeId, CancellationToken ct = default)
-        {
-            if (!TryNormalize(tenantId, roadmapId, nodeId, out var tId, out var rId, out var nId))
-                return false;
+        var firstOrder = first.Order;
+        var secondOrder = second.Order;
 
-            var entity = await _dbContext.Set<RoadmapNodeEntity>()
-                .FirstOrDefaultAsync(n =>
-                    n.Id == nId &&
-                    n.RoadmapId == rId &&
-                    n.TenantId == tId, ct);
+        // temporary safe value inside persistence layer only
+        first.Order = 0;
+        await _dbContext.SaveChangesAsync(ct);
 
-            if (entity is null) return false;
+        second.Order = firstOrder;
+        await _dbContext.SaveChangesAsync(ct);
 
-            _dbContext.Remove(entity);
-            return true;
-        }
-
-        // ---------- Queries ----------
-        public async Task<RoadmapNode?> GetByIdAsync(
-            string tenantId,
-            string roadmapId,
-            string nodeId,
-            CancellationToken ct = default)
-        {
-            if (!TryNormalize(tenantId, roadmapId, nodeId, out var tId, out var rId, out var nId))
-                return null;
-
-            var entity = await _dbContext.Set<RoadmapNodeEntity>()
-                .AsNoTracking()
-                .Include(n => n.Roadmap)
-                .FirstOrDefaultAsync(n =>
-                    n.Id == nId &&
-                    n.RoadmapId == rId &&
-                    n.Roadmap.TenantId == tId, ct);
-
-            return entity is null ? null : RoadmapNodeMapper.ToDomain(entity);
-        }
-
-        public async Task<List<RoadmapNode>> GetByRoadmapIdAsync(
-            string tenantId,
-            string roadmapId,
-            CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
-                return new();
-
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-
-            var entities = await _dbContext.Set<RoadmapNodeEntity>()
-                .AsNoTracking()
-                .Where(n => n.RoadmapId == rId && n.TenantId == tId)
-                .OrderBy(n => n.Order)
-                .ToListAsync(ct);
-
-            return entities.Select(RoadmapNodeMapper.ToDomain).ToList();
-        }
-
-        // ---------- NEW: Get Max Order ----------
-        public async Task<int> GetMaxOrderAsync(
-            string tenantId,
-            string roadmapId,
-            CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(roadmapId))
-                return 0;
-
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-
-            var max = await _dbContext.Set<RoadmapNodeEntity>()
-                .Where(n => n.TenantId == tId && n.RoadmapId == rId)
-                .Select(n => (int?)n.Order)
-                .MaxAsync(ct);
-
-            return max ?? 0;
-        }
-
-        // ---------- Helpers ----------
-        private static bool TryNormalize(
-            string? tenantId,
-            string? roadmapId,
-            string? nodeId,
-            out string tId,
-            out string rId,
-            out string nId)
-        {
-            tId = tenantId?.Trim() ?? "";
-            rId = roadmapId?.Trim() ?? "";
-            nId = nodeId?.Trim() ?? "";
-
-            return !string.IsNullOrWhiteSpace(tId)
-                && !string.IsNullOrWhiteSpace(rId)
-                && !string.IsNullOrWhiteSpace(nId);
-        }
-        public async Task SwapOrderAsync(
-    string tenantId,
-    string roadmapId,
-    string firstNodeId,
-    string secondNodeId,
-    CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId) ||
-                string.IsNullOrWhiteSpace(roadmapId) ||
-                string.IsNullOrWhiteSpace(firstNodeId) ||
-                string.IsNullOrWhiteSpace(secondNodeId))
-            {
-                throw new ArgumentException("TenantId, RoadmapId, and node ids are required.");
-            }
-
-            var tId = tenantId.Trim();
-            var rId = roadmapId.Trim();
-            var firstId = firstNodeId.Trim();
-            var secondId = secondNodeId.Trim();
-
-            if (string.Equals(firstId, secondId, StringComparison.Ordinal))
-                return;
-
-            var first = await _dbContext.Set<RoadmapNodeEntity>()
-                .FirstOrDefaultAsync(n =>
-                    n.Id == firstId &&
-                    n.RoadmapId == rId &&
-                    n.TenantId == tId, ct);
-
-            var second = await _dbContext.Set<RoadmapNodeEntity>()
-                .FirstOrDefaultAsync(n =>
-                    n.Id == secondId &&
-                    n.RoadmapId == rId &&
-                    n.TenantId == tId, ct);
-
-            if (first is null || second is null)
-                throw new InvalidOperationException("One or both nodes were not found.");
-
-            var firstOrder = first.Order;
-            var secondOrder = second.Order;
-
-            // temporary safe value inside persistence layer only
-            first.Order = 0;
-            await _dbContext.SaveChangesAsync(ct);
-
-            second.Order = firstOrder;
-            await _dbContext.SaveChangesAsync(ct);
-
-            first.Order = secondOrder;
-            await _dbContext.SaveChangesAsync(ct);
-        }
+        first.Order = secondOrder;
+        await _dbContext.SaveChangesAsync(ct);
     }
 }

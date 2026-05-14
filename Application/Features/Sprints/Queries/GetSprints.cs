@@ -45,7 +45,7 @@ public class GetSprints
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<PagedList<SprintDto, DateTime?>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<PagedList<SprintDto, DateTime?>>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var parameters = mapper.Map<SprintsSearchAndFilterParametersDto>(request);

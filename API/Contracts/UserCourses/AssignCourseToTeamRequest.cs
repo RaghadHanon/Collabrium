@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.UserCourses
+﻿namespace API.Contracts.UserCourses;
+
+public sealed class AssignCourseToTeamRequest
 {
-    public sealed class AssignCourseToTeamRequest
-    {
-        public required string TeamId { get; set; }
-    }
+    public required string TeamId { get; set; }
 }

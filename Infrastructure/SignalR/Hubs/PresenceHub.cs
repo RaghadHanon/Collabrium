@@ -85,10 +85,7 @@ public sealed class PresenceHub(
         var tenantId = Context.User?.FindFirst("tenantId")?.Value
                        ?? tenantContext.TenantId;
 
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return false;
-
-        return await tracker.IsUserOnlineAsync(tenantId, userId);
+        return string.IsNullOrWhiteSpace(tenantId) ? false : await tracker.IsUserOnlineAsync(tenantId, userId);
     }
 
     public async Task<IReadOnlyCollection<string>> GetOnlineUsers()
@@ -96,12 +93,11 @@ public sealed class PresenceHub(
         var tenantId = Context.User?.FindFirst("tenantId")?.Value
                        ?? tenantContext.TenantId;
 
-        if (string.IsNullOrWhiteSpace(tenantId))
-            return [];
-
-        return await tracker.GetOnlineUsersAsync(tenantId);
+        return string.IsNullOrWhiteSpace(tenantId) ? [] : await tracker.GetOnlineUsersAsync(tenantId);
     }
 
     private static string BuildTenantPresenceGroup(string tenantId)
-        => $"tenants:{tenantId}:presence";
+    {
+        return $"tenants:{tenantId}:presence";
+    }
 }

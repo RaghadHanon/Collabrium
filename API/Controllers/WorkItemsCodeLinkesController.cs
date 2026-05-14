@@ -1,8 +1,6 @@
 ﻿using API.Contracts.WorkItems.CodeLinkes;
-using API.Contracts.WorkItems.Comments;
 using API.SetupProgram;
 using Application.Features.WorkItems.Commands.CodeLinks;
-using Application.Features.WorkItems.Commands.Comments;
 using Application.Features.WorkItems.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

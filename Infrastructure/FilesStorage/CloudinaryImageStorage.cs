@@ -6,7 +6,7 @@ using Domain.Enums;
 using Infrastructure.FilesStorage.Factory;
 using Microsoft.AspNetCore.Http;
 
-namespace Infrastructure.Storage;
+namespace Infrastructure.FilesStorage;
 
 public sealed class CloudinaryImageStorage : IAttachmentStorage
 {
@@ -35,10 +35,9 @@ public sealed class CloudinaryImageStorage : IAttachmentStorage
 
         var result = await _cloudinary.UploadAsync(uploadParams);
 
-        if (result.Error != null)
-            throw new Exception(result.Error.Message);
-
-        return new StoredFileResult(
+        return result.Error != null
+            ? throw new Exception(result.Error.Message)
+            : new StoredFileResult(
             StoragePath: result.PublicId,
             Url: result.SecureUrl.AbsoluteUri,
             ContentType: file.ContentType,
@@ -59,9 +58,6 @@ public sealed class CloudinaryImageStorage : IAttachmentStorage
 
         var result = await _cloudinary.DestroyAsync(deletionParams);
 
-        if (result.Error != null)
-            throw new Exception(result.Error.Message);
-
-        return result.Result;
+        return result.Error != null ? throw new Exception(result.Error.Message) : result.Result;
     }
 }

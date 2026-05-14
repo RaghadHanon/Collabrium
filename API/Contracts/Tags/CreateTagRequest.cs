@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.Tags
+﻿namespace API.Contracts.Tags;
+
+public sealed class CreateTagRequest
 {
-    public sealed class CreateTagRequest
-    {
-        public required string Name { get; set; }
-    }
+    public required string Name { get; set; }
 }

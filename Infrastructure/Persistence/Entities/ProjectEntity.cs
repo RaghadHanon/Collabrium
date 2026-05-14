@@ -13,7 +13,7 @@ public class ProjectEntity : DbEntity
     public DateTime? EndDate { get; set; }
 
     public int LastWorkItemNumber { get; set; }
-    public int LastSprintNumber { get; set; } 
+    public int LastSprintNumber { get; set; }
 
 
     public string CreatedByUserId { get; set; } = null!;

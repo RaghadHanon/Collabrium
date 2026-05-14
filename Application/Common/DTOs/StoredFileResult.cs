@@ -1,7 +1,7 @@
 ﻿namespace Application.Common.DTOs;
 
 public record StoredFileResult(
-    string StoragePath,  
+    string StoragePath,
     string Url,
     string ContentType,
     long Size,

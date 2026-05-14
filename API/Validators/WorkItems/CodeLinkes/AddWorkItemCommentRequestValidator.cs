@@ -1,5 +1,4 @@
 ﻿using API.Contracts.WorkItems.CodeLinkes;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.WorkItems.CodeLinkes;

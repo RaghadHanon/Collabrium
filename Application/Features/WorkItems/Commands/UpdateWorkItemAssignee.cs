@@ -142,16 +142,12 @@ public sealed class UpdateWorkItemAssignee
 
         private static bool CanSetAssignee(bool isManager, bool isWorkItemUnassigned, bool isCreator, bool assigningToSelf)
         {
-            if (isManager) return true;
-
-            return isCreator ? true : isWorkItemUnassigned ? assigningToSelf : false;
+            return isManager ? true : isCreator ? true : isWorkItemUnassigned ? assigningToSelf : false;
         }
 
         private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isCreator)
         {
-            if (isManager) return true;
-
-            return isCreator ? true : isCurrentAssignee;
+            return isManager ? true : isCreator ? true : isCurrentAssignee;
         }
     }
 }

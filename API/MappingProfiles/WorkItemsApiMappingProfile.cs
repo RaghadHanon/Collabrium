@@ -10,7 +10,6 @@ using Application.Features.WorkItems.Commands.Attachments;
 using Application.Features.WorkItems.Commands.CodeLinks;
 using Application.Features.WorkItems.Commands.Comments;
 using Application.Features.WorkItems.Commands.Relations;
-using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
 using Application.Features.WorkItems.Queries;
 using Application.Features.WorkItems.Queries.Comments;

@@ -31,6 +31,6 @@ public sealed class UpdateUserStoryRequestValidator : AbstractValidator<UpdateUs
         || !(r.Priority is null)
         || r.SprintId is not null
         || r.IsBlocked.HasValue
-        || r.StoryPoints.HasValue;  
+        || r.StoryPoints.HasValue;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using API.Contracts.WorkItems.Comments;
 using FluentValidation;
 
-namespace API.Validators.WorkItems.Relations;
+namespace API.Validators.WorkItems.Comments;
 
 public class AddWorkItemCommentRequestValidator : AbstractValidator<AddWorkItemCommentRequest>
 {

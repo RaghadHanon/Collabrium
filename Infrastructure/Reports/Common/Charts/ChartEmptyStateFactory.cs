@@ -4,6 +4,7 @@ namespace Infrastructure.Reports.Common.Charts;
 
 public static class ChartEmptyStateFactory
 {
+    [Obsolete]
     public static byte[] Create(
         string title,
         string xLabel,

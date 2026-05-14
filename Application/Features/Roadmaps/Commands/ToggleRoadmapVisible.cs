@@ -6,45 +6,44 @@ using Application.Interfaces.Repositories;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.Roadmaps.Commands
+namespace Application.Features.Roadmaps.Commands;
+
+public class ToggleRoadmapVisible
 {
-    public class ToggleRoadmapVisible
+    public class Command : IRequest<Result<RoadmapDto>>
     {
-        public class Command : IRequest<Result<RoadmapDto>>
+        public required string RoadmapId { get; set; }
+    }
+
+    public class Handler(
+        IRoadmapsRepository roadmapsRepository,
+        IRoadmapsReadModel readModel,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork
+    ) : IRequestHandler<Command, Result<RoadmapDto>>
+    {
+        public async Task<Result<RoadmapDto>> Handle(Command request, CancellationToken cancellationToken)
         {
-            public required string RoadmapId { get; set; }
-        }
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<RoadmapDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-        public class Handler(
-            IRoadmapsRepository roadmapsRepository,
-            IRoadmapsReadModel readModel,
-            ITenantContext tenantContext,
-            IUnitOfWork unitOfWork
-        ) : IRequestHandler<Command, Result<RoadmapDto>>
-        {
-            public async Task<Result<RoadmapDto>> Handle(Command request, CancellationToken cancellationToken)
-            {
-                var tenantId = tenantContext.CurrentTenant?.Id;
-                if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<RoadmapDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
+            if (roadmap is null)
+                return Result<RoadmapDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(tenantId, request.RoadmapId, cancellationToken);
-                if (roadmap is null)
-                    return Result<RoadmapDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
+            if (!roadmap.IsVisible)
+                roadmap.Show();
+            else
+                roadmap.Hide();
 
-                if (!roadmap.IsVisible)
-                    roadmap.Show();
-                else
-                    roadmap.Hide();
+            await roadmapsRepository.UpdateAsync(roadmap, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-                await roadmapsRepository.UpdateAsync(roadmap, cancellationToken);
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-
-                var dto = await readModel.GetByIdAsync(tenantId, roadmap.Id, cancellationToken);
-                return dto is null
-                    ? Result<RoadmapDto>.Failure("Roadmap status updated but could not be loaded.", HttpStatusCode.InternalServerError)
-                    : Result<RoadmapDto>.Success(dto, HttpStatusCode.OK);
-            }
+            var dto = await readModel.GetByIdAsync(tenantId, roadmap.Id, cancellationToken);
+            return dto is null
+                ? Result<RoadmapDto>.Failure("Roadmap status updated but could not be loaded.", HttpStatusCode.InternalServerError)
+                : Result<RoadmapDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

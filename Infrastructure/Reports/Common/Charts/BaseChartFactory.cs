@@ -53,9 +53,28 @@ public static class BaseChartFactory
         plt.Axes.Margins(left: left, right: right, top: top, bottom: bottom);
     }
 
-    public static Color Primary() => Color.FromHex(ReportPalette.Primary);
-    public static Color PrimarySoft() => Color.FromHex(ReportPalette.PrimarySoft);
-    public static Color Accent() => Color.FromHex(ReportPalette.Accent);
-    public static Color Danger() => Color.FromHex(ReportPalette.Danger);
-    public static Color Slate() => Color.FromHex(ReportPalette.Slate);
+    public static Color Primary()
+    {
+        return Color.FromHex(ReportPalette.Primary);
+    }
+
+    public static Color PrimarySoft()
+    {
+        return Color.FromHex(ReportPalette.PrimarySoft);
+    }
+
+    public static Color Accent()
+    {
+        return Color.FromHex(ReportPalette.Accent);
+    }
+
+    public static Color Danger()
+    {
+        return Color.FromHex(ReportPalette.Danger);
+    }
+
+    public static Color Slate()
+    {
+        return Color.FromHex(ReportPalette.Slate);
+    }
 }

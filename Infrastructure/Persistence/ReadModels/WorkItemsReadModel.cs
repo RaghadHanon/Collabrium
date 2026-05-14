@@ -13,7 +13,6 @@ using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
-using SkiaSharp;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -502,12 +501,9 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         if (parameters.CreatedBefore.HasValue)
             query = query.Where(x => x.CreatedAt <= parameters.CreatedBefore.Value);
 
-        if(parameters.IsAssigned.HasValue)
+        if (parameters.IsAssigned.HasValue)
         {
-            if (parameters.IsAssigned.Value)
-                query = query.Where(x => x.AssignedToUserId != null);
-            else
-                query = query.Where(x => x.AssignedToUserId == null);
+            query = parameters.IsAssigned.Value ? query.Where(x => x.AssignedToUserId != null) : query.Where(x => x.AssignedToUserId == null);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.ParentId))
@@ -601,7 +597,7 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .Where(w =>
                 w.Project.TenantId == tenantId &&
                 w.ProjectId == projectId &&
-                w.Id != sourceWorkItem.Id && 
+                w.Id != sourceWorkItem.Id &&
                 (w.SprintId == null || w.SprintId == sourceWorkItem.SprintId));
 
         var allowedTypes = GetAllowedTargetTypes(sourceWorkItem.Type, relationType);
@@ -621,41 +617,38 @@ public class WorkItemsReadModel : IWorkItemsReadModel
     WorkItemType source,
     WorkItemRelationType relationType)
     {
-        if (relationType == WorkItemRelationType.RelatesTo)
-        {
-            return Enum.GetValues<WorkItemType>();
-        }
+        return relationType == WorkItemRelationType.RelatesTo
+            ? Enum.GetValues<WorkItemType>()
+            : (source, relationType) switch
+            {
+                (WorkItemType.UserStory, WorkItemRelationType.Parent)
+                    => new[] { WorkItemType.Epic },
 
-        return (source, relationType) switch
-        {
-            (WorkItemType.UserStory, WorkItemRelationType.Parent)
-                => new[] { WorkItemType.Epic },
+                (WorkItemType.TaskItem, WorkItemRelationType.Parent)
+                    => new[] { WorkItemType.UserStory },
 
-            (WorkItemType.TaskItem, WorkItemRelationType.Parent)
-                => new[] { WorkItemType.UserStory },
+                (WorkItemType.Bug, WorkItemRelationType.Parent)
+                    => new[] { WorkItemType.UserStory },
 
-            (WorkItemType.Bug, WorkItemRelationType.Parent)
-                => new[] { WorkItemType.UserStory },
+                (WorkItemType.TestCase, WorkItemRelationType.Parent)
+                    => new[] { WorkItemType.UserStory },
 
-            (WorkItemType.TestCase, WorkItemRelationType.Parent)
-                => new[] { WorkItemType.UserStory },
+                (WorkItemType.Epic, WorkItemRelationType.Child)
+                    => new[] { WorkItemType.UserStory },
 
-            (WorkItemType.Epic, WorkItemRelationType.Child)
-                => new[] { WorkItemType.UserStory },
-
-            (WorkItemType.UserStory, WorkItemRelationType.Child)
-                => new[]
-                {
+                (WorkItemType.UserStory, WorkItemRelationType.Child)
+                    => new[]
+                    {
                 WorkItemType.TaskItem,
                 WorkItemType.Bug,
                 WorkItemType.TestCase
-                },
+                    },
 
-            (WorkItemType.Bug, WorkItemRelationType.FoundByTestCase)
-                => new[] { WorkItemType.TestCase },
+                (WorkItemType.Bug, WorkItemRelationType.FoundByTestCase)
+                    => new[] { WorkItemType.TestCase },
 
-            _ => Array.Empty<WorkItemType>()
-        };
+                _ => Array.Empty<WorkItemType>()
+            };
     }
 
     // comments

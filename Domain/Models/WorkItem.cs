@@ -1,5 +1,4 @@
-﻿using Domain.Common;
-using Domain.Core;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -146,7 +145,7 @@ public abstract class WorkItem : Entity
 
     protected virtual bool IsValidTransition(WorkItemStatus from, WorkItemStatus to)
     {
-        return from == to 
+        return from == to
             || to == WorkItemStatus.ToDo
             || from switch
             {
@@ -421,7 +420,7 @@ public abstract class WorkItem : Entity
         string uploadedByUserId,
         string? checksum = null)
     {
-        Guard.Against(IsDone, "Cannot add attachments to a completed work item."); 
+        Guard.Against(IsDone, "Cannot add attachments to a completed work item.");
 
         var att = new Attachment(
             attachmentId, fileName, storagePath, contentType, type, uploadedByUserId);

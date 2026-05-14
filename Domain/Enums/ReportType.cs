@@ -1,4 +1,4 @@
-﻿namespace Domain.Models;
+﻿namespace Domain.Enums;
 
 public enum ReportType
 {
@@ -8,4 +8,13 @@ public enum ReportType
     SprintBurndown = 3,
     WorkItemDistribution = 4,
     ProjectProgress = 5,
+    SprintProgress = 6,
+    Velocity = 7,
+    CycleTime = 8,
+    BugSeverityDistribution = 9,
+    DeveloperProductivity = 10,
+    TeamsProductivity = 11,
+    BlockedWorkItems = 12,
+    OverdueWorkItems = 13,
+    ProjectHealth = 14,
 }

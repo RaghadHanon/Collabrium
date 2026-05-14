@@ -29,7 +29,7 @@ public class ToggleTeamActivationEmailHandler
 
         var url = $"{settings.BaseUrl}/dashboard/teams/{notification.TeamId}";
 
-        for (int i = 0; i < notification.TeamMembers.Count; i++)
+        for (var i = 0; i < notification.TeamMembers.Count; i++)
         {
             var member = notification.TeamMembers[i];
             var data = new Dictionary<string, string>

@@ -1,8 +1,7 @@
-﻿namespace API.Contracts.Roadmaps
+﻿namespace API.Contracts.Roadmaps;
+
+public sealed class ToggleRoadmapVisibleRequest
 {
-    public sealed class ToggleRoadmapVisibleRequest
-    {
-        public required string RoadmapId { get; set; }
-        public required bool IsVisible { get; set; }
-    }
+    public required string RoadmapId { get; set; }
+    public required bool IsVisible { get; set; }
 }

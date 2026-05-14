@@ -8,6 +8,7 @@ namespace Infrastructure.Reports.Velocity;
 
 public class VelocityChartRenderer : IVelocityChartRenderer
 {
+    [Obsolete]
     public byte[] RenderMainChart(VelocityReportDto data)
     {
         if (data.SprintVelocities == null || data.SprintVelocities.Count == 0)
@@ -24,9 +25,9 @@ public class VelocityChartRenderer : IVelocityChartRenderer
 
         var ordered = data.SprintVelocities.ToList();
 
-        double[] xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
-        double[] completed = ordered.Select(x => (double) x.CompletedStoryPoints).ToArray();
-        string[] labels = ordered.Select(x => x.SprintCode).ToArray();
+        var xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
+        var completed = ordered.Select(x => (double) x.CompletedStoryPoints).ToArray();
+        var labels = ordered.Select(x => x.SprintCode).ToArray();
 
         var bars = plt.Add.Bars(xs, completed);
 
@@ -36,10 +37,10 @@ public class VelocityChartRenderer : IVelocityChartRenderer
             bar.LineStyle.Width = 0;
         }
 
-        double maxY = completed.Length > 0 ? completed.Max() : 0;
-        double offset = Math.Max(0.5, maxY * 0.04);
+        var maxY = completed.Length > 0 ? completed.Max() : 0;
+        var offset = Math.Max(0.5, maxY * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{completed[i]:N0}", xs[i], completed[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
@@ -59,6 +60,7 @@ public class VelocityChartRenderer : IVelocityChartRenderer
         return plt.GetImageBytes(1400, 700);
     }
 
+    [Obsolete]
     public byte[] RenderSecondaryChart(VelocityReportDto data)
     {
         if (data.SprintVelocities == null || data.SprintVelocities.Count == 0)
@@ -75,9 +77,9 @@ public class VelocityChartRenderer : IVelocityChartRenderer
 
         var ordered = data.SprintVelocities.ToList();
 
-        double[] xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
-        double[] ys = ordered.Select(x => x.VelocityPercentage).ToArray();
-        string[] labels = ordered.Select(x => x.SprintCode).ToArray();
+        var xs = Enumerable.Range(0, ordered.Count).Select(i => (double) i).ToArray();
+        var ys = ordered.Select(x => x.VelocityPercentage).ToArray();
+        var labels = ordered.Select(x => x.SprintCode).ToArray();
 
         var bars = plt.Add.Bars(xs, ys);
 
@@ -87,7 +89,7 @@ public class VelocityChartRenderer : IVelocityChartRenderer
             bar.LineStyle.Width = 0;
         }
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N1}%", xs[i], ys[i] + 2);
             txt.Alignment = Alignment.LowerCenter;
@@ -111,6 +113,7 @@ public class VelocityChartRenderer : IVelocityChartRenderer
         return plt.GetImageBytes(900, 450);
     }
 
+    [Obsolete]
     public byte[] RenderSummaryChart(VelocityReportDto data)
     {
         if (data.SprintVelocities == null || data.SprintVelocities.Count == 0)
@@ -143,17 +146,17 @@ public class VelocityChartRenderer : IVelocityChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
         }
 
-        double offset = Math.Max(0.4, ys.Max() * 0.04);
+        var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
-            string label = i == 2 ? $"{ys[i]:N1}%" : $"{ys[i]:N0}";
+            var label = i == 2 ? $"{ys[i]:N1}%" : $"{ys[i]:N0}";
             var txt = plt.Add.Text(label, xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
             txt.FontSize = 10;

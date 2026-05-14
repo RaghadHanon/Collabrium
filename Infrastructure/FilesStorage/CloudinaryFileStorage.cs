@@ -6,7 +6,7 @@ using Domain.Enums;
 using Infrastructure.FilesStorage.Factory;
 using Microsoft.AspNetCore.Http;
 
-namespace Infrastructure.Storage;
+namespace Infrastructure.FilesStorage;
 
 public class CloudinaryFileStorage : IAttachmentStorage
 {
@@ -21,7 +21,7 @@ public class CloudinaryFileStorage : IAttachmentStorage
         IFormFile file, AttachmentType type, string folder, CancellationToken ct = default)
     {
         if (type == AttachmentType.Image)
-            return null; 
+            return null;
 
         if (file is null || file.Length <= 0)
             return null;
@@ -36,10 +36,9 @@ public class CloudinaryFileStorage : IAttachmentStorage
 
         var result = await _cloudinary.UploadAsync(uploadParams);
 
-        if (result.Error != null)
-            throw new Exception(result.Error.Message);
-
-        return new StoredFileResult(
+        return result.Error != null
+            ? throw new Exception(result.Error.Message)
+            : new StoredFileResult(
             StoragePath: result.PublicId,
             Url: result.SecureUrl.AbsoluteUri,
             ContentType: file.ContentType,
@@ -63,9 +62,6 @@ public class CloudinaryFileStorage : IAttachmentStorage
 
         var result = await _cloudinary.DestroyAsync(deletionParams);
 
-        if (result.Error != null)
-            throw new Exception(result.Error.Message);
-
-        return result.Result;
+        return result.Error != null ? throw new Exception(result.Error.Message) : result.Result;
     }
 }

@@ -8,7 +8,6 @@ using AutoMapper;
 using Domain.Enums;
 using MediatR;
 using System.Net;
-using System.Text.RegularExpressions;
 
 namespace Application.Features.Projects.Queries;
 

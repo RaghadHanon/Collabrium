@@ -1,15 +1,14 @@
 ﻿using API.Contracts.UserCourses;
 using FluentValidation;
 
-namespace API.Validators.UserCourses
+namespace API.Validators.UserCourses;
+
+public sealed class AssignCourseToUserRequestValidator : AbstractValidator<AssignCourseToUserRequest>
 {
-    public sealed class AssignCourseToUserRequestValidator : AbstractValidator<AssignCourseToUserRequest>
+    public AssignCourseToUserRequestValidator()
     {
-        public AssignCourseToUserRequestValidator()
-        {
-            RuleFor(x => x.AssignedToUserId)
-                .NotEmpty()
-                .MaximumLength(450);
-        }
+        RuleFor(x => x.AssignedToUserId)
+            .NotEmpty()
+            .MaximumLength(450);
     }
 }

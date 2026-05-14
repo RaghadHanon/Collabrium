@@ -29,7 +29,7 @@ public class SprintStatusChangedEmailHandler
 
         var url = $"{settings.BaseUrl}/dashboard/projects/{notification.ProjectId}?tab=board&sprintId={notification.SprintId}";
 
-        for (int i = 0; i < notification.TeamMembers.Count; i++)
+        for (var i = 0; i < notification.TeamMembers.Count; i++)
         {
             var member = notification.TeamMembers[i];
             var data = new Dictionary<string, string>

@@ -1,12 +1,11 @@
 ﻿using Application.Common;
-using Application.Features.ProjectHistories.DTOs;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using AutoMapper;
 using Domain.Enums;
-using Domain.Models;
 using MediatR;
 using System.Net;
 

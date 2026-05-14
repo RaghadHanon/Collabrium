@@ -72,17 +72,17 @@ public class UpdateUserProfile
                 dateOfBirth: newDob
             );
 
-            user.SetContactInfo(
-                email: user.Email,
-                phone: PatchHelpers.ApplyStringPatch(user.ContactInfo.PhoneNumber, request.PhoneNumber),
-                linkedIn: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.LinkedIn, request.LinkedIn),
-                facebook: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Facebook, request.Facebook),
-                instagram: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Instagram, request.Instagram),
-                youTube: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.YouTube, request.YouTube),
-                github: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Github, request.Github)
-            );
+                user.SetContactInfo(
+                    email: user.Email,
+                    phone: PatchHelpers.ApplyStringPatch(user.ContactInfo.PhoneNumber, request.PhoneNumber),
+                    linkedIn: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.LinkedIn, request.LinkedIn),
+                    facebook: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Facebook, request.Facebook),
+                    instagram: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Instagram, request.Instagram),
+                    youTube: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.YouTube, request.YouTube),
+                    github: PatchHelpers.ApplyStringPatch(user.ContactInfo.Socials.Github, request.Github)
+                );
 
-            await usersRepository.UpdateAsync(user, cancellationToken);
+                await usersRepository.UpdateAsync(user, cancellationToken);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

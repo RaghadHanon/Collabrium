@@ -28,7 +28,10 @@ public class CycleTimeReportDocument : IDocument
         _logoBytes = logoBytes;
     }
 
-    public DocumentMetadata GetMetadata() => DocumentMetadata.Default;
+    public DocumentMetadata GetMetadata()
+    {
+        return DocumentMetadata.Default;
+    }
 
     public void Compose(IDocumentContainer container)
     {
@@ -261,7 +264,7 @@ public class CycleTimeReportDocument : IDocument
                     header.Cell().Background(ReportPalette.Soft).Padding(10).AlignRight().Text("Cycle Time").Style(ReportTextStyles.TableHeader);
                 });
 
-                for (int i = 0; i < orderedItems.Count; i++)
+                for (var i = 0; i < orderedItems.Count; i++)
                 {
                     var item = orderedItems[i];
                     var bg = i % 2 == 0 ? ReportPalette.White : ReportPalette.Soft;

@@ -15,9 +15,9 @@ public class GetEnumMetaData
 
     public class Handler : IRequestHandler<Query, Result<string[]>>
     {
-        public async Task<Result<string[]>> Handle(Query request, CancellationToken cancellationToken)
+        public Task<Result<string[]>> Handle(Query request, CancellationToken cancellationToken)
         {
-            return request.MetadataType switch
+            var result = request.MetadataType switch
             {
                 MetadataType.UserRole => Result<string[]>.Success(
                     Enum.GetNames(typeof(UserRole)).Select(AddSpace).ToArray(),
@@ -68,24 +68,24 @@ public class GetEnumMetaData
                     HttpStatusCode.OK),
 
                 MetadataType.RoadmapPath => Result<string[]>.Success(
-               Enum.GetNames(typeof(RoadmapPath)).Select(AddSpace).ToArray(),
-               HttpStatusCode.OK),
+                    Enum.GetNames(typeof(RoadmapPath)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
 
                 MetadataType.RoadmapLevel => Result<string[]>.Success(
-                Enum.GetNames(typeof(RoadmapLevel)).Select(AddSpace).ToArray(),
-                HttpStatusCode.OK),
+                    Enum.GetNames(typeof(RoadmapLevel)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
 
                 MetadataType.RoadmapResourceType => Result<string[]>.Success(
-               Enum.GetNames(typeof(RoadmapResourceType)).Select(AddSpace).ToArray(),
-               HttpStatusCode.OK),
+                    Enum.GetNames(typeof(RoadmapResourceType)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
 
                 MetadataType.CourseLevel => Result<string[]>.Success(
-                Enum.GetNames(typeof(CourseLevel)).Select(AddSpace).ToArray(),
-                HttpStatusCode.OK),
+                    Enum.GetNames(typeof(CourseLevel)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
 
                 MetadataType.CourseLanguage => Result<string[]>.Success(
-                Enum.GetNames(typeof(CourseLanguage)).Select(AddSpace).ToArray(),
-                HttpStatusCode.OK),
+                    Enum.GetNames(typeof(CourseLanguage)).Select(AddSpace).ToArray(),
+                    HttpStatusCode.OK),
 
                 MetadataType.UserCourseStatus => Result<string[]>.Success(
                Enum.GetNames(typeof(UserCourseStatus)).Select(AddSpace).ToArray(),
@@ -95,6 +95,8 @@ public class GetEnumMetaData
               HttpStatusCode.OK),
                 _ => throw new NotImplementedException()
             };
+
+            return Task.FromResult(result);
         }
 
         private static string AddSpace(string value)

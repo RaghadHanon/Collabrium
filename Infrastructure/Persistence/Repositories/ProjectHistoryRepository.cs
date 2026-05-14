@@ -1,5 +1,5 @@
 ﻿using Application.Common;
-using Application.Features.ProjectHistories.DTOs;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Persistence.Entities;

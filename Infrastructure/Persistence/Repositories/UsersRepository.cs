@@ -140,10 +140,7 @@ public sealed class UsersRepository : IUsersRepository
         }
 
         var addResult = await _userManager.AddToRoleAsync(user, role);
-        if (!addResult.Succeeded)
-            throw new InvalidOperationException($"Failed to assign new role: {JoinErrors(addResult)}");
-
-        return true;
+        return !addResult.Succeeded ? throw new InvalidOperationException($"Failed to assign new role: {JoinErrors(addResult)}") : true;
     }
 
     public async Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
@@ -178,5 +175,12 @@ public sealed class UsersRepository : IUsersRepository
     private static string JoinErrors(IdentityResult result)
     {
         return string.Join("; ", result.Errors.Select(e => e.Description));
+    }
+
+    public async Task<bool> IsUserExists(string tenantId, string userId)
+    {
+        return await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.TenantId == tenantId && u.Id == userId);
     }
 }

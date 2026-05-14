@@ -1,4 +1,4 @@
-﻿namespace Domain.Common;
+﻿namespace Domain.Core;
 
 public static class Guard
 {

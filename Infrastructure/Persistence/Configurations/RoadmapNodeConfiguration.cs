@@ -2,40 +2,39 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Persistence.Configurations
+namespace Infrastructure.Persistence.Configurations;
+
+public class RoadmapNodeConfiguration : IEntityTypeConfiguration<RoadmapNodeEntity>
 {
-    public class RoadmapNodeConfiguration : IEntityTypeConfiguration<RoadmapNodeEntity>
+    public void Configure(EntityTypeBuilder<RoadmapNodeEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<RoadmapNodeEntity> builder)
-        {
-            builder.HasKey(n => n.Id);
+        builder.HasKey(n => n.Id);
 
-            builder.Property(n => n.Title)
-                .IsRequired()
-                .HasMaxLength(200);
-            builder.Property(r => r.TenantId)
-           .IsRequired()
-           .HasMaxLength(50);
+        builder.Property(n => n.Title)
+            .IsRequired()
+            .HasMaxLength(200);
+        builder.Property(r => r.TenantId)
+       .IsRequired()
+       .HasMaxLength(50);
 
-            builder.Property(n => n.Description)
-                .HasMaxLength(2000);
+        builder.Property(n => n.Description)
+            .HasMaxLength(2000);
 
-            builder.Property(n => n.Order)
-                .IsRequired();
+        builder.Property(n => n.Order)
+            .IsRequired();
 
-            builder
-    .HasIndex(n => new { n.RoadmapId, n.Order })
-    .IsUnique();
-            builder.HasOne(n => n.Roadmap)
-           .WithMany(r => r.Nodes)
-           .HasForeignKey(n => n.RoadmapId)
-           .OnDelete(DeleteBehavior.Cascade);
+        builder
+.HasIndex(n => new { n.RoadmapId, n.Order })
+.IsUnique();
+        builder.HasOne(n => n.Roadmap)
+       .WithMany(r => r.Nodes)
+       .HasForeignKey(n => n.RoadmapId)
+       .OnDelete(DeleteBehavior.Cascade);
 
-            // TPH Inheritance
-            builder
-                .HasDiscriminator<string>("NodeType")
-                .HasValue<TopicNodeEntity>("Topic")
-                .HasValue<ReferenceNodeEntity>("Reference");
-        }
+        // TPH Inheritance
+        builder
+            .HasDiscriminator<string>("NodeType")
+            .HasValue<TopicNodeEntity>("Topic")
+            .HasValue<ReferenceNodeEntity>("Reference");
     }
 }

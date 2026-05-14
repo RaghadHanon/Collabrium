@@ -7,15 +7,14 @@ public static class ProjectHistoryMapper
 {
     public static ProjectHistory ToDomain(ProjectHistoryEntity entity)
     {
-        if (entity is null)
-            throw new ArgumentNullException(nameof(entity));
-
-        return ProjectHistory.Rehydrate(
+        return entity is null
+            ? throw new ArgumentNullException(nameof(entity))
+            : ProjectHistory.Rehydrate(
             id: entity.Id,
             createdAt: entity.CreatedAt,
             updatedAt: entity.UpdatedAt,
             projectId: entity.ProjectId,
-            relatedEntityId: entity.RelatedEntityId,   
+            relatedEntityId: entity.RelatedEntityId,
             relatedEntityTitle: entity.RelatedEntityTitle,
             relatedEntityCode: entity.RelatedEntityCode,
             madeByUserId: entity.MadeByUserId,
@@ -29,25 +28,24 @@ public static class ProjectHistoryMapper
 
     public static ProjectHistoryEntity ToEntity(ProjectHistory domain)
     {
-        if (domain is null)
-            throw new ArgumentNullException(nameof(domain));
+        return domain is null
+            ? throw new ArgumentNullException(nameof(domain))
+            : new ProjectHistoryEntity
+            {
+                Id = domain.Id,
+                CreatedAt = domain.CreatedAt,
+                UpdatedAt = domain.UpdatedAt,
 
-        return new ProjectHistoryEntity
-        {
-            Id = domain.Id,
-            CreatedAt = domain.CreatedAt,
-            UpdatedAt = domain.UpdatedAt,
-
-            ProjectId = domain.ProjectId,
-            RelatedEntityId = domain.RelatedEntityId,
-            RelatedEntityTitle = domain.RelatedEntityTitle,
-            RelatedEntityCode = domain.RelatedEntityCode,
-            MadeByUserId = domain.MadeByUserId,
-            Scope = domain.Scope,
-            ActionType = domain.ActionType,
-            PropertyName = domain.PropertyName,
-            OldValue = domain.OldValue,
-            NewValue = domain.NewValue
-        };
+                ProjectId = domain.ProjectId,
+                RelatedEntityId = domain.RelatedEntityId,
+                RelatedEntityTitle = domain.RelatedEntityTitle,
+                RelatedEntityCode = domain.RelatedEntityCode,
+                MadeByUserId = domain.MadeByUserId,
+                Scope = domain.Scope,
+                ActionType = domain.ActionType,
+                PropertyName = domain.PropertyName,
+                OldValue = domain.OldValue,
+                NewValue = domain.NewValue
+            };
     }
 }

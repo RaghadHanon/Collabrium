@@ -1,7 +1,6 @@
-﻿namespace API.Contracts.Courses
+﻿namespace API.Contracts.Courses;
+
+public sealed class AddCourseTagsRequest
 {
-    public sealed class AddCourseTagsRequest
-    {
-        public List<string> TagIds { get; set; } = new();
-    }
+    public List<string> TagIds { get; set; } = new();
 }

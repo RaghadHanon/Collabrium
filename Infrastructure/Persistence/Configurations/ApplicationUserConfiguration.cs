@@ -59,7 +59,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.HasMany(u => u.TeamMemberships)
             .WithOne(tm => tm.User)
             .HasForeignKey(tm => tm.UserId)
-            .OnDelete(DeleteBehavior.Cascade); 
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(u => u.RefreshTokens)
             .WithOne(rt => rt.User)

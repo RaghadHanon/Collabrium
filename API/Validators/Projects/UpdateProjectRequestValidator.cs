@@ -1,5 +1,4 @@
 ﻿using API.Contracts.Projects;
-using Domain.Enums;
 using FluentValidation;
 
 namespace API.Validators.Projects;

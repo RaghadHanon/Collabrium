@@ -6,46 +6,46 @@ using Application.Interfaces.Repositories;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.RoadmapNodes.Commands
+namespace Application.Features.RoadmapNodes.Commands;
+
+public sealed class MoveRoadmapNodeDown
 {
-    public sealed class MoveRoadmapNodeDown
+    public sealed class Command : IRequest<Result<RoadmapNodeDto>>
     {
-        public sealed class Command : IRequest<Result<RoadmapNodeDto>>
+        public required string RoadmapId { get; set; }
+        public required string NodeId { get; set; }
+    }
+
+    public sealed class Handler(
+        IRoadmapNodesRepository roadmapNodesRepository,
+        IRoadmapNodesReadModel roadmapNodesReadModel,
+        IRoadmapsRepository roadmapsRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork
+    ) : IRequestHandler<Command, Result<RoadmapNodeDto>>
+    {
+        public async Task<Result<RoadmapNodeDto>> Handle(Command request, CancellationToken cancellationToken)
         {
-            public required string RoadmapId { get; set; }
-            public required string NodeId { get; set; }
-        }
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<RoadmapNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-        public sealed class Handler(
-            IRoadmapNodesRepository roadmapNodesRepository,
-            IRoadmapNodesReadModel roadmapNodesReadModel,
-            IRoadmapsRepository roadmapsRepository,
-            ITenantContext tenantContext,
-            IUnitOfWork unitOfWork
-        ) : IRequestHandler<Command, Result<RoadmapNodeDto>>
-        {
-            public async Task<Result<RoadmapNodeDto>> Handle(Command request, CancellationToken cancellationToken)
-            {
-                var tenantId = tenantContext.CurrentTenant?.Id;
-                if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<RoadmapNodeDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            var roadmap = await roadmapsRepository.GetByIdAsync(
+                tenantId,
+                request.RoadmapId,
+                cancellationToken);
 
-                var roadmap = await roadmapsRepository.GetByIdAsync(
-                    tenantId,
-                    request.RoadmapId,
-                    cancellationToken);
+            if (roadmap is null)
+                return Result<RoadmapNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
 
-                if (roadmap is null)
-                    return Result<RoadmapNodeDto>.Failure("Roadmap not found.", HttpStatusCode.NotFound);
+            var nodes = await roadmapNodesRepository.GetByRoadmapIdAsync(
+                tenantId,
+                request.RoadmapId,
+                cancellationToken);
 
-                var nodes = await roadmapNodesRepository.GetByRoadmapIdAsync(
-                    tenantId,
-                    request.RoadmapId,
-                    cancellationToken);
-
-                var current = nodes.FirstOrDefault(n => n.Id == request.NodeId);
-                if (current is null)
-                    return Result<RoadmapNodeDto>.Failure("Node not found.", HttpStatusCode.NotFound);
+            var current = nodes.FirstOrDefault(n => n.Id == request.NodeId);
+            if (current is null)
+                return Result<RoadmapNodeDto>.Failure("Node not found.", HttpStatusCode.NotFound);
 
                 var next = nodes
                     .Where(n => n.Order > current.Order)
@@ -60,10 +60,10 @@ namespace Application.Features.RoadmapNodes.Commands
                         current.Id,
                         cancellationToken);
 
-                    return dto is null
-                        ? Result<RoadmapNodeDto>.Failure("Node could not be loaded.", HttpStatusCode.InternalServerError)
-                        : Result<RoadmapNodeDto>.Success(dto, HttpStatusCode.OK);
-                }
+                return dto is null
+                    ? Result<RoadmapNodeDto>.Failure("Node could not be loaded.", HttpStatusCode.InternalServerError)
+                    : Result<RoadmapNodeDto>.Success(dto, HttpStatusCode.OK);
+            }
 
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
@@ -75,16 +75,15 @@ namespace Application.Features.RoadmapNodes.Commands
                         ct: ct);
                 }, cancellationToken);
 
-                var updatedDto = await roadmapNodesReadModel.GetByIdAsync(
-                    tenantId,
-                    request.RoadmapId,
-                    current.Id,
-                    cancellationToken);
+            var updatedDto = await roadmapNodesReadModel.GetByIdAsync(
+                tenantId,
+                request.RoadmapId,
+                current.Id,
+                cancellationToken);
 
-                return updatedDto is null
-                    ? Result<RoadmapNodeDto>.Failure("Move down succeeded but reload failed.", HttpStatusCode.InternalServerError)
-                    : Result<RoadmapNodeDto>.Success(updatedDto, HttpStatusCode.OK);
-            }
+            return updatedDto is null
+                ? Result<RoadmapNodeDto>.Failure("Move down succeeded but reload failed.", HttpStatusCode.InternalServerError)
+                : Result<RoadmapNodeDto>.Success(updatedDto, HttpStatusCode.OK);
         }
     }
 }

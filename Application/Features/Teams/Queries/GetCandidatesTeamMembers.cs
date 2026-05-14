@@ -8,7 +8,7 @@ using System.Net;
 namespace Application.Features.Teams.Queries;
 public class GetCandidatesTeamMembers
 {
-    public class  Query : IRequest<Result<List<UserDto>>>
+    public class Query : IRequest<Result<List<UserDto>>>
     {
         public required string TeamId { get; set; }
     }

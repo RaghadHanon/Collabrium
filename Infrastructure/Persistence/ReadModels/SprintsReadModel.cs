@@ -30,7 +30,7 @@ public sealed class SprintsReadModel : ISprintsReadModel
 
         return await _dbContext.Sprints
             .AsNoTracking()
-            .Where(s => s.TenantId == tId && s.Id == sId && (projectId != null && s.ProjectId == projectId))
+            .Where(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId)
             .ProjectTo<SprintDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
     }

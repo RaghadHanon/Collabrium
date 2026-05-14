@@ -1,15 +1,14 @@
 ﻿using API.Contracts.Tags;
 using FluentValidation;
 
-namespace API.Validators.Tags
+namespace API.Validators.Tags;
+
+public class CreateTagRequestValidator : AbstractValidator<CreateTagRequest>
 {
-    public class CreateTagRequestValidator : AbstractValidator<CreateTagRequest>
+    public CreateTagRequestValidator()
     {
-        public CreateTagRequestValidator()
-        {
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name is required.")
-                .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
-        }
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
     }
 }

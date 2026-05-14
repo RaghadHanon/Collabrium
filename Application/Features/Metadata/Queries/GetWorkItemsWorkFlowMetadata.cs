@@ -18,7 +18,7 @@ public class GetWorkItemsWorkFlowMetadata
         IWorkItemsReadModel workItemsReadModel
       ) : IRequestHandler<Query, Result<List<WorkItemWorkflowDto>>>
     {
-        public async Task<Result<List<WorkItemWorkflowDto>>> Handle(Query request, CancellationToken cancellationToken)
+        public Result<List<WorkItemWorkflowDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var workflows = new List<WorkItemWorkflowDto>
             {
@@ -54,6 +54,11 @@ public class GetWorkItemsWorkFlowMetadata
             };
 
             return Result<List<WorkItemWorkflowDto>>.Success(workflows, HttpStatusCode.OK);
+        }
+
+        Task<Result<List<WorkItemWorkflowDto>>> IRequestHandler<Query, Result<List<WorkItemWorkflowDto>>>.Handle(Query request, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

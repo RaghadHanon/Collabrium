@@ -2,14 +2,13 @@
 using Application.Features.RoadmapResources.Commands;
 using AutoMapper;
 
-namespace API.MappingProfiles
+namespace API.MappingProfiles;
+
+public class RoadmapResourcesApiMappingProfile : Profile
 {
-    public class RoadmapResourcesApiMappingProfile : Profile
+    public RoadmapResourcesApiMappingProfile()
     {
-        public RoadmapResourcesApiMappingProfile()
-        {
-            CreateMap<CreateResourceRequest, CreateResource.Command>();
-            CreateMap<UpdateResourceRequest, UpdateResource.Command>();
-        }
+        CreateMap<CreateResourceRequest, CreateResource.Command>();
+        CreateMap<UpdateResourceRequest, UpdateResource.Command>();
     }
 }

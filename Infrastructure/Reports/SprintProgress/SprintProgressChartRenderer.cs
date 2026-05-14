@@ -8,6 +8,7 @@ namespace Infrastructure.Reports.SprintProgress;
 
 public class SprintProgressChartRenderer : ISprintProgressChartRenderer
 {
+    [Obsolete]
     public byte[] RenderMainChart(SprintProgressDto data)
     {
         if (data.TotalWorkItems == 0 && data.CompletedWorkItems == 0)
@@ -33,15 +34,15 @@ public class SprintProgressChartRenderer : ISprintProgressChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
         }
 
-        double offset = Math.Max(0.4, ys.Max() * 0.05);
+        var offset = Math.Max(0.4, ys.Max() * 0.05);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N0}", xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
@@ -60,6 +61,7 @@ public class SprintProgressChartRenderer : ISprintProgressChartRenderer
         return plt.GetImageBytes(1200, 650);
     }
 
+    [Obsolete]
     public byte[] RenderSecondaryChart(SprintProgressDto data)
     {
         if (data.TotalWorkItems == 0 &&
@@ -93,13 +95,13 @@ public class SprintProgressChartRenderer : ISprintProgressChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
         }
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
             var txt = plt.Add.Text($"{ys[i]:N1}%", xs[i], ys[i] + 2);
             txt.Alignment = Alignment.LowerCenter;
@@ -122,6 +124,7 @@ public class SprintProgressChartRenderer : ISprintProgressChartRenderer
         return plt.GetImageBytes(900, 450);
     }
 
+    [Obsolete]
     public byte[] RenderSummaryChart(SprintProgressDto data)
     {
         if (data.TotalWorkItems == 0 &&
@@ -166,17 +169,17 @@ public class SprintProgressChartRenderer : ISprintProgressChartRenderer
 
         var bars = plt.Add.Bars(xs, ys);
 
-        for (int i = 0; i < bars.Bars.Count; i++)
+        for (var i = 0; i < bars.Bars.Count; i++)
         {
             bars.Bars[i].FillStyle.Color = colors[i];
             bars.Bars[i].LineStyle.Width = 0;
         }
 
-        double offset = Math.Max(0.4, ys.Max() * 0.04);
+        var offset = Math.Max(0.4, ys.Max() * 0.04);
 
-        for (int i = 0; i < xs.Length; i++)
+        for (var i = 0; i < xs.Length; i++)
         {
-            string label = i >= 2 ? $"{ys[i]:N1}%" : $"{ys[i]:N0}";
+            var label = i >= 2 ? $"{ys[i]:N1}%" : $"{ys[i]:N0}";
             var txt = plt.Add.Text(label, xs[i], ys[i] + offset);
             txt.Alignment = Alignment.LowerCenter;
             txt.FontSize = 10;

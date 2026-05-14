@@ -2,7 +2,6 @@
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
-using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -53,7 +52,7 @@ public class MustHaveProjectAccessHandler
         if (string.IsNullOrEmpty(projectIdString) || !Guid.TryParse(projectIdString, out var projectId))
             throw new BadRequestException("Project id is missing or wrongly formatted.");
 
-        if (!(await _projectsRepository.IsProjectExists(user!.TenantId!, projectIdString)))
+        if (!await _projectsRepository.IsProjectExists(user!.TenantId!, projectIdString))
             throw new NotFoundException("Project not found in your tenant.");
 
         if (context.User.IsInRole(nameof(UserRole.SuperAdmin)))

@@ -1,5 +1,4 @@
 ﻿using Application.Common;
-using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Domain.Models;
@@ -29,7 +28,7 @@ public class DeleteSprint
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!(await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken)))
+            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var sprint = await sprintsRepository.GetByIdAsync(tenantId, request.SprintId, request.ProjectId, cancellationToken);
@@ -40,11 +39,11 @@ public class DeleteSprint
             if (hasItems)
                 return Result<Unit>.Failure("Cannot delete a sprint that has work items.", HttpStatusCode.BadRequest);
 
-            await unitOfWork.ExecuteInTransactionAsync((async ct =>
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 await sprintsRepository.RemoveAsync(tenantId, request.SprintId, ct);
                 historyRecorder.RecordDeletionChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code);
-            }), cancellationToken);
+            }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }

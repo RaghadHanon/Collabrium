@@ -1,7 +1,6 @@
-﻿namespace Infrastructure.Persistence.Entities
+﻿namespace Infrastructure.Persistence.Entities;
+
+public sealed class CourseLearningPointEntity
 {
-    public sealed class CourseLearningPointEntity
-    {
-        public string Text { get; set; } = null!;
-    }
+    public string Text { get; set; } = null!;
 }

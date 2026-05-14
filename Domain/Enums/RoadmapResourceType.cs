@@ -1,10 +1,9 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum RoadmapResourceType
 {
-    public enum RoadmapResourceType
-    {
-        Documentation = 0,
-        Article = 1,
-        Video = 2,
-        Tool = 3
-    }
+    Documentation = 0,
+    Article = 1,
+    Video = 2,
+    Tool = 3
 }

@@ -1,4 +1,4 @@
-﻿using Domain.Common;
+﻿using Domain.Core;
 using Domain.Enums;
 
 namespace Domain.Models;
@@ -41,7 +41,7 @@ public sealed class Epic : WorkItem
         DateTime? endDate)
     {
         var e = new Epic(id, title, code, createdByUserId, projectId);
-        e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints,title, code, description, acceptanceCriteria,
+        e.RehydrateCommon(createdAt, updatedAt, type, status, priority, isBlocked, effortPoints, title, code, description, acceptanceCriteria,
             assignedToUserId, createdByUserId, sprintId, parentId, projectId, startDate, endDate);
         return e;
     }
@@ -108,7 +108,7 @@ public sealed class Epic : WorkItem
 
         var items = linked?.ToList() ?? new List<WorkItemSnapshot>();
 
-        bool allUserStoriesDone =
+        var allUserStoriesDone =
             items.Where(x => x.Type == WorkItemType.UserStory)
                  .All(x => x.Status == WorkItemStatus.Done);
 

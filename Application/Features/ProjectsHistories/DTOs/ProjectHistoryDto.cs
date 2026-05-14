@@ -1,7 +1,6 @@
 ﻿using Domain.Enums;
-using Domain.Models;
 
-namespace Application.Features.ProjectHistories.DTOs;
+namespace Application.Features.ProjectsHistories.DTOs;
 
 public class ProjectHistoryDto
 {

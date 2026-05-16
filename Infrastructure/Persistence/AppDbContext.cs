@@ -49,6 +49,8 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<PostEntity> Posts => Set<PostEntity>();
     public DbSet<PostLikeEntity> PostLikes => Set<PostLikeEntity>();
     public DbSet<PostCommentEntity> PostComments => Set<PostCommentEntity>();
+    public DbSet<AnnouncementEntity> Announcements { get; set; }
+    public DbSet<AnnouncementAudienceEntity> AnnouncementAudiences { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

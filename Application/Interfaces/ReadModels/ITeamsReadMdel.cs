@@ -21,4 +21,9 @@ public interface ITeamsReadModel
     Task<List<UserDto>> GetCandidatesMembers(string tenantId, string teamId, CancellationToken cancellationToken = default);
 
     Task<TeamFullInfoDto?> GetTeamFullAsync(string tenantId, string teamId, CancellationToken cancellationToken = default);
+    Task<List<string>> GetUserTeamIdsAsync(
+      string tenantId,
+      string userId,
+      CancellationToken cancellationToken = default);
+
 }

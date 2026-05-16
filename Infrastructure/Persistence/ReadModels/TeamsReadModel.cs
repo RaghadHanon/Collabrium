@@ -158,6 +158,29 @@ public sealed class TeamsReadModel : ITeamsReadModel
             NextCursor = nextCursor
         };
     }
+    public async Task<List<string>> GetUserTeamIdsAsync(
+    string tenantId,
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(userId))
+        {
+            return new List<string>();
+        }
+
+        tenantId = tenantId.Trim();
+        userId = userId.Trim();
+
+        return await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Where(tm =>
+                tm.Team.TenantId == tenantId &&
+                tm.UserId == userId)
+            .Select(tm => tm.TeamId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
 
     private static IQueryable<TeamEntity> ApplyFilters(IQueryable<TeamEntity> query, TeamsSearchAndFilterParametersDto p)
     {

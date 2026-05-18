@@ -9,5 +9,4 @@ public sealed class AnnouncementAudienceInputDto
 
     public string? RoleName { get; set; }
 
-    public string? UserId { get; set; }
 }

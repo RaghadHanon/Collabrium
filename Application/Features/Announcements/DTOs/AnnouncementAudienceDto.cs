@@ -1,5 +1,4 @@
-﻿using Application.Features.Users.DTOs;
-using Domain.Enums;
+﻿using Domain.Enums;
 
 namespace Application.Features.Announcements.DTOs;
 public sealed class AnnouncementAudienceDto
@@ -13,5 +12,4 @@ public sealed class AnnouncementAudienceDto
 
     public string? RoleName { get; set; }
 
-    public UserDto? User { get; set; }
 }

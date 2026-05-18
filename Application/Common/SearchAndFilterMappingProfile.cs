@@ -1,4 +1,6 @@
-﻿using Application.Features.Articles.DTOs;
+﻿using Application.Features.Announcements.DTOs;
+using Application.Features.Announcements.Queries;
+using Application.Features.Articles.DTOs;
 using Application.Features.Articles.Queries;
 using Application.Features.CourseRatings.DTOs;
 using Application.Features.CourseRatings.Queries;
@@ -57,5 +59,7 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetAssignedToMeCourses.Query, UserCoursesSearchAndFilterParametersDto>();
         CreateMap<GetArticles.Query, ArticlesSearchAndFilterParametersDto>();
         CreateMap<GetPosts.Query, PostsSearchAndFilterParametersDto>();
+        CreateMap<GetAnnouncements.Query, AnnouncementsSearchAndFilterParametersDto>();
+        CreateMap<GetManageAnnouncements.Query, AnnouncementsSearchAndFilterParametersDto>();
     }
 }

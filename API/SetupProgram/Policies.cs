@@ -68,4 +68,8 @@ public static class Policies
     //Posts
     public const string Posts_Read = "Posts.Read";
     public const string Posts_Manage = "Posts.Manage";
+    //Announcements
+    public const string Announcements_Read = "Posts.Read";
+    public const string Announcements_Manage = "Posts.Manage";
 }
+

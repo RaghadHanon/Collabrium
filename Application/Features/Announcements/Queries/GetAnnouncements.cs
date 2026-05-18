@@ -10,7 +10,6 @@ using Domain.Enums;
 using MediatR;
 using System.Net;
 
-namespace Application.Features.Announcements.Queries;
 
 public sealed class GetAnnouncements
 {

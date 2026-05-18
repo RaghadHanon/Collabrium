@@ -22,7 +22,11 @@ public sealed class AnnouncementDto
 
     public required UserDto CreatedByUser { get; set; }
 
+
     public int AudiencesCount { get; set; }
+
+    public IReadOnlyList<AnnouncementAudienceDto> Audiences { get; set; }
+        = new List<AnnouncementAudienceDto>();
 
     public DateTime CreatedAt { get; set; }
 

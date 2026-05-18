@@ -59,27 +59,41 @@ public sealed class CreateAnnouncement
 
             Announcement announcement = null!;
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            try
             {
-                announcement = new Announcement(
-                    tenantId: tenantId,
-                    title: request.Title,
-                    content: request.Content,
-                    priority: request.Priority,
-                    publishAt: request.PublishAt,
-                    expiresAt: request.ExpiresAt,
-                    createdByUserId: currentUserId);
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    announcement = new Announcement(
+                        tenantId: tenantId,
+                        title: request.Title,
+                        content: request.Content,
+                        priority: request.Priority,
+                        publishAt: request.PublishAt,
+                        expiresAt: request.ExpiresAt,
+                        createdByUserId: currentUserId);
 
-                var audiences = request.Audiences
-                    .Select(a => CreateAudience(announcement.Id, a))
-                    .ToList();
+                    var audiences = request.Audiences
+                        .Select(a => CreateAudience(announcement.Id, a))
+                        .ToList();
 
-                announcement.SetAudiences(audiences);
+                    announcement.SetAudiences(audiences);
 
-                await announcementsRepository.AddAsync(announcement, ct);
+                    await announcementsRepository.AddAsync(announcement, ct);
 
-                await unitOfWork.SaveChangesAsync(ct);
-            }, cancellationToken);
+                    await unitOfWork.SaveChangesAsync(ct);
+                }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                var message =
+                    ex.InnerException?.InnerException?.Message
+                    ?? ex.InnerException?.Message
+                    ?? ex.Message;
+
+                return Result<AnnouncementDetailsDto>.Failure(
+                    message,
+                    HttpStatusCode.InternalServerError);
+            }
 
             var dto = await announcementsReadModel.GetDetailsByIdAsync(
                 tenantId,
@@ -94,19 +108,26 @@ public sealed class CreateAnnouncement
         }
 
         private static AnnouncementAudience CreateAudience(
-            string announcementId,
-            AnnouncementAudienceInputDto input)
+     string announcementId,
+     AnnouncementAudienceInputDto input)
         {
+            static string? Clean(string? value)
+                => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
             return input.Type switch
             {
                 AnnouncementAudienceType.Everyone =>
                     AnnouncementAudience.ForEveryone(announcementId),
 
                 AnnouncementAudienceType.Team =>
-                    AnnouncementAudience.ForTeam(announcementId, input.TeamId!),
+                    Clean(input.TeamId) is { } teamId
+                        ? AnnouncementAudience.ForTeam(announcementId, teamId)
+                        : throw new DomainException("TeamId is required for team audience."),
 
                 AnnouncementAudienceType.Role =>
-                    AnnouncementAudience.ForRole(announcementId, input.RoleName!),
+                    Clean(input.RoleName) is { } roleName
+                        ? AnnouncementAudience.ForRole(announcementId, roleName)
+                        : throw new DomainException("RoleName is required for role audience."),
 
                 _ => throw new DomainException("Invalid announcement audience type.")
             };

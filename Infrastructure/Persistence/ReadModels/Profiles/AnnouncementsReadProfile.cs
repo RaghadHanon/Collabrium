@@ -16,10 +16,8 @@ public sealed class AnnouncementsReadProfile : Profile
                 o => o.MapFrom(s =>
                     s.Team != null
                         ? s.Team.Name
-                        : null))
-            .ForMember(
-                d => d.User,
-                o => o.MapFrom(s => s.User));
+                        : null));
+
 
         CreateMap<AnnouncementEntity, AnnouncementDto>()
             .ForMember(
@@ -28,6 +26,9 @@ public sealed class AnnouncementsReadProfile : Profile
             .ForMember(
                 d => d.AudiencesCount,
                 o => o.MapFrom(s => s.Audiences.Count))
+            .ForMember(
+                    d => d.Audiences,
+                    o => o.MapFrom(s => s.Audiences))
             .ForMember(
                 d => d.IsPublishedNow,
                 o => o.MapFrom(s =>

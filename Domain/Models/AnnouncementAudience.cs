@@ -63,15 +63,7 @@ public sealed class AnnouncementAudience : Entity
             null);
     }
 
-    public static AnnouncementAudience ForUser(string announcementId, string userId)
-    {
-        return new AnnouncementAudience(
-            announcementId,
-            AnnouncementAudienceType.SpecificUser,
-            null,
-            null,
-            userId);
-    }
+
 
     public static AnnouncementAudience Rehydrate(
         string id,
@@ -139,16 +131,7 @@ public sealed class AnnouncementAudience : Entity
                     "Role audience must only have RoleName.");
                 break;
 
-            case AnnouncementAudienceType.SpecificUser:
-                Guard.Against(
-                    string.IsNullOrWhiteSpace(UserId),
-                    "Specific user audience requires UserId.");
 
-                Guard.Against(
-                    TeamId is not null ||
-                    RoleName is not null,
-                    "Specific user audience must only have UserId.");
-                break;
 
             default:
                 throw new DomainException("Invalid announcement audience type.");

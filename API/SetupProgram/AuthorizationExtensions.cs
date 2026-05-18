@@ -197,6 +197,16 @@ public static class AuthorizationExtensions
                 nameof(UserRole.BusinessAnalyst),
                 nameof(UserRole.TenantAdmin)
             ));
+
+            //Posts
+            options.AddPolicy(Policies.Announcements_Read, p => p.RequireRole(TenantMembers));
+
+            options.AddPolicy(Policies.Announcements_Manage, p => p.RequireRole(
+                nameof(UserRole.ProductOwner),
+                nameof(UserRole.TeamLead),
+                nameof(UserRole.BusinessAnalyst),
+                nameof(UserRole.TenantAdmin)
+            ));
         });
 
         return services;

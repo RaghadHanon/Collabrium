@@ -52,6 +52,103 @@ namespace Infrastructure.Migrations
                     b.ToTable("CourseTags", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AnnouncementAudienceEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AnnouncementId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RoleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TeamId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleName");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("AnnouncementId", "Type");
+
+                    b.ToTable("AnnouncementAudiences", (string)null);
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AnnouncementEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PublishAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("TenantId", "ExpiresAt");
+
+                    b.HasIndex("TenantId", "Priority");
+
+                    b.HasIndex("TenantId", "PublishAt");
+
+                    b.ToTable("Announcements", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -1600,6 +1697,50 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AnnouncementAudienceEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.AnnouncementEntity", "Announcement")
+                        .WithMany("Audiences")
+                        .HasForeignKey("AnnouncementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TeamEntity", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Announcement");
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AnnouncementEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
@@ -2529,6 +2670,11 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("RefRoadmap");
+                });
+
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.AnnouncementEntity", b =>
+                {
+                    b.Navigation("Audiences");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ApplicationUserEntity", b =>

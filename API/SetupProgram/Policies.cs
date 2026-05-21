@@ -71,5 +71,9 @@ public static class Policies
     //Announcements
     public const string Announcements_Read = "Posts.Read";
     public const string Announcements_Manage = "Posts.Manage";
+
+    //Events
+    public const string Events_Read = "Posts.Read";
+    public const string Events_Manage = "Posts.Manage";
 }
 

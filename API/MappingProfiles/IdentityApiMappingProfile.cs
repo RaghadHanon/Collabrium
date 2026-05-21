@@ -1,8 +1,5 @@
 ﻿using API.Contracts.Identity;
-using API.Contracts.Tenants;
-using API.Contracts.Users;
 using Application.Features.Identity.Commands;
-using Application.Features.Users.Commands;
 using AutoMapper;
 
 namespace API.MappingProfiles;
@@ -28,8 +25,5 @@ public class IdentityApiMappingProfile : Profile
         CreateMap<LoginRequest, LoginUser.Command>();
         CreateMap<RefreshTokenRequest, RefreshUserToken.Command>();
         CreateMap<RevokeRefreshTokenRequest, RevokeUserRefreshToken.Command>();
-        CreateMap<UpdateUserProfileRequest, UpdateUserProfile.Command>();
-        CreateMap<UpdateUserRoleRequest, UpdateUserRole.Command>();
-        CreateMap<UploadImageRequest, UploadUserProfileImage.Command>();
     }
 }

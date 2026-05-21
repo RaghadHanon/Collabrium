@@ -164,4 +164,112 @@ public class UsersController : ApiBaseController
     {
         return HandleResult(await Mediator.Send(query));
     }
+
+    /// <summary>
+    /// Adds skills to the currently authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint allows the current user to add one or more skills to their own profile.
+    /// Existing skills will remain unchanged, and duplicate skills will be ignored.
+    ///
+    /// Sample request:
+    ///
+    ///     POST /api/users/me/skills
+    ///     {
+    ///         "skillIds": [1, 2, 3]
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="request">The skill IDs to add to the current user's profile.</param>
+    /// <returns>No content if the skills were added successfully.</returns>
+    /// <response code="204">Skills added successfully.</response>
+    /// <response code="400">If the request is invalid or no skills are provided.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user has not changed their initial password.</response>
+    /// <response code="404">If the current user was not found.</response>
+    [HttpPost("me/skills")]
+    public async Task<IActionResult> AddMySkills(AddUserSkillsRequest request)
+    {
+        var command = Mapper.Map<AddUserSkills.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Retrieves the skills of the currently authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/users/me/skills
+    ///
+    /// </remarks>
+    /// <returns>The list of skills assigned to the current user.</returns>
+    /// <response code="200">Returns the current user's skills successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user has not changed their initial password.</response>
+    /// <response code="404">If the current user was not found.</response>
+    [HttpGet("me/skills")]
+    public async Task<IActionResult> GetMySkills()
+    {
+        var query = new GetUserSkills.Query();
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Retrieves the skills of a specific user.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/users/3fa85f64-5717-4562-b3fc-2c963f66afa6/skills
+    ///
+    /// </remarks>
+    /// <param name="id">The Id of the user whose skills should be retrieved.</param>
+    /// <returns>The list of skills assigned to the specified user.</returns>
+    /// <response code="200">Returns the user's skills successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user is not authorized to view the specified user's skills.</response>
+    /// <response code="404">If the target user was not found.</response>
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [HttpGet("{id}/skills")]
+    public async Task<IActionResult> GetUserSkills(string id)
+    {
+        var query = new GetUserSkills.Query
+        {
+            UserId = id
+        };
+
+        return HandleResult(await Mediator.Send(query));
+    }
+
+    /// <summary>
+    /// Deletes skills from the currently authenticated user.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint removes one or more skills from the current user's profile.
+    ///
+    /// Sample request:
+    ///
+    ///     DELETE /api/users/me/skills
+    ///     {
+    ///         "skillIds": [1, 2, 3]
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="request">The skill IDs to remove from the current user's profile.</param>
+    /// <returns>No content if the skills were removed successfully.</returns>
+    /// <response code="204">Skills deleted successfully.</response>
+    /// <response code="400">If the request is invalid or no skills are provided.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user has not changed their initial password.</response>
+    /// <response code="404">If the current user was not found.</response>
+    [HttpDelete("me/skills")]
+    public async Task<IActionResult> DeleteMySkills(DeleteUserSkillsRequest request)
+    {
+        var command = Mapper.Map<DeleteUserSkills.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
+    }
 }

@@ -1,9 +1,9 @@
-﻿using Application.Features.AI.DTOs.WorkItems;
-using Application.Interfaces.AI;
-using Domain.Enums;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Application.Features.AI.DTOs.WorkItems;
+using Application.Interfaces.AI;
+using Domain.Enums;
 
 namespace Infrastructure.AI;
 
@@ -11,6 +11,10 @@ public sealed class WorkItemFieldsSuggestionService(
     IAiAssistantService aiAssistantService)
     : IWorkItemFieldsSuggestionService
 {
+    private const int MaxAttempts = 3;
+
+    private static readonly int[] AllowedStoryPoints = [1, 2, 3, 5, 8, 13];
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -19,8 +23,6 @@ public sealed class WorkItemFieldsSuggestionService(
             new JsonStringEnumConverter()
         }
     };
-
-    private static readonly int[] AllowedStoryPoints = [1, 2, 3, 5, 8, 13];
 
     public async Task<TSuggestion> GenerateAsync<TSuggestion>(
         WorkItemType workItemType,
@@ -31,71 +33,159 @@ public sealed class WorkItemFieldsSuggestionService(
         if (string.IsNullOrWhiteSpace(summary))
             throw new ArgumentException("Summary is required.");
 
-        var prompt = BuildPrompt(workItemType, summary.Trim());
+        summary = summary.Trim();
 
-        var aiResponse = await aiAssistantService.AskAsync(prompt, cancellationToken);
+        var prompt = BuildInitialPrompt(workItemType, summary);
+        string? lastError = null;
+        string? lastResponse = null;
 
-        var json = ExtractJson(aiResponse);
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            var aiResponse = await aiAssistantService.AskAsync(prompt, cancellationToken);
+            lastResponse = aiResponse;
 
-        var suggestion = DeserializeSuggestion<TSuggestion>(json);
+            var parsed = TryParseSuggestion<TSuggestion>(
+                workItemType,
+                aiResponse,
+                summary,
+                out var suggestion,
+                out var error);
 
-        ValidateSuggestion(workItemType, suggestion);
+            if (parsed && suggestion is not null)
+                return suggestion;
 
-        return suggestion;
+            lastError = error;
+
+            prompt = BuildRepairPrompt(
+                workItemType,
+                summary,
+                aiResponse,
+                error ?? "The response was invalid.");
+        }
+
+        return BuildFallbackSuggestion<TSuggestion>(
+            workItemType,
+            summary,
+            lastError,
+            lastResponse);
     }
 
-    private static TSuggestion DeserializeSuggestion<TSuggestion>(string json)
+    private static bool TryParseSuggestion<TSuggestion>(
+        WorkItemType workItemType,
+        string aiResponse,
+        string summary,
+        out TSuggestion? suggestion,
+        out string? error)
         where TSuggestion : WorkItemFieldsSuggestionDto
     {
+        suggestion = null;
+        error = null;
+
         try
         {
-            var suggestion = JsonSerializer.Deserialize<TSuggestion>(json, JsonOptions);
+            var json = ExtractJson(aiResponse);
 
-            return suggestion ?? throw new InvalidOperationException(
-                "AI returned an empty or invalid suggestion.");
+            suggestion = JsonSerializer.Deserialize<TSuggestion>(
+                json,
+                JsonOptions);
+
+            if (suggestion is null)
+            {
+                error = "The JSON object could not be deserialized.";
+                return false;
+            }
+
+            NormalizeSuggestion(workItemType, suggestion, summary);
+
+            if (!IsSuggestionUsable(workItemType, suggestion, out error))
+                return false;
+
+            return true;
         }
-        catch (JsonException ex)
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {
-            throw new InvalidOperationException(
-                $"AI returned JSON in an invalid format. Details: {ex.Message}");
+            error = ex.Message;
+            return false;
         }
     }
 
-    private static string BuildPrompt(WorkItemType workItemType, string summary)
+    private static string BuildInitialPrompt(
+        WorkItemType workItemType,
+        string summary)
     {
         var schema = GetJsonSchema(workItemType);
-
         var priorityValues = string.Join(", ", Enum.GetNames<WorkItemPriority>());
         var testEnvironmentValues = string.Join(", ", Enum.GetNames<TestEnvironment>());
 
         return $$"""
         You are an AI assistant inside Collabrium.
 
-        Your task is to generate suggested fields for creating a {{workItemType}} work item.
+        Generate suggested fields for creating a {{workItemType}} work item.
 
         User summary:
         {{summary}}
 
-        Strict rules:
+        Rules:
         - Return valid JSON only.
         - Do not wrap the JSON in markdown.
-        - Do not add explanations before or after the JSON.
+        - Do not add explanations.
         - Use only the fields shown in the required JSON schema.
-        - Do not invent IDs.
+        - Do not include IDs or system fields.
         - Do not include projectId, createdByUserId, status, code, sprintId, parentId, startDate, or endDate.
-        - title must be concise and clear.
-        - description must be practical and specific.
-        - acceptanceCriteria must be clear, testable, and written as completion conditions.
-        - effortPoints must be a non-negative integer.
+        - Do not leave required fields empty.
         - priority must be exactly one of these string values: {{priorityValues}}.
         - Do not return enum values as numbers.
-        - If the summary is vague, provide reasonable but conservative suggestions.
+        - effortPoints must be a non-negative integer.
 
         Type-specific rules:
-        - For UserStory, storyPoints must be exactly one of: 1, 2, 3, 5, 8, 13.
-        - For Bug, stepsToReproduce, expectedResult, and actualResult are required.
-        - For TestCase, preconditions, steps, testEnvironment, and expectedResult are required.
+        - For UserStory, storyPoints must be one of: 1, 2, 3, 5, 8, 13.
+        - For Bug, stepsToReproduce, expectedResult, and actualResult must be non-empty strings.
+        - For Bug, if actualResult is not explicitly stated, infer it from the summary.
+        - For Bug, if reproduction steps are not explicit, create reasonable steps based on the summary.
+        - For TestCase, preconditions, steps, testEnvironment, and expectedResult must be non-empty strings.
         - For TestCase, testEnvironment must be exactly one of these string values: {{testEnvironmentValues}}.
+
+        Required JSON schema:
+        {{schema}}
+        """;
+    }
+
+    private static string BuildRepairPrompt(
+        WorkItemType workItemType,
+        string summary,
+        string invalidResponse,
+        string error)
+    {
+        var schema = GetJsonSchema(workItemType);
+        var priorityValues = string.Join(", ", Enum.GetNames<WorkItemPriority>());
+        var testEnvironmentValues = string.Join(", ", Enum.GetNames<TestEnvironment>());
+
+        return $$"""
+        Your previous response was invalid for creating a {{workItemType}} work item.
+
+        Validation/parsing problem:
+        {{error}}
+
+        User summary:
+        {{summary}}
+
+        Previous invalid response:
+        {{invalidResponse}}
+
+        Fix the response now.
+
+        Rules:
+        - Return valid JSON only.
+        - Do not wrap the JSON in markdown.
+        - Do not add explanations.
+        - Use only the fields shown in the schema.
+        - Do not leave required fields empty.
+        - priority must be exactly one of: {{priorityValues}}.
+        - Do not return enum values as numbers.
+        - For UserStory, storyPoints must be one of: 1, 2, 3, 5, 8, 13.
+        - For Bug, stepsToReproduce, expectedResult, and actualResult must be non-empty strings.
+        - For TestCase, preconditions, steps, testEnvironment, and expectedResult must be non-empty strings.
+        - For TestCase, testEnvironment must be exactly one of: {{testEnvironmentValues}}.
 
         Required JSON schema:
         {{schema}}
@@ -197,109 +287,236 @@ public sealed class WorkItemFieldsSuggestionService(
             @"\{[\s\S]*\}",
             RegexOptions.Multiline);
 
-        return !jsonMatch.Success
-            ? throw new InvalidOperationException("AI response does not contain a valid JSON object.")
-            : jsonMatch.Value.Trim();
+        if (!jsonMatch.Success)
+            throw new InvalidOperationException("AI response does not contain a valid JSON object.");
+
+        return jsonMatch.Value.Trim();
     }
 
-    private static void ValidateSuggestion<TSuggestion>(
+    private static void NormalizeSuggestion<TSuggestion>(
         WorkItemType workItemType,
-        TSuggestion suggestion)
+        TSuggestion suggestion,
+        string summary)
         where TSuggestion : WorkItemFieldsSuggestionDto
     {
-        ValidateCommonFields(suggestion);
+        suggestion.Title = NormalizeText(
+            suggestion.Title,
+            BuildFallbackTitle(workItemType, summary));
+
+        suggestion.Description = NormalizeText(
+            suggestion.Description,
+            summary);
+
+        suggestion.AcceptanceCriteria = NormalizeText(
+            suggestion.AcceptanceCriteria,
+            "The work item is complete when the described behavior is implemented, verified, and accepted.");
+
+        if (suggestion.EffortPoints < 0)
+            suggestion.EffortPoints = 0;
+
+        if (!Enum.IsDefined(typeof(WorkItemPriority), suggestion.Priority))
+            suggestion.Priority = WorkItemPriority.Medium;
 
         switch (workItemType)
         {
-            case WorkItemType.UserStory:
-                ValidateUserStorySuggestion(suggestion);
+            case WorkItemType.UserStory when suggestion is UserStoryFieldsSuggestionDto userStory:
+                if (!AllowedStoryPoints.Contains(userStory.StoryPoints))
+                    userStory.StoryPoints = 3;
                 break;
 
-            case WorkItemType.Bug:
-                ValidateBugSuggestion(suggestion);
+            case WorkItemType.Bug when suggestion is BugFieldsSuggestionDto bug:
+                bug.StepsToReproduce = NormalizeText(
+                    bug.StepsToReproduce,
+                    BuildFallbackBugSteps(summary));
+
+                bug.ExpectedResult = NormalizeText(
+                    bug.ExpectedResult,
+                    "The feature should behave correctly without errors or unexpected behavior.");
+
+                bug.ActualResult = NormalizeText(
+                    bug.ActualResult,
+                    $"The issue described in the summary occurs: {summary}");
+
                 break;
 
-            case WorkItemType.TestCase:
-                ValidateTestCaseSuggestion(suggestion);
-                break;
+            case WorkItemType.TestCase when suggestion is TestCaseFieldsSuggestionDto testCase:
+                testCase.Preconditions = NormalizeText(
+                    testCase.Preconditions,
+                    "The user has access to the system and the related feature is available.");
 
-            case WorkItemType.Epic:
-            case WorkItemType.TaskItem:
-                break;
+                testCase.Steps = NormalizeText(
+                    testCase.Steps,
+                    BuildFallbackTestSteps(summary));
 
-            default:
-                throw new NotSupportedException(
-                    $"AI field suggestion is not supported for work item type '{workItemType}'.");
+                testCase.ExpectedResult = NormalizeText(
+                    testCase.ExpectedResult,
+                    "The system should produce the expected behavior described in the summary.");
+
+                if (!Enum.IsDefined(typeof(TestEnvironment), testCase.TestEnvironment))
+                    testCase.TestEnvironment = GetDefaultTestEnvironment();
+
+                break;
         }
     }
 
-    private static void ValidateCommonFields(WorkItemFieldsSuggestionDto suggestion)
+    private static bool IsSuggestionUsable<TSuggestion>(
+        WorkItemType workItemType,
+        TSuggestion suggestion,
+        out string? error)
+        where TSuggestion : WorkItemFieldsSuggestionDto
     {
+        error = null;
+
         if (string.IsNullOrWhiteSpace(suggestion.Title))
-            throw new InvalidOperationException("AI suggestion must include a title.");
+        {
+            error = "Missing title.";
+            return false;
+        }
 
         if (suggestion.EffortPoints < 0)
-            throw new InvalidOperationException("EffortPoints cannot be negative.");
+        {
+            error = "Invalid effortPoints.";
+            return false;
+        }
 
         if (!Enum.IsDefined(typeof(WorkItemPriority), suggestion.Priority))
-            throw new InvalidOperationException("AI suggestion contains an invalid priority.");
-    }
-
-    private static void ValidateUserStorySuggestion<TSuggestion>(TSuggestion suggestion)
-        where TSuggestion : WorkItemFieldsSuggestionDto
-    {
-        if (suggestion is not UserStoryFieldsSuggestionDto userStory)
-            throw new InvalidOperationException("AI returned an invalid User Story suggestion format.");
-
-        if (!AllowedStoryPoints.Contains(userStory.StoryPoints))
         {
-            throw new InvalidOperationException(
-                "StoryPoints must be one of: 1, 2, 3, 5, 8, 13.");
+            error = "Invalid priority.";
+            return false;
         }
+
+        return workItemType switch
+        {
+            WorkItemType.Epic or WorkItemType.TaskItem => true,
+
+            WorkItemType.UserStory =>
+                suggestion is UserStoryFieldsSuggestionDto userStory &&
+                AllowedStoryPoints.Contains(userStory.StoryPoints),
+
+            WorkItemType.Bug =>
+                suggestion is BugFieldsSuggestionDto bug &&
+                !string.IsNullOrWhiteSpace(bug.StepsToReproduce) &&
+                !string.IsNullOrWhiteSpace(bug.ExpectedResult) &&
+                !string.IsNullOrWhiteSpace(bug.ActualResult),
+
+            WorkItemType.TestCase =>
+                suggestion is TestCaseFieldsSuggestionDto testCase &&
+                !string.IsNullOrWhiteSpace(testCase.Preconditions) &&
+                !string.IsNullOrWhiteSpace(testCase.Steps) &&
+                !string.IsNullOrWhiteSpace(testCase.ExpectedResult) &&
+                Enum.IsDefined(typeof(TestEnvironment), testCase.TestEnvironment),
+
+            _ => false
+        };
     }
 
-    private static void ValidateBugSuggestion<TSuggestion>(TSuggestion suggestion)
+    private static TSuggestion BuildFallbackSuggestion<TSuggestion>(
+        WorkItemType workItemType,
+        string summary,
+        string? lastError,
+        string? lastResponse)
         where TSuggestion : WorkItemFieldsSuggestionDto
     {
-        if (suggestion is not BugFieldsSuggestionDto bug)
-            throw new InvalidOperationException("AI returned an invalid Bug suggestion format.");
+        WorkItemFieldsSuggestionDto suggestion = workItemType switch
+        {
+            WorkItemType.Epic => new EpicFieldsSuggestionDto(),
 
-        if (string.IsNullOrWhiteSpace(bug.StepsToReproduce))
-            throw new InvalidOperationException("StepsToReproduce is required.");
+            WorkItemType.UserStory => new UserStoryFieldsSuggestionDto
+            {
+                StoryPoints = 3
+            },
 
-        if (string.IsNullOrWhiteSpace(bug.ExpectedResult))
-            throw new InvalidOperationException("ExpectedResult is required.");
+            WorkItemType.TaskItem => new TaskFieldsSuggestionDto(),
 
-        if (string.IsNullOrWhiteSpace(bug.ActualResult))
-            throw new InvalidOperationException("ActualResult is required.");
+            WorkItemType.Bug => new BugFieldsSuggestionDto
+            {
+                StepsToReproduce = BuildFallbackBugSteps(summary),
+                ExpectedResult = "The feature should behave correctly without errors or unexpected behavior.",
+                ActualResult = $"The issue described in the summary occurs: {summary}"
+            },
+
+            WorkItemType.TestCase => new TestCaseFieldsSuggestionDto
+            {
+                Preconditions = "The user has access to the system and the related feature is available.",
+                Steps = BuildFallbackTestSteps(summary),
+                TestEnvironment = GetDefaultTestEnvironment(),
+                ExpectedResult = "The system should produce the expected behavior described in the summary."
+            },
+
+            _ => throw new NotSupportedException(
+                $"AI field suggestion is not supported for work item type '{workItemType}'.")
+        };
+
+        suggestion.Title = BuildFallbackTitle(workItemType, summary);
+        suggestion.Description = summary;
+        suggestion.AcceptanceCriteria =
+            "The work item is complete when the described behavior is implemented, verified, and accepted.";
+        suggestion.EffortPoints = 1;
+        suggestion.Priority = WorkItemPriority.Medium;
+
+        return suggestion is TSuggestion typedSuggestion
+            ? typedSuggestion
+            : throw new InvalidOperationException(
+                $"Could not build fallback suggestion for {typeof(TSuggestion).Name}.");
     }
 
-    private static void ValidateTestCaseSuggestion<TSuggestion>(TSuggestion suggestion)
-        where TSuggestion : WorkItemFieldsSuggestionDto
+    private static string NormalizeText(string? value, string fallback)
     {
-        if (suggestion is not TestCaseFieldsSuggestionDto testCase)
-            throw new InvalidOperationException("AI returned an invalid Test Case suggestion format.");
+        return string.IsNullOrWhiteSpace(value)
+            ? fallback
+            : value.Trim();
+    }
 
-        if (string.IsNullOrWhiteSpace(testCase.Preconditions))
-            throw new InvalidOperationException("Preconditions is required.");
+    private static string BuildFallbackTitle(
+        WorkItemType workItemType,
+        string summary)
+    {
+        var normalized = summary.Trim();
 
-        if (string.IsNullOrWhiteSpace(testCase.Steps))
-            throw new InvalidOperationException("Steps is required.");
+        if (normalized.Length > 70)
+            normalized = normalized[..70].TrimEnd() + "...";
 
-        if (string.IsNullOrWhiteSpace(testCase.ExpectedResult))
-            throw new InvalidOperationException("ExpectedResult is required.");
+        return workItemType switch
+        {
+            WorkItemType.Epic => $"Epic: {normalized}",
+            WorkItemType.UserStory => $"User Story: {normalized}",
+            WorkItemType.TaskItem => $"Task: {normalized}",
+            WorkItemType.Bug => $"Bug: {normalized}",
+            WorkItemType.TestCase => $"Test Case: {normalized}",
+            _ => normalized
+        };
+    }
 
-        if (!Enum.IsDefined(typeof(TestEnvironment), testCase.TestEnvironment))
-            throw new InvalidOperationException("AI suggestion contains an invalid test environment.");
+    private static string BuildFallbackBugSteps(string summary)
+    {
+        return
+            $"1. Open the related feature.\n" +
+            $"2. Perform the action described in the summary.\n" +
+            $"3. Observe the reported issue.\n\n" +
+            $"Summary: {summary}";
+    }
+
+    private static string BuildFallbackTestSteps(string summary)
+    {
+        return
+            $"1. Open the related feature.\n" +
+            $"2. Execute the scenario described in the summary.\n" +
+            $"3. Verify the result.\n\n" +
+            $"Summary: {summary}";
     }
 
     private static string GetDefaultTestEnvironmentValue()
     {
-        var names = Enum.GetNames<TestEnvironment>();
+        return GetDefaultTestEnvironment().ToString();
+    }
 
-        return names.Contains("Software")
-            ? "Software"
-            : names.FirstOrDefault()
-            ?? throw new InvalidOperationException("TestEnvironment enum has no defined values.");
+    private static TestEnvironment GetDefaultTestEnvironment()
+    {
+        var values = Enum.GetValues<TestEnvironment>();
+
+        if (values.Contains(TestEnvironment.Software))
+            return TestEnvironment.Software;
+
+        return values.FirstOrDefault();
     }
 }

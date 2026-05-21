@@ -10,7 +10,7 @@ namespace API.Controllers;
 [Route("api/projects/{projectId}/work-items/ai-suggestions")]
 [Authorize(Policy = Policies.PasswordChanged)]
 [Authorize(Policy = Policies.Project_Access)]
-public sealed class AiWorkItemsController : ApiBaseController
+public sealed class AIWorkItemsController : ApiBaseController
 {
     /// <summary>
     /// Generates AI-suggested fields for creating an Epic work item.

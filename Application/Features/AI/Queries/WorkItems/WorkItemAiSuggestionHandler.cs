@@ -16,48 +16,13 @@ internal static class WorkItemAiSuggestionHandler
         CancellationToken cancellationToken)
         where TSuggestion : WorkItemFieldsSuggestionDto
     {
-        if (string.IsNullOrWhiteSpace(projectId))
-        {
-            return Result<TSuggestion>.Failure(
-                "ProjectId is required.",
-                HttpStatusCode.BadRequest);
-        }
+        var suggestion = await suggestionService.GenerateAsync<TSuggestion>(
+            workItemType,
+            summary,
+            cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(summary))
-        {
-            return Result<TSuggestion>.Failure(
-                "Summary is required.",
-                HttpStatusCode.BadRequest);
-        }
-
-        try
-        {
-            var suggestion = await suggestionService.GenerateAsync<TSuggestion>(
-                workItemType,
-                summary,
-                cancellationToken);
-
-            return Result<TSuggestion>.Success(
-                suggestion,
-                HttpStatusCode.OK);
-        }
-        catch (ArgumentException ex)
-        {
-            return Result<TSuggestion>.Failure(
-                ex.Message,
-                HttpStatusCode.BadRequest);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result<TSuggestion>.Failure(
-                ex.Message,
-                HttpStatusCode.BadRequest);
-        }
-        catch (NotSupportedException ex)
-        {
-            return Result<TSuggestion>.Failure(
-                ex.Message,
-                HttpStatusCode.BadRequest);
-        }
+        return Result<TSuggestion>.Success(
+            suggestion,
+            HttpStatusCode.OK);
     }
 }

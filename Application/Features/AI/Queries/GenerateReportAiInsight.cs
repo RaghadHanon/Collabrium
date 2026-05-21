@@ -32,34 +32,13 @@ public class GenerateReportAiInsight
             Query request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var insight = await reportAiInsightService.GenerateAsync(
-                    request,
-                    cancellationToken);
+            var insight = await reportAiInsightService.GenerateAsync(
+                request,
+                cancellationToken);
 
-                return Result<ReportAiInsightDto>.Success(
-                    insight,
-                    HttpStatusCode.OK);
-            }
-            catch (ArgumentException ex)
-            {
-                return Result<ReportAiInsightDto>.Failure(
-                    ex.Message,
-                    HttpStatusCode.BadRequest);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Result<ReportAiInsightDto>.Failure(
-                    ex.Message,
-                    HttpStatusCode.NotFound);
-            }
-            catch (NotSupportedException ex)
-            {
-                return Result<ReportAiInsightDto>.Failure(
-                    ex.Message,
-                    HttpStatusCode.BadRequest);
-            }
+            return Result<ReportAiInsightDto>.Success(
+                insight,
+                HttpStatusCode.OK);
         }
     }
 }

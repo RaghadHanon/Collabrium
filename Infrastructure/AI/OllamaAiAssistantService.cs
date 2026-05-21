@@ -6,13 +6,18 @@ namespace Infrastructure.AI;
 
 public sealed class OllamaAiAssistantService(HttpClient httpClient) : IAiAssistantService
 {
+    private const string DefaultModel = "gemma3";
+
     public async Task<string> AskAsync(
         string prompt,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(prompt))
+            throw new ArgumentException("Prompt is required.", nameof(prompt));
+
         var request = new
         {
-            model = "gemma3",
+            model = DefaultModel,
             stream = false,
             messages = new[]
             {
@@ -21,35 +26,57 @@ public sealed class OllamaAiAssistantService(HttpClient httpClient) : IAiAssista
                     role = "system",
                     content = """
                     You are an AI assistant inside Collabrium.
-                    Analyze reports and give clear, professional, useful insights.
-                    Do not invent data.
-                    Use only the provided input.
+                    Follow the user's instructions exactly.
+                    Use only the information provided in the prompt.
+                    Do not invent facts, IDs, names, numbers, or system data.
+                    Return the response in the format requested by the prompt.
                     """
                 },
                 new
                 {
                     role = "user",
-                    content = prompt
+                    content = prompt.Trim()
                 }
             }
         };
 
-        var response = await httpClient.PostAsJsonAsync(
+        using var response = await httpClient.PostAsJsonAsync(
             "/api/chat",
             request,
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Ollama request failed with status code {(int) response.StatusCode}. Response: {responseBody}");
+        }
 
-        using var json = await JsonDocument.ParseAsync(
-            stream,
-            cancellationToken: cancellationToken);
+        return ExtractAssistantContent(responseBody);
+    }
 
-        return json.RootElement
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString() ?? string.Empty;
+    private static string ExtractAssistantContent(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            throw new InvalidOperationException("Ollama returned an empty response.");
+
+        try
+        {
+            using var json = JsonDocument.Parse(responseBody);
+
+            if (!json.RootElement.TryGetProperty("message", out var messageElement))
+                throw new InvalidOperationException("Ollama response does not contain a message object.");
+
+            if (!messageElement.TryGetProperty("content", out var contentElement))
+                throw new InvalidOperationException("Ollama response does not contain message content.");
+
+            return contentElement.GetString() ?? string.Empty;
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Ollama returned invalid JSON. Details: {ex.Message}");
+        }
     }
 }

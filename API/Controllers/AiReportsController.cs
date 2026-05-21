@@ -10,7 +10,7 @@ namespace API.Controllers;
 
 [Route("api/ai/reports")]
 [Authorize(Policy = Policies.PasswordChanged)]
-public sealed class AiReportsController : ApiBaseController
+public sealed class AIReportsController : ApiBaseController
 {
     /// <summary>
     /// Generates an AI insight for the current tenant info report.

@@ -18,13 +18,7 @@ public sealed class ReportAiInsightService(
         GenerateReportAiInsight.Query query,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(query);
-
-        var tenantId = RequireTenantId();
-
-        var reportData = await GetReportDataAsync(
-            query,
-            tenantId);
+        var reportData = await GetReportDataAsync(query);
 
         var prompt = BuildPrompt(
             query.ReportType,
@@ -43,9 +37,10 @@ public sealed class ReportAiInsightService(
     }
 
     private async Task<object> GetReportDataAsync(
-        GenerateReportAiInsight.Query query,
-        string tenantId)
+        GenerateReportAiInsight.Query query)
     {
+        var tenantId = tenantContext.TenantId!;
+
         return query.ReportType switch
         {
             ReportType.TenantInfo =>
@@ -55,34 +50,34 @@ public sealed class ReportAiInsightService(
             ReportType.SprintProgress =>
                 await reportsReadModel.GenerateSprintProgressReport(
                     tenantId,
-                    RequireProjectId(query),
-                    RequireSprintId(query)),
+                    query.ProjectId!,
+                    query.SprintId!),
 
             ReportType.Velocity =>
                 await reportsReadModel.GenerateVelocityReport(
                     tenantId,
-                    RequireProjectId(query)),
+                    query.ProjectId!),
 
             ReportType.CycleTime =>
                 await reportsReadModel.GenerateCycleTimeReportAsync(
                     tenantId,
-                    RequireProjectId(query),
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.ProjectId!,
+                    query.From!.Value,
+                    query.To!.Value,
                     query.SprintId),
 
             ReportType.BugSeverityDistribution =>
                 await reportsReadModel.GenerateBugSeverityDistributionReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId),
 
             ReportType.DeveloperProductivity =>
                 await reportsReadModel.GenerateDeveloperProductivityReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId,
                     query.TeamId,
                     query.UserId),
@@ -90,15 +85,15 @@ public sealed class ReportAiInsightService(
             ReportType.TeamsProductivity =>
                 await reportsReadModel.GenerateTeamsProductivityReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId),
 
             ReportType.BlockedWorkItems =>
                 await reportsReadModel.GenerateBlockedWorkItemsReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId,
                     query.TeamId,
                     query.AssignedToUserId,
@@ -107,8 +102,8 @@ public sealed class ReportAiInsightService(
             ReportType.OverdueWorkItems =>
                 await reportsReadModel.GenerateOverdueWorkItemsReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId,
                     query.TeamId,
                     query.AssignedToUserId,
@@ -117,8 +112,8 @@ public sealed class ReportAiInsightService(
             ReportType.ProjectHealth =>
                 await reportsReadModel.GenerateProjectHealthReportAsync(
                     tenantId,
-                    RequireFrom(query),
-                    RequireTo(query),
+                    query.From!.Value,
+                    query.To!.Value,
                     query.ProjectId),
 
             _ => throw new NotSupportedException(
@@ -234,38 +229,5 @@ public sealed class ReportAiInsightService(
                 Focus on the most important metrics, unusual patterns, risks, and practical actions.
                 """
         };
-    }
-
-    private string RequireTenantId()
-    {
-        return !string.IsNullOrWhiteSpace(tenantContext.TenantId)
-            ? tenantContext.TenantId
-            : throw new ArgumentException("TenantId is required.");
-    }
-
-    private static string RequireProjectId(GenerateReportAiInsight.Query query)
-    {
-        return !string.IsNullOrWhiteSpace(query.ProjectId)
-            ? query.ProjectId
-            : throw new ArgumentException("ProjectId is required.");
-    }
-
-    private static string RequireSprintId(GenerateReportAiInsight.Query query)
-    {
-        return !string.IsNullOrWhiteSpace(query.SprintId)
-            ? query.SprintId
-            : throw new ArgumentException("SprintId is required.");
-    }
-
-    private static DateTime RequireFrom(GenerateReportAiInsight.Query query)
-    {
-        return query.From
-            ?? throw new ArgumentException("From date is required.");
-    }
-
-    private static DateTime RequireTo(GenerateReportAiInsight.Query query)
-    {
-        return query.To
-            ?? throw new ArgumentException("To date is required.");
     }
 }

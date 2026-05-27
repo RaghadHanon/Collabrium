@@ -1,4 +1,5 @@
 ﻿using API.Contracts.Sprints;
+using API.Contracts.WorkItems;
 using API.SetupProgram;
 using Application.Common;
 using Application.Features.Sprints.Commands;
@@ -276,6 +277,7 @@ public sealed class SprintsController : ApiBaseController
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
     /// <param name="sprintId">Sprint identifier.</param>
+    /// <param name="request">Filters and Pagination.</param>
     /// <returns>The list of user stories of a sprint.</returns>
     /// <response code="200">User stories loaded successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
@@ -283,14 +285,12 @@ public sealed class SprintsController : ApiBaseController
     /// <response code="404">If tenant/project/sprint not found.</response>
     [Authorize(Policy = Policies.Sprints_Read)]
     [HttpGet("sprint/{sprintId}/user-stories")]
-    public async Task<ActionResult<WorkItemListItemDto>> GetSprintUserStories(string projectId, string sprintId)
+    public async Task<ActionResult<WorkItemListItemDto>> GetSprintUserStories(string projectId, string sprintId,[FromQuery] GetSprintUserStoriesRequest request)
     {
-        var query = new GetWorkItemsByType.Query
-        {
-            ProjectId = projectId,
-            SprintId = sprintId,
-            Type = WorkItemType.UserStory
-        };
+        var query = Mapper.Map<GetWorkItemsByType.Query>(request);
+        query.ProjectId = projectId;
+        query.SprintId = sprintId;
+        query.Type = WorkItemType.UserStory;
 
         return HandleResult(await Mediator.Send(query));
     }

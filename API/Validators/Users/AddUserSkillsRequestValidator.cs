@@ -14,7 +14,7 @@ public sealed class AddUserSkillsRequestValidator : AbstractValidator<AddUserSki
             .WithMessage("At least one skill is required.");
 
         RuleForEach(x => x.SkillIds)
-            .Must(s => string.IsNullOrEmpty(s))
+            .NotEmpty()
             .WithMessage("SkillId can't be null or empty.");
     }
 }

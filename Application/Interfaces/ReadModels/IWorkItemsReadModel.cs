@@ -16,12 +16,12 @@ public interface IWorkItemsReadModel
     Task<BoardDto> GetBoardItemsAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
-    Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(
-            string tenantId,
-            string projectId,
-            WorkItemType type,
-            string? sprintId,
-            CancellationToken cancellationToken = default);
+    Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsByTypeAsync(
+        string tenantId,
+        string projectId,
+        WorkItemType type,
+        WorkItemsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default);
     List<WorkItemStatus> GetWorkItemWorkflowByType(WorkItemType type);
     Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsAsync(
         WorkItemsSearchAndFilterParametersDto parameters,

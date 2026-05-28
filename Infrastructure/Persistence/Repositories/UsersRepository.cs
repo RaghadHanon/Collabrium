@@ -4,6 +4,7 @@ using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -159,6 +160,103 @@ public sealed class UsersRepository : IUsersRepository
             : !await _dbContext.Users
             .AsNoTracking()
             .AnyAsync(u => u.UserName == normalized, cancellationToken);
+    }
+
+    public async Task<bool> AddSkillsAsync(
+    string userId,
+    IEnumerable<string> skillIds,
+    CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(userId, out var id))
+            return false;
+
+        var ids = skillIds
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+            return false;
+
+        var user = await _dbContext.Users
+            .Include(u => u.Skills)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+        if (user is null)
+            throw new InvalidOperationException($"User '{id}' was not found.");
+
+        var skills = await _dbContext.Tags
+            .Where(t => ids.Contains(t.Id))
+            .ToListAsync(cancellationToken);
+
+        if (skills.Count != ids.Count)
+            throw new InvalidOperationException("One or more skills were not found.");
+
+        var existingSkillIds = user.Skills
+            .Select(s => s.Id)
+            .ToHashSet();
+
+        foreach (var skill in skills)
+        {
+            if (!existingSkillIds.Contains(skill.Id))
+                user.Skills.Add(skill);
+        }
+
+        return true;
+    }
+
+    public async Task<bool> DeleteSkillsAsync(
+    string userId,
+    IEnumerable<string> skillIds,
+    CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(userId, out var id))
+            return false;
+
+        if (skillIds is null)
+            throw new ArgumentNullException(nameof(skillIds));
+
+        var ids = skillIds
+            .Distinct()
+            .ToHashSet();
+
+        if (ids.Count == 0)
+            return false;
+
+        var user = await _dbContext.Users
+            .Include(u => u.Skills)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+        if (user is null)
+            throw new InvalidOperationException($"User '{id}' was not found.");
+
+        var skillsToRemove = user.Skills
+            .Where(s => ids.Contains(s.Id))
+            .ToList();
+
+        foreach (var skill in skillsToRemove)
+            user.Skills.Remove(skill);
+
+        return true;
+    }
+
+    public async Task<List<Tag>> GetSkillsAsync(
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(userId, out var id))
+            return new();
+
+        var user = await _dbContext.Users
+            .AsNoTracking()
+            .Include(u => u.Skills)
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+        if (user is null)
+            throw new InvalidOperationException($"User '{id}' was not found.");
+
+        return user.Skills
+            .Select(TagMapper.ToDomain)
+            .ToList();
     }
 
     private IQueryable<ApplicationUserEntity> ReadOnlyQuery()

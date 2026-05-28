@@ -25,6 +25,8 @@ public sealed class WorkItemsApiProfile : Profile
     public WorkItemsApiProfile()
     {
         CreateMap<GetWorkItemsRequest, GetWorkItems.Query>();
+        CreateMap<GetSprintUserStoriesRequest, GetWorkItemsByType.Query>();
+        CreateMap<GetProjectWorkItemByTypeRequest, GetWorkItemsByType.Query>();
         CreateMap<UpdateWorkItemRequest, UpdateWorkItem.Command>();
         CreateMap<ChangeWorkItemStatusRequest, UpdateWorkItemStatus.Command>();
         CreateMap<UpdateWorkItemAssigneeRequest, UpdateWorkItemAssignee.Command>();

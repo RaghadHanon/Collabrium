@@ -17,13 +17,16 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration config)
     {
-        services.AddControllers()
-            .AddJsonOptions(opts =>
-            {
-                opts.JsonSerializerOptions.Converters.Add(new SpacedEnumConverterFactory());
-                opts.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
-                opts.JsonSerializerOptions.Converters.Add(new DateTimeConverterUsingIso8601());
-            });
+        services.AddControllers(options =>
+        {
+            options.ModelBinderProviders.Insert(0, new SpacedEnumModelBinderProvider());
+        })
+        .AddJsonOptions(opts =>
+        {
+            opts.JsonSerializerOptions.Converters.Add(new SpacedEnumConverterFactory());
+            opts.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+            opts.JsonSerializerOptions.Converters.Add(new DateTimeConverterUsingIso8601());
+        });
 
         // Validation
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

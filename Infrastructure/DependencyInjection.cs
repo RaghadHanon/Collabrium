@@ -1,9 +1,11 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.AI;
 using Application.Interfaces.Emails;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Reports;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Infrastructure.AI;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.FilesStorage;
@@ -67,14 +69,28 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         AddReportsServices(services);
-        QuestPDF.Settings.License = LicenseType.Community;
+
+        AddAiServices(services);
 
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
 
         return services;
     }
+
+    private static void AddAiServices(IServiceCollection services)
+    {
+        services.AddScoped<IReportAiInsightService, ReportAiInsightService>();
+        services.AddScoped<IWorkItemFieldsSuggestionService, WorkItemFieldsSuggestionService>();
+        services.AddHttpClient<IAiAssistantService, OllamaAiAssistantService>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:11434");
+        });
+    }
+
     private static void AddReportsServices(IServiceCollection services)
     {
+
+        QuestPDF.Settings.License = LicenseType.Community;
         services.AddSingleton<IReportBrandingProvider, ReportBrandingProvider>();
 
         services.AddScoped<ITenantInfoChartRenderer, TenantInfoChartRenderer>();

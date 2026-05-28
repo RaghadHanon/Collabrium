@@ -105,7 +105,6 @@ public sealed class PostsReadModel : IPostsReadModel
             .FirstOrDefaultAsync(ct);
     }
 
-
     private static IQueryable<PostEntity> ApplyFilters(
         IQueryable<PostEntity> query,
         PostsSearchAndFilterParametersDto p)

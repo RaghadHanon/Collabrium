@@ -14,10 +14,8 @@ public sealed class CreateRoadmapRequestValidator
             .WithMessage("Title cannot exceed 200 characters.");
 
         RuleFor(x => x.Description)
-            .MaximumLength(2000)
+            .MaximumLength(1000)
             .WithMessage("Description cannot exceed 2000 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.Description));
-
-
     }
 }

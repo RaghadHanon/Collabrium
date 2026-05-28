@@ -259,4 +259,19 @@ public sealed class MetadataController : ApiBaseController
 
     }
 
+    //AnnouncementScopeFilter
+    [IgnoreTenantContext]
+    [HttpGet("Announcement-Scope-Filter")]
+    public async Task<ActionResult> GetAnnouncementScopeFilterMetadata()
+    {
+        var query = new GetEnumMetaData.Query
+        {
+            MetadataType = MetadataType.AnnouncementScopeFilter,
+        };
+
+        return HandleResult(await Mediator.Send(query));
+
+    }
+
 }
+

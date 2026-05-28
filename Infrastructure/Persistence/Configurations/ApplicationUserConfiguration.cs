@@ -66,6 +66,35 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(u => u.Skills)
+             .WithMany()
+             .UsingEntity<Dictionary<string, object>>(
+                 "UserSkill",
+                 j => j
+                     .HasOne<TagEntity>()
+                     .WithMany()
+                     .HasForeignKey("TagId")
+                     .HasConstraintName("FK_UserSkills_Tags_TagId")
+                     .OnDelete(DeleteBehavior.Cascade),
+                 j => j
+                     .HasOne<ApplicationUserEntity>()
+                     .WithMany()
+                     .HasForeignKey("UserId")
+                     .HasConstraintName("FK_UserSkills_ApplicationUsers_UserId")
+                     .OnDelete(DeleteBehavior.Cascade),
+                 j =>
+                 {
+                     j.ToTable("UserSkills");
+
+                     j.IndexerProperty<int>("Id")
+                         .ValueGeneratedOnAdd();
+
+                     j.HasKey("Id");
+
+                     j.HasIndex("UserId", "TagId")
+                         .IsUnique();
+                 });
+
         builder.HasIndex(u => u.UserName)
             .IsUnique()
             .HasDatabaseName("IX_ApplicationUser_UserName");

@@ -315,30 +315,41 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         };
     }
 
-    public async Task<List<WorkItemListItemDto>> GetWorkItemsByTypeAsync(
-            string tenantId,
-            string projectId,
-            WorkItemType type,
-            string? sprintId,
-            CancellationToken cancellationToken = default)
+    public async Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsByTypeAsync(
+        string tenantId,
+        string projectId,
+        WorkItemType type,
+        WorkItemsSearchAndFilterParametersDto parameters,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
-            return new List<WorkItemListItemDto>();
+            return new PagedList<WorkItemListItemDto, DateTime?>();
 
         var tId = tenantId.Trim();
         var pId = projectId.Trim();
-        var sId = sprintId?.Trim();
+
+        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
 
         var query = _dbContext.WorkItems
+            .Include(i => i.Project)
             .AsNoTracking()
-            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId);
+            .Where(w =>
+                w.Project.TenantId == tId &&
+                w.ProjectId == pId &&
+                w.Type == type);
 
-        if (!string.IsNullOrWhiteSpace(sId))
-            query = query.Where(w => w.SprintId == sId);
+        parameters.TenantId = tId;
+        parameters.ProjectId = pId;
+        parameters.Type = type;
+
+        query = ApplyFilters(query, parameters);
+
+        if (parameters.Cursor.HasValue)
+            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
 
         var items = await query
-            .OrderBy(x => x.CreatedAt)
-            .Where(x => x.Type == type)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .Select(w => new WorkItemListItemDto
             {
                 Id = w.Id,
@@ -365,13 +376,26 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                         Title = r.Title,
                         Type = r.Type,
                         Status = r.Status,
-
                     })
                     .FirstOrDefault()
             })
+            .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
-        return items;
+        DateTime? nextCursor = null;
+        var hasMore = items.Count > pageSize;
+
+        if (hasMore)
+        {
+            items.RemoveAt(items.Count - 1);
+            nextCursor = items[^1].CreatedAt;
+        }
+
+        return new PagedList<WorkItemListItemDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
     }
 
     public async Task<PagedList<WorkItemListItemDto, DateTime?>> GetWorkItemsAsync(

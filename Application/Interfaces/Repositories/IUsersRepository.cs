@@ -9,7 +9,17 @@ public interface IUsersRepository
     Task<User?> GetByUserNameAsync(string username, CancellationToken cancellationToken = default);
     Task<bool> IsUserExists(string tenantId, string userId);
     Task<List<User>> GetByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default);
-
+    Task<bool> AddSkillsAsync(
+        string userId,
+        IEnumerable<string> skillIds,
+        CancellationToken cancellationToken = default);
+    Task<List<Tag>> GetSkillsAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+    Task<bool> DeleteSkillsAsync(
+        string userId,
+        IEnumerable<string> skillIds,
+        CancellationToken cancellationToken = default);
     Task<bool> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default);
     Task UpdateAsync(User user, CancellationToken cancellationToken = default);
     Task<bool> DeleteUserAsync(string userId, CancellationToken cancellationToken = default);

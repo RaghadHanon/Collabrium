@@ -47,7 +47,8 @@ public class SearchAndFilterMappingProfile : Profile
         CreateMap<GetUserProjects.Query, ProjectsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItems.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetProjectBoard.Query, WorkItemsSearchAndFilterParametersDto>();
-        CreateMap<GetProjectBacklog.Query, WorkItemsSearchAndFilterParametersDto>();
+        CreateMap<GetProjectBacklog.Query, WorkItemsSearchAndFilterParametersDto>(); 
+        CreateMap<GetWorkItemsByType.Query, WorkItemsSearchAndFilterParametersDto>();
         CreateMap<GetWorkItemComments.Query, CommentsQueryParametersDto>();
         CreateMap<GetTags.Query, TagsSearchAndFilterParametersDto>();
         CreateMap<GetRoadmaps.Query, RoadmapsSearchAndFilterParametersDto>();

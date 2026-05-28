@@ -290,6 +290,7 @@ public sealed class ProjectsController : ApiBaseController
     ///
     /// </remarks>
     /// <param name="projectId">Project identifier.</param>
+    /// <param name="request">Filters And Pagination</param>
     /// <returns>The list of user stories of a project.</returns>
     /// <response code="200">User stories loaded successfully.</response>
     /// <response code="401">If the user is not authenticated.</response>
@@ -298,13 +299,11 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("project/{projectId}/user-stories")]
-    public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId)
+    public async Task<ActionResult<BoardDto>> GetProjectUserStories(string projectId, [FromQuery] GetProjectWorkItemByTypeRequest request)
     {
-        var query = new GetWorkItemsByType.Query
-        {
-            ProjectId = projectId,
-            Type = WorkItemType.UserStory
-        };
+        var query = Mapper.Map<GetWorkItemsByType.Query>(request);
+        query.ProjectId = projectId;
+        query.Type = WorkItemType.UserStory;
 
         return HandleResult(await Mediator.Send(query));
     }
@@ -328,13 +327,11 @@ public sealed class ProjectsController : ApiBaseController
     [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("project/{projectId}/epics")]
-    public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId)
+    public async Task<ActionResult<BoardDto>> GetProjectEpics(string projectId, [FromQuery] GetProjectWorkItemByTypeRequest request)
     {
-        var query = new GetWorkItemsByType.Query
-        {
-            ProjectId = projectId,
-            Type = WorkItemType.Epic
-        };
+        var query = Mapper.Map<GetWorkItemsByType.Query>(request);
+        query.ProjectId = projectId;
+        query.Type = WorkItemType.Epic;
 
         return HandleResult(await Mediator.Send(query));
     }

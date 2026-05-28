@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.Tags.DTOs;
 using Application.Features.Users.DTOs;
 
 namespace Application.Interfaces.ReadModels;
@@ -21,4 +22,7 @@ public interface IUsersReadModel
     Task<UserSnapshotDto?> GetUserSnapshotByIdAsync(
       string userId,
       CancellationToken ct);
+    Task<List<TagDto>> GetUserSkillsAsync(
+    string userId,
+    CancellationToken cancellationToken = default);
 }

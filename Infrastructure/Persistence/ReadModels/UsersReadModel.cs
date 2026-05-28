@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.Tags.DTOs;
 using Application.Features.Users.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
@@ -89,6 +90,28 @@ public class UsersReadModel : IUsersReadModel
              .ProjectTo<UserSnapshotDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<List<TagDto>> GetUserSkillsAsync(
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return new();
+
+        var id = userId.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .SelectMany(u => u.Skills)
+            .Select(s => new TagDto
+            {
+                Id = s.Id,
+                Name = s.Name
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     private async Task<PagedList<UserDto, DateTime?>> ApplyPagination(
         UsersSearchAndFilterParametersDto parameters, int pageSize,
         IQueryable<ApplicationUserEntity> query,

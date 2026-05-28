@@ -34,7 +34,7 @@ public class ApplicationUserEntity : IdentityUser
 
     public ContactDetailsOwned ContactDetails { get; set; } = new();
     public StoredImageOwned? ProfileImage { get; set; }
-
+    public ICollection<TagEntity> Skills { get; set; } = new List<TagEntity>();
     public ICollection<TeamMemberEntity> TeamMemberships { get; set; } = new List<TeamMemberEntity>();
 
     public ICollection<ProjectEntity> Projects { get; set; } = new List<ProjectEntity>();

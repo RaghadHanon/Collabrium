@@ -19,7 +19,7 @@ public class CommentConfiguration : IEntityTypeConfiguration<CommentEntity>
 
         builder.Property(c => c.Content)
             .IsRequired()
-            .HasMaxLength(1000);
+            .HasColumnType("nvarchar(max)");
 
         builder.Property(c => c.CreatedByUserId)
             .IsRequired()

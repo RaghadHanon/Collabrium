@@ -164,8 +164,7 @@ public static class DependencyInjection
         services.AddScoped<IPostCommentsRepository, PostCommentsRepository>();
         services.AddScoped<IAnnouncementsRepository, AnnouncementsRepository>();
         services.AddScoped<IEventsRepository, EventsRepository>();
-
-
+        services.AddScoped<INotificationsRepository, NotificationsRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -181,7 +180,6 @@ public static class DependencyInjection
         services.AddScoped<IRoadmapNodesReadModel, RoadmapNodesReadModel>();
         services.AddScoped<IRoadmapSubTopicsReadModel, RoadmapSubTopicsReadModel>();
         services.AddScoped<IRoadmapResourcesReadModel, RoadmapResourcesReadModel>();
-
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
         services.AddScoped<IReportsReadModel, ReportsReadModel>();
         services.AddScoped<ICoursesReadModel, CoursesReadModel>();
@@ -193,6 +191,7 @@ public static class DependencyInjection
         services.AddScoped<IPostCommentsReadModel, PostCommentsReadModel>();
         services.AddScoped<IAnnouncementsReadModel, AnnouncementsReadModel>();
         services.AddScoped<IEventsReadModel, EventsReadModel>();
+        services.AddScoped<INotificationsReadModel, NotificationsReadModel>();
 
     }
 

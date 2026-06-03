@@ -57,11 +57,13 @@ public sealed class AddMembersToTeam
                         .ToList();
 
             await mediator.Publish(new AddMemberToTeamEvent(
+                    tenantId,
                     team.Id,
                     addedMembers,
+                    currentUser.Id,
                     currentUser.FullName,
-                    team!.TeamLeadName,
-                    team!.Name
+                    team.TeamLeadName,
+                    team.Name
                 ), cancellationToken);
 
             return Result<string>.Success("Members added successfully.", HttpStatusCode.OK);

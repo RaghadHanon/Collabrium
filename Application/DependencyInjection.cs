@@ -1,6 +1,8 @@
 ﻿using Application.Common;
 using Application.Common.Behaviors;
+using Application.Features.Notifications.Services;
 using Application.Interfaces;
+using Application.Interfaces.Services;
 using Application.Services;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +25,7 @@ public static class DependencyInjection
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddScoped<IProjectHistoryRecorder, ProjectHistoryRecorder>();
 
+        services.AddScoped<INotificationCreationService, NotificationCreationService>();
         services.Configure<WebAppSettings>(configuration.GetSection("WebAppSettings"));
 
         return services;

@@ -31,9 +31,11 @@ public class AssignProjectToTeam
         IMediator mediator
     ) : IRequestHandler<Command, Result<ProjectDto>>
     {
-        public async Task<Result<ProjectDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<ProjectDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
-            var tenantId = tenantContext.CurrentTenant?.Id;
+            var tenantId = tenantContext.CurrentTenant?.Id ?? tenantContext.TenantId;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<ProjectDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
@@ -41,41 +43,72 @@ public class AssignProjectToTeam
             if (currentUser == null)
                 return Result<ProjectDto>.Failure("Current user is not found.", HttpStatusCode.NotFound);
 
-            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            var project = await projectsRepository.GetByIdAsync(
+                tenantId,
+                request.ProjectId,
+                cancellationToken);
+
             if (project is null)
                 return Result<ProjectDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
-            var team = await teamsRepository.GetByIdAsync(tenantId, request.TeamId, cancellationToken);
+            var team = await teamsRepository.GetByIdAsync(
+                tenantId,
+                request.TeamId,
+                cancellationToken);
+
             if (team is null)
                 return Result<ProjectDto>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
 
             if (!team.IsActive)
-                return Result<ProjectDto>.Failure("Cannot assign project to an inactive team.", HttpStatusCode.BadRequest);
+                return Result<ProjectDto>.Failure(
+                    "Cannot assign project to an inactive team.",
+                    HttpStatusCode.BadRequest);
 
             var oldProjectState = project.Clone();
+
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 project.AssignToTeam(request.TeamId);
+
                 await projectsRepository.UpdateAsync(project, ct);
 
-                historyRecorder.RecordUpdatingChanges<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
+                historyRecorder.RecordUpdatingChanges<Project>(
+                    project.Id,
+                    project.Id,
+                    project.Name,
+                    project.Key,
+                    oldProjectState,
+                    project);
 
             }, cancellationToken);
 
+            var dto = await projectsReadModel.GetByIdAsync(
+                tenantId,
+                project.Id,
+                cancellationToken);
 
-            var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
+            if (dto is null)
+                return Result<ProjectDto>.Failure(
+                    "Project updated but could not be loaded.",
+                    HttpStatusCode.InternalServerError);
+
+            var teamMembers = await teamsReadModel.GetTeamMembersSnapshotAsync(
+                tenantId,
+                request.TeamId,
+                cancellationToken);
+
             await mediator.Publish(new ProjectAssignedEvent(
-                        request.ProjectId,
-                        dto.Name,
-                        dto.Key,
-                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, request.TeamId, cancellationToken),
-                        currentUser.FullName,
-                        team.Name
-                    ), cancellationToken);
+                    tenantId,
+                    request.ProjectId,
+                    dto.Name,
+                    dto.Key,
+                    teamMembers,
+                    currentUser.Id,
+                    currentUser.FullName,
+                    team.Name
+                ), cancellationToken);
 
-            return dto is null
-                ? Result<ProjectDto>.Failure("Project updated but could not be loaded.", HttpStatusCode.InternalServerError)
-                : Result<ProjectDto>.Success(dto, HttpStatusCode.OK);
+            return Result<ProjectDto>.Success(dto, HttpStatusCode.OK);
         }
     }
 }

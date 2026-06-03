@@ -57,12 +57,14 @@ public sealed class RemoveMembersFromTeam
             }, cancellationToken);
 
             await mediator.Publish(new RemoveMemberFromTeamEvent(
-                   team.Id,
-                   removedMembers,
-                   currentUser.FullName,
-                   team!.TeamLeadName,
-                   team!.Name
-               ), cancellationToken);
+                     tenantId,
+                     team.Id,
+                     removedMembers,
+                     currentUser.Id,
+                     currentUser.FullName,
+                     team.TeamLeadName,
+                     team.Name
+                 ), cancellationToken);
 
             return Result<string>.Success("Members removed successfully.", HttpStatusCode.OK);
         }

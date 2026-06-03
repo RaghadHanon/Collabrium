@@ -4,7 +4,6 @@ using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -251,10 +250,9 @@ public sealed class UsersRepository : IUsersRepository
             .Include(u => u.Skills)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
-        if (user is null)
-            throw new InvalidOperationException($"User '{id}' was not found.");
-
-        return user.Skills
+        return user is null
+            ? throw new InvalidOperationException($"User '{id}' was not found.")
+            : user.Skills
             .Select(TagMapper.ToDomain)
             .ToList();
     }

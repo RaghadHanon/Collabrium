@@ -54,6 +54,8 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<Applicat
     public DbSet<AnnouncementAudienceEntity> AnnouncementAudiences { get; set; }
     public DbSet<EventEntity> Events { get; set; } = null!;
     public DbSet<EventAttendanceEntity> EventAttendances { get; set; } = null!;
+
+    public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

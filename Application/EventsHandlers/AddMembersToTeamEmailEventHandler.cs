@@ -6,14 +6,14 @@ using Microsoft.Extensions.Options;
 
 namespace Application.EventsHandlers;
 
-public class AddMembersToTeamEmailHandler
+public class AddMembersToTeamEmailEventHandler
     : INotificationHandler<AddMemberToTeamEvent>
 {
     private readonly IEmailService emailService;
     private readonly IEmailTemplateFactory templateFactory;
     private readonly WebAppSettings settings;
 
-    public AddMembersToTeamEmailHandler(
+    public AddMembersToTeamEmailEventHandler(
         IEmailService emailService,
         IEmailTemplateFactory templateFactory,
         IOptions<WebAppSettings> settings)
@@ -25,6 +25,9 @@ public class AddMembersToTeamEmailHandler
 
     public async Task Handle(AddMemberToTeamEvent notification, CancellationToken ct)
     {
+        if (notification.TeamMembers.Count == 0)
+            return;
+
         var template = templateFactory.GetTemplate("AddMemberToTeam");
 
         var url = $"{settings.BaseUrl}/dashboard/teams/{notification.TeamId}";
@@ -32,6 +35,7 @@ public class AddMembersToTeamEmailHandler
         for (var i = 0; i < notification.TeamMembers.Count; i++)
         {
             var member = notification.TeamMembers[i];
+
             var data = new Dictionary<string, string>
             {
                 ["AssigneeFullName"] = member.FullName,
@@ -47,6 +51,7 @@ public class AddMembersToTeamEmailHandler
                 .PlainTextBody(template.GetPlainTextBody(data))
                 .HtmlBody(template.GetHtmlBody(data))
                 .Build();
+
             await emailService.SendAsync(message, ct);
         }
     }

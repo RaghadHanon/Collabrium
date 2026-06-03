@@ -20,6 +20,7 @@ namespace API.Controllers
             [FromQuery] GetArticlesRequest request)
         {
             var query = Mapper.Map<GetArticles.Query>(request);
+            query.IsPublished = true;
 
             return HandleResult(await Mediator.Send(query));
         }
@@ -213,6 +214,15 @@ namespace API.Controllers
             };
 
             return HandleResult(await Mediator.Send(command));
+        }
+        [Authorize(Policy = Policies.Roadmaps_Manage)]
+        [HttpGet("manage")]
+        public async Task<ActionResult<PagedList<ArticleDto, DateTime?>>> GetManageArticles(
+         [FromQuery] GetArticlesRequest request)
+        {
+            var query = Mapper.Map<GetArticles.Query>(request);
+
+            return HandleResult(await Mediator.Send(query));
         }
     }
 }

@@ -93,6 +93,10 @@ public class GetEnumMetaData
                 MetadataType.PostType => Result<string[]>.Success(
               Enum.GetNames(typeof(PostType)).Select(AddSpace).ToArray(),
               HttpStatusCode.OK),
+                MetadataType.AnnouncementScopeFilter => Result<string[]>.Success(
+               Enum.GetNames(typeof(AnnouncementScopeFilter)).Select(AddSpace).ToArray(),
+               HttpStatusCode.OK),
+
                 _ => throw new NotImplementedException()
             };
 

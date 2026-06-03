@@ -10,6 +10,8 @@ public sealed class PostsReadProfile : Profile
 {
     public PostsReadProfile()
     {
+        string? currentUserId = null;
+
         CreateMap<TagEntity, TagDto>();
 
         CreateMap<ApplicationUserEntity, UserDto>()
@@ -21,7 +23,8 @@ public sealed class PostsReadProfile : Profile
 
         CreateMap<PostCommentEntity, PostCommentDto>()
             .ForMember(d => d.CreatedByUserName,
-                o => o.MapFrom(s => s.CreatedByUser.UserName))
+                o => o.MapFrom(s =>
+                    s.CreatedByUser.FullName ?? s.CreatedByUser.UserName))
             .ForMember(d => d.CreatedByUserProfileImageUrl,
                 o => o.MapFrom(s =>
                     s.CreatedByUser.ProfileImage != null
@@ -53,6 +56,16 @@ public sealed class PostsReadProfile : Profile
                 o => o.MapFrom(s => s.Likes.Count))
 
             .ForMember(d => d.CommentsCount,
-                o => o.MapFrom(s => s.Comments.Count));
+                o => o.MapFrom(s => s.Comments.Count))
+
+            .ForMember(d => d.IsLikedByCurrentUser,
+                o => o.MapFrom(s =>
+                    currentUserId != null &&
+                    s.Likes.Any(l => l.CreatedByUserId == currentUserId)));
+
+        CreateMap<PostEntity, PostDetailsDto>()
+            .IncludeBase<PostEntity, PostDto>()
+            .ForMember(d => d.Comments,
+                o => o.MapFrom(s => s.Comments));
     }
 }

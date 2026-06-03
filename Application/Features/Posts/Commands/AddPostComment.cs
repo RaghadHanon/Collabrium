@@ -71,7 +71,7 @@ namespace Application.Features.Posts.Commands
 
                 return dto is null
                     ? Result<PostCommentDto>.Failure("Comment added but could not be loaded.", HttpStatusCode.InternalServerError)
-                    : Result<PostCommentDto>.Success(dto, HttpStatusCode.Created);
+                    : Result<PostCommentDto>.Success(dto, HttpStatusCode.OK);
             }
         }
     }

@@ -13,7 +13,7 @@ public sealed class UpdateRoadmapRequestValidator
             .When(x => !string.IsNullOrWhiteSpace(x.Title));
 
         RuleFor(x => x.Description)
-            .MaximumLength(2000)
+            .MaximumLength(1000)
             .When(x => !string.IsNullOrWhiteSpace(x.Description));
 
         RuleFor(x => x.PublishedAt)

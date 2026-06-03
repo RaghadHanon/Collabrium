@@ -156,7 +156,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// <response code="500">If an unexpected error occurred.</response>
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPatch("{workItemId}/comment/{commentId}")]
-    public async Task<IActionResult> UpdateWorkItemComment(
+    public async Task<ActionResult<CommentDto>> UpdateWorkItemComment(
        string projectId,
        string workItemId,
        string commentId,

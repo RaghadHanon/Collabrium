@@ -2,6 +2,7 @@
 using Application.Features.Roadmaps.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
@@ -13,21 +14,46 @@ public class GetRoadmap
     {
         public required string RoadmapId { get; set; }
     }
-    public class Handler(ITenantContext tenantContext, IRoadmapsReadModel roadmapsReadModel)
-   : IRequestHandler<Query, Result<RoadmapDetailsDto>>
+    public class Handler(
+     ITenantContext tenantContext,
+     IRoadmapsReadModel roadmapsReadModel,
+     ICurrentUserAccessor currentUserAccessor)
+     : IRequestHandler<Query, Result<RoadmapDetailsDto>>
     {
-        public async Task<Result<RoadmapDetailsDto>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<Result<RoadmapDetailsDto>> Handle(
+            Query request,
+            CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.TenantId;
 
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<RoadmapDetailsDto>.Failure("Tenant not found", HttpStatusCode.NotFound);
+                return Result<RoadmapDetailsDto>.Failure(
+                    "Tenant not found",
+                    HttpStatusCode.NotFound);
 
-            var dto = await roadmapsReadModel.GetDetailsAsync(tenantId, request.RoadmapId, cancellationToken);
-            return dto == null
-            ? Result<RoadmapDetailsDto>.Failure("Roadmap not found", HttpStatusCode.NotFound)
-            : Result<RoadmapDetailsDto>.Success(dto, HttpStatusCode.OK);
+            var dto = await roadmapsReadModel.GetDetailsAsync(
+                tenantId,
+                request.RoadmapId,
+                cancellationToken);
 
+            if (dto is null)
+                return Result<RoadmapDetailsDto>.Failure(
+                    "Roadmap not found",
+                    HttpStatusCode.NotFound);
+
+            var canViewHidden =
+                await RoadmapAccessHelper.CanCurrentUserViewHiddenAsync(
+                    currentUserAccessor,
+                    cancellationToken);
+
+            if (!dto.IsVisible && !canViewHidden)
+                return Result<RoadmapDetailsDto>.Failure(
+                    "Roadmap not found",
+                    HttpStatusCode.NotFound);
+
+            return Result<RoadmapDetailsDto>.Success(
+                dto,
+                HttpStatusCode.OK);
         }
     }
 }

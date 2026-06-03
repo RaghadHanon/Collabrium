@@ -17,11 +17,11 @@ namespace Application.Features.Articles.Queries
         }
 
         public sealed class Handler(
-            IArticlesReadModel articlesReadModel,
-            IArticlesRepository articlesRepository,
-            ITenantContext tenantContext,
-            ICurrentUserAccessor currentUserAccessor)
-            : IRequestHandler<Query, Result<ArticleDetailsDto>>
+           IArticlesReadModel articlesReadModel,
+           IArticlesRepository articlesRepository,
+           ITenantContext tenantContext,
+           ICurrentUserAccessor currentUserAccessor)
+           : IRequestHandler<Query, Result<ArticleDetailsDto>>
         {
             public async Task<Result<ArticleDetailsDto>> Handle(Query request, CancellationToken cancellationToken)
             {
@@ -29,8 +29,19 @@ namespace Application.Features.Articles.Queries
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<ArticleDetailsDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-                var article = await articlesRepository.GetByIdAsync(tenantId, request.ArticleId, cancellationToken);
+                var article = await articlesRepository.GetByIdAsync(
+                    tenantId,
+                    request.ArticleId,
+                    cancellationToken);
+
                 if (article is null)
+                    return Result<ArticleDetailsDto>.Failure("Article not found.", HttpStatusCode.NotFound);
+
+                var canViewHidden = await RoadmapAccessHelper.CanCurrentUserViewHiddenAsync(
+                    currentUserAccessor,
+                    cancellationToken);
+
+                if (!article.IsPublished && !canViewHidden)
                     return Result<ArticleDetailsDto>.Failure("Article not found.", HttpStatusCode.NotFound);
 
                 var currentUserId = currentUserAccessor.GetUserId();
@@ -48,3 +59,5 @@ namespace Application.Features.Articles.Queries
         }
     }
 }
+
+

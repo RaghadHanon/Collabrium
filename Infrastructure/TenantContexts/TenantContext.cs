@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.TenantContexts;
 
-public class TenantContext : ITenantContext
+public sealed class TenantContext : ITenantContext
 {
     private const string GlobalTenantDomain = "global.platform";
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public TenantContext(IServiceProvider serviceProvider)
+    public TenantContext(IServiceScopeFactory scopeFactory)
     {
-        _serviceProvider = serviceProvider;
+        _scopeFactory = scopeFactory;
     }
 
     public string? TenantId { get; set; }
@@ -22,12 +22,19 @@ public class TenantContext : ITenantContext
 
     public async Task<Tenant?> GetGlobalTenant(CancellationToken cancellationToken = default)
     {
-        using var scope = _serviceProvider.CreateScope();
+        await using var scope = _scopeFactory.CreateAsyncScope();
+
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var tenantEntity = await dbContext.Tenants
-            .FirstOrDefaultAsync(t => t.Domain == GlobalTenantDomain, cancellationToken);
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                tenant => tenant.Domain == GlobalTenantDomain,
+                cancellationToken);
 
-        return tenantEntity == null ? null : TenantMapper.ToDomain(tenantEntity);
+        return tenantEntity is null
+            ? null
+            : TenantMapper.ToDomain(tenantEntity);
     }
 }

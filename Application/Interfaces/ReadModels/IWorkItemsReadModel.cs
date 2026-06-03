@@ -66,6 +66,11 @@ public interface IWorkItemsReadModel
         string workItemId,
         CancellationToken cancellationToken = default);
 
+    Task<CommentDto?> GetWorkItemComment(
+     string workItemId,
+     string commentId,
+     CancellationToken cancellationToken = default);
+
     // attachments
     Task<List<AttachmentDto>> GetWorkItemAttachments(
         string workItemId,

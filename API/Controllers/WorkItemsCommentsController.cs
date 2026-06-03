@@ -42,7 +42,7 @@ public sealed class WorkItemsCommentsController : ApiBaseController
     /// <response code="500">If an unexpected error occurred.</response>
     [Authorize(Policy = Policies.WorkItems_UpdateContent)]
     [HttpPost("{workItemId}/comment")]
-    public async Task<ActionResult<string>> AddWorkItemComment(
+    public async Task<ActionResult<CommentDto>> AddWorkItemComment(
        string projectId,
        string workItemId,
        AddWorkItemCommentRequest request)

@@ -712,6 +712,21 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         };
     }
 
+    public async Task<CommentDto?> GetWorkItemComment(
+     string workItemId,
+     string commentId,
+     CancellationToken cancellationToken = default)
+    {
+        var wId = workItemId.Trim();
+        var cId = commentId.Trim();
+
+        return await _dbContext.WorkItemComments
+            .AsNoTracking()
+            .Where(c => c.WorkItemId == wId && c.Id == cId)
+            .ProjectTo<CommentDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     // attachments
     public async Task<List<AttachmentDto>> GetWorkItemAttachments(
         string workItemId,

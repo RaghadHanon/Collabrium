@@ -1,5 +1,7 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.DTOs.Comments;
 using Application.Interfaces;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Models;
@@ -10,7 +12,7 @@ namespace Application.Features.WorkItems.Commands.Comments;
 
 public class AddWorkItemComment
 {
-    public class Command : IRequest<Result<string>>
+    public class Command : IRequest<Result<CommentDto>>
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
@@ -19,29 +21,30 @@ public class AddWorkItemComment
 
     public class Handler(
         IWorkItemsRepository workItemsRepository,
+        IWorkItemsReadModel workItemsReadModel,
         IProjectHistoryRecorder historyRecorder,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         ICurrentUserAccessor currentUserAccessor,
         IProjectsRepository projectsRepository
-    ) : IRequestHandler<Command, Result<string>>
+    ) : IRequestHandler<Command, Result<CommentDto>>
     {
-        public async Task<Result<string>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<CommentDto>> Handle(Command request, CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<string>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+                return Result<CommentDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
-                return Result<string>.Failure("Project not found.", HttpStatusCode.NotFound);
+                return Result<CommentDto>.Failure("Project not found.", HttpStatusCode.NotFound);
 
             var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
             if (workItem is null)
-                return Result<string>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+                return Result<CommentDto>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
 
             var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(currentUserId))
-                return Result<string>.Failure("Current User not found", HttpStatusCode.NotFound);
+                return Result<CommentDto>.Failure("Current User not found", HttpStatusCode.NotFound);
 
             WorkItemComment? comment = null;
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
@@ -58,7 +61,9 @@ public class AddWorkItemComment
                 historyRecorder.RecordCreationChanges<WorkItemComment>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
             }, cancellationToken);
 
-            return Result<string>.Success(comment?.Id, HttpStatusCode.OK);
+            var commentDto = await workItemsReadModel.GetWorkItemComment(request.WorkItemId, comment!.Id, cancellationToken);
+
+            return Result<CommentDto>.Success(commentDto, HttpStatusCode.OK);
         }
     }
 }

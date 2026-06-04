@@ -83,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkItemFieldsSuggestionService, WorkItemFieldsSuggestionService>();
         services.AddScoped<IRoadmapAiDraftService, RoadmapAiDraftService>();
         services.AddScoped<IRoadmapAiSuggestionService, RoadmapAiSuggestionService>();
+        services.AddScoped<IUserSkillGapAiService, UserSkillGapAiService>();
         services.AddHttpClient<IAiAssistantService, OllamaAiAssistantService>(client =>
         {
             client.BaseAddress = new Uri("http://localhost:11434");

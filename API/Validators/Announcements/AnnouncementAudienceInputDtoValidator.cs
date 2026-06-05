@@ -19,7 +19,7 @@ public sealed class AnnouncementAudienceInputDtoValidator
                 .WithMessage("TeamId must be empty when audience type is Everyone.");
 
             RuleFor(x => x.RoleName)
-                .Must(string.IsNullOrWhiteSpace)
+                .Must(x => !x.HasValue)
                 .WithMessage("RoleName must be empty when audience type is Everyone.");
         });
 
@@ -30,14 +30,14 @@ public sealed class AnnouncementAudienceInputDtoValidator
                 .WithMessage("TeamId is required when audience type is Team.");
 
             RuleFor(x => x.RoleName)
-                .Must(string.IsNullOrWhiteSpace)
+                .Must(x => !x.HasValue)
                 .WithMessage("RoleName must be empty when audience type is Team.");
         });
 
         When(x => x.Type == AnnouncementAudienceType.Role, () =>
         {
             RuleFor(x => x.RoleName)
-                .NotEmpty()
+                .NotNull()
                 .WithMessage("RoleName is required when audience type is Role.");
 
             RuleFor(x => x.TeamId)

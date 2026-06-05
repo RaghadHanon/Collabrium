@@ -125,9 +125,9 @@ public sealed class CreateAnnouncement
                         : throw new DomainException("TeamId is required for team audience."),
 
                 AnnouncementAudienceType.Role =>
-                    Clean(input.RoleName) is { } roleName
-                        ? AnnouncementAudience.ForRole(announcementId, roleName)
-                        : throw new DomainException("RoleName is required for role audience."),
+                     input.RoleName.HasValue
+                         ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
+                         : throw new DomainException("RoleName is required for role audience."),
 
                 _ => throw new DomainException("Invalid announcement audience type.")
             };

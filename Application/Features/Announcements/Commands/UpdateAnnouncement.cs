@@ -117,19 +117,26 @@ public sealed class UpdateAnnouncement
         }
 
         private static AnnouncementAudience CreateAudience(
-            string announcementId,
-            AnnouncementAudienceInputDto input)
+    string announcementId,
+    AnnouncementAudienceInputDto input)
         {
+            static string? Clean(string? value)
+                => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
             return input.Type switch
             {
                 AnnouncementAudienceType.Everyone =>
                     AnnouncementAudience.ForEveryone(announcementId),
 
                 AnnouncementAudienceType.Team =>
-                    AnnouncementAudience.ForTeam(announcementId, input.TeamId!),
+                    Clean(input.TeamId) is { } teamId
+                        ? AnnouncementAudience.ForTeam(announcementId, teamId)
+                        : throw new DomainException("TeamId is required for team audience."),
 
                 AnnouncementAudienceType.Role =>
-                    AnnouncementAudience.ForRole(announcementId, input.RoleName!),
+                    input.RoleName.HasValue
+                        ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
+                        : throw new DomainException("RoleName is required for role audience."),
 
                 _ => throw new DomainException("Invalid announcement audience type.")
             };

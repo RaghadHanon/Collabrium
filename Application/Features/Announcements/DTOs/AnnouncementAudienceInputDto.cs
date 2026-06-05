@@ -7,6 +7,6 @@ public sealed class AnnouncementAudienceInputDto
 
     public string? TeamId { get; set; }
 
-    public string? RoleName { get; set; }
+    public UserRole? RoleName { get; set; }
 
 }

@@ -104,9 +104,11 @@ namespace Application.Features.UserCourses.Commands
                 }, cancellationToken);
 
                 await mediator.Publish(new CourseAssignedEvent(
+                    TenantId: tenantId,
                     CourseId: course.Id,
                     CourseTitle: course.Title,
                     CourseProvider: course.Provider,
+                    AssignerUserId: currentUserId,
                     AssignerFullName: assignerUser.FullName,
                     AssignedTo: assignedUser
                 ), cancellationToken);

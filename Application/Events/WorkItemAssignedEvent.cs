@@ -10,6 +10,7 @@ public record WorkItemAssignedEvent(
     string WorkItemCode,
     string WorkItemType,
     string WorkItemPriority,
+    string? SprintId,
     string AssigneeUserId,
     string AssigneeEmail,
     string AssigneeFullName,

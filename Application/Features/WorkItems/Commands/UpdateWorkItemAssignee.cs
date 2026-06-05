@@ -167,6 +167,7 @@ public sealed class UpdateWorkItemAssignee
                     workItem.Code,
                     workItem.Type.ToString(),
                     workItem.Priority.ToString(),
+                    workItem.SprintId,
                     assigneeUser!.Id,
                     assigneeUser.Email,
                     assigneeUser.FullName,

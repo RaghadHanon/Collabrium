@@ -5,6 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Features\Identity\Validators\**" />
+    <EmbeddedResource Remove="Features\Identity\Validators\**" />
+    <None Remove="Features\Identity\Validators\**" />
+  </ItemGroup>
 	
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="12.0.1" />
@@ -20,10 +26,6 @@
 	
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
-  </ItemGroup>
-	
-  <ItemGroup>
-    <Folder Include="Features\Identity\Validators\" />
   </ItemGroup>
 
 </Project>

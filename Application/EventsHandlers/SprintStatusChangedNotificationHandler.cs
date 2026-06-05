@@ -32,7 +32,7 @@ public sealed class SprintStatusChangedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "Sprint",
             entityId: notification.SprintId,
-            actionUrl: $"/dashboard/projects/{notification.ProjectId}?tab=board&sprintId={notification.SprintId}",
+            actionUrl: $"/dashboard/projects/{notification.ProjectId}/board/{notification.SprintId}",
             cancellationToken: ct);
     }
 }

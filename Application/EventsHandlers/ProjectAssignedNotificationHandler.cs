@@ -32,7 +32,7 @@ public sealed class ProjectAssignedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "Project",
             entityId: notification.ProjectId,
-            actionUrl: $"/dashboard/projects/{notification.ProjectId}",
+            actionUrl: $"/projects/{notification.ProjectId}/backlog",
             cancellationToken: ct);
     }
 }

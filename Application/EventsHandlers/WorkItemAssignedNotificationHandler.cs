@@ -14,6 +14,10 @@ public sealed class WorkItemAssignedNotificationHandler(
         if (string.IsNullOrWhiteSpace(notification.AssigneeUserId))
             return;
 
+        var actionUrl = string.IsNullOrWhiteSpace(notification.SprintId)
+            ? $"/projects/{notification.ProjectId}/backlog"
+            : $"/projects/{notification.ProjectId}/board";
+
         await notificationCreationService.CreateForUsersAsync(
             tenantId: notification.TenantId,
             recipientUserIds: new[] { notification.AssigneeUserId },
@@ -23,7 +27,7 @@ public sealed class WorkItemAssignedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "WorkItem",
             entityId: notification.WorkItemId,
-            actionUrl: $"/projects/{notification.ProjectId}?tab=storyboard",
+            actionUrl: actionUrl,
             cancellationToken: ct);
     }
 }

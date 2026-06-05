@@ -30,4 +30,5 @@ public enum NotificationType
     CourseAssigned = 50,
 
     UserRoleChanged = 60,
+    Welcome = 70
 }

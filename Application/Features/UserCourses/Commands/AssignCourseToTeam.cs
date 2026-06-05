@@ -121,12 +121,16 @@ public sealed class AssignCourseToTeam
             if (assignedMembers.Count > 0)
             {
                 await mediator.Publish(new CourseAssignedToTeamEvent(
-                    CourseId: course.Id,
-                    CourseTitle: course.Title,
-                    CourseProvider: course.Provider,
-                    AssignerFullName: assignerUser.FullName,
-                    Members: assignedMembers
-                ), cancellationToken);
+                     TenantId: tenantId,
+                     TeamId: request.TeamId,
+                     TeamName: team.Name,
+                     CourseId: course.Id,
+                     CourseTitle: course.Title,
+                     CourseProvider: course.Provider,
+                     AssignerUserId: currentUserId,
+                     AssignerFullName: assignerUser.FullName,
+                     Members: assignedMembers
+                 ), cancellationToken);
             }
 
             return Result<string>.Success(

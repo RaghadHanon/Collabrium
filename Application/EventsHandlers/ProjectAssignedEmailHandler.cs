@@ -27,7 +27,7 @@ public class ProjectAssignedEmailHandler
     {
         var template = templateFactory.GetTemplate("ProjectAssignment");
 
-        var url = $"{settings.BaseUrl}/dashboard/projects/{notification.ProjectId}";
+        var url = $"{settings.BaseUrl}/projects/{notification.ProjectId}/backlog";
 
         for (var i = 0; i < notification.TeamMembers.Count; i++)
         {

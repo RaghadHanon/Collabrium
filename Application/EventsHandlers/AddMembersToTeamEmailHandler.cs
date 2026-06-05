@@ -6,14 +6,14 @@ using Microsoft.Extensions.Options;
 
 namespace Application.EventsHandlers;
 
-public class AddMembersToTeamEmailEventHandler
+public class AddMembersToTeamEmailHandler
     : INotificationHandler<AddMemberToTeamEvent>
 {
     private readonly IEmailService emailService;
     private readonly IEmailTemplateFactory templateFactory;
     private readonly WebAppSettings settings;
 
-    public AddMembersToTeamEmailEventHandler(
+    public AddMembersToTeamEmailHandler(
         IEmailService emailService,
         IEmailTemplateFactory templateFactory,
         IOptions<WebAppSettings> settings)

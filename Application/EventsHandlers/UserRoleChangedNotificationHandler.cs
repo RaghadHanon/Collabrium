@@ -27,7 +27,7 @@ public sealed class UserRoleChangedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "User",
             entityId: notification.User.Id,
-            actionUrl: "/dashboard/profile",
+            actionUrl: $"/users/user-profile/{notification.User.Id}",
             cancellationToken: ct);
     }
 

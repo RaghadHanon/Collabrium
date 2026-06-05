@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.Extensions.Options;
 
 namespace Application.EventsHandlers;
+
 public class WorkItemAssignedEmailHandler
     : INotificationHandler<WorkItemAssignedEvent>
 {
@@ -26,7 +27,11 @@ public class WorkItemAssignedEmailHandler
     {
         var template = templateFactory.GetTemplate("WorkItemAssignment");
 
-        var url = $"{settings.BaseUrl}/projects/{notification.ProjectId}?tab=storyboard";
+        var relativeUrl = string.IsNullOrWhiteSpace(notification.SprintId)
+            ? $"/projects/{notification.ProjectId}/backlog/{notification.WorkItemId}"
+            : $"/projects/{notification.ProjectId}/board/{notification.SprintId}/{notification.WorkItemId}";
+
+        var url = $"{settings.BaseUrl}{relativeUrl}";
 
         var data = new Dictionary<string, string>
         {

@@ -64,18 +64,21 @@ public class CompleteSprint
             }), cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(tenantId, sprint.Id, request.ProjectId, cancellationToken);
+            var teamMembers = await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, project.TeamId, cancellationToken);
             if (project.TeamId is not null)
                 await mediator.Publish(new SprintStatusChangedEvent(
-                        project.Id,
-                        project.Name,
-                        project.Key,
-                        dto.Id,
-                        dto.Code,
-                        dto.Name,
-                        dto.Status,
-                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenantId, project.TeamId, cancellationToken),
-                        currentUser.FullName
-                    ), cancellationToken);
+                    tenantId,
+                    project.Id,
+                    project.Name,
+                    project.Key,
+                    sprint.Id,
+                    sprint.Code,
+                    sprint.Name,
+                    sprint.Status,
+                    teamMembers,
+                    currentUser.Id,
+                    currentUser.FullName
+                ), cancellationToken);
 
             return dto is null
                 ? Result<SprintDto>.Failure("Sprint completed but could not be loaded.", HttpStatusCode.InternalServerError)

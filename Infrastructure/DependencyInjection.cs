@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Interfaces.AI;
 using Application.Interfaces.Emails;
+using Application.Interfaces.Notifications;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Reports;
 using Application.Interfaces.Repositories;
@@ -30,6 +31,7 @@ using Infrastructure.Reports.Velocity;
 using Infrastructure.Security;
 using Infrastructure.Settings;
 using Infrastructure.SignalR;
+using Infrastructure.SignalR.Notifications;
 using Infrastructure.TenantContexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -71,10 +73,16 @@ public static class DependencyInjection
         AddReportsServices(services);
 
         AddAiServices(services);
-
-        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
+        AddSignalRServices(services);
 
         return services;
+    }
+
+    private static void AddSignalRServices(IServiceCollection services)
+    {
+        services.AddSignalR();
+        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
+        services.AddScoped<INotificationRealtimeService, SignalRNotificationRealtimeService>();
     }
 
     private static void AddAiServices(IServiceCollection services)
@@ -165,8 +173,7 @@ public static class DependencyInjection
         services.AddScoped<IPostCommentsRepository, PostCommentsRepository>();
         services.AddScoped<IAnnouncementsRepository, AnnouncementsRepository>();
         services.AddScoped<IEventsRepository, EventsRepository>();
-
-
+        services.AddScoped<INotificationsRepository, NotificationsRepository>();
     }
 
     private static void AddReadModels(IServiceCollection services)
@@ -182,7 +189,6 @@ public static class DependencyInjection
         services.AddScoped<IRoadmapNodesReadModel, RoadmapNodesReadModel>();
         services.AddScoped<IRoadmapSubTopicsReadModel, RoadmapSubTopicsReadModel>();
         services.AddScoped<IRoadmapResourcesReadModel, RoadmapResourcesReadModel>();
-
         services.AddScoped<IProjectHistoriesReadModel, ProjectsHistoriesReadModel>();
         services.AddScoped<IReportsReadModel, ReportsReadModel>();
         services.AddScoped<ICoursesReadModel, CoursesReadModel>();
@@ -194,6 +200,7 @@ public static class DependencyInjection
         services.AddScoped<IPostCommentsReadModel, PostCommentsReadModel>();
         services.AddScoped<IAnnouncementsReadModel, AnnouncementsReadModel>();
         services.AddScoped<IEventsReadModel, EventsReadModel>();
+        services.AddScoped<INotificationsReadModel, NotificationsReadModel>();
 
     }
 
@@ -276,7 +283,7 @@ public static class DependencyInjection
                    var accessToken = context.Request.Query["access_token"];
                    var path = context.HttpContext.Request.Path;
 
-                   if (!string.IsNullOrEmpty(accessToken) &&
+                   if (!string.IsNullOrWhiteSpace(accessToken) &&
                        path.StartsWithSegments("/hubs"))
                    {
                        context.Token = accessToken;

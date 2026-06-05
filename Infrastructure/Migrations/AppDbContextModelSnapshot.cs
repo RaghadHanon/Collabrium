@@ -655,6 +655,84 @@ namespace Infrastructure.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.NotificationEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecipientUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TriggeredByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("TriggeredByUserId");
+
+                    b.HasIndex("TenantId", "EntityType", "EntityId")
+                        .HasDatabaseName("IX_Notifications_Tenant_Entity");
+
+                    b.HasIndex("TenantId", "RecipientUserId", "CreatedAt")
+                        .HasDatabaseName("IX_Notifications_Tenant_Recipient_CreatedAt");
+
+                    b.HasIndex("TenantId", "RecipientUserId", "IsRead", "CreatedAt")
+                        .HasDatabaseName("IX_Notifications_Tenant_Recipient_IsRead_CreatedAt");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.PostEntity", b =>
                 {
                     b.Property<string>("Id")
@@ -2247,6 +2325,32 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("Infrastructure.Persistence.Entities.NotificationEntity", b =>
+                {
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "RecipientUser")
+                        .WithMany("ReceivedNotifications")
+                        .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.TenantEntity", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "TriggeredByUser")
+                        .WithMany("TriggeredNotifications")
+                        .HasForeignKey("TriggeredByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("RecipientUser");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("TriggeredByUser");
+                });
+
             modelBuilder.Entity("Infrastructure.Persistence.Entities.PostEntity", b =>
                 {
                     b.HasOne("Infrastructure.Persistence.Entities.ApplicationUserEntity", "CreatedByUser")
@@ -2908,9 +3012,13 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("ProjectsHistories");
 
+                    b.Navigation("ReceivedNotifications");
+
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("TeamMemberships");
+
+                    b.Navigation("TriggeredNotifications");
                 });
 
             modelBuilder.Entity("Infrastructure.Persistence.Entities.ArticleEntity", b =>

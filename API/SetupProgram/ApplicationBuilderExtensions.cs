@@ -30,6 +30,7 @@ public static class ApplicationBuilderExtensions
 
         app.MapHub<PresenceHub>("/hubs/presence");
         app.MapHub<CommentHub>("/hubs/comments");
+        app.MapHub<NotificationHub>("/hubs/notifications");
         app.MapControllers();
 
         return app;

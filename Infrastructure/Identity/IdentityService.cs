@@ -77,10 +77,17 @@ public sealed class IdentityService : IIdentityService
         return UserMapper.ToDomain(userEntity);
     }
 
-    public async Task<(string AccessToken, string RefreshToken, string Id, string TenantId)> LoginAsync(
-    string email,
-    string password,
-    CancellationToken cancellationToken = default)
+    public async Task<(
+     string AccessToken,
+     string RefreshToken,
+     string Id,
+     string TenantId,
+     bool MustChangePassword,
+     string FullName
+     )> LoginAsync(
+         string email,
+         string password,
+         CancellationToken cancellationToken = default)
     {
         var userEntity = await ValidateCredentialsAsync(email, password);
 
@@ -88,6 +95,9 @@ public sealed class IdentityService : IIdentityService
             throw new UnauthenticatedException("You must confirm your email before logging in.");
 
         var roles = await GetRolesAsync(userEntity);
+
+        var mustChangePassword = userEntity.MustChangePassword;
+        var fullName = userEntity.FullName;
 
         userEntity.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(userEntity);
@@ -114,7 +124,9 @@ public sealed class IdentityService : IIdentityService
             accessToken,
             refreshToken,
             userEntity.Id,
-            userEntity.TenantId ?? string.Empty
+            userEntity.TenantId ?? string.Empty,
+            mustChangePassword,
+            fullName
         );
     }
 

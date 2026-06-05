@@ -5,6 +5,7 @@ using MediatR;
 namespace Application.Events;
 
 public record SprintStatusChangedEvent(
+    string TenantId,
     string ProjectId,
     string ProjectTitle,
     string ProjectKey,
@@ -13,5 +14,6 @@ public record SprintStatusChangedEvent(
     string SprintName,
     SprintStatus Status,
     List<UserSnapshotDto> TeamMembers,
+    string AssignerUserId,
     string AssignerFullName
 ) : INotification;

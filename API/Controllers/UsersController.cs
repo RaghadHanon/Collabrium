@@ -232,7 +232,6 @@ public class UsersController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user is not authorized to view the specified user's skills.</response>
     /// <response code="404">If the target user was not found.</response>
-    [Authorize(Policy = Policies.TenantAdmin)]
     [HttpGet("{id}/skills")]
     public async Task<IActionResult> GetUserSkills(string id)
     {

@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Identity.DTOs;
 using Application.Interfaces.Services;
 using MediatR;
@@ -14,13 +15,35 @@ public class LoginUser
         public required string Password { get; set; }
     }
 
-    public class Handler(IIdentityService identityService)
-        : IRequestHandler<Command, Result<LoginResponseDto>>
+    public class Handler(
+        IIdentityService identityService,
+        IMediator mediator
+    ) : IRequestHandler<Command, Result<LoginResponseDto>>
     {
-        public async Task<Result<LoginResponseDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<LoginResponseDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
-            var (accessToken, refreshToken, id, tenantId) =
-                await identityService.LoginAsync(request.Email, request.Password, cancellationToken);
+            var (
+                accessToken,
+                refreshToken,
+                id,
+                tenantId,
+                mustChangePassword,
+                fullName
+            ) = await identityService.LoginAsync(
+                request.Email,
+                request.Password,
+                cancellationToken);
+
+            if (mustChangePassword && !string.IsNullOrWhiteSpace(tenantId))
+            {
+                await mediator.Publish(new UserFirstLoginWelcomeEvent(
+                        tenantId,
+                        id,
+                        fullName
+                    ), cancellationToken);
+            }
 
             return Result<LoginResponseDto>.Success(new LoginResponseDto
             {

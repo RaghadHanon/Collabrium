@@ -58,6 +58,9 @@ public class UpdateWorkItemStatus
             if (workItem.AssignedToUserId is null)
                 return Result<WorkItemDto>.Failure("You can't change WoorkItem status without assigning it to someone.", HttpStatusCode.BadRequest);
 
+            if(workItem.IsBlocked)
+                return Result<WorkItemDto>.Failure("You can't change status of a blocked item. Unblock it first.", HttpStatusCode.BadRequest);
+
             var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 

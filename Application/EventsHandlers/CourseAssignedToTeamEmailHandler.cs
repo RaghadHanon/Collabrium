@@ -4,54 +4,53 @@ using Application.Interfaces.Emails;
 using MediatR;
 using Microsoft.Extensions.Options;
 
-namespace Application.EventsHandlers
+namespace Application.EventsHandlers;
+
+public class CourseAssignedToTeamEmailHandler
+    : INotificationHandler<CourseAssignedToTeamEvent>
 {
-    public class CourseAssignedToTeamEmailHandler
-      : INotificationHandler<CourseAssignedToTeamEvent>
+    private readonly IEmailService emailService;
+    private readonly IEmailTemplateFactory templateFactory;
+    private readonly WebAppSettings settings;
+
+    public CourseAssignedToTeamEmailHandler(
+        IEmailService emailService,
+        IEmailTemplateFactory templateFactory,
+        IOptions<WebAppSettings> settings)
     {
-        private readonly IEmailService emailService;
-        private readonly IEmailTemplateFactory templateFactory;
-        private readonly WebAppSettings settings;
+        this.emailService = emailService;
+        this.templateFactory = templateFactory;
+        this.settings = settings.Value;
+    }
 
-        public CourseAssignedToTeamEmailHandler(
-            IEmailService emailService,
-            IEmailTemplateFactory templateFactory,
-            IOptions<WebAppSettings> settings)
+    public async Task Handle(CourseAssignedToTeamEvent notification, CancellationToken ct)
+    {
+        var template = templateFactory.GetTemplate("CourseAssignment");
+
+        var url = $"{settings.BaseUrl}/dashboard/courses/{notification.CourseId}";
+
+        foreach (var member in notification.Members)
         {
-            this.emailService = emailService;
-            this.templateFactory = templateFactory;
-            this.settings = settings.Value;
-        }
+            if (string.IsNullOrWhiteSpace(member.Email))
+                continue;
 
-        public async Task Handle(CourseAssignedToTeamEvent notification, CancellationToken ct)
-        {
-            var template = templateFactory.GetTemplate("CourseAssignment");
-
-            var url = $"{settings.BaseUrl}/dashboard/courses/{notification.CourseId}";
-
-            foreach (var member in notification.Members)
+            var data = new Dictionary<string, string>
             {
-                if (string.IsNullOrWhiteSpace(member.Email))
-                    continue;
+                ["AssigneeFullName"] = member.FullName,
+                ["AssignerFullName"] = notification.AssignerFullName,
+                ["CourseTitle"] = notification.CourseTitle,
+                ["CourseProvider"] = notification.CourseProvider,
+                ["Url"] = url
+            };
 
-                var data = new Dictionary<string, string>
-                {
-                    ["AssigneeFullName"] = member.FullName,
-                    ["AssignerFullName"] = notification.AssignerFullName,
-                    ["CourseTitle"] = notification.CourseTitle,
-                    ["CourseProvider"] = notification.CourseProvider,
-                    ["Url"] = url
-                };
+            var message = new EmailMessageBuilder()
+                .To(member.Email)
+                .Subject(template.GetSubject())
+                .PlainTextBody(template.GetPlainTextBody(data))
+                .HtmlBody(template.GetHtmlBody(data))
+                .Build();
 
-                var message = new EmailMessageBuilder()
-                    .To(member.Email)
-                    .Subject(template.GetSubject())
-                    .PlainTextBody(template.GetPlainTextBody(data))
-                    .HtmlBody(template.GetHtmlBody(data))
-                    .Build();
-
-                await emailService.SendAsync(message, ct);
-            }
+            await emailService.SendAsync(message, ct);
         }
     }
 }

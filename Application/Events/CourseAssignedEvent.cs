@@ -1,13 +1,14 @@
 ﻿using Application.Features.Users.DTOs;
 using MediatR;
 
-namespace Application.Events
-{
-    public record CourseAssignedEvent(
-      string CourseId,
-      string CourseTitle,
-      string CourseProvider,
-      string AssignerFullName,
-      UserSnapshotDto AssignedTo
-  ) : INotification;
-}
+namespace Application.Events;
+
+public record CourseAssignedEvent(
+    string TenantId,
+    string CourseId,
+    string CourseTitle,
+    string CourseProvider,
+    string AssignerUserId,
+    string AssignerFullName,
+    UserSnapshotDto AssignedTo
+) : INotification;

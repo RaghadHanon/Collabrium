@@ -27,11 +27,12 @@ public class SprintStatusChangedEmailHandler
     {
         var template = templateFactory.GetTemplate("SprintStatusChanged");
 
-        var url = $"{settings.BaseUrl}/dashboard/projects/{notification.ProjectId}?tab=board&sprintId={notification.SprintId}";
+        var url = $"{settings.BaseUrl}/projects/{notification.ProjectId}/board/{notification.SprintId}";
 
         for (var i = 0; i < notification.TeamMembers.Count; i++)
         {
             var member = notification.TeamMembers[i];
+
             var data = new Dictionary<string, string>
             {
                 ["AssigneeFullName"] = member.FullName,
@@ -50,6 +51,7 @@ public class SprintStatusChangedEmailHandler
                 .PlainTextBody(template.GetPlainTextBody(data))
                 .HtmlBody(template.GetHtmlBody(data))
                 .Build();
+
             await emailService.SendAsync(message, ct);
         }
     }

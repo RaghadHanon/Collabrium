@@ -43,4 +43,7 @@ public class ApplicationUserEntity : IdentityUser
     public ICollection<WorkItemEntity> CreatedWorkItems { get; set; } = new List<WorkItemEntity>();
     public ICollection<ProjectHistoryEntity> ProjectsHistories { get; set; } = new List<ProjectHistoryEntity>();
     public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = new List<RefreshTokenEntity>();
+
+    public ICollection<NotificationEntity> ReceivedNotifications { get; set; } = new List<NotificationEntity>();
+    public ICollection<NotificationEntity> TriggeredNotifications { get; set; } = new List<NotificationEntity>();
 }

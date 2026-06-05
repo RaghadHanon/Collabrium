@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.Extensions.Options;
 
 namespace Application.EventsHandlers;
+
 public class WorkItemAssignedEmailHandler
     : INotificationHandler<WorkItemAssignedEvent>
 {

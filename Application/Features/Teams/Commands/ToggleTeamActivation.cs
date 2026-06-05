@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Models;
 using MediatR;
 using System.Net;
 
@@ -44,13 +45,16 @@ public class ToggleTeamActivation
 
             await teamsRepository.UpdateAsync(team);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+            var teamMembers = await teamsReadModel.GetTeamMembersSnapshotAsync(tenant.Id, team.Id, cancellationToken);
             await mediator.Publish(new ToggleTeamActivationEvent(
-                        team.Id,
-                        await teamsReadModel.GetTeamMembersSnapshotAsync(tenant.Id, team.Id, cancellationToken),
-                        currentUser.FullName,
-                        team.IsActive,
-                        team.Name
-                    ), cancellationToken);
+                    tenant.Id,
+                    team.Id,
+                    teamMembers,
+                    currentUser.Id,
+                    currentUser.FullName,
+                    team.IsActive,
+                    team.Name
+                ), cancellationToken);
 
             return Result<bool>.Success(team.IsActive, HttpStatusCode.OK);
         }

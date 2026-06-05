@@ -8,6 +8,7 @@ public enum NotificationType
     TeamCreated = 2,
     TeamUpdated = 3,
     TeamMemberRemoved = 4,
+    TeamActivationChanged = 5,
 
     ProjectAssigned = 10,
     ProjectUnassigned = 11,
@@ -17,6 +18,7 @@ public enum NotificationType
     WorkItemStatusChanged = 22,
     WorkItemCommentAdded = 23,
     WorkItemMention = 24,
+    WorkItemUnassigned = 25,
 
     SprintCreated = 30,
     SprintUpdated = 31,
@@ -25,5 +27,7 @@ public enum NotificationType
 
     AnnouncementCreated = 40,
     EventCreated = 41,
-    CourseAssigned = 50
+    CourseAssigned = 50,
+
+    UserRoleChanged = 60,
 }

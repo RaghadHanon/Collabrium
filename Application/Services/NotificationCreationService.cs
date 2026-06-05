@@ -1,5 +1,7 @@
 ﻿using Application.Features.Notifications.DTOs;
 using Application.Interfaces;
+using Application.Interfaces.Notifications;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Enums;
@@ -9,6 +11,8 @@ namespace Application.Features.Notifications.Services;
 
 public sealed class NotificationCreationService(
     INotificationsRepository notificationsRepository,
+    INotificationsReadModel notificationsReadModel,
+    INotificationRealtimeService notificationRealtimeService,
     IUnitOfWork unitOfWork
 ) : INotificationCreationService
 {
@@ -58,7 +62,7 @@ public sealed class NotificationCreationService(
             await notificationsRepository.AddRangeAsync(notifications, ct);
         }, cancellationToken);
 
-        return notifications.Select(n => new NotificationDto
+        var notificationDtos = notifications.Select(n => new NotificationDto
         {
             Id = n.Id,
             TenantId = n.TenantId,
@@ -74,5 +78,26 @@ public sealed class NotificationCreationService(
             ReadAt = n.ReadAt,
             CreatedAt = n.CreatedAt
         }).ToList();
+
+        await notificationRealtimeService.SendToUsersAsync(
+            tenantId,
+            notificationDtos,
+            cancellationToken);
+
+        foreach (var userId in userIds)
+        {
+            var unreadCount = await notificationsReadModel.GetUnreadCountAsync(
+                tenantId,
+                userId,
+                cancellationToken);
+
+            await notificationRealtimeService.SendUnreadCountChangedAsync(
+                tenantId,
+                userId,
+                unreadCount,
+                cancellationToken);
+        }
+
+        return notificationDtos;
     }
 }

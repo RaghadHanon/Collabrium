@@ -25,45 +25,74 @@ public class UpdateUserRole
         ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<Unit>>
     {
-        public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<Unit>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
             var currentUser = await currentUserAccessor.GetCurrentUserAsync();
             if (currentUser == null)
-                return Result<Unit>.Failure("Current user is not found.", HttpStatusCode.NotFound);
+                return Result<Unit>.Failure(
+                    "Current user is not found.",
+                    HttpStatusCode.NotFound);
 
-            var user = await usersRepository.GetByIdAsync(request.UserId, cancellationToken);
+            var user = await usersRepository.GetByIdAsync(
+                request.UserId,
+                cancellationToken);
+
             if (user is null)
-                return Result<Unit>.Failure("User not found.", HttpStatusCode.NotFound);
+                return Result<Unit>.Failure(
+                    "User not found.",
+                    HttpStatusCode.NotFound);
 
-            if (!string.IsNullOrWhiteSpace(tenantContext.TenantId) &&
-                !string.Equals(user.TenantId, tenantContext.TenantId, StringComparison.Ordinal))
+            var tenantId = tenantContext.CurrentTenant?.Id
+                           ?? tenantContext.TenantId
+                           ?? user.TenantId;
+
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<Unit>.Failure(
+                    "Tenant not found.",
+                    HttpStatusCode.NotFound);
+
+            if (!string.Equals(user.TenantId, tenantId, StringComparison.Ordinal))
             {
-                return Result<Unit>.Failure("User not found in this tenant.", HttpStatusCode.Forbidden);
+                return Result<Unit>.Failure(
+                    "User not found in this tenant.",
+                    HttpStatusCode.Forbidden);
             }
 
+            if (string.IsNullOrWhiteSpace(request.NewRole))
+                return Result<Unit>.Failure(
+                    "NewRole is required.",
+                    HttpStatusCode.BadRequest);
+
             var oldRole = user.JobTitle;
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
+
+            await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 await usersRepository.ReplaceUserRoleAsync(
                     request.UserId,
                     request.NewRole,
-                    cancellationToken);
+                    ct);
+
                 user.ChangeJobTitle(request.NewRole);
 
-                await usersRepository.UpdateAsync(user, cancellationToken);
+                await usersRepository.UpdateAsync(user, ct);
+
             }, cancellationToken);
 
             await mediator.Publish(new UserRoleChangedEvent(
-                       new UserSnapshotDto
-                       {
-                           Id = user.Id,
-                           FullName = user.FullName,
-                           Email = user.Email,
-                           JobTitle = user.JobTitle
-                       },
-                        oldRole,
-                        currentUser.FullName
-                    ), cancellationToken);
+                    tenantId,
+                    new UserSnapshotDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        JobTitle = user.JobTitle
+                    },
+                    oldRole,
+                    currentUser.Id,
+                    currentUser.FullName
+                ), cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
         }

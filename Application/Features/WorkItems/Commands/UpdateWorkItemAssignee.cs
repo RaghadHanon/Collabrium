@@ -33,9 +33,11 @@ public sealed class UpdateWorkItemAssignee
         IMediator mediator)
         : IRequestHandler<Command, Result<WorkItemDto>>
     {
-        public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<WorkItemDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
-            var tenantId = tenantContext.CurrentTenant?.Id;
+            var tenantId = tenantContext.CurrentTenant?.Id ?? tenantContext.TenantId;
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
@@ -56,10 +58,16 @@ public sealed class UpdateWorkItemAssignee
             if (workItem is null)
                 return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            var isAsigneeUpdated = PatchHelpers.DecideStringPatch(request.AssignedToUserId);
-            if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Ignore)
+            var assigneePatch = PatchHelpers.DecideStringPatch(request.AssignedToUserId);
+
+            if (assigneePatch.Action == PatchHelpers.PatchStringAction.Ignore)
             {
-                var currentDto = await workItemsReadModel.GetByIdAsync(tenantId, request.ProjectId, workItem.Id, cancellationToken);
+                var currentDto = await workItemsReadModel.GetByIdAsync(
+                    tenantId,
+                    request.ProjectId,
+                    workItem.Id,
+                    cancellationToken);
+
                 return currentDto is null
                     ? Result<WorkItemDto>.Failure("Work item loaded but could not be returned.", HttpStatusCode.InternalServerError)
                     : Result<WorkItemDto>.Success(currentDto, HttpStatusCode.OK);
@@ -72,20 +80,27 @@ public sealed class UpdateWorkItemAssignee
             var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUser.Id, StringComparison.Ordinal);
             var isCreator = string.Equals(workItem.CreatedByUserId, currentUser.Id, StringComparison.Ordinal);
 
-            UserDto? asigneeUser = null;
-            if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Set)
-            {
-                var targetUserId = isAsigneeUpdated.Value!;
+            UserDto? assigneeUser = null;
+            UserDto? previousAssigneeUser = null;
 
-                asigneeUser = await usersReadModel.GetUserByIdAsync(targetUserId, cancellationToken);
-                if (asigneeUser is null)
+            if (assigneePatch.Action == PatchHelpers.PatchStringAction.Set)
+            {
+                var targetUserId = assigneePatch.Value!;
+
+                assigneeUser = await usersReadModel.GetUserByIdAsync(targetUserId, cancellationToken);
+                if (assigneeUser is null)
                     return Result<WorkItemDto>.Failure("Assigned user not found.", HttpStatusCode.BadRequest);
 
                 var isUserToAssignHasAccess = await projectsRepository.IsUserHasAccessToProjectAsync(
-                    tenantId, targetUserId, request.ProjectId, cancellationToken);
+                    tenantId,
+                    targetUserId,
+                    request.ProjectId,
+                    cancellationToken);
 
                 if (!isUserToAssignHasAccess)
-                    return Result<WorkItemDto>.Failure("Assigned user does not have access to the project.", HttpStatusCode.BadRequest);
+                    return Result<WorkItemDto>.Failure(
+                        "Assigned user does not have access to the project.",
+                        HttpStatusCode.BadRequest);
 
                 var assigningToSelf = string.Equals(targetUserId, currentUser.Id, StringComparison.Ordinal);
 
@@ -94,40 +109,89 @@ public sealed class UpdateWorkItemAssignee
                         "You can only take unassigned items for yourself. Managers and workItem creator can assign/reassign any item.",
                         HttpStatusCode.Forbidden);
             }
-            else if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Clear)
+            else if (assigneePatch.Action == PatchHelpers.PatchStringAction.Clear)
             {
                 if (!CanClearAssignee(isManager, isCurrentAssignee, isCreator))
                     return Result<WorkItemDto>.Failure(
                         "Only the current assignee, workItem creator or managers can unassign this work item.",
                         HttpStatusCode.Forbidden);
+
+                if (!string.IsNullOrWhiteSpace(workItem.AssignedToUserId))
+                {
+                    previousAssigneeUser = await usersReadModel.GetUserByIdAsync(
+                        workItem.AssignedToUserId,
+                        cancellationToken);
+                }
             }
 
+            var shouldPublishAssignedEvent =
+                assigneePatch.Action == PatchHelpers.PatchStringAction.Set &&
+                assigneeUser is not null;
+
+            var shouldPublishUnassignedEvent =
+                assigneePatch.Action == PatchHelpers.PatchStringAction.Clear &&
+                previousAssigneeUser is not null;
+
             var oldWorkItemState = workItem.Clone();
+
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Clear)
-                    workItem.AssignTo(null);
-                else if (isAsigneeUpdated.Action == PatchHelpers.PatchStringAction.Set)
+                if (assigneePatch.Action == PatchHelpers.PatchStringAction.Clear)
                 {
-                    workItem.AssignTo(isAsigneeUpdated.Value!);
-                    await mediator.Publish(new WorkItemAssignedEvent(
-                        request.ProjectId,
-                        workItem.Id,
-                        workItem.Title,
-                        workItem.Code,
-                        workItem.Type.ToString(),
-                        workItem.Priority.ToString(),
-                        asigneeUser!.Id,
-                        asigneeUser.Email,
-                        asigneeUser.FullName,
-                        currentUser.FullName
-                    ), cancellationToken);
+                    workItem.AssignTo(null);
+                }
+                else if (assigneePatch.Action == PatchHelpers.PatchStringAction.Set)
+                {
+                    workItem.AssignTo(assigneePatch.Value!);
                 }
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
-                historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);
+                historyRecorder.RecordUpdatingChanges<WorkItem>(
+                    workItem.ProjectId,
+                    workItem.Id,
+                    workItem.Title,
+                    workItem.Code,
+                    oldWorkItemState,
+                    workItem);
+
             }, cancellationToken);
+
+            if (shouldPublishAssignedEvent)
+            {
+                await mediator.Publish(new WorkItemAssignedEvent(
+                    tenantId,
+                    request.ProjectId,
+                    workItem.Id,
+                    workItem.Title,
+                    workItem.Code,
+                    workItem.Type.ToString(),
+                    workItem.Priority.ToString(),
+                    assigneeUser!.Id,
+                    assigneeUser.Email,
+                    assigneeUser.FullName,
+                    currentUser.Id,
+                    currentUser.FullName
+                ), cancellationToken);
+            }
+
+            if (shouldPublishUnassignedEvent)
+            {
+                await mediator.Publish(new WorkItemUnassignedEvent(
+                    tenantId,
+                    request.ProjectId,
+                    workItem.Id,
+                    workItem.Title,
+                    workItem.Code,
+                    workItem.Type.ToString(),
+                    workItem.Priority.ToString(),
+                    previousAssigneeUser!.Id,
+                    previousAssigneeUser.Email,
+                    previousAssigneeUser.FullName,
+                    currentUser.Id,
+                    currentUser.FullName
+                ), cancellationToken);
+            }
 
             var dto = await workItemsReadModel.GetByIdAsync(
                 tenantId,
@@ -140,12 +204,19 @@ public sealed class UpdateWorkItemAssignee
                 : Result<WorkItemDto>.Success(dto, HttpStatusCode.OK);
         }
 
-        private static bool CanSetAssignee(bool isManager, bool isWorkItemUnassigned, bool isCreator, bool assigningToSelf)
+        private static bool CanSetAssignee(
+            bool isManager,
+            bool isWorkItemUnassigned,
+            bool isCreator,
+            bool assigningToSelf)
         {
             return isManager ? true : isCreator ? true : isWorkItemUnassigned ? assigningToSelf : false;
         }
 
-        private static bool CanClearAssignee(bool isManager, bool isCurrentAssignee, bool isCreator)
+        private static bool CanClearAssignee(
+            bool isManager,
+            bool isCurrentAssignee,
+            bool isCreator)
         {
             return isManager ? true : isCreator ? true : isCurrentAssignee;
         }

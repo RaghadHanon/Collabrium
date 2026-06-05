@@ -1,25 +1,29 @@
-﻿//using Domain.Events;
-//using MediatR;
+﻿using Application.Events;
+using Application.Interfaces.Services;
+using Domain.Enums;
+using MediatR;
 
-//namespace Application.EventsHandlers;
+namespace Application.EventsHandlers;
 
-//public class WorkItemAssignedNotificationHandler
-//    : INotificationHandler<WorkItemAssignedEvent>
-//{
-//    private readonly INotificationService notificationService;
+public sealed class WorkItemAssignedNotificationHandler(
+    INotificationCreationService notificationCreationService
+) : INotificationHandler<WorkItemAssignedEvent>
+{
+    public async Task Handle(WorkItemAssignedEvent notification, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(notification.AssigneeUserId))
+            return;
 
-//    public WorkItemAssignedNotificationHandler(INotificationService notificationService)
-//    {
-//        this.notificationService = notificationService;
-//    }
-
-//    public async Task Handle(WorkItemAssignedEvent notification, CancellationToken ct)
-//    {
-//        await notificationService.CreateAsync(new Notification
-//        {
-//            UserId = notification.AssigneeUserId,
-//            Title = "New Work Item Assigned",
-//            Message = $"{notification.WorkItemTitle} was assigned to you"
-//        });
-//    }
-//}
+        await notificationCreationService.CreateForUsersAsync(
+            tenantId: notification.TenantId,
+            recipientUserIds: new[] { notification.AssigneeUserId },
+            type: NotificationType.WorkItemAssigned,
+            title: "Work Item Assigned",
+            message: $"{notification.AssignerFullName} assigned {notification.WorkItemCode} - {notification.WorkItemTitle} to you.",
+            triggeredByUserId: notification.AssignerUserId,
+            entityType: "WorkItem",
+            entityId: notification.WorkItemId,
+            actionUrl: $"/projects/{notification.ProjectId}?tab=storyboard",
+            cancellationToken: ct);
+    }
+}

@@ -1,5 +1,7 @@
 ﻿using Application.Common;
 using Application.Interfaces;
+using Application.Interfaces.Notifications;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using MediatR;
@@ -17,6 +19,8 @@ public sealed class MarkAllNotificationsAsRead
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
         INotificationsRepository notificationsRepository,
+        INotificationsReadModel notificationsReadModel,
+        INotificationRealtimeService notificationRealtimeService,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<string>>
     {
@@ -39,6 +43,17 @@ public sealed class MarkAllNotificationsAsRead
                     currentUser.Id,
                     ct);
             }, cancellationToken);
+
+            var unreadCount = await notificationsReadModel.GetUnreadCountAsync(
+                tenantId,
+                currentUser.Id,
+                cancellationToken);
+
+            await notificationRealtimeService.SendUnreadCountChangedAsync(
+                tenantId,
+                currentUser.Id,
+                unreadCount,
+                cancellationToken);
 
             return Result<string>.Success(
                 "All notifications marked as read.",

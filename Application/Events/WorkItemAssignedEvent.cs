@@ -1,7 +1,9 @@
 ﻿using MediatR;
 
 namespace Application.Events;
+
 public record WorkItemAssignedEvent(
+    string TenantId,
     string ProjectId,
     string WorkItemId,
     string WorkItemTitle,
@@ -11,5 +13,6 @@ public record WorkItemAssignedEvent(
     string AssigneeUserId,
     string AssigneeEmail,
     string AssigneeFullName,
+    string AssignerUserId,
     string AssignerFullName
 ) : INotification;

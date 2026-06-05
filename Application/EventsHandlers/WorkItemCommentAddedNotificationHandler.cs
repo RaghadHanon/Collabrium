@@ -20,8 +20,8 @@ public sealed class WorkItemCommentAddedNotificationHandler(
             return;
 
         var actionUrl = string.IsNullOrWhiteSpace(notification.SprintId)
-            ? $"/projects/{notification.ProjectId}/backlog"
-            : $"/projects/{notification.ProjectId}/board";
+            ? $"/projects/{notification.ProjectId}/backlog/{notification.WorkItemId}"
+            : $"/projects/{notification.ProjectId}/board/{notification.SprintId}/{notification.WorkItemId}";
 
         await notificationCreationService.CreateForUsersAsync(
             tenantId: notification.TenantId,

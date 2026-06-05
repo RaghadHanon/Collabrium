@@ -23,7 +23,7 @@ public sealed class WorkItemUnassignedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "WorkItem",
             entityId: notification.WorkItemId,
-            actionUrl: $"/projects/{notification.ProjectId}?tab=storyboard",
+            actionUrl: $"/projects/{notification.ProjectId}/board",
             cancellationToken: ct);
     }
 }

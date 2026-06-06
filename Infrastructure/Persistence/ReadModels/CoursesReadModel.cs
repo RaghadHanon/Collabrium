@@ -57,7 +57,7 @@ public sealed class CoursesReadModel : ICoursesReadModel
 
         var items = await query
             .OrderByDescending(c => c.CourseRatings.Any()
-                ? c.CourseRatings.Average(r => (double?) r.Rating) ?? 0
+                ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
                 : 0)
             .ThenByDescending(c => c.CreatedAt)
             .Select(c => new CourseListItemDto
@@ -86,7 +86,7 @@ public sealed class CoursesReadModel : ICoursesReadModel
 
                 RatingsCount = c.CourseRatings.Count,
                 AverageRating = c.CourseRatings.Any()
-                    ? c.CourseRatings.Average(r => (double?) r.Rating) ?? 0
+                    ? c.CourseRatings.Average(r => (double?)r.Rating) ?? 0
                     : 0,
 
                 IsSaved = !string.IsNullOrWhiteSpace(currentUserId) &&
@@ -97,7 +97,7 @@ public sealed class CoursesReadModel : ICoursesReadModel
                 Status = !string.IsNullOrWhiteSpace(currentUserId)
                     ? c.UserCourses
                         .Where(uc => uc.UserId == currentUserId)
-                        .Select(uc => (UserCourseStatus?) uc.Status)
+                        .Select(uc => (UserCourseStatus?)uc.Status)
                         .FirstOrDefault()
                     : null,
 
@@ -221,19 +221,28 @@ public sealed class CoursesReadModel : ICoursesReadModel
             query = parameters.HasThumbnail.Value ? query.Where(c => c.ThumbnailImage != null) : query.Where(c => c.ThumbnailImage == null);
         }
 
-        if (parameters.TagIds is { Count: > 0 })
+        if (parameters.TagIdsAny is { Count: > 0 })
         {
-            var tagIds = parameters.TagIds
+            var tagIds = parameters.TagIdsAny
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x.Trim())
                 .Distinct()
                 .ToList();
 
-            if (tagIds.Count > 0)
-            {
-                query = query.Where(c =>
-                    c.Tags.Any(ct => tagIds.Contains(ct.Id)));
-            }
+            query = query.Where(c =>
+                c.Tags.Any(t => tagIds.Contains(t.Id)));
+        }
+        if (parameters.TagIdsAll is { Count: > 0 })
+        {
+            var tagIds = parameters.TagIdsAll
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct()
+                .ToList();
+
+            query = query.Where(c =>
+                tagIds.All(tagId =>
+                    c.Tags.Any(t => t.Id == tagId)));
         }
 
         if (parameters.CreatedAfter.HasValue)

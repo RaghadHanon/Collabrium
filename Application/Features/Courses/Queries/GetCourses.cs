@@ -31,7 +31,8 @@ public sealed class GetCourses
 
         public DateTime? UpdatedAfter { get; set; }
         public DateTime? UpdatedBefore { get; set; }
-
+        public IReadOnlyCollection<string>? TagIdsAny { get; set; }
+        public IReadOnlyCollection<string>? TagIdsAll { get; set; }
         public DateTime? Cursor { get; set; }
         public int PageSize { get; set; } = 10;
     }

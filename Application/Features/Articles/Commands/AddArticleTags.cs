@@ -53,6 +53,11 @@ namespace Application.Features.Articles.Commands
                         "Article not found.",
                         HttpStatusCode.NotFound);
 
+                if (!string.Equals(article.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<ArticleDetailsDto>.Failure(
+                        "You can manage only your own article.",
+                        HttpStatusCode.Forbidden);
+
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
                     foreach (var tagId in request.TagIds)

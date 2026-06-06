@@ -3,6 +3,7 @@ using Application.Features.Announcements.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Domain.Core;
 using Domain.Enums;
 using Domain.Models;
@@ -33,6 +34,7 @@ public sealed class UpdateAnnouncement
         IAnnouncementsRepository announcementsRepository,
         IAnnouncementsReadModel announcementsReadModel,
         ITenantContext tenantContext,
+        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<AnnouncementDetailsDto>>
     {
@@ -41,6 +43,7 @@ public sealed class UpdateAnnouncement
             CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
+            var currentUserId = currentUserAccessor.GetUserId();
 
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<AnnouncementDetailsDto>.Failure(
@@ -56,6 +59,11 @@ public sealed class UpdateAnnouncement
                 return Result<AnnouncementDetailsDto>.Failure(
                     "Announcement not found.",
                     HttpStatusCode.NotFound);
+            if (!string.Equals(announcement.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                return Result<AnnouncementDetailsDto>.Failure(
+                    "You can update only your own announcement.",
+                    HttpStatusCode.Forbidden);
+
 
             if (request.Audiences is not null && request.Audiences.Count == 0)
                 return Result<AnnouncementDetailsDto>.Failure(

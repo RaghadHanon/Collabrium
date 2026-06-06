@@ -10,6 +10,5 @@ public interface IRoadmapAiDraftService
         string goal,
         int topicsCount,
         int subTopicsPerTopic,
-        int resourcesPerSubTopic,
         CancellationToken cancellationToken = default);
 }

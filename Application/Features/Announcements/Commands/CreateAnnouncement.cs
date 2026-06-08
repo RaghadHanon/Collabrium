@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Announcements.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -31,6 +32,7 @@ public sealed class CreateAnnouncement
         IAnnouncementsReadModel announcementsReadModel,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
+        IMediator mediator,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<AnnouncementDetailsDto>>
     {
@@ -96,15 +98,26 @@ public sealed class CreateAnnouncement
             }
 
             var dto = await announcementsReadModel.GetDetailsByIdAsync(
-                tenantId,
-                announcement.Id,
-                cancellationToken);
+                 tenantId,
+                 announcement.Id,
+                 cancellationToken);
 
-            return dto is null
-                ? Result<AnnouncementDetailsDto>.Failure(
+            if (dto is null)
+            {
+                return Result<AnnouncementDetailsDto>.Failure(
                     "Announcement created but could not be loaded.",
-                    HttpStatusCode.InternalServerError)
-                : Result<AnnouncementDetailsDto>.Success(dto, HttpStatusCode.Created);
+                    HttpStatusCode.InternalServerError);
+            }
+
+            await mediator.Publish(new AnnouncementCreatedEvent(
+                TenantId: tenantId,
+                AnnouncementId: dto.Id,
+                Title: dto.Title,
+                CreatedByUserId: currentUserId,
+                Audiences: dto.Audiences
+            ), cancellationToken);
+
+            return Result<AnnouncementDetailsDto>.Success(dto, HttpStatusCode.Created);
         }
 
         private static AnnouncementAudience CreateAudience(

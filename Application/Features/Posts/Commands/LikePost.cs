@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Posts.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -21,6 +22,8 @@ namespace Application.Features.Posts.Commands
             IPostsRepository postsRepository,
             IPostsReadModel postsReadModel,
             ITenantContext tenantContext,
+            IUsersReadModel usersReadModel,
+             IMediator mediator,
             ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<PostDto>>
@@ -40,6 +43,8 @@ namespace Application.Features.Posts.Commands
                     return Result<PostDto>.Failure("Post not found.", HttpStatusCode.NotFound);
 
                 var alreadyLiked = await postsRepository.HasUserLikedAsync(request.PostId, currentUserId, cancellationToken);
+                var shouldNotify = false;
+
                 if (!alreadyLiked)
                 {
                     await unitOfWork.ExecuteInTransactionAsync(async ct =>
@@ -48,10 +53,30 @@ namespace Application.Features.Posts.Commands
                         await postsRepository.AddLikeAsync(like, ct);
                         await unitOfWork.SaveChangesAsync(ct);
                     }, cancellationToken);
+
+                    shouldNotify = true;
                 }
 
                 var dto = await postsReadModel.GetByIdAsync(tenantId, request.PostId, currentUserId, cancellationToken);
+                if (dto is not null && shouldNotify)
+                {
+                    var likedByUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                        currentUserId,
+                        cancellationToken);
 
+                    if (likedByUser is not null &&
+                        dto.CreatedByUser.Id != currentUserId)
+                    {
+                        await mediator.Publish(new PostLikedEvent(
+                            TenantId: tenantId,
+                            PostId: dto.Id,
+                            PostTitle: dto.Title,
+                            PostOwnerUserId: dto.CreatedByUser.Id,
+                            LikedByUserId: currentUserId,
+                            LikedByFullName: likedByUser.FullName
+                        ), cancellationToken);
+                    }
+                }
                 return dto is null
                     ? Result<PostDto>.Failure("Post liked but could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<PostDto>.Success(dto, HttpStatusCode.OK);

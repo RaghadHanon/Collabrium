@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Articles.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -22,6 +23,8 @@ namespace Application.Features.Articles.Commands
            IArticleCommentsRepository commentsRepository,
            IArticleCommentsReadModel commentsReadModel,
            ITenantContext tenantContext,
+           IUsersReadModel usersReadModel,
+           IMediator mediator,
            ICurrentUserAccessor currentUserAccessor,
            IUnitOfWork unitOfWork)
            : IRequestHandler<Command, Result<ArticleCommentDto>>
@@ -50,7 +53,22 @@ namespace Application.Features.Articles.Commands
                       request.ArticleId,
                       comment.Id,
                       cancellationToken);
+                var commenter = await usersReadModel.GetUserSnapshotByIdAsync(
+                    userId,
+                    cancellationToken);
 
+                if (commenter is not null && article.CreatedByUserId != userId)
+                {
+                    await mediator.Publish(new ArticleCommentAddedEvent(
+                        TenantId: tenantId,
+                        ArticleId: article.Id,
+                        ArticleTitle: article.Title,
+                        ArticleOwnerUserId: article.CreatedByUserId,
+                        CommentId: comment.Id,
+                        CommenterUserId: userId,
+                        CommenterFullName: commenter.FullName
+                    ), cancellationToken);
+                }
                 return dto is null
                     ? Result<ArticleCommentDto>.Failure("Article comment added but could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<ArticleCommentDto>.Success(dto, HttpStatusCode.OK);

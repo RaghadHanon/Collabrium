@@ -85,6 +85,27 @@ public sealed class TeamsReadModel : ITeamsReadModel
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
+    public async Task<List<string>> GetTeamMemberIdsAsync(
+    string tenantId,
+    string teamId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(teamId))
+            return new List<string>();
+
+        tenantId = tenantId.Trim();
+        teamId = teamId.Trim();
+
+        return await _dbContext.TeamMembers
+            .AsNoTracking()
+            .Where(tm =>
+                tm.Team.TenantId == tenantId &&
+                tm.TeamId == teamId)
+            .Select(tm => tm.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task<PagedList<TeamDto, DateTime?>> GetUserTeamsAsync(
       string userId,

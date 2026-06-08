@@ -24,7 +24,7 @@ public sealed class CourseAssignedNotificationHandler(
             triggeredByUserId: notification.AssignerUserId,
             entityType: "Course",
             entityId: notification.CourseId,
-            actionUrl: $"/dashboard/courses/{notification.CourseId}",
+            actionUrl: $"learning-hub/courses/{notification.CourseId}",
             cancellationToken: ct);
     }
 }

@@ -261,4 +261,38 @@ public class UsersReadModel : IUsersReadModel
         query = query.Where(u => !blockedJobTitles.Contains(u.JobTitle));
         return query;
     }
+    public async Task<List<string>> GetTenantUserIdsAsync(
+    string tenantId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return new();
+
+        var tId = tenantId.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.TenantId == tId)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<string>> GetUserIdsByRoleAsync(
+        string tenantId,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(roleName))
+            return new();
+
+        var tId = tenantId.Trim();
+        var role = roleName.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.TenantId == tId && u.JobTitle == role)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
 }

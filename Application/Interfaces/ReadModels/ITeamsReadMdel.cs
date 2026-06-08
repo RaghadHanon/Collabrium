@@ -25,5 +25,9 @@ public interface ITeamsReadModel
       string tenantId,
       string userId,
       CancellationToken cancellationToken = default);
+    Task<List<string>> GetTeamMemberIdsAsync(
+    string tenantId,
+    string teamId,
+    CancellationToken cancellationToken = default);
 
 }

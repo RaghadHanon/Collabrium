@@ -11,7 +11,7 @@ namespace Application.Features.Posts.Queries
 {
     public sealed class GetPosts
     {
-        public sealed class Query : IRequest<Result<PagedList<PostDto, DateTime?>>>
+        public sealed class Query : IRequest<Result<PagedList<PostDto, PostsCursorDto?>>>
         {
             public string? Search { get; set; }
             public string? CreatedByUserId { get; set; }
@@ -32,7 +32,7 @@ namespace Application.Features.Posts.Queries
             public DateTime? UpdatedBefore { get; set; }
 
             public int PageSize { get; set; } = 10;
-            public DateTime? Cursor { get; set; }
+            public PostsCursorDto? Cursor { get; set; }
         }
 
         public sealed class Handler(
@@ -40,16 +40,16 @@ namespace Application.Features.Posts.Queries
             ITenantContext tenantContext,
             IMapper mapper,
             ICurrentUserAccessor currentUserAccessor)
-            : IRequestHandler<Query, Result<PagedList<PostDto, DateTime?>>>
+            : IRequestHandler<Query, Result<PagedList<PostDto, PostsCursorDto?>>>
         {
-            public async Task<Result<PagedList<PostDto, DateTime?>>> Handle(
+            public async Task<Result<PagedList<PostDto, PostsCursorDto?>>> Handle(
                 Query request,
                 CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
 
                 if (string.IsNullOrWhiteSpace(tenantId))
-                    return Result<PagedList<PostDto, DateTime?>>.Failure(
+                    return Result<PagedList<PostDto, PostsCursorDto?>>.Failure(
                         "Tenant not found.",
                         HttpStatusCode.NotFound);
 
@@ -58,9 +58,13 @@ namespace Application.Features.Posts.Queries
                 parameters.TenantId = tenantId;
                 parameters.CurrentUserId = currentUserAccessor.GetUserId();
 
-                var result = await postsReadModel.GetPostsAsync(parameters, cancellationToken);
+                var result = await postsReadModel.GetPostsAsync(
+                    parameters,
+                    cancellationToken);
 
-                return Result<PagedList<PostDto, DateTime?>>.Success(result, HttpStatusCode.OK);
+                return Result<PagedList<PostDto, PostsCursorDto?>>.Success(
+                    result,
+                    HttpStatusCode.OK);
             }
         }
     }

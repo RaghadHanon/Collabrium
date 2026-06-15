@@ -81,8 +81,6 @@ public sealed class CreateAnnouncement
                     announcement.SetAudiences(audiences);
 
                     await announcementsRepository.AddAsync(announcement, ct);
-
-                    await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
             }
             catch (Exception ex)
@@ -98,9 +96,9 @@ public sealed class CreateAnnouncement
             }
 
             var dto = await announcementsReadModel.GetDetailsByIdAsync(
-                 tenantId,
-                 announcement.Id,
-                 cancellationToken);
+                tenantId,
+                announcement.Id,
+                cancellationToken);
 
             if (dto is null)
             {
@@ -109,20 +107,28 @@ public sealed class CreateAnnouncement
                     HttpStatusCode.InternalServerError);
             }
 
-            await mediator.Publish(new AnnouncementCreatedEvent(
-                TenantId: tenantId,
-                AnnouncementId: dto.Id,
-                Title: dto.Title,
-                CreatedByUserId: currentUserId,
-                Audiences: dto.Audiences
-            ), cancellationToken);
+            var now = DateTime.UtcNow;
+
+            if (announcement.IsVisibleNow(now) && !announcement.NotificationSent)
+            {
+                await mediator.Publish(new AnnouncementCreatedEvent(
+                    TenantId: tenantId,
+                    AnnouncementId: announcement.Id
+                ), cancellationToken);
+
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    announcement.MarkNotificationSent(now);
+                    await announcementsRepository.UpdateAsync(announcement, ct);
+                }, cancellationToken);
+            }
 
             return Result<AnnouncementDetailsDto>.Success(dto, HttpStatusCode.Created);
         }
 
         private static AnnouncementAudience CreateAudience(
-     string announcementId,
-     AnnouncementAudienceInputDto input)
+            string announcementId,
+            AnnouncementAudienceInputDto input)
         {
             static string? Clean(string? value)
                 => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -138,9 +144,9 @@ public sealed class CreateAnnouncement
                         : throw new DomainException("TeamId is required for team audience."),
 
                 AnnouncementAudienceType.Role =>
-                     input.RoleName.HasValue
-                         ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
-                         : throw new DomainException("RoleName is required for role audience."),
+                    input.RoleName.HasValue
+                        ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
+                        : throw new DomainException("RoleName is required for role audience."),
 
                 _ => throw new DomainException("Invalid announcement audience type.")
             };

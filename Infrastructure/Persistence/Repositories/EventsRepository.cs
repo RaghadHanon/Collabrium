@@ -13,9 +13,7 @@ public sealed class EventsRepository : IEventsRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public async Task AddAsync(
-        Event ev,
-        CancellationToken ct = default)
+    public async Task AddAsync(Event ev, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(ev);
 
@@ -24,9 +22,7 @@ public sealed class EventsRepository : IEventsRepository
         await _dbContext.Events.AddAsync(entity, ct);
     }
 
-    public async Task UpdateAsync(
-    Event ev,
-    CancellationToken ct = default)
+    public async Task UpdateAsync(Event ev, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(ev);
 
@@ -49,9 +45,7 @@ public sealed class EventsRepository : IEventsRepository
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId))
-        {
             return null;
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
@@ -76,14 +70,13 @@ public sealed class EventsRepository : IEventsRepository
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId))
-        {
             return Task.FromResult(false);
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
 
         return _dbContext.Events
+            .AsNoTracking()
             .AnyAsync(e =>
                 e.TenantId == tId &&
                 e.Id == eId,
@@ -97,9 +90,7 @@ public sealed class EventsRepository : IEventsRepository
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId))
-        {
             return false;
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
@@ -122,15 +113,14 @@ public sealed class EventsRepository : IEventsRepository
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId) ||
             string.IsNullOrWhiteSpace(userId))
-        {
             return Task.FromResult(false);
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
         var uId = userId.Trim();
 
         return _dbContext.EventAttendances
+            .AsNoTracking()
             .AnyAsync(a =>
                 a.TenantId == tId &&
                 a.EventId == eId &&
@@ -146,8 +136,7 @@ public sealed class EventsRepository : IEventsRepository
 
         var entity = EventAttendanceMapper.ToEntity(attendance);
 
-        await _dbContext.EventAttendances
-            .AddAsync(entity, ct);
+        await _dbContext.EventAttendances.AddAsync(entity, ct);
     }
 
     public async Task<bool> RemoveAttendanceAsync(
@@ -159,9 +148,7 @@ public sealed class EventsRepository : IEventsRepository
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId) ||
             string.IsNullOrWhiteSpace(userId))
-        {
             return false;
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
@@ -184,17 +171,58 @@ public sealed class EventsRepository : IEventsRepository
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(eventId))
-        {
             return Task.FromResult(0);
-        }
 
         var tId = tenantId.Trim();
         var eId = eventId.Trim();
 
         return _dbContext.EventAttendances
+            .AsNoTracking()
             .CountAsync(a =>
                 a.TenantId == tId &&
                 a.EventId == eId,
                 ct);
+    }
+
+    public async Task<List<Event>> GetEventsDueForReminderAsync(
+        DateTime now,
+        DateTime remindBefore,
+        CancellationToken ct = default)
+    {
+        var entities = await _dbContext.Events
+            .AsNoTracking()
+            .Include(e => e.Attendances)
+            .Where(e =>
+                !e.IsCancelled &&
+                !e.ReminderSent &&
+                e.StartAt > now &&
+                e.StartAt <= remindBefore)
+            .ToListAsync(ct);
+
+        return entities
+            .Select(EventMapper.ToDomain)
+            .ToList();
+    }
+
+    public async Task<List<string>> GetAttendeeUserIdsAsync(
+        string tenantId,
+        string eventId,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(eventId))
+            return new();
+
+        var tId = tenantId.Trim();
+        var eId = eventId.Trim();
+
+        return await _dbContext.EventAttendances
+            .AsNoTracking()
+            .Where(a =>
+                a.TenantId == tId &&
+                a.EventId == eId)
+            .Select(a => a.UserId)
+            .Distinct()
+            .ToListAsync(ct);
     }
 }

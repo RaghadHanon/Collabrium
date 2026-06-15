@@ -27,7 +27,11 @@ public sealed class Event : Entity
 
     public bool IsCancelled { get; private set; }
 
+    public bool ReminderSent { get; private set; }
+    public DateTime? ReminderSentAt { get; private set; }
+
     public IReadOnlyCollection<EventAttendance> Attendances => _attendances.AsReadOnly();
+
     private Event() { }
 
     public Event(
@@ -46,15 +50,15 @@ public sealed class Event : Entity
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
 
-        Description = string.IsNullOrWhiteSpace(description)
-            ? null
-            : description.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
 
         SetSchedule(startAt, endAt);
         SetEventPlace(isOnline, location, meetingUrl);
         SetMaxAttendees(maxAttendees);
 
         IsCancelled = false;
+        ReminderSent = false;
+        ReminderSentAt = null;
 
         Touch();
     }
@@ -76,16 +80,17 @@ public sealed class Event : Entity
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
 
-        Description = string.IsNullOrWhiteSpace(description)
-            ? null
-            : description.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
 
         SetSchedule(startAt, endAt);
         SetEventPlace(isOnline, location, meetingUrl);
         SetMaxAttendees(maxAttendees);
 
         IsCancelled = false;
+        ReminderSent = false;
+        ReminderSentAt = null;
     }
+
     public static Event Rehydrate(
         string id,
         DateTime createdAt,
@@ -102,6 +107,8 @@ public sealed class Event : Entity
         StoredImage? bannerImage,
         string createdByUserId,
         bool isCancelled,
+        bool reminderSent,
+        DateTime? reminderSentAt,
         IEnumerable<EventAttendance>? attendances)
     {
         var ev = new Event(
@@ -120,6 +127,8 @@ public sealed class Event : Entity
         ev.SetTimestamps(createdAt, updatedAt);
         ev.BannerImage = bannerImage;
         ev.IsCancelled = isCancelled;
+        ev.ReminderSent = reminderSent;
+        ev.ReminderSentAt = reminderSentAt;
 
         ev._attendances.Clear();
 
@@ -131,6 +140,7 @@ public sealed class Event : Entity
 
         return ev;
     }
+
     public void UpdateDetails(
         string title,
         string? description,
@@ -144,9 +154,7 @@ public sealed class Event : Entity
         Guard.Against(IsCancelled, "Cancelled event cannot be updated.");
 
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
-        Description = string.IsNullOrWhiteSpace(description)
-            ? null
-            : description.Trim();
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
 
         SetSchedule(startAt, endAt);
         SetEventPlace(isOnline, location, meetingUrl);
@@ -154,6 +162,7 @@ public sealed class Event : Entity
 
         Touch();
     }
+
     public void Cancel()
     {
         if (IsCancelled)
@@ -162,30 +171,35 @@ public sealed class Event : Entity
         IsCancelled = true;
         Touch();
     }
+
+    public void MarkReminderSent(DateTime sentAt)
+    {
+        if (ReminderSent)
+            return;
+
+        ReminderSent = true;
+        ReminderSentAt = sentAt;
+        Touch();
+    }
+
     public void SetBannerImage(string url, string publicId)
     {
         BannerImage = StoredImage.Create(url, publicId);
         Touch();
     }
+
     public void RemoveBannerImage()
     {
         BannerImage = null;
         Touch();
     }
 
-    public bool IsFinished(DateTime now)
-    {
-        return EndAt <= now;
-    }
-    public bool IsOngoing(DateTime now)
-    {
-        return StartAt <= now && EndAt > now;
-    }
+    public bool IsFinished(DateTime now) => EndAt <= now;
 
-    public bool IsUpcoming(DateTime now)
-    {
-        return StartAt > now;
-    }
+    public bool IsOngoing(DateTime now) => StartAt <= now && EndAt > now;
+
+    public bool IsUpcoming(DateTime now) => StartAt > now;
+
     public string GetStatus(DateTime now)
     {
         if (IsCancelled)
@@ -199,10 +213,8 @@ public sealed class Event : Entity
 
         return "Finished";
     }
-    public int AttendeesCount()
-    {
-        return _attendances.Count;
-    }
+
+    public int AttendeesCount() => _attendances.Count;
 
     public int? AvailableSeats()
     {
@@ -211,6 +223,7 @@ public sealed class Event : Entity
 
         return Math.Max(MaxAttendees.Value - AttendeesCount(), 0);
     }
+
     private void SetSchedule(DateTime startAt, DateTime endAt)
     {
         Guard.Against(endAt <= startAt, "EndAt must be after StartAt.");
@@ -218,6 +231,7 @@ public sealed class Event : Entity
         StartAt = startAt;
         EndAt = endAt;
     }
+
     private void SetEventPlace(bool isOnline, string? location, string? meetingUrl)
     {
         IsOnline = isOnline;
@@ -240,6 +254,4 @@ public sealed class Event : Entity
 
         MaxAttendees = maxAttendees;
     }
-
-
 }

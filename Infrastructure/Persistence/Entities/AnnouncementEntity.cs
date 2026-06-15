@@ -14,6 +14,9 @@ public sealed class AnnouncementEntity : DbEntity
     public DateTime PublishAt { get; set; }
     public DateTime? ExpiresAt { get; set; }
 
+    public bool NotificationSent { get; set; }
+    public DateTime? NotificationSentAt { get; set; }
+
     public string CreatedByUserId { get; set; } = null!;
     public ApplicationUserEntity CreatedByUser { get; set; } = null!;
 

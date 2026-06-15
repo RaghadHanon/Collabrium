@@ -25,7 +25,7 @@ public sealed class PostCommentAddedNotificationHandler(
             triggeredByUserId: notification.CommenterUserId,
             entityType: "Post",
             entityId: notification.PostId,
-            actionUrl: $"/community/posts/{notification.PostId}#comments",
+            actionUrl: $"/community-hub/feed/{notification.PostId}",
             cancellationToken: ct);
     }
 }

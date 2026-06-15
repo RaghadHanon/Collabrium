@@ -7,21 +7,31 @@ using MediatR;
 namespace Application.EventsHandlers;
 public sealed class AnnouncementCreatedNotificationHandler(
     INotificationCreationService notificationCreationService,
+    IAnnouncementsReadModel announcementsReadModel,
     IUsersReadModel usersReadModel,
     ITeamsReadModel teamsReadModel
 ) : INotificationHandler<AnnouncementCreatedEvent>
 {
     public async Task Handle(AnnouncementCreatedEvent notification, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(notification.TenantId))
+        if (string.IsNullOrWhiteSpace(notification.TenantId) ||
+            string.IsNullOrWhiteSpace(notification.AnnouncementId))
             return;
 
-        if (notification.Audiences.Count == 0)
+        var announcement = await announcementsReadModel.GetDetailsByIdAsync(
+            notification.TenantId,
+            notification.AnnouncementId,
+            ct);
+
+        if (announcement is null)
+            return;
+
+        if (announcement.Audiences.Count == 0)
             return;
 
         var recipientUserIds = new HashSet<string>();
 
-        foreach (var audience in notification.Audiences)
+        foreach (var audience in announcement.Audiences)
         {
             if (audience.Type == AnnouncementAudienceType.Everyone)
             {
@@ -56,7 +66,7 @@ public sealed class AnnouncementCreatedNotificationHandler(
             }
         }
 
-        recipientUserIds.Remove(notification.CreatedByUserId);
+        recipientUserIds.Remove(announcement.CreatedByUser.Id);
 
         if (recipientUserIds.Count == 0)
             return;
@@ -66,10 +76,10 @@ public sealed class AnnouncementCreatedNotificationHandler(
             recipientUserIds: recipientUserIds,
             type: NotificationType.AnnouncementCreated,
             title: "New Announcement",
-            message: $"New announcement: {notification.Title}",
-            triggeredByUserId: notification.CreatedByUserId,
+            message: $"New announcement: {announcement.Title}",
+            triggeredByUserId: announcement.CreatedByUser.Id,
             entityType: "Announcement",
-            entityId: notification.AnnouncementId,
+            entityId: announcement.Id,
             actionUrl: "/community-hub/announcements",
             cancellationToken: ct);
     }

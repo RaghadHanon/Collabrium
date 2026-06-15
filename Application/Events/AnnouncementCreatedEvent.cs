@@ -1,11 +1,7 @@
-﻿using Application.Features.Announcements.DTOs;
-using MediatR;
+﻿using MediatR;
 
 namespace Application.Events;
 public sealed record AnnouncementCreatedEvent(
     string TenantId,
-    string AnnouncementId,
-    string Title,
-    string CreatedByUserId,
-    IReadOnlyList<AnnouncementAudienceDto> Audiences
+    string AnnouncementId
 ) : INotification;

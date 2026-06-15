@@ -25,4 +25,7 @@ public interface IAnnouncementsRepository
         string tenantId,
         string announcementId,
         CancellationToken cancellationToken = default);
+    Task<List<Announcement>> GetAnnouncementsDueForNotificationAsync(
+      DateTime now,
+      CancellationToken ct = default);
 }

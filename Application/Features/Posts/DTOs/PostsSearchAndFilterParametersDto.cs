@@ -3,7 +3,8 @@ using Domain.Enums;
 
 namespace Application.Features.Posts.DTOs;
 
-public sealed class PostsSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
+public sealed class PostsSearchAndFilterParametersDto
+    : QueryParametersDto<PostsCursorDto?>
 {
     public string? TenantId { get; set; }
 

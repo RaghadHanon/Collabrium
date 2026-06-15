@@ -7,6 +7,7 @@ using Application.Interfaces.Reports;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Infrastructure.AI;
+using Infrastructure.BackgroundServices;
 using Infrastructure.Email;
 using Infrastructure.Email.Templates;
 using Infrastructure.FilesStorage;
@@ -74,7 +75,8 @@ public static class DependencyInjection
 
         AddAiServices(services);
         AddSignalRServices(services);
-
+        services.AddHostedService<EventReminderBackgroundService>();
+        services.AddHostedService<AnnouncementNotificationBackgroundService>();
         return services;
     }
 

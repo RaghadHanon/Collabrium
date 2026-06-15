@@ -132,4 +132,21 @@ public sealed class AnnouncementsRepository
 
         return true;
     }
+    public async Task<List<Announcement>> GetAnnouncementsDueForNotificationAsync(
+    DateTime now,
+    CancellationToken ct = default)
+    {
+        var entities = await _dbContext.Announcements
+            .AsNoTracking()
+            .Include(a => a.Audiences)
+            .Where(a =>
+                !a.NotificationSent &&
+                a.PublishAt <= now &&
+                (a.ExpiresAt == null || a.ExpiresAt > now))
+            .ToListAsync(ct);
+
+        return entities
+            .Select(AnnouncementMapper.ToDomain)
+            .ToList();
+    }
 }

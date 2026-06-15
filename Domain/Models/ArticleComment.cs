@@ -19,7 +19,7 @@ public sealed class ArticleComment : Entity
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
         CreatedByUserId = Guard.NotNullOrWhiteSpace(createdByUserId, nameof(createdByUserId)).Trim();
 
-        Touch();
+
     }
 
     public ArticleComment(

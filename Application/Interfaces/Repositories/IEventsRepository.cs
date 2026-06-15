@@ -12,12 +12,12 @@ public interface IEventsRepository
         string eventId,
         CancellationToken ct = default);
 
-    Task<bool> RemoveAsync(
+    Task<bool> ExistsAsync(
         string tenantId,
         string eventId,
         CancellationToken ct = default);
 
-    Task<bool> ExistsAsync(
+    Task<bool> RemoveAsync(
         string tenantId,
         string eventId,
         CancellationToken ct = default);
@@ -39,6 +39,16 @@ public interface IEventsRepository
         CancellationToken ct = default);
 
     Task<int> GetAttendeesCountAsync(
+        string tenantId,
+        string eventId,
+        CancellationToken ct = default);
+
+    Task<List<Event>> GetEventsDueForReminderAsync(
+        DateTime now,
+        DateTime remindBefore,
+        CancellationToken ct = default);
+
+    Task<List<string>> GetAttendeeUserIdsAsync(
         string tenantId,
         string eventId,
         CancellationToken ct = default);

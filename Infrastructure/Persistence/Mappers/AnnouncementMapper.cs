@@ -17,6 +17,8 @@ public static class AnnouncementMapper
             Priority = domain.Priority,
             PublishAt = domain.PublishAt,
             ExpiresAt = domain.ExpiresAt,
+            NotificationSent = domain.NotificationSent,
+            NotificationSentAt = domain.NotificationSentAt,
             CreatedByUserId = domain.CreatedByUserId,
             CreatedAt = domain.CreatedAt,
             UpdatedAt = domain.UpdatedAt,
@@ -41,6 +43,8 @@ public static class AnnouncementMapper
             publishAt: entity.PublishAt,
             expiresAt: entity.ExpiresAt,
             createdByUserId: entity.CreatedByUserId,
+            notificationSent: entity.NotificationSent,
+            notificationSentAt: entity.NotificationSentAt,
             audiences: entity.Audiences.Select(AnnouncementAudienceMapper.ToDomain));
     }
 
@@ -54,6 +58,8 @@ public static class AnnouncementMapper
         entity.Priority = domain.Priority;
         entity.PublishAt = domain.PublishAt;
         entity.ExpiresAt = domain.ExpiresAt;
+        entity.NotificationSent = domain.NotificationSent;
+        entity.NotificationSentAt = domain.NotificationSentAt;
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
     }
 }

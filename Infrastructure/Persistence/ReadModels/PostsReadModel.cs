@@ -19,9 +19,9 @@ public sealed class PostsReadModel : IPostsReadModel
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public async Task<PagedList<PostDto, DateTime?>> GetPostsAsync(
-        PostsSearchAndFilterParametersDto parameters,
-        CancellationToken ct = default)
+    public async Task<PagedList<PostDto, PostsCursorDto?>> GetPostsAsync(
+    PostsSearchAndFilterParametersDto parameters,
+    CancellationToken ct = default)
     {
         parameters ??= new PostsSearchAndFilterParametersDto();
 
@@ -31,8 +31,20 @@ public sealed class PostsReadModel : IPostsReadModel
 
         query = ApplyFilters(query, parameters);
 
-        if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
+        if (parameters.Cursor is not null)
+        {
+            var c = parameters.Cursor;
+
+            query = query.Where(x =>
+                x.IsPinned.CompareTo(c.IsPinned) < 0 ||
+
+                x.IsPinned == c.IsPinned &&
+                (x.Likes.Count + x.Comments.Count) < c.EngagementScore ||
+
+                x.IsPinned == c.IsPinned &&
+                (x.Likes.Count + x.Comments.Count) == c.EngagementScore &&
+                x.CreatedAt < c.CreatedAt);
+        }
 
         var currentUserId = parameters.CurrentUserId?.Trim();
 
@@ -46,21 +58,28 @@ public sealed class PostsReadModel : IPostsReadModel
             .Take(pageSize + 1)
             .ToListAsync(ct);
 
-        DateTime? nextCursor = null;
+        PostsCursorDto? nextCursor = null;
 
         if (items.Count > pageSize)
         {
-            nextCursor = items[^1].CreatedAt;
             items.RemoveAt(items.Count - 1);
+
+            var last = items[^1];
+
+            nextCursor = new PostsCursorDto
+            {
+                IsPinned = last.IsPinned,
+                EngagementScore = last.LikesCount + last.CommentsCount,
+                CreatedAt = last.CreatedAt
+            };
         }
 
-        return new PagedList<PostDto, DateTime?>
+        return new PagedList<PostDto, PostsCursorDto?>
         {
             Items = items,
             NextCursor = nextCursor
         };
     }
-
     public Task<PostDto?> GetByIdAsync(
         string tenantId,
         string postId,

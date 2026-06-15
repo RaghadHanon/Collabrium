@@ -25,7 +25,7 @@ public sealed class PostLikedNotificationHandler(
             triggeredByUserId: notification.LikedByUserId,
             entityType: "Post",
             entityId: notification.PostId,
-            actionUrl: $"/community/posts/{notification.PostId}",
+            actionUrl: $"/community-hub/feed/{notification.PostId}",
             cancellationToken: ct);
     }
 }

@@ -28,8 +28,8 @@ public sealed class PostsController : ApiBaseController
     /// <response code="404">If tenant not found.</response>
     [Authorize(Policy = Policies.Posts_Read)]
     [HttpGet]
-    public async Task<ActionResult<PagedList<PostDto, DateTime?>>> GetPosts(
-        [FromQuery] GetPostsRequest request)
+    public async Task<ActionResult<PagedList<PostDto, PostsCursorDto?>>> GetPosts(
+    [FromQuery] GetPostsRequest request)
     {
         var query = Mapper.Map<GetPosts.Query>(request);
 

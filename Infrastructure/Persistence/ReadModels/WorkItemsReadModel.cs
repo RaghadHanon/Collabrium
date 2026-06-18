@@ -247,7 +247,9 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             itemsByParent.TryGetValue(us.Id, out var children);
             children ??= new List<WorkItemListItemDto>();
 
-            var columns = children.Count != 0 ? _boardStatuses
+            // Filter out the "ReadyForRelease" status from the board statuses, as it is not relevant for board view.
+            var filteredStatuses = _boardStatuses.Where(s => s != WorkItemStatus.ReadyForRelease).ToList();
+            var columns = children.Count != 0 ? filteredStatuses
                 .Select(status =>
                 {
                     var items = children
@@ -278,9 +280,10 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         List<WorkItemListItemDto> items)
     {
 
+        var filteredStatuses = _boardStatuses.Where(s => s != WorkItemStatus.ReadyForRelease).ToList();
         return new OrphanBoardGroupDto
         {
-            Columns = items.Count != 0 ? _boardStatuses.Select(status => new BoardColumnDto
+            Columns = items.Count != 0 ? filteredStatuses.Select(status => new BoardColumnDto
             {
                 Status = status,
                 Title = Regex.Replace(status.ToString(), "(\\B[A-Z])", " $1"),

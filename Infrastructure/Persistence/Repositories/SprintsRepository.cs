@@ -11,210 +11,412 @@ namespace Infrastructure.Persistence.Repositories;
 
 public class SprintsRepository : ISprintsRepository
 {
+    private const int DefaultPageSize = 10;
+    private const int MaxPageSize = 50;
+
     private readonly AppDbContext _dbContext;
 
     public SprintsRepository(AppDbContext dbContext)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContext = dbContext
+            ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public void Add(Sprint sprint, CancellationToken cancellationToken = default)
+    public void Add(
+        Sprint sprint,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sprint);
 
-        _dbContext.Sprints.Add(SprintMapper.ToEntity(sprint));
+        _dbContext.Sprints.Add(
+            SprintMapper.ToEntity(sprint));
     }
 
-    public async Task UpdateAsync(Sprint sprint, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(
+        Sprint sprint,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(sprint);
 
         var entity = await _dbContext.Sprints
-            .FirstOrDefaultAsync(s => s.Id == sprint.Id && s.TenantId == sprint.TenantId, cancellationToken);
+            .FirstOrDefaultAsync(
+                current =>
+                    current.Id == sprint.Id &&
+                    current.TenantId == sprint.TenantId &&
+                    current.ProjectId == sprint.ProjectId,
+                cancellationToken);
 
         if (entity is null)
-            throw new InvalidOperationException($"Sprint '{sprint.Id}' was not found.");
+        {
+            throw new InvalidOperationException(
+                $"Sprint '{sprint.Id}' was not found.");
+        }
 
-        SprintMapper.UpdateEntity(sprint, entity);
+        SprintMapper.UpdateEntity(
+            sprint,
+            entity);
     }
 
-    public async Task<bool> RemoveAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<bool> RemoveAsync(
+        string tenantId,
+        string sprintId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return false;
+        }
 
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
 
         var entity = await _dbContext.Sprints
-            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId, cancellationToken);
+            .FirstOrDefaultAsync(
+                sprint =>
+                    sprint.TenantId == tId &&
+                    sprint.Id == sId,
+                cancellationToken);
 
-        if (entity is null) return false;
+        if (entity is null)
+            return false;
 
         _dbContext.Sprints.Remove(entity);
+
         return true;
     }
 
-    public async Task<bool> IsExistsAsync(string tenantId, string sprintId, string? projectId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> IsExistsAsync(
+        string tenantId,
+        string sprintId,
+        string? projectId = null,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return false;
+        }
 
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
+        var pId = projectId?.Trim();
 
-        return await _dbContext.Sprints
+        var query = _dbContext.Sprints
             .AsNoTracking()
-            .AnyAsync(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId, cancellationToken);
+            .Where(sprint =>
+                sprint.TenantId == tId &&
+                sprint.Id == sId);
+
+        if (!string.IsNullOrWhiteSpace(pId))
+        {
+            query = query.Where(sprint =>
+                sprint.ProjectId == pId);
+        }
+
+        return await query.AnyAsync(
+            cancellationToken);
     }
 
-    public async Task<Sprint?> GetByIdAsync(string tenantId, string? sprintId, string? projectId = null, CancellationToken cancellationToken = default)
+    public async Task<Sprint?> GetByIdAsync(
+        string tenantId,
+        string? sprintId,
+        string? projectId = null,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return null;
+        }
 
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
+        var pId = projectId?.Trim();
 
-        var entity = await _dbContext.Sprints
+        var query = _dbContext.Sprints
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId, cancellationToken);
+            .Where(sprint =>
+                sprint.TenantId == tId &&
+                sprint.Id == sId);
 
-        return entity is null ? null : SprintMapper.ToDomain(entity);
+        if (!string.IsNullOrWhiteSpace(pId))
+        {
+            query = query.Where(sprint =>
+                sprint.ProjectId == pId);
+        }
+
+        var entity = await query.FirstOrDefaultAsync(
+            cancellationToken);
+
+        return entity is null
+            ? null
+            : SprintMapper.ToDomain(entity);
     }
 
-    public Task<bool> ProjectHasActiveSprintAsync(string tenantId, string projectId, CancellationToken cancellationToken = default)
+    public Task<bool> ProjectHasActiveSprintAsync(
+        string tenantId,
+        string projectId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(projectId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId))
+        {
             return Task.FromResult(false);
+        }
 
         var tId = tenantId.Trim();
         var pId = projectId.Trim();
 
         return _dbContext.Sprints
             .AsNoTracking()
-            .AnyAsync(s => s.TenantId == tId
-                        && s.ProjectId == pId
-                        && s.Status == SprintStatus.Active, cancellationToken);
+            .AnyAsync(
+                sprint =>
+                    sprint.TenantId == tId &&
+                    sprint.ProjectId == pId &&
+                    sprint.Status == SprintStatus.Active,
+                cancellationToken);
     }
 
-    public Task<bool> SprintHasWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public Task<bool> SprintHasWorkItemsAsync(
+        string tenantId,
+        string sprintId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return Task.FromResult(false);
+        }
 
+        var tId = tenantId.Trim();
         var sId = sprintId.Trim();
 
         return _dbContext.WorkItems
             .AsNoTracking()
-            .AnyAsync(w => w.SprintId == sId && tenantId == w.Project.TenantId, cancellationToken);
+            .AnyAsync(
+                workItem =>
+                    workItem.SprintId == sId &&
+                    workItem.Project.TenantId == tId,
+                cancellationToken);
     }
 
-    public async Task<bool> CanSprintBeCompletedAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<bool> CanSprintBeCompletedAsync(
+        string tenantId,
+        string sprintId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return false;
+        }
 
+        var tId = tenantId.Trim();
         var sId = sprintId.Trim();
 
-        return await _dbContext.WorkItems
+        var hasIncompleteWorkItems =
+            await _dbContext.WorkItems
                 .AsNoTracking()
-                .Where(w => w.SprintId == sId && w.Project.TenantId == tenantId)
-                .AnyAsync(w => w.Status != WorkItemStatus.Done);
+                .AnyAsync(
+                    workItem =>
+                        workItem.SprintId == sId &&
+                        workItem.Project.TenantId == tId &&
+                        workItem.Status != WorkItemStatus.Done,
+                    cancellationToken);
+
+        return !hasIncompleteWorkItems;
     }
 
-    public async Task<List<WorkItemEntity>>? GetWorkItemsAsync(string tenantId, string sprintId, CancellationToken cancellationToken = default)
+    public async Task<List<WorkItemEntity>?> GetWorkItemsAsync(
+        string tenantId,
+        string sprintId,
+        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return null;
+        }
 
+        var tId = tenantId.Trim();
         var sId = sprintId.Trim();
 
         return await _dbContext.WorkItems
-                .AsNoTracking()
-                .Where(w => w.SprintId == sId && w.Project.TenantId == tenantId)
-                .ToListAsync(cancellationToken);
+            .AsNoTracking()
+            .Where(workItem =>
+                workItem.SprintId == sId &&
+                workItem.Project.TenantId == tId)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<PagedList<Sprint, DateTime?>> GetPagedAsync(
         SprintsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)
     {
-        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+        ArgumentNullException.ThrowIfNull(parameters);
 
-        var query = _dbContext.Sprints.AsNoTracking();
+        var requestedPageSize =
+            parameters.PageSize <= 0
+                ? DefaultPageSize
+                : parameters.PageSize;
 
-        query = ApplyFilters(query, parameters);
+        var pageSize = Math.Min(
+            requestedPageSize,
+            MaxPageSize);
+
+        var query = _dbContext.Sprints
+            .AsNoTracking()
+            .AsQueryable();
+
+        query = ApplyFilters(
+            query,
+            parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt > parameters.Cursor.Value);
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt > parameters.Cursor.Value);
+        }
 
-        var items = await query
-            .OrderBy(x => x.CreatedAt)
+        var entities = await query
+            .OrderBy(sprint => sprint.CreatedAt)
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
         DateTime? nextCursor = null;
-        var hasMore = items.Count > pageSize;
 
-        if (hasMore)
+        if (entities.Count > pageSize)
         {
-            items.RemoveAt(items.Count - 1);
-            nextCursor = items[^1].CreatedAt;
+            entities.RemoveAt(entities.Count - 1);
+
+            nextCursor = entities.Count > 0
+                ? entities[^1].CreatedAt
+                : null;
         }
 
         return new PagedList<Sprint, DateTime?>
         {
-            Items = items.Select(SprintMapper.ToDomain).ToList(),
+            Items = entities
+                .Select(SprintMapper.ToDomain)
+                .ToList(),
+
             NextCursor = nextCursor
         };
     }
 
-    private static IQueryable<SprintEntity> ApplyFilters(IQueryable<SprintEntity> query, SprintsSearchAndFilterParametersDto p)
+    private static IQueryable<SprintEntity> ApplyFilters(
+        IQueryable<SprintEntity> query,
+        SprintsSearchAndFilterParametersDto parameters)
     {
-        if (!string.IsNullOrWhiteSpace(p.TenantId))
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
         {
-            var tId = p.TenantId.Trim();
-            query = query.Where(x => x.TenantId == tId);
+            var tenantId = parameters.TenantId.Trim();
+
+            query = query.Where(sprint =>
+                sprint.TenantId == tenantId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.ProjectId))
+        if (!string.IsNullOrWhiteSpace(parameters.ProjectId))
         {
-            var prId = p.ProjectId.Trim();
-            query = query.Where(x => x.ProjectId == prId);
+            var projectId = parameters.ProjectId.Trim();
+
+            query = query.Where(sprint =>
+                sprint.ProjectId == projectId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.NameContains))
+        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
         {
-            var term = p.NameContains.Trim();
-            query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && x.Name.Contains(term));
+            var term = parameters.NameContains.Trim();
+
+            query = query.Where(sprint =>
+                sprint.Name != null &&
+                sprint.Name.Contains(term));
         }
 
-        if (!string.IsNullOrWhiteSpace(p.Code))
+        if (!string.IsNullOrWhiteSpace(parameters.Code))
         {
-            query = query.Where(x => x.Code == p.Code);
+            var code = parameters.Code.Trim();
+
+            query = query.Where(sprint =>
+                sprint.Code == code);
         }
 
-        if (p.Status.HasValue)
-            query = query.Where(x => x.Status == p.Status.Value);
+        if (parameters.Status.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.Status == parameters.Status.Value);
+        }
 
-        if (p.StartAfter.HasValue)
-            query = query.Where(x => x.StartDate >= p.StartAfter.Value);
+        if (parameters.StartAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartDate.HasValue &&
+                sprint.StartDate.Value >= parameters.StartAfter.Value);
+        }
 
-        if (p.StartBefore.HasValue)
-            query = query.Where(x => x.StartDate <= p.StartBefore.Value);
+        if (parameters.StartBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartDate.HasValue &&
+                sprint.StartDate.Value <= parameters.StartBefore.Value);
+        }
 
-        if (p.EndAfter.HasValue)
-            query = query.Where(x => x.EndDate >= p.EndAfter.Value);
+        if (parameters.EndAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.EndDate.HasValue &&
+                sprint.EndDate.Value >= parameters.EndAfter.Value);
+        }
 
-        if (p.EndBefore.HasValue)
-            query = query.Where(x => x.EndDate <= p.EndBefore.Value);
+        if (parameters.EndBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.EndDate.HasValue &&
+                sprint.EndDate.Value <= parameters.EndBefore.Value);
+        }
 
-        if (p.CreatedAfter.HasValue)
-            query = query.Where(x => x.CreatedAt >= p.CreatedAfter.Value);
+        if (parameters.StartedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartedAt.HasValue &&
+                sprint.StartedAt.Value >= parameters.StartedAfter.Value);
+        }
 
-        if (p.CreatedBefore.HasValue)
-            query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
+        if (parameters.StartedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartedAt.HasValue &&
+                sprint.StartedAt.Value <= parameters.StartedBefore.Value);
+        }
+
+        if (parameters.CompletedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CompletedAt.HasValue &&
+                sprint.CompletedAt.Value >=
+                    parameters.CompletedAfter.Value);
+        }
+
+        if (parameters.CompletedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CompletedAt.HasValue &&
+                sprint.CompletedAt.Value <=
+                    parameters.CompletedBefore.Value);
+        }
+
+        if (parameters.CreatedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt >= parameters.CreatedAfter.Value);
+        }
+
+        if (parameters.CreatedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt <= parameters.CreatedBefore.Value);
+        }
 
         return query;
     }

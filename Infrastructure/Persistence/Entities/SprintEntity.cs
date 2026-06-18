@@ -9,8 +9,15 @@ public class SprintEntity : DbEntity
     public string Code { get; set; } = null!;
     public string? Goal { get; set; }
     public string? Name { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+
+    // Planned dates
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+
+    // Actual dates
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+
     public SprintStatus Status { get; set; }
 
     public string ProjectId { get; set; } = null!;

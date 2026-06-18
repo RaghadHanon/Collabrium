@@ -331,4 +331,40 @@ public sealed class SprintsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+
+    /// <summary>
+    /// Retrieves the details and progress of a specific sprint, together with all work items assigned to it.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     GET /api/projects/project/{projectId}/sprints/sprint/{sprintId}/work-items
+    ///
+    /// </remarks>
+    /// <param name="projectId">Project identifier.</param>
+    /// <param name="sprintId">Sprint identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>
+    /// The sprint details with epics, orphan work items,
+    /// and user stories with their associated work items.
+    /// </returns>
+    /// <response code="200">Sprint and work items loaded successfully.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have access to the project.</response>
+    /// <response code="404">If the tenant, project, or sprint was not found.</response>
+    [Authorize(Policy = Policies.Sprints_Read)]
+    [HttpGet("sprint/{sprintId}/work-items")]
+    public async Task<ActionResult<SprintWithWorkItemsDto>> GetSprintWithWorkItems(
+        string projectId,
+        string sprintId,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetSprintWithWorkItems.Query
+        {
+            ProjectId = projectId,
+            SprintId = sprintId
+        };
+
+        return HandleResult(await Mediator.Send(query, cancellationToken));
+    }
 }

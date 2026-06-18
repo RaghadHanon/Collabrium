@@ -14,4 +14,9 @@ public interface ISprintsReadModel
     Task<PagedList<SprintDto, DateTime?>> GetSprintsAsync(
         SprintsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
+    Task<SprintWithWorkItemsDto?> GetSprintWithWorkItemsAsync(
+        string tenantId,
+        string projectId,
+        string sprintId,
+        CancellationToken cancellationToken = default);
 }

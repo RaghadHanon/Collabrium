@@ -97,7 +97,7 @@ public class WorkItemsRepository : IWorkItemsRepository
             .AnyAsync(w => w.Project.TenantId == tId && w.Id == wId && w.ProjectId == projectId, cancellationToken);
     }
 
-    public async Task MoveWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default)
+    public async Task MoveIncompleteWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId) || string.IsNullOrWhiteSpace(projectId))
             return;

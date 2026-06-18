@@ -52,7 +52,7 @@ public class CancelSprint
             var oldSprintState = sprint.Clone();
             await unitOfWork.ExecuteInTransactionAsync((Func<CancellationToken, Task>) (async cancellationToken =>
             {
-                await workItemsRepository.MoveWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
+                await workItemsRepository.MoveIncompleteWorkItemsFromSprintToBacklogAsync(tenantId, sprint.Id, sprint.ProjectId, cancellationToken);
                 sprint.Cancel();
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
                 await historyRecorder.RecordUpdatingChangesAsync(

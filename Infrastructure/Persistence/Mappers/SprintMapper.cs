@@ -18,10 +18,11 @@ public static class SprintMapper
             goal: entity.Goal,
             tenantId: entity.TenantId,
             projectId: entity.ProjectId,
-            start: entity.StartDate,
-            end: entity.EndDate,
-            status: entity.Status
-        );
+            startDate: entity.StartDate,
+            endDate: entity.EndDate,
+            startedAt: entity.StartedAt,
+            completedAt: entity.CompletedAt,
+            status: entity.Status);
     }
 
     public static SprintEntity ToEntity(Sprint domain)
@@ -40,13 +41,20 @@ public static class SprintMapper
             Code = domain.Code,
             Name = domain.Name,
             Goal = domain.Goal,
+
             StartDate = domain.StartDate,
             EndDate = domain.EndDate,
+
+            StartedAt = domain.StartedAt,
+            CompletedAt = domain.CompletedAt,
+
             Status = domain.Status
         };
     }
 
-    public static void UpdateEntity(Sprint domain, SprintEntity entity)
+    public static void UpdateEntity(
+        Sprint domain,
+        SprintEntity entity)
     {
         ArgumentNullException.ThrowIfNull(domain);
         ArgumentNullException.ThrowIfNull(entity);
@@ -57,8 +65,13 @@ public static class SprintMapper
         entity.Code = domain.Code;
         entity.Name = domain.Name;
         entity.Goal = domain.Goal;
+
         entity.StartDate = domain.StartDate;
         entity.EndDate = domain.EndDate;
+
+        entity.StartedAt = domain.StartedAt;
+        entity.CompletedAt = domain.CompletedAt;
+
         entity.Status = domain.Status;
 
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;

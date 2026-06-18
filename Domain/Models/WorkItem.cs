@@ -187,13 +187,13 @@ public abstract class WorkItem : Entity
         if ((newStatus == WorkItemStatus.InProgress || (newStatus == WorkItemStatus.InTesting && Type == WorkItemType.TestCase)) && StartDate is null)
             StartDate = DateTime.UtcNow;
 
-        if (newStatus == WorkItemStatus.ToDo && StartDate is not null)
+        if (newStatus == WorkItemStatus.ToDo)
             StartDate = null;
 
         if (newStatus == WorkItemStatus.Done)
             EndDate = DateTime.UtcNow;
 
-        if (newStatus != WorkItemStatus.Done && EndDate is not null && CanReopenFromDone)
+        if (newStatus != WorkItemStatus.Done && CanReopenFromDone)
             EndDate = null;
 
         Touch();

@@ -3,20 +3,27 @@ using Domain.Enums;
 
 namespace Application.Features.Sprints.DTOs;
 
-public sealed class SprintsSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
+public sealed class SprintsSearchAndFilterParametersDto
+    : QueryParametersDto<DateTime?>
 {
     public string? TenantId { get; set; }
     public string? ProjectId { get; set; }
 
     public string? Code { get; set; }
     public string? NameContains { get; set; }
+
     public SprintStatus? Status { get; set; }
 
     public DateTime? StartAfter { get; set; }
     public DateTime? StartBefore { get; set; }
-
     public DateTime? EndAfter { get; set; }
     public DateTime? EndBefore { get; set; }
+
+    public DateTime? StartedAfter { get; set; }
+    public DateTime? StartedBefore { get; set; }
+
+    public DateTime? CompletedAfter { get; set; }
+    public DateTime? CompletedBefore { get; set; }
 
     public DateTime? CreatedAfter { get; set; }
     public DateTime? CreatedBefore { get; set; }

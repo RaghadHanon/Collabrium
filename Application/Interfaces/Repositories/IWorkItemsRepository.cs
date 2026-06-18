@@ -11,7 +11,7 @@ public interface IWorkItemsRepository
     Task UpdateAsync(WorkItem workItem, CancellationToken cancellationToken = default);
     Task<bool> RemoveAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default);
     Task<bool> IsExistAsync(string tenantId, string projectId, string workItemId, CancellationToken cancellationToken = default);
-    Task MoveWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default);
+    Task MoveIncompleteWorkItemsFromSprintToBacklogAsync(string tenantId, string sprintId, string projectId, CancellationToken cancellationToken = default);
 
     Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
         string[] workItemIds, CancellationToken cancellationToken);

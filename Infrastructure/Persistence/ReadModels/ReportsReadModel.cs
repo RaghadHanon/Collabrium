@@ -85,13 +85,17 @@ public class ReportsReadModel : IReportsReadModel
         return BuildSprintsSummary(statuses);
     }
 
-    public async Task<SprintsSummary> GenerateProjectSprintsSummary(string tenantId, string projectId)
+    public async Task<SprintsSummary> GenerateProjectSprintsSummary(
+        string tenantId,
+        string projectId)
     {
         await GetRequiredProjectAsync(tenantId, projectId);
 
         var statuses = await _dbContext.Sprints
             .AsNoTracking()
-            .Where(sprint => sprint.TenantId == tenantId && sprint.ProjectId == projectId)
+            .Where(sprint =>
+                sprint.TenantId == tenantId &&
+                sprint.ProjectId == projectId)
             .Select(sprint => sprint.Status)
             .ToListAsync();
 
@@ -174,10 +178,16 @@ public class ReportsReadModel : IReportsReadModel
             From = from,
             To = to,
             GeneratedAt = generatedAt,
-            AverageCycleTimeDays = AverageOrZero(items, item => item.CycleTimeDays),
+            AverageCycleTimeDays = AverageOrZero(
+                items,
+                item => item.CycleTimeDays),
             MedianCycleTimeDays = CalculateMedianCycleTimeDays(items),
-            MinCycleTimeDays = items.Count > 0 ? items.Min(item => item.CycleTimeDays) : 0,
-            MaxCycleTimeDays = items.Count > 0 ? items.Max(item => item.CycleTimeDays) : 0,
+            MinCycleTimeDays = items.Count > 0
+                ? items.Min(item => item.CycleTimeDays)
+                : 0,
+            MaxCycleTimeDays = items.Count > 0
+                ? items.Max(item => item.CycleTimeDays)
+                : 0,
             TotalItemsAnalyzed = items.Count,
             Items = items
         };
@@ -192,7 +202,10 @@ public class ReportsReadModel : IReportsReadModel
 
         var sprint = await _dbContext.Sprints
             .AsNoTracking()
-            .Where(s => s.Id == sprintId && s.ProjectId == projectId && s.TenantId == tenantId)
+            .Where(s =>
+                s.Id == sprintId &&
+                s.ProjectId == projectId &&
+                s.TenantId == tenantId)
             .Select(s => new
             {
                 s.Id,
@@ -203,10 +216,15 @@ public class ReportsReadModel : IReportsReadModel
             .FirstOrDefaultAsync();
 
         if (sprint is null)
-            throw new InvalidOperationException($"Sprint with id {sprintId} was not found for project {projectId} and tenant {tenantId}.");
+        {
+            throw new InvalidOperationException(
+                $"Sprint with id {sprintId} was not found for project {projectId} and tenant {tenantId}.");
+        }
 
         var workItems = await QueryTenantWorkItems(tenantId)
-            .Where(workItem => workItem.ProjectId == projectId && workItem.SprintId == sprintId)
+            .Where(workItem =>
+                workItem.ProjectId == projectId &&
+                workItem.SprintId == sprintId)
             .Select(workItem => workItem.Status)
             .ToListAsync();
 
@@ -226,7 +244,9 @@ public class ReportsReadModel : IReportsReadModel
         var totalWorkItems = workItems.Count;
         var completedWorkItems = workItems.Count(IsDone);
 
-        var totalStoryPoints = userStories.Sum(userStory => userStory.StoryPoints);
+        var totalStoryPoints = userStories.Sum(userStory =>
+            userStory.StoryPoints);
+
         var completedStoryPoints = userStories
             .Where(userStory => IsDone(userStory.Status))
             .Sum(userStory => userStory.StoryPoints);
@@ -239,14 +259,22 @@ public class ReportsReadModel : IReportsReadModel
             ProjectName = sprint.ProjectName,
             TotalWorkItems = totalWorkItems,
             CompletedWorkItems = completedWorkItems,
-            GeneralProgressPercentage = CalculatePercentage(completedWorkItems, totalWorkItems),
-            UserStoryProgressPercentage = CalculatePercentage(completedStoryPoints, totalStoryPoints)
+            GeneralProgressPercentage = CalculatePercentage(
+                completedWorkItems,
+                totalWorkItems),
+            UserStoryProgressPercentage = CalculatePercentage(
+                completedStoryPoints,
+                totalStoryPoints)
         };
     }
 
-    public async Task<VelocityReportDto> GenerateVelocityReport(string tenantId, string projectId)
+    public async Task<VelocityReportDto> GenerateVelocityReport(
+        string tenantId,
+        string projectId)
     {
-        var project = await GetRequiredProjectAsync(tenantId, projectId);
+        var project = await GetRequiredProjectAsync(
+            tenantId,
+            projectId);
 
         var sprintRows = await _dbContext.UserStories
             .AsNoTracking()
@@ -254,29 +282,34 @@ public class ReportsReadModel : IReportsReadModel
                 userStory.Project.TenantId == tenantId &&
                 userStory.ProjectId == projectId &&
                 userStory.SprintId != null &&
-                userStory.Sprint!.Status == SprintStatus.Completed)
+                userStory.Sprint != null &&
+                userStory.Sprint.Status == SprintStatus.Completed &&
+                userStory.Sprint.StartedAt.HasValue)
             .GroupBy(userStory => new
             {
                 userStory.SprintId,
                 userStory.Sprint!.Code,
-                userStory.Sprint.StartDate
+                StartedAt = userStory.Sprint.StartedAt!.Value
             })
             .Select(group => new SprintVelocityProjection
             {
                 SprintId = group.Key.SprintId!,
                 SprintCode = group.Key.Code,
-                StartDate = group.Key.StartDate,
-                TotalStoryPoints = group.Sum(userStory => userStory.StoryPoints),
+                StartedAt = group.Key.StartedAt,
+                TotalStoryPoints = group.Sum(userStory =>
+                    userStory.StoryPoints),
                 CompletedStoryPoints = group
-                    .Where(userStory => userStory.Status == WorkItemStatus.Done)
-                    .Sum(userStory => userStory.StoryPoints)
+                    .Where(userStory =>
+                        userStory.Status == WorkItemStatus.Done)
+                    .Sum(userStory =>
+                        userStory.StoryPoints)
             })
-            .OrderByDescending(sprint => sprint.StartDate)
+            .OrderByDescending(sprint => sprint.StartedAt)
             .Take(DefaultVelocitySprintsCount)
             .ToListAsync();
 
         var sprintVelocities = sprintRows
-            .OrderBy(sprint => sprint.StartDate)
+            .OrderBy(sprint => sprint.StartedAt)
             .Select(ToSprintVelocityDto)
             .ToList();
 
@@ -285,23 +318,30 @@ public class ReportsReadModel : IReportsReadModel
             ProjectId = project.Id,
             ProjectKey = project.Key,
             ProjectName = project.Name,
-            TotalStoryPoints = sprintVelocities.Sum(sprint => sprint.TotalStoryPoints),
-            CompletedStoryPoints = sprintVelocities.Sum(sprint => sprint.CompletedStoryPoints),
-            AvgVelocityPercentage = AverageOrZero(sprintVelocities, sprint => sprint.VelocityPercentage),
+            TotalStoryPoints = sprintVelocities.Sum(sprint =>
+                sprint.TotalStoryPoints),
+            CompletedStoryPoints = sprintVelocities.Sum(sprint =>
+                sprint.CompletedStoryPoints),
+            AvgVelocityPercentage = AverageOrZero(
+                sprintVelocities,
+                sprint => sprint.VelocityPercentage),
             SprintVelocities = sprintVelocities
         };
     }
 
-    public async Task<BugSeverityDistributionReportDto> GenerateBugSeverityDistributionReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null)
+    public async Task<BugSeverityDistributionReportDto>
+        GenerateBugSeverityDistributionReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null)
     {
         ValidateDateRange(from, to);
 
         var generatedAt = DateTime.UtcNow;
-        var project = await GetOptionalProjectAsync(tenantId, projectId);
+        var project = await GetOptionalProjectAsync(
+            tenantId,
+            projectId);
 
         var query = QueryTenantWorkItems(tenantId)
             .Where(workItem =>
@@ -318,10 +358,17 @@ public class ReportsReadModel : IReportsReadModel
         var totalBugs = priorities.Count;
         var countsByPriority = CountBy(priorities);
 
-        var lowCount = countsByPriority.GetValueOrDefault(WorkItemPriority.Low);
-        var mediumCount = countsByPriority.GetValueOrDefault(WorkItemPriority.Medium);
-        var highCount = countsByPriority.GetValueOrDefault(WorkItemPriority.High);
-        var criticalCount = countsByPriority.GetValueOrDefault(WorkItemPriority.Critical);
+        var lowCount =
+            countsByPriority.GetValueOrDefault(WorkItemPriority.Low);
+
+        var mediumCount =
+            countsByPriority.GetValueOrDefault(WorkItemPriority.Medium);
+
+        var highCount =
+            countsByPriority.GetValueOrDefault(WorkItemPriority.High);
+
+        var criticalCount =
+            countsByPriority.GetValueOrDefault(WorkItemPriority.Critical);
 
         return new BugSeverityDistributionReportDto
         {
@@ -338,46 +385,82 @@ public class ReportsReadModel : IReportsReadModel
             HighBugsCount = highCount,
             CriticalBugsCount = criticalCount,
             LowPercentage = CalculatePercentage(lowCount, totalBugs),
-            MediumPercentage = CalculatePercentage(mediumCount, totalBugs),
+            MediumPercentage = CalculatePercentage(
+                mediumCount,
+                totalBugs),
             HighPercentage = CalculatePercentage(highCount, totalBugs),
-            CriticalPercentage = CalculatePercentage(criticalCount, totalBugs),
-            Items = BuildBugSeverityDistributionItems(countsByPriority, totalBugs)
+            CriticalPercentage = CalculatePercentage(
+                criticalCount,
+                totalBugs),
+            Items = BuildBugSeverityDistributionItems(
+                countsByPriority,
+                totalBugs)
         };
     }
 
-    public async Task<DeveloperProductivityReportDto> GenerateDeveloperProductivityReportAsync(
-    string tenantId,
-    DateTime from,
-    DateTime to,
-    string? projectId = null,
-    string? teamId = null,
-    string? userId = null)
+    public async Task<DeveloperProductivityReportDto>
+        GenerateDeveloperProductivityReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null,
+            string? teamId = null,
+            string? userId = null)
     {
         ValidateDateRange(from, to);
 
         var generatedAt = DateTime.UtcNow;
         var now = DateTime.UtcNow;
-        var project = await GetOptionalProjectAsync(tenantId, projectId);
+        var project = await GetOptionalProjectAsync(
+            tenantId,
+            projectId);
 
-        var users = await GetDeveloperCandidatesAsync(tenantId, teamId, userId);
-        var userIds = users.Select(user => user.Id).ToList();
+        var users = await GetDeveloperCandidatesAsync(
+            tenantId,
+            teamId,
+            userId);
+
+        var userIds = users
+            .Select(user => user.Id)
+            .ToList();
 
         var workItemsQuery = QueryTenantWorkItems(tenantId);
-        workItemsQuery = ApplyProjectFilter(workItemsQuery, projectId);
-        workItemsQuery = ApplyTeamFilter(workItemsQuery, teamId);
-        workItemsQuery = ApplyOverlappingDateRange(workItemsQuery, from, to);
+
+        workItemsQuery = ApplyProjectFilter(
+            workItemsQuery,
+            projectId);
+
+        workItemsQuery = ApplyTeamFilter(
+            workItemsQuery,
+            teamId);
+
+        workItemsQuery = ApplyOverlappingDateRange(
+            workItemsQuery,
+            from,
+            to);
 
         workItemsQuery = workItemsQuery.Where(workItem =>
             userIds.Contains(workItem.CreatedByUserId) ||
-            (workItem.AssignedToUserId != null && userIds.Contains(workItem.AssignedToUserId)));
+            (workItem.AssignedToUserId != null &&
+             userIds.Contains(workItem.AssignedToUserId)));
 
-        var workItems = await SelectWorkItemMetrics(workItemsQuery).ToListAsync();
+        var workItems = await SelectWorkItemMetrics(workItemsQuery)
+            .ToListAsync();
 
         var developers = users
-            .Select(user => BuildDeveloperProductivityItem(user, workItems, from, to, now))
-            .Where(developer => !string.IsNullOrWhiteSpace(userId) || HasDeveloperActivity(developer))
-            .OrderByDescending(developer => developer.CompletedEffortPoints)
-            .ThenByDescending(developer => developer.CompletedWorkItemsCount)
+            .Select(user => BuildDeveloperProductivityItem(
+                user,
+                workItems,
+                from,
+                to,
+                now))
+            .Where(developer =>
+                !string.IsNullOrWhiteSpace(userId) ||
+                HasDeveloperActivity(developer))
+            .OrderByDescending(developer =>
+                developer.CompletedEffortPoints)
+            .ThenByDescending(developer =>
+                developer.CompletedWorkItemsCount)
             .ToList();
 
         return new DeveloperProductivityReportDto
@@ -395,24 +478,38 @@ public class ReportsReadModel : IReportsReadModel
 
             DevelopersCount = developers.Count,
 
-            TotalAssignedWorkItems = developers.Sum(developer => developer.AssignedWorkItemsCount),
-            TotalCompletedWorkItems = developers.Sum(developer => developer.CompletedWorkItemsCount),
-            TotalBlockedWorkItems = developers.Sum(developer => developer.BlockedWorkItemsCount),
-            TotalOverdueWorkItems = developers.Sum(developer => developer.OverdueWorkItemsCount),
-            TotalCompletedEffortPoints = developers.Sum(developer => developer.CompletedEffortPoints),
+            TotalAssignedWorkItems = developers.Sum(developer =>
+                developer.AssignedWorkItemsCount),
 
-            AverageCompletionPercentage = AverageOrZero(developers, developer => developer.CompletionPercentage),
-            AverageCycleTimeDays = AverageForItemsWithCompletedWork(developers),
+            TotalCompletedWorkItems = developers.Sum(developer =>
+                developer.CompletedWorkItemsCount),
+
+            TotalBlockedWorkItems = developers.Sum(developer =>
+                developer.BlockedWorkItemsCount),
+
+            TotalOverdueWorkItems = developers.Sum(developer =>
+                developer.OverdueWorkItemsCount),
+
+            TotalCompletedEffortPoints = developers.Sum(developer =>
+                developer.CompletedEffortPoints),
+
+            AverageCompletionPercentage = AverageOrZero(
+                developers,
+                developer => developer.CompletionPercentage),
+
+            AverageCycleTimeDays =
+                AverageForItemsWithCompletedWork(developers),
 
             Developers = developers
         };
     }
 
-    public async Task<TeamsProductivityReportDto> GenerateTeamsProductivityReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null)
+    public async Task<TeamsProductivityReportDto>
+        GenerateTeamsProductivityReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null)
     {
         ValidateDateRange(from, to);
 
@@ -422,24 +519,43 @@ public class ReportsReadModel : IReportsReadModel
         if (!string.IsNullOrWhiteSpace(projectId))
             await GetRequiredProjectAsync(tenantId, projectId);
 
-        var teams = await GetActiveTeamsAsync(tenantId, projectId);
-        var teamIds = teams.Select(team => team.Id).ToList();
+        var teams = await GetActiveTeamsAsync(
+            tenantId,
+            projectId);
+
+        var teamIds = teams
+            .Select(team => team.Id)
+            .ToList();
 
         var workItemsQuery = QueryTenantWorkItems(tenantId)
             .Where(workItem =>
                 workItem.Project.TeamId != null &&
                 teamIds.Contains(workItem.Project.TeamId));
 
-        workItemsQuery = ApplyProjectFilter(workItemsQuery, projectId);
-        workItemsQuery = ApplyOverlappingDateRange(workItemsQuery, from, to);
+        workItemsQuery = ApplyProjectFilter(
+            workItemsQuery,
+            projectId);
 
-        var workItems = await SelectWorkItemMetrics(workItemsQuery).ToListAsync();
+        workItemsQuery = ApplyOverlappingDateRange(
+            workItemsQuery,
+            from,
+            to);
+
+        var workItems = await SelectWorkItemMetrics(workItemsQuery)
+            .ToListAsync();
 
         var teamItems = teams
-            .Select(team => BuildTeamProductivityItem(team, workItems, from, to, now))
+            .Select(team => BuildTeamProductivityItem(
+                team,
+                workItems,
+                from,
+                to,
+                now))
             .Where(HasTeamActivity)
-            .OrderByDescending(team => team.CompletedEffortPoints)
-            .ThenByDescending(team => team.CompletedWorkItemsCount)
+            .OrderByDescending(team =>
+                team.CompletedEffortPoints)
+            .ThenByDescending(team =>
+                team.CompletedWorkItemsCount)
             .ToList();
 
         return new TeamsProductivityReportDto
@@ -450,25 +566,42 @@ public class ReportsReadModel : IReportsReadModel
             To = to,
             GeneratedAt = generatedAt,
             TeamsCount = teamItems.Count,
-            TotalAssignedWorkItems = teamItems.Sum(team => team.AssignedWorkItemsCount),
-            TotalCompletedWorkItems = teamItems.Sum(team => team.CompletedWorkItemsCount),
-            TotalBlockedWorkItems = teamItems.Sum(team => team.BlockedWorkItemsCount),
-            TotalOverdueWorkItems = teamItems.Sum(team => team.OverdueWorkItemsCount),
-            TotalCompletedEffortPoints = teamItems.Sum(team => team.CompletedEffortPoints),
-            AverageCompletionPercentage = AverageOrZero(teamItems, team => team.CompletionPercentage),
-            AverageCycleTimeDays = AverageForTeamsWithCompletedWork(teamItems),
+
+            TotalAssignedWorkItems = teamItems.Sum(team =>
+                team.AssignedWorkItemsCount),
+
+            TotalCompletedWorkItems = teamItems.Sum(team =>
+                team.CompletedWorkItemsCount),
+
+            TotalBlockedWorkItems = teamItems.Sum(team =>
+                team.BlockedWorkItemsCount),
+
+            TotalOverdueWorkItems = teamItems.Sum(team =>
+                team.OverdueWorkItemsCount),
+
+            TotalCompletedEffortPoints = teamItems.Sum(team =>
+                team.CompletedEffortPoints),
+
+            AverageCompletionPercentage = AverageOrZero(
+                teamItems,
+                team => team.CompletionPercentage),
+
+            AverageCycleTimeDays =
+                AverageForTeamsWithCompletedWork(teamItems),
+
             Teams = teamItems
         };
     }
 
-    public async Task<BlockedWorkItemsReportDto> GenerateBlockedWorkItemsReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null,
-        string? teamId = null,
-        string? assignedToUserId = null,
-        int maxItems = DefaultMaxReportItems)
+    public async Task<BlockedWorkItemsReportDto>
+        GenerateBlockedWorkItemsReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null,
+            string? teamId = null,
+            string? assignedToUserId = null,
+            int maxItems = DefaultMaxReportItems)
     {
         ValidateDateRange(from, to);
 
@@ -476,16 +609,29 @@ public class ReportsReadModel : IReportsReadModel
         var take = NormalizeMaxItems(maxItems);
 
         var query = QueryTenantWorkItems(tenantId)
-            .Where(workItem => workItem.IsBlocked && workItem.Status != WorkItemStatus.Done);
+            .Where(workItem =>
+                workItem.IsBlocked &&
+                workItem.Status != WorkItemStatus.Done);
 
-        query = ApplyWorkItemScopeFilters(query, projectId, teamId, assignedToUserId);
-        query = ApplyOverlappingDateRange(query, from, to);
+        query = ApplyWorkItemScopeFilters(
+            query,
+            projectId,
+            teamId,
+            assignedToUserId);
 
-        var workItems = await SelectWorkItemDetails(query).ToListAsync();
+        query = ApplyOverlappingDateRange(
+            query,
+            from,
+            to);
+
+        var workItems = await SelectWorkItemDetails(query)
+            .ToListAsync();
+
         var total = workItems.Count;
 
         var items = workItems
-            .Select(workItem => ToBlockedWorkItemDto(workItem, generatedAt))
+            .Select(workItem =>
+                ToBlockedWorkItemDto(workItem, generatedAt))
             .OrderByDescending(item => item.Priority)
             .ThenByDescending(item => item.BlockedAgeDays)
             .Take(take)
@@ -501,24 +647,43 @@ public class ReportsReadModel : IReportsReadModel
             To = to,
             GeneratedAt = generatedAt,
             TotalBlockedItems = total,
-            CriticalBlockedItems = workItems.Count(workItem => workItem.Priority == WorkItemPriority.Critical),
-            HighBlockedItems = workItems.Count(workItem => workItem.Priority == WorkItemPriority.High),
-            TotalBlockedEffortPoints = workItems.Sum(workItem => workItem.EffortPoints),
-            AverageBlockedAgeDays = AverageOrZero(workItems, workItem => CalculateNonNegativeDays(workItem.CreatedAt, generatedAt)),
-            ByPriority = BuildPriorityDistribution(workItems.Select(workItem => workItem.Priority), total),
-            ByStatus = BuildStatusDistribution(workItems.Select(workItem => workItem.Status), total),
+
+            CriticalBlockedItems = workItems.Count(workItem =>
+                workItem.Priority == WorkItemPriority.Critical),
+
+            HighBlockedItems = workItems.Count(workItem =>
+                workItem.Priority == WorkItemPriority.High),
+
+            TotalBlockedEffortPoints = workItems.Sum(workItem =>
+                workItem.EffortPoints),
+
+            AverageBlockedAgeDays = AverageOrZero(
+                workItems,
+                workItem => CalculateNonNegativeDays(
+                    workItem.CreatedAt,
+                    generatedAt)),
+
+            ByPriority = BuildPriorityDistribution(
+                workItems.Select(workItem => workItem.Priority),
+                total),
+
+            ByStatus = BuildStatusDistribution(
+                workItems.Select(workItem => workItem.Status),
+                total),
+
             Items = items
         };
     }
 
-    public async Task<OverdueWorkItemsReportDto> GenerateOverdueWorkItemsReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null,
-        string? teamId = null,
-        string? assignedToUserId = null,
-        int maxItems = DefaultMaxReportItems)
+    public async Task<OverdueWorkItemsReportDto>
+        GenerateOverdueWorkItemsReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null,
+            string? teamId = null,
+            string? assignedToUserId = null,
+            int maxItems = DefaultMaxReportItems)
     {
         ValidateDateRange(from, to);
 
@@ -528,18 +693,28 @@ public class ReportsReadModel : IReportsReadModel
         var query = QueryTenantWorkItems(tenantId)
             .Where(workItem =>
                 workItem.Status != WorkItemStatus.Done &&
-                workItem.EndDate.HasValue &&
-                workItem.EndDate.Value < generatedAt &&
-                workItem.EndDate.Value >= from &&
-                workItem.EndDate.Value <= to);
+                workItem.SprintId != null &&
+                workItem.Sprint != null &&
+                workItem.Sprint.Status == SprintStatus.Active &&
+                workItem.Sprint.EndDate.HasValue &&
+                workItem.Sprint.EndDate.Value < generatedAt &&
+                workItem.Sprint.EndDate.Value >= from &&
+                workItem.Sprint.EndDate.Value <= to);
 
-        query = ApplyWorkItemScopeFilters(query, projectId, teamId, assignedToUserId);
+        query = ApplyWorkItemScopeFilters(
+            query,
+            projectId,
+            teamId,
+            assignedToUserId);
 
-        var workItems = await SelectWorkItemDetails(query).ToListAsync();
+        var workItems = await SelectWorkItemDetails(query)
+            .ToListAsync();
+
         var total = workItems.Count;
 
         var items = workItems
-            .Select(workItem => ToOverdueWorkItemDto(workItem, generatedAt))
+            .Select(workItem =>
+                ToOverdueWorkItemDto(workItem, generatedAt))
             .OrderByDescending(item => item.Priority)
             .ThenByDescending(item => item.DaysOverdue)
             .Take(take)
@@ -551,28 +726,48 @@ public class ReportsReadModel : IReportsReadModel
             ProjectId = projectId,
             TeamId = teamId,
             AssignedToUserId = assignedToUserId,
+
             From = from,
             To = to,
             GeneratedAt = generatedAt,
+
             TotalOverdueItems = total,
-            CriticalOverdueItems = workItems.Count(workItem => workItem.Priority == WorkItemPriority.Critical),
-            HighOverdueItems = workItems.Count(workItem => workItem.Priority == WorkItemPriority.High),
-            TotalOverdueEffortPoints = workItems.Sum(workItem => workItem.EffortPoints),
-            AverageDaysOverdue = AverageOrZero(workItems, workItem =>
-                workItem.EndDate.HasValue
-                    ? CalculateNonNegativeDays(workItem.EndDate.Value, generatedAt)
+
+            CriticalOverdueItems = workItems.Count(workItem =>
+                workItem.Priority == WorkItemPriority.Critical),
+
+            HighOverdueItems = workItems.Count(workItem =>
+                workItem.Priority == WorkItemPriority.High),
+
+            TotalOverdueEffortPoints = workItems.Sum(workItem =>
+                workItem.EffortPoints),
+
+            AverageDaysOverdue = AverageOrZero(
+                workItems,
+                workItem => workItem.DueDate.HasValue
+                    ? CalculateNonNegativeDays(
+                        workItem.DueDate.Value,
+                        generatedAt)
                     : 0),
-            ByPriority = BuildPriorityDistribution(workItems.Select(workItem => workItem.Priority), total),
-            ByStatus = BuildStatusDistribution(workItems.Select(workItem => workItem.Status), total),
+
+            ByPriority = BuildPriorityDistribution(
+                workItems.Select(workItem => workItem.Priority),
+                total),
+
+            ByStatus = BuildStatusDistribution(
+                workItems.Select(workItem => workItem.Status),
+                total),
+
             Items = items
         };
     }
 
-    public async Task<ProjectHealthReportDto> GenerateProjectHealthReportAsync(
-        string tenantId,
-        DateTime from,
-        DateTime to,
-        string? projectId = null)
+    public async Task<ProjectHealthReportDto>
+        GenerateProjectHealthReportAsync(
+            string tenantId,
+            DateTime from,
+            DateTime to,
+            string? projectId = null)
     {
         ValidateDateRange(from, to);
 
@@ -580,9 +775,12 @@ public class ReportsReadModel : IReportsReadModel
 
         var projectsQuery = _dbContext.Projects
             .AsNoTracking()
-            .Where(project => project.TenantId == tenantId);
+            .Where(project =>
+                project.TenantId == tenantId);
 
-        projectsQuery = ApplyProjectFilter(projectsQuery, projectId);
+        projectsQuery = ApplyProjectFilter(
+            projectsQuery,
+            projectId);
 
         var projects = await projectsQuery
             .Select(project => new ProjectHealthProjection
@@ -592,27 +790,42 @@ public class ReportsReadModel : IReportsReadModel
                 Name = project.Name,
                 Status = project.Status,
                 TeamId = project.TeamId,
-                TeamName = project.Team != null ? project.Team.Name : null
+                TeamName = project.Team != null
+                    ? project.Team.Name
+                    : null
             })
             .ToListAsync();
 
         if (projectId is not null && projects.Count == 0)
-            throw new InvalidOperationException($"Project with id {projectId} was not found for tenant {tenantId}.");
+        {
+            throw new InvalidOperationException(
+                $"Project with id {projectId} was not found for tenant {tenantId}.");
+        }
 
-        var projectIds = projects.Select(project => project.Id).ToList();
+        var projectIds = projects
+            .Select(project => project.Id)
+            .ToList();
 
-        var workItems = await SelectWorkItemMetrics(QueryTenantWorkItems(tenantId)
-                .Where(workItem => projectIds.Contains(workItem.ProjectId))
-                .Where(workItem =>
-                    workItem.CreatedAt <= to &&
-                    (!workItem.EndDate.HasValue || workItem.EndDate.Value >= from)))
+        var workItems = await SelectWorkItemMetrics(
+                QueryTenantWorkItems(tenantId)
+                    .Where(workItem =>
+                        projectIds.Contains(workItem.ProjectId))
+                    .Where(workItem =>
+                        workItem.CreatedAt <= to &&
+                        (!workItem.EndDate.HasValue ||
+                         workItem.EndDate.Value >= from)))
             .ToListAsync();
 
         var projectHealthItems = projects
-            .Select(project => BuildProjectHealthItem(project, workItems, generatedAt))
+            .Select(project => BuildProjectHealthItem(
+                project,
+                workItems,
+                generatedAt))
             .OrderBy(project => project.HealthScore)
-            .ThenByDescending(project => project.CriticalBugs)
-            .ThenByDescending(project => project.OverdueWorkItems)
+            .ThenByDescending(project =>
+                project.CriticalBugs)
+            .ThenByDescending(project =>
+                project.OverdueWorkItems)
             .ToList();
 
         return new ProjectHealthReportDto
@@ -623,30 +836,49 @@ public class ReportsReadModel : IReportsReadModel
             To = to,
             GeneratedAt = generatedAt,
             ProjectsCount = projectHealthItems.Count,
-            HealthyProjectsCount = projectHealthItems.Count(project => project.HealthStatus == HealthStatusHealthy),
-            AtRiskProjectsCount = projectHealthItems.Count(project => project.HealthStatus == HealthStatusAtRisk),
-            CriticalProjectsCount = projectHealthItems.Count(project => project.HealthStatus == HealthStatusCritical),
-            AverageHealthScore = AverageOrZero(projectHealthItems, project => project.HealthScore),
+
+            HealthyProjectsCount = projectHealthItems.Count(project =>
+                project.HealthStatus == HealthStatusHealthy),
+
+            AtRiskProjectsCount = projectHealthItems.Count(project =>
+                project.HealthStatus == HealthStatusAtRisk),
+
+            CriticalProjectsCount = projectHealthItems.Count(project =>
+                project.HealthStatus == HealthStatusCritical),
+
+            AverageHealthScore = AverageOrZero(
+                projectHealthItems,
+                project => project.HealthScore),
+
             Projects = projectHealthItems
         };
     }
 
-    private async Task<TenantDto> GetRequiredTenantAsync(string tenantId)
+    private async Task<TenantDto> GetRequiredTenantAsync(
+        string tenantId)
     {
         var tenant = await _dbContext.Tenants
             .AsNoTracking()
             .Where(t => t.Id == tenantId)
-            .ProjectTo<TenantDto>(_mapper.ConfigurationProvider, t => t.Name)
+            .ProjectTo<TenantDto>(
+                _mapper.ConfigurationProvider,
+                t => t.Name)
             .FirstOrDefaultAsync();
 
-        return tenant ?? throw new InvalidOperationException($"Tenant with id {tenantId} not found.");
+        return tenant ??
+               throw new InvalidOperationException(
+                   $"Tenant with id {tenantId} not found.");
     }
 
-    private async Task<ProjectLookup> GetRequiredProjectAsync(string tenantId, string projectId)
+    private async Task<ProjectLookup> GetRequiredProjectAsync(
+        string tenantId,
+        string projectId)
     {
         var project = await _dbContext.Projects
             .AsNoTracking()
-            .Where(p => p.Id == projectId && p.TenantId == tenantId)
+            .Where(p =>
+                p.Id == projectId &&
+                p.TenantId == tenantId)
             .Select(p => new ProjectLookup
             {
                 Id = p.Id,
@@ -655,41 +887,53 @@ public class ReportsReadModel : IReportsReadModel
             })
             .FirstOrDefaultAsync();
 
-        return project ?? throw new InvalidOperationException($"Project with id {projectId} was not found for tenant {tenantId}.");
+        return project ??
+               throw new InvalidOperationException(
+                   $"Project with id {projectId} was not found for tenant {tenantId}.");
     }
 
-    private async Task<ProjectLookup?> GetOptionalProjectAsync(string tenantId, string? projectId)
+    private async Task<ProjectLookup?> GetOptionalProjectAsync(
+        string tenantId,
+        string? projectId)
     {
         return string.IsNullOrWhiteSpace(projectId)
             ? null
-            : await GetRequiredProjectAsync(tenantId, projectId);
+            : await GetRequiredProjectAsync(
+                tenantId,
+                projectId);
     }
 
-    private IQueryable<WorkItemEntity> QueryTenantWorkItems(string tenantId)
+    private IQueryable<WorkItemEntity> QueryTenantWorkItems(
+        string tenantId)
     {
         return _dbContext.WorkItems
             .AsNoTracking()
-            .Where(workItem => workItem.Project.TenantId == tenantId);
+            .Where(workItem =>
+                workItem.Project.TenantId == tenantId);
     }
 
-    private async Task<List<UserProjection>> GetDeveloperCandidatesAsync(
-        string tenantId,
-        string? teamId,
-        string? userId)
+    private async Task<List<UserProjection>>
+        GetDeveloperCandidatesAsync(
+            string tenantId,
+            string? teamId,
+            string? userId)
     {
         var query = _dbContext.Users
             .AsNoTracking()
-            .Where(user => user.TenantId == tenantId);
+            .Where(user =>
+                user.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(teamId))
         {
             query = query.Where(user =>
-                user.TeamMemberships.Any(member => member.TeamId == teamId));
+                user.TeamMemberships.Any(member =>
+                    member.TeamId == teamId));
         }
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            query = query.Where(user => user.Id == userId);
+            query = query.Where(user =>
+                user.Id == userId);
         }
 
         return await query
@@ -703,14 +947,23 @@ public class ReportsReadModel : IReportsReadModel
             .ToListAsync();
     }
 
-    private async Task<List<TeamProjection>> GetActiveTeamsAsync(string tenantId, string? projectId)
+    private async Task<List<TeamProjection>>
+        GetActiveTeamsAsync(
+            string tenantId,
+            string? projectId)
     {
         var query = _dbContext.Teams
             .AsNoTracking()
-            .Where(team => team.TenantId == tenantId && team.IsActive);
+            .Where(team =>
+                team.TenantId == tenantId &&
+                team.IsActive);
 
         if (!string.IsNullOrWhiteSpace(projectId))
-            query = query.Where(team => team.Projects.Any(project => project.Id == projectId));
+        {
+            query = query.Where(team =>
+                team.Projects.Any(project =>
+                    project.Id == projectId));
+        }
 
         return await query
             .Select(team => new TeamProjection
@@ -722,148 +975,234 @@ public class ReportsReadModel : IReportsReadModel
                 Department = team.Department,
                 Capacity = team.Capacity,
                 MembersCount = team.Members.Count,
-                ActiveProjectsCount = team.Projects.Count(project => project.Status == ProjectStatus.InProgress)
+
+                ActiveProjectsCount = team.Projects.Count(project =>
+                    project.Status == ProjectStatus.InProgress)
             })
             .ToListAsync();
     }
 
-    private static IQueryable<ProjectEntity> ApplyProjectFilter(IQueryable<ProjectEntity> query, string? projectId)
+    private static IQueryable<ProjectEntity> ApplyProjectFilter(
+        IQueryable<ProjectEntity> query,
+        string? projectId)
     {
         return string.IsNullOrWhiteSpace(projectId)
             ? query
-            : query.Where(project => project.Id == projectId);
+            : query.Where(project =>
+                project.Id == projectId);
     }
 
-    private static IQueryable<WorkItemEntity> ApplyProjectFilter(IQueryable<WorkItemEntity> query, string? projectId)
+    private static IQueryable<WorkItemEntity> ApplyProjectFilter(
+        IQueryable<WorkItemEntity> query,
+        string? projectId)
     {
         return string.IsNullOrWhiteSpace(projectId)
             ? query
-            : query.Where(workItem => workItem.ProjectId == projectId);
+            : query.Where(workItem =>
+                workItem.ProjectId == projectId);
     }
 
-    private static IQueryable<WorkItemEntity> ApplyTeamFilter(IQueryable<WorkItemEntity> query, string? teamId)
+    private static IQueryable<WorkItemEntity> ApplyTeamFilter(
+        IQueryable<WorkItemEntity> query,
+        string? teamId)
     {
         return string.IsNullOrWhiteSpace(teamId)
             ? query
-            : query.Where(workItem => workItem.Project.TeamId == teamId);
+            : query.Where(workItem =>
+                workItem.Project.TeamId == teamId);
     }
 
-    private static IQueryable<WorkItemEntity> ApplyAssignedToUserFilter(IQueryable<WorkItemEntity> query, string? assignedToUserId)
+    private static IQueryable<WorkItemEntity>
+        ApplyAssignedToUserFilter(
+            IQueryable<WorkItemEntity> query,
+            string? assignedToUserId)
     {
         return string.IsNullOrWhiteSpace(assignedToUserId)
             ? query
-            : query.Where(workItem => workItem.AssignedToUserId == assignedToUserId);
+            : query.Where(workItem =>
+                workItem.AssignedToUserId == assignedToUserId);
     }
 
-    private static IQueryable<WorkItemEntity> ApplyWorkItemScopeFilters(
-        IQueryable<WorkItemEntity> query,
-        string? projectId,
-        string? teamId,
-        string? assignedToUserId)
+    private static IQueryable<WorkItemEntity>
+        ApplyWorkItemScopeFilters(
+            IQueryable<WorkItemEntity> query,
+            string? projectId,
+            string? teamId,
+            string? assignedToUserId)
     {
-        query = ApplyProjectFilter(query, projectId);
-        query = ApplyTeamFilter(query, teamId);
-        query = ApplyAssignedToUserFilter(query, assignedToUserId);
+        query = ApplyProjectFilter(
+            query,
+            projectId);
+
+        query = ApplyTeamFilter(
+            query,
+            teamId);
+
+        query = ApplyAssignedToUserFilter(
+            query,
+            assignedToUserId);
 
         return query;
     }
 
-    private static IQueryable<WorkItemEntity> ApplyOverlappingDateRange(
-        IQueryable<WorkItemEntity> query,
-        DateTime from,
-        DateTime to)
+    private static IQueryable<WorkItemEntity>
+        ApplyOverlappingDateRange(
+            IQueryable<WorkItemEntity> query,
+            DateTime from,
+            DateTime to)
     {
         return query.Where(workItem =>
             workItem.CreatedAt <= to &&
-            (!workItem.EndDate.HasValue || workItem.EndDate.Value >= from));
+            (!workItem.EndDate.HasValue ||
+             workItem.EndDate.Value >= from));
     }
 
-    private static IQueryable<WorkItemMetricsProjection> SelectWorkItemMetrics(IQueryable<WorkItemEntity> query)
+    private static IQueryable<WorkItemMetricsProjection>
+        SelectWorkItemMetrics(
+            IQueryable<WorkItemEntity> query)
     {
-        return query.Select(workItem => new WorkItemMetricsProjection
-        {
-            Id = workItem.Id,
-            ProjectId = workItem.ProjectId,
-            TeamId = workItem.Project.TeamId,
-            AssignedToUserId = workItem.AssignedToUserId,
-            CreatedByUserId = workItem.CreatedByUserId,
-            CreatedAt = workItem.CreatedAt,
-            StartDate = workItem.StartDate,
-            EndDate = workItem.EndDate,
-            Type = workItem.Type,
-            Status = workItem.Status,
-            Priority = workItem.Priority,
-            IsBlocked = workItem.IsBlocked,
-            EffortPoints = workItem.EffortPoints
-        });
+        return query.Select(workItem =>
+            new WorkItemMetricsProjection
+            {
+                Id = workItem.Id,
+                ProjectId = workItem.ProjectId,
+                TeamId = workItem.Project.TeamId,
+                AssignedToUserId = workItem.AssignedToUserId,
+                CreatedByUserId = workItem.CreatedByUserId,
+                CreatedAt = workItem.CreatedAt,
+
+                StartDate = workItem.StartDate,
+                EndDate = workItem.EndDate,
+
+                SprintEndDate = workItem.Sprint != null
+                    ? workItem.Sprint.EndDate
+                    : null,
+
+                SprintStatus = workItem.Sprint != null
+                    ? workItem.Sprint.Status
+                    : null,
+
+                Type = workItem.Type,
+                Status = workItem.Status,
+                Priority = workItem.Priority,
+                IsBlocked = workItem.IsBlocked,
+                EffortPoints = workItem.EffortPoints
+            });
     }
 
-    private static IQueryable<WorkItemDetailsProjection> SelectWorkItemDetails(IQueryable<WorkItemEntity> query)
+    private static IQueryable<WorkItemDetailsProjection>
+        SelectWorkItemDetails(
+            IQueryable<WorkItemEntity> query)
     {
-        return query.Select(workItem => new WorkItemDetailsProjection
-        {
-            Id = workItem.Id,
-            Code = workItem.Code,
-            Title = workItem.Title,
-            Type = workItem.Type,
-            Status = workItem.Status,
-            Priority = workItem.Priority,
-            EffortPoints = workItem.EffortPoints,
-            CreatedAt = workItem.CreatedAt,
-            EndDate = workItem.EndDate,
-            ProjectId = workItem.ProjectId,
-            ProjectKey = workItem.Project.Key,
-            ProjectName = workItem.Project.Name,
-            AssignedToUserId = workItem.AssignedToUserId,
-            AssignedToUserName = workItem.AssignedToUser != null
-                ? workItem.AssignedToUser.FullName
-                : null
-        });
+        return query.Select(workItem =>
+            new WorkItemDetailsProjection
+            {
+                Id = workItem.Id,
+                Code = workItem.Code,
+                Title = workItem.Title,
+                Type = workItem.Type,
+                Status = workItem.Status,
+                Priority = workItem.Priority,
+                EffortPoints = workItem.EffortPoints,
+                CreatedAt = workItem.CreatedAt,
+
+                EndDate = workItem.EndDate,
+
+                DueDate = workItem.Sprint != null
+                    ? workItem.Sprint.EndDate
+                    : null,
+
+                ProjectId = workItem.ProjectId,
+                ProjectKey = workItem.Project.Key,
+                ProjectName = workItem.Project.Name,
+                AssignedToUserId = workItem.AssignedToUserId,
+
+                AssignedToUserName =
+                    workItem.AssignedToUser != null
+                        ? workItem.AssignedToUser.FullName
+                        : null
+            });
     }
 
-    private static ProjectsSummary BuildProjectsSummary(IReadOnlyCollection<ProjectStatus> statuses)
+    private static ProjectsSummary BuildProjectsSummary(
+        IReadOnlyCollection<ProjectStatus> statuses)
     {
         var countsByStatus = CountBy(statuses);
 
         return new ProjectsSummary
         {
             TotalProjectsCount = statuses.Count,
-            NotStartedProjectsCount = countsByStatus.GetValueOrDefault(ProjectStatus.NotStarted),
-            InProgressProjectsCount = countsByStatus.GetValueOrDefault(ProjectStatus.InProgress),
-            CompletedProjectsCount = countsByStatus.GetValueOrDefault(ProjectStatus.Completed),
-            OnHoldProjectsCount = countsByStatus.GetValueOrDefault(ProjectStatus.OnHold),
-            CancelledProjectsCount = countsByStatus.GetValueOrDefault(ProjectStatus.Cancelled)
+
+            NotStartedProjectsCount =
+                countsByStatus.GetValueOrDefault(
+                    ProjectStatus.NotStarted),
+
+            InProgressProjectsCount =
+                countsByStatus.GetValueOrDefault(
+                    ProjectStatus.InProgress),
+
+            CompletedProjectsCount =
+                countsByStatus.GetValueOrDefault(
+                    ProjectStatus.Completed),
+
+            OnHoldProjectsCount =
+                countsByStatus.GetValueOrDefault(
+                    ProjectStatus.OnHold),
+
+            CancelledProjectsCount =
+                countsByStatus.GetValueOrDefault(
+                    ProjectStatus.Cancelled)
         };
     }
 
-    private static SprintsSummary BuildSprintsSummary(IReadOnlyCollection<SprintStatus> statuses)
+    private static SprintsSummary BuildSprintsSummary(
+        IReadOnlyCollection<SprintStatus> statuses)
     {
         var countsByStatus = CountBy(statuses);
 
         return new SprintsSummary
         {
             TotalSprintsCount = statuses.Count,
-            PlannedSprintsCount = countsByStatus.GetValueOrDefault(SprintStatus.Planned),
-            ActiveSprintsCount = countsByStatus.GetValueOrDefault(SprintStatus.Active),
-            CompletedSprintsCount = countsByStatus.GetValueOrDefault(SprintStatus.Completed),
-            CancelledSprintsCount = countsByStatus.GetValueOrDefault(SprintStatus.Cancelled)
+
+            PlannedSprintsCount =
+                countsByStatus.GetValueOrDefault(
+                    SprintStatus.Planned),
+
+            ActiveSprintsCount =
+                countsByStatus.GetValueOrDefault(
+                    SprintStatus.Active),
+
+            CompletedSprintsCount =
+                countsByStatus.GetValueOrDefault(
+                    SprintStatus.Completed),
+
+            CancelledSprintsCount =
+                countsByStatus.GetValueOrDefault(
+                    SprintStatus.Cancelled)
         };
     }
 
-    private static WorkItemCycleTime ToWorkItemCycleTime(WorkItemCycleTimeProjection snapshot)
+    private static WorkItemCycleTime ToWorkItemCycleTime(
+        WorkItemCycleTimeProjection snapshot)
     {
-        var startDate = snapshot.StartDate ?? snapshot.CreatedAt;
+        var startDate =
+            snapshot.StartDate ??
+            snapshot.CreatedAt;
 
         return new WorkItemCycleTime
         {
             WorkItemId = snapshot.Id,
             Code = snapshot.Code,
             EndDate = snapshot.EndDate,
-            CycleTimeDays = CalculateNonNegativeDays(startDate, snapshot.EndDate)
+
+            CycleTimeDays = CalculateNonNegativeDays(
+                startDate,
+                snapshot.EndDate)
         };
     }
 
-    private static SprintVelocityDto ToSprintVelocityDto(SprintVelocityProjection snapshot)
+    private static SprintVelocityDto ToSprintVelocityDto(
+        SprintVelocityProjection snapshot)
     {
         return new SprintVelocityDto
         {
@@ -871,27 +1210,36 @@ public class ReportsReadModel : IReportsReadModel
             SprintCode = snapshot.SprintCode,
             TotalStoryPoints = snapshot.TotalStoryPoints,
             CompletedStoryPoints = snapshot.CompletedStoryPoints,
-            VelocityPercentage = CalculatePercentage(snapshot.CompletedStoryPoints, snapshot.TotalStoryPoints)
+
+            VelocityPercentage = CalculatePercentage(
+                snapshot.CompletedStoryPoints,
+                snapshot.TotalStoryPoints)
         };
     }
 
-    private static DeveloperProductivityItemDto BuildDeveloperProductivityItem(
-        UserProjection user,
-        IReadOnlyCollection<WorkItemMetricsProjection> workItems,
-        DateTime from,
-        DateTime to,
-        DateTime now)
+    private static DeveloperProductivityItemDto
+        BuildDeveloperProductivityItem(
+            UserProjection user,
+            IReadOnlyCollection<WorkItemMetricsProjection> workItems,
+            DateTime from,
+            DateTime to,
+            DateTime now)
     {
         var assignedItems = workItems
-            .Where(workItem => workItem.AssignedToUserId == user.Id)
+            .Where(workItem =>
+                workItem.AssignedToUserId == user.Id)
             .ToList();
 
         var completedItems = assignedItems
-            .Where(workItem => IsCompletedWithin(workItem, from, to))
+            .Where(workItem =>
+                IsCompletedWithin(workItem, from, to))
             .ToList();
 
-        var assignedEffortPoints = assignedItems.Sum(workItem => workItem.EffortPoints);
-        var completedEffortPoints = completedItems.Sum(workItem => workItem.EffortPoints);
+        var assignedEffortPoints = assignedItems.Sum(workItem =>
+            workItem.EffortPoints);
+
+        var completedEffortPoints = completedItems.Sum(workItem =>
+            workItem.EffortPoints);
 
         return new DeveloperProductivityItemDto
         {
@@ -899,40 +1247,65 @@ public class ReportsReadModel : IReportsReadModel
             FullName = user.FullName,
             JobTitle = user.JobTitle,
             Department = user.Department?.ToString(),
+
             AssignedWorkItemsCount = assignedItems.Count,
+
             CreatedWorkItemsCount = workItems.Count(workItem =>
                 workItem.CreatedByUserId == user.Id &&
                 workItem.CreatedAt >= from &&
                 workItem.CreatedAt <= to),
+
             CompletedWorkItemsCount = completedItems.Count,
-            InProgressWorkItemsCount = assignedItems.Count(workItem => IsInProgressStatus(workItem.Status)),
-            BlockedWorkItemsCount = assignedItems.Count(workItem => workItem.IsBlocked && !IsDone(workItem.Status)),
-            OverdueWorkItemsCount = assignedItems.Count(workItem => IsOverdue(workItem, now)),
+
+            InProgressWorkItemsCount = assignedItems.Count(workItem =>
+                IsInProgressStatus(workItem.Status)),
+
+            BlockedWorkItemsCount = assignedItems.Count(workItem =>
+                workItem.IsBlocked &&
+                !IsDone(workItem.Status)),
+
+            OverdueWorkItemsCount = assignedItems.Count(workItem =>
+                IsOverdue(workItem, now)),
+
             AssignedEffortPoints = assignedEffortPoints,
             CompletedEffortPoints = completedEffortPoints,
-            CompletionPercentage = CalculatePercentage(completedItems.Count, assignedItems.Count),
-            EffortCompletionPercentage = CalculatePercentage(completedEffortPoints, assignedEffortPoints),
-            AverageCycleTimeDays = CalculateAverageCycleTimeDays(completedItems)
+
+            CompletionPercentage = CalculatePercentage(
+                completedItems.Count,
+                assignedItems.Count),
+
+            EffortCompletionPercentage = CalculatePercentage(
+                completedEffortPoints,
+                assignedEffortPoints),
+
+            AverageCycleTimeDays =
+                CalculateAverageCycleTimeDays(completedItems)
         };
     }
 
-    private static TeamProductivityItemDto BuildTeamProductivityItem(
-        TeamProjection team,
-        IReadOnlyCollection<WorkItemMetricsProjection> workItems,
-        DateTime from,
-        DateTime to,
-        DateTime now)
+    private static TeamProductivityItemDto
+        BuildTeamProductivityItem(
+            TeamProjection team,
+            IReadOnlyCollection<WorkItemMetricsProjection> workItems,
+            DateTime from,
+            DateTime to,
+            DateTime now)
     {
         var teamWorkItems = workItems
-            .Where(workItem => workItem.TeamId == team.Id)
+            .Where(workItem =>
+                workItem.TeamId == team.Id)
             .ToList();
 
         var completedItems = teamWorkItems
-            .Where(workItem => IsCompletedWithin(workItem, from, to))
+            .Where(workItem =>
+                IsCompletedWithin(workItem, from, to))
             .ToList();
 
-        var assignedEffortPoints = teamWorkItems.Sum(workItem => workItem.EffortPoints);
-        var completedEffortPoints = completedItems.Sum(workItem => workItem.EffortPoints);
+        var assignedEffortPoints = teamWorkItems.Sum(workItem =>
+            workItem.EffortPoints);
+
+        var completedEffortPoints = completedItems.Sum(workItem =>
+            workItem.EffortPoints);
 
         return new TeamProductivityItemDto
         {
@@ -944,16 +1317,33 @@ public class ReportsReadModel : IReportsReadModel
             MembersCount = team.MembersCount,
             Capacity = team.Capacity,
             ActiveProjectsCount = team.ActiveProjectsCount,
+
             AssignedWorkItemsCount = teamWorkItems.Count,
             CompletedWorkItemsCount = completedItems.Count,
-            InProgressWorkItemsCount = teamWorkItems.Count(workItem => IsInProgressStatus(workItem.Status)),
-            BlockedWorkItemsCount = teamWorkItems.Count(workItem => workItem.IsBlocked && !IsDone(workItem.Status)),
-            OverdueWorkItemsCount = teamWorkItems.Count(workItem => IsOverdue(workItem, now)),
+
+            InProgressWorkItemsCount = teamWorkItems.Count(workItem =>
+                IsInProgressStatus(workItem.Status)),
+
+            BlockedWorkItemsCount = teamWorkItems.Count(workItem =>
+                workItem.IsBlocked &&
+                !IsDone(workItem.Status)),
+
+            OverdueWorkItemsCount = teamWorkItems.Count(workItem =>
+                IsOverdue(workItem, now)),
+
             AssignedEffortPoints = assignedEffortPoints,
             CompletedEffortPoints = completedEffortPoints,
-            CompletionPercentage = CalculatePercentage(completedItems.Count, teamWorkItems.Count),
-            EffortCompletionPercentage = CalculatePercentage(completedEffortPoints, assignedEffortPoints),
-            AverageCycleTimeDays = CalculateAverageCycleTimeDays(completedItems)
+
+            CompletionPercentage = CalculatePercentage(
+                completedItems.Count,
+                teamWorkItems.Count),
+
+            EffortCompletionPercentage = CalculatePercentage(
+                completedEffortPoints,
+                assignedEffortPoints),
+
+            AverageCycleTimeDays =
+                CalculateAverageCycleTimeDays(completedItems)
         };
     }
 
@@ -963,27 +1353,57 @@ public class ReportsReadModel : IReportsReadModel
         DateTime now)
     {
         var projectWorkItems = workItems
-            .Where(workItem => workItem.ProjectId == project.Id)
+            .Where(workItem =>
+                workItem.ProjectId == project.Id)
             .ToList();
 
         var totalWorkItems = projectWorkItems.Count;
-        var completedWorkItems = projectWorkItems.Count(workItem => IsDone(workItem.Status));
-        var blockedWorkItems = projectWorkItems.Count(workItem => workItem.IsBlocked && !IsDone(workItem.Status));
-        var overdueWorkItems = projectWorkItems.Count(workItem => IsOverdue(workItem, now));
 
-        var totalBugs = projectWorkItems.Count(workItem => workItem.Type == WorkItemType.Bug);
-        var criticalBugs = CountOpenBugsByPriority(projectWorkItems, WorkItemPriority.Critical);
-        var highBugs = CountOpenBugsByPriority(projectWorkItems, WorkItemPriority.High);
+        var completedWorkItems = projectWorkItems.Count(workItem =>
+            IsDone(workItem.Status));
 
-        var totalEffortPoints = projectWorkItems.Sum(workItem => workItem.EffortPoints);
+        var blockedWorkItems = projectWorkItems.Count(workItem =>
+            workItem.IsBlocked &&
+            !IsDone(workItem.Status));
+
+        var overdueWorkItems = projectWorkItems.Count(workItem =>
+            IsOverdue(workItem, now));
+
+        var totalBugs = projectWorkItems.Count(workItem =>
+            workItem.Type == WorkItemType.Bug);
+
+        var criticalBugs = CountOpenBugsByPriority(
+            projectWorkItems,
+            WorkItemPriority.Critical);
+
+        var highBugs = CountOpenBugsByPriority(
+            projectWorkItems,
+            WorkItemPriority.High);
+
+        var totalEffortPoints = projectWorkItems.Sum(workItem =>
+            workItem.EffortPoints);
+
         var completedEffortPoints = projectWorkItems
-            .Where(workItem => IsDone(workItem.Status))
-            .Sum(workItem => workItem.EffortPoints);
+            .Where(workItem =>
+                IsDone(workItem.Status))
+            .Sum(workItem =>
+                workItem.EffortPoints);
 
-        var completionPercentage = CalculatePercentage(completedWorkItems, totalWorkItems);
-        var effortCompletionPercentage = CalculatePercentage(completedEffortPoints, totalEffortPoints);
-        var blockedPercentage = CalculatePercentage(blockedWorkItems, totalWorkItems);
-        var overduePercentage = CalculatePercentage(overdueWorkItems, totalWorkItems);
+        var completionPercentage = CalculatePercentage(
+            completedWorkItems,
+            totalWorkItems);
+
+        var effortCompletionPercentage = CalculatePercentage(
+            completedEffortPoints,
+            totalEffortPoints);
+
+        var blockedPercentage = CalculatePercentage(
+            blockedWorkItems,
+            totalWorkItems);
+
+        var overduePercentage = CalculatePercentage(
+            overdueWorkItems,
+            totalWorkItems);
 
         var healthScore = CalculateProjectHealthScore(
             completionPercentage,
@@ -1000,25 +1420,32 @@ public class ReportsReadModel : IReportsReadModel
             ProjectStatus = project.Status,
             TeamId = project.TeamId,
             TeamName = project.TeamName,
+
             TotalWorkItems = totalWorkItems,
             CompletedWorkItems = completedWorkItems,
             BlockedWorkItems = blockedWorkItems,
             OverdueWorkItems = overdueWorkItems,
+
             TotalBugs = totalBugs,
             CriticalBugs = criticalBugs,
             HighBugs = highBugs,
+
             TotalEffortPoints = totalEffortPoints,
             CompletedEffortPoints = completedEffortPoints,
+
             CompletionPercentage = completionPercentage,
             EffortCompletionPercentage = effortCompletionPercentage,
             BlockedPercentage = blockedPercentage,
             OverduePercentage = overduePercentage,
+
             HealthScore = healthScore,
             HealthStatus = GetHealthStatus(healthScore)
         };
     }
 
-    private static BlockedWorkItemDto ToBlockedWorkItemDto(WorkItemDetailsProjection snapshot, DateTime now)
+    private static BlockedWorkItemDto ToBlockedWorkItemDto(
+        WorkItemDetailsProjection snapshot,
+        DateTime now)
     {
         return new BlockedWorkItemDto
         {
@@ -1029,19 +1456,31 @@ public class ReportsReadModel : IReportsReadModel
             Status = snapshot.Status,
             Priority = snapshot.Priority,
             EffortPoints = snapshot.EffortPoints,
-            BlockedAgeDays = CalculateNonNegativeDays(snapshot.CreatedAt, now),
+
+            BlockedAgeDays = CalculateNonNegativeDays(
+                snapshot.CreatedAt,
+                now),
+
             CreatedAt = snapshot.CreatedAt,
             EndDate = snapshot.EndDate,
+
             ProjectId = snapshot.ProjectId,
             ProjectKey = snapshot.ProjectKey,
             ProjectName = snapshot.ProjectName,
+
             AssignedToUserId = snapshot.AssignedToUserId,
             AssignedToUserName = snapshot.AssignedToUserName
         };
     }
 
-    private static OverdueWorkItemDto ToOverdueWorkItemDto(WorkItemDetailsProjection snapshot, DateTime now)
+    private static OverdueWorkItemDto ToOverdueWorkItemDto(
+        WorkItemDetailsProjection snapshot,
+        DateTime now)
     {
+        var dueDate = snapshot.DueDate
+            ?? throw new InvalidOperationException(
+                $"Overdue work item '{snapshot.Id}' does not have a sprint due date.");
+
         return new OverdueWorkItemDto
         {
             WorkItemId = snapshot.Id,
@@ -1051,103 +1490,133 @@ public class ReportsReadModel : IReportsReadModel
             Status = snapshot.Status,
             Priority = snapshot.Priority,
             EffortPoints = snapshot.EffortPoints,
-            DaysOverdue = snapshot.EndDate.HasValue
-                ? CalculateNonNegativeDays(snapshot.EndDate.Value, now)
-                : 0,
+
+            DaysOverdue = CalculateNonNegativeDays(
+                dueDate,
+                now),
+
             CreatedAt = snapshot.CreatedAt,
-            EndDate = snapshot.EndDate!.Value,
+
+            // Kept as EndDate to avoid breaking the existing DTO contract.
+            // The value is the planned Sprint EndDate.
+            EndDate = dueDate,
+
             ProjectId = snapshot.ProjectId,
             ProjectKey = snapshot.ProjectKey,
             ProjectName = snapshot.ProjectName,
+
             AssignedToUserId = snapshot.AssignedToUserId,
             AssignedToUserName = snapshot.AssignedToUserName
         };
     }
 
-    private static List<BugSeverityDistributionItemDto> BuildBugSeverityDistributionItems(
-        IReadOnlyDictionary<WorkItemPriority, int> countsByPriority,
-        int total)
+    private static List<BugSeverityDistributionItemDto>
+        BuildBugSeverityDistributionItems(
+            IReadOnlyDictionary<WorkItemPriority, int> countsByPriority,
+            int total)
     {
         return Enum.GetValues<WorkItemPriority>()
             .Select(priority =>
             {
-                var count = countsByPriority.GetValueOrDefault(priority);
+                var count =
+                    countsByPriority.GetValueOrDefault(priority);
 
                 return new BugSeverityDistributionItemDto
                 {
                     Severity = priority,
                     Count = count,
-                    Percentage = CalculatePercentage(count, total)
+
+                    Percentage = CalculatePercentage(
+                        count,
+                        total)
                 };
             })
             .ToList();
     }
 
-    private static List<WorkItemPriorityDistributionDto> BuildPriorityDistribution(
-        IEnumerable<WorkItemPriority> priorities,
-        int total)
+    private static List<WorkItemPriorityDistributionDto>
+        BuildPriorityDistribution(
+            IEnumerable<WorkItemPriority> priorities,
+            int total)
     {
         var countsByPriority = CountBy(priorities);
 
         return Enum.GetValues<WorkItemPriority>()
             .Select(priority =>
             {
-                var count = countsByPriority.GetValueOrDefault(priority);
+                var count =
+                    countsByPriority.GetValueOrDefault(priority);
 
                 return new WorkItemPriorityDistributionDto
                 {
                     Priority = priority,
                     Count = count,
-                    Percentage = CalculatePercentage(count, total)
+
+                    Percentage = CalculatePercentage(
+                        count,
+                        total)
                 };
             })
             .ToList();
     }
 
-    private static List<WorkItemStatusDistributionDto> BuildStatusDistribution(
-        IEnumerable<WorkItemStatus> statuses,
-        int total)
+    private static List<WorkItemStatusDistributionDto>
+        BuildStatusDistribution(
+            IEnumerable<WorkItemStatus> statuses,
+            int total)
     {
         var countsByStatus = CountBy(statuses);
 
         return Enum.GetValues<WorkItemStatus>()
             .Select(status =>
             {
-                var count = countsByStatus.GetValueOrDefault(status);
+                var count =
+                    countsByStatus.GetValueOrDefault(status);
 
                 return new WorkItemStatusDistributionDto
                 {
                     Status = status,
                     Count = count,
-                    Percentage = CalculatePercentage(count, total)
+
+                    Percentage = CalculatePercentage(
+                        count,
+                        total)
                 };
             })
             .ToList();
     }
 
-    private static Dictionary<TEnum, int> CountBy<TEnum>(IEnumerable<TEnum> values)
+    private static Dictionary<TEnum, int> CountBy<TEnum>(
+        IEnumerable<TEnum> values)
         where TEnum : notnull
     {
         return values
             .GroupBy(value => value)
-            .ToDictionary(group => group.Key, group => group.Count());
+            .ToDictionary(
+                group => group.Key,
+                group => group.Count());
     }
 
-    private static bool HasDeveloperActivity(DeveloperProductivityItemDto developer)
+    private static bool HasDeveloperActivity(
+        DeveloperProductivityItemDto developer)
     {
         return developer.AssignedWorkItemsCount > 0 ||
                developer.CreatedWorkItemsCount > 0 ||
                developer.CompletedWorkItemsCount > 0;
     }
 
-    private static bool HasTeamActivity(TeamProductivityItemDto team)
+    private static bool HasTeamActivity(
+        TeamProductivityItemDto team)
     {
         return team.AssignedWorkItemsCount > 0 ||
                team.CompletedWorkItemsCount > 0 ||
                team.ActiveProjectsCount > 0;
     }
 
-    private static bool IsCompletedWithin(WorkItemMetricsProjection workItem, DateTime from, DateTime to)
+    private static bool IsCompletedWithin(
+        WorkItemMetricsProjection workItem,
+        DateTime from,
+        DateTime to)
     {
         return IsDone(workItem.Status) &&
                workItem.EndDate.HasValue &&
@@ -1155,24 +1624,30 @@ public class ReportsReadModel : IReportsReadModel
                workItem.EndDate.Value <= to;
     }
 
-    private static bool IsOverdue(WorkItemMetricsProjection workItem, DateTime now)
+    private static bool IsOverdue(
+        WorkItemMetricsProjection workItem,
+        DateTime now)
     {
         return !IsDone(workItem.Status) &&
-               workItem.EndDate.HasValue &&
-               workItem.EndDate.Value < now;
+               workItem.SprintStatus == SprintStatus.Active &&
+               workItem.SprintEndDate.HasValue &&
+               workItem.SprintEndDate.Value < now;
     }
 
-    private static bool IsDone(WorkItemStatus status)
+    private static bool IsDone(
+        WorkItemStatus status)
     {
         return status == WorkItemStatus.Done;
     }
 
-    private static bool IsInProgressStatus(WorkItemStatus status)
+    private static bool IsInProgressStatus(
+        WorkItemStatus status)
     {
-        return status is WorkItemStatus.InProgress
-            or WorkItemStatus.InReview
-            or WorkItemStatus.InTesting
-            or WorkItemStatus.ReadyForRelease;
+        return status is
+            WorkItemStatus.InProgress or
+            WorkItemStatus.InReview or
+            WorkItemStatus.InTesting or
+            WorkItemStatus.ReadyForRelease;
     }
 
     private static int CountOpenBugsByPriority(
@@ -1185,7 +1660,8 @@ public class ReportsReadModel : IReportsReadModel
             !IsDone(workItem.Status));
     }
 
-    private static double CalculateMedianCycleTimeDays(List<WorkItemCycleTime> items)
+    private static double CalculateMedianCycleTimeDays(
+        List<WorkItemCycleTime> items)
     {
         if (items.Count == 0)
             return 0;
@@ -1195,66 +1671,104 @@ public class ReportsReadModel : IReportsReadModel
             .OrderBy(value => value)
             .ToList();
 
-        var middleIndex = orderedValues.Count / 2;
+        var middleIndex =
+            orderedValues.Count / 2;
 
         return orderedValues.Count % 2 == 1
             ? orderedValues[middleIndex]
-            : (orderedValues[middleIndex - 1] + orderedValues[middleIndex]) / 2.0;
+            : (orderedValues[middleIndex - 1] +
+               orderedValues[middleIndex]) / 2.0;
     }
 
-    private static double CalculateAverageCycleTimeDays(IEnumerable<WorkItemMetricsProjection> items)
+    private static double CalculateAverageCycleTimeDays(
+        IEnumerable<WorkItemMetricsProjection> items)
     {
         var cycleTimes = items
-            .Where(item => item.EndDate.HasValue)
-            .Select(item => CalculateNonNegativeDays(item.StartDate ?? item.CreatedAt, item.EndDate!.Value))
+            .Where(item =>
+                item.EndDate.HasValue)
+            .Select(item =>
+                CalculateNonNegativeDays(
+                    item.StartDate ?? item.CreatedAt,
+                    item.EndDate!.Value))
             .ToList();
 
-        return cycleTimes.Count > 0 ? cycleTimes.Average() : 0;
+        return cycleTimes.Count > 0
+            ? cycleTimes.Average()
+            : 0;
     }
 
-    private static double CalculatePercentage(int value, int total)
+    private static double CalculatePercentage(
+        int value,
+        int total)
     {
-        return total > 0 ? (double) value / total * 100 : 0;
+        return total > 0
+            ? (double) value / total * 100
+            : 0;
     }
 
-    private static double AverageOrZero<T>(IReadOnlyCollection<T> items, Func<T, double> selector)
+    private static double AverageOrZero<T>(
+        IReadOnlyCollection<T> items,
+        Func<T, double> selector)
     {
-        return items.Count > 0 ? items.Average(selector) : 0;
+        return items.Count > 0
+            ? items.Average(selector)
+            : 0;
     }
 
-    private static double AverageForItemsWithCompletedWork(IReadOnlyCollection<DeveloperProductivityItemDto> developers)
+    private static double AverageForItemsWithCompletedWork(
+        IReadOnlyCollection<DeveloperProductivityItemDto> developers)
     {
         var activeDevelopers = developers
-            .Where(developer => developer.CompletedWorkItemsCount > 0)
+            .Where(developer =>
+                developer.CompletedWorkItemsCount > 0)
             .ToList();
 
-        return AverageOrZero(activeDevelopers, developer => developer.AverageCycleTimeDays);
+        return AverageOrZero(
+            activeDevelopers,
+            developer => developer.AverageCycleTimeDays);
     }
 
-    private static double AverageForTeamsWithCompletedWork(IReadOnlyCollection<TeamProductivityItemDto> teams)
+    private static double AverageForTeamsWithCompletedWork(
+        IReadOnlyCollection<TeamProductivityItemDto> teams)
     {
         var activeTeams = teams
-            .Where(team => team.CompletedWorkItemsCount > 0)
+            .Where(team =>
+                team.CompletedWorkItemsCount > 0)
             .ToList();
 
-        return AverageOrZero(activeTeams, team => team.AverageCycleTimeDays);
+        return AverageOrZero(
+            activeTeams,
+            team => team.AverageCycleTimeDays);
     }
 
-    private static int CalculateNonNegativeDays(DateTime from, DateTime to)
+    private static int CalculateNonNegativeDays(
+        DateTime from,
+        DateTime to)
     {
         var days = (to - from).Days;
-        return days < 0 ? 0 : days;
+
+        return days < 0
+            ? 0
+            : days;
     }
 
-    private static int NormalizeMaxItems(int maxItems)
+    private static int NormalizeMaxItems(
+        int maxItems)
     {
-        return maxItems > 0 ? maxItems : DefaultMaxReportItems;
+        return maxItems > 0
+            ? maxItems
+            : DefaultMaxReportItems;
     }
 
-    private static void ValidateDateRange(DateTime from, DateTime to)
+    private static void ValidateDateRange(
+        DateTime from,
+        DateTime to)
     {
         if (from > to)
-            throw new ArgumentException("The report start date cannot be after the report end date.");
+        {
+            throw new ArgumentException(
+                "The report start date cannot be after the report end date.");
+        }
     }
 
     private static double CalculateProjectHealthScore(
@@ -1275,14 +1789,24 @@ public class ReportsReadModel : IReportsReadModel
         return ClampScore(score);
     }
 
-    private static double ClampScore(double score)
+    private static double ClampScore(
+        double score)
     {
-        return score < 0 ? 0 : score > 100 ? 100 : score;
+        return score < 0
+            ? 0
+            : score > 100
+                ? 100
+                : score;
     }
 
-    private static string GetHealthStatus(double score)
+    private static string GetHealthStatus(
+        double score)
     {
-        return score >= 80 ? HealthStatusHealthy : score >= 60 ? HealthStatusAtRisk : HealthStatusCritical;
+        return score >= 80
+            ? HealthStatusHealthy
+            : score >= 60
+                ? HealthStatusAtRisk
+                : HealthStatusCritical;
     }
 
     private sealed class ProjectLookup
@@ -1325,7 +1849,7 @@ public class ReportsReadModel : IReportsReadModel
     {
         public string SprintId { get; init; } = null!;
         public string SprintCode { get; init; } = null!;
-        public DateTime StartDate { get; init; }
+        public DateTime StartedAt { get; init; }
         public int TotalStoryPoints { get; init; }
         public int CompletedStoryPoints { get; init; }
     }
@@ -1338,8 +1862,13 @@ public class ReportsReadModel : IReportsReadModel
         public string? AssignedToUserId { get; init; }
         public string CreatedByUserId { get; init; } = null!;
         public DateTime CreatedAt { get; init; }
+
         public DateTime? StartDate { get; init; }
         public DateTime? EndDate { get; init; }
+
+        public DateTime? SprintEndDate { get; init; }
+        public SprintStatus? SprintStatus { get; init; }
+
         public WorkItemType Type { get; init; }
         public WorkItemStatus Status { get; init; }
         public WorkItemPriority Priority { get; init; }
@@ -1357,7 +1886,10 @@ public class ReportsReadModel : IReportsReadModel
         public WorkItemPriority Priority { get; init; }
         public int EffortPoints { get; init; }
         public DateTime CreatedAt { get; init; }
+
         public DateTime? EndDate { get; init; }
+        public DateTime? DueDate { get; init; }
+
         public string ProjectId { get; init; } = null!;
         public string ProjectKey { get; init; } = null!;
         public string ProjectName { get; init; } = null!;

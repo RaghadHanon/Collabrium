@@ -1,39 +1,140 @@
 ﻿using Application.Common;
 using Application.Features.Sprints.DTOs;
+using Application.Features.WorkItems.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
-using SkiaSharp;
 
 namespace Infrastructure.Persistence.ReadModels;
 
 public sealed class SprintsReadModel : ISprintsReadModel
 {
+    private const int DefaultPageSize = 10;
+    private const int MaxPageSize = 50;
+
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
 
-    public SprintsReadModel(AppDbContext dbContext, IMapper mapper)
+    public SprintsReadModel(
+        AppDbContext dbContext,
+        IMapper mapper)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _dbContext = dbContext
+            ?? throw new ArgumentNullException(nameof(dbContext));
+
+        _mapper = mapper
+            ?? throw new ArgumentNullException(nameof(mapper));
     }
 
-    public async Task<SprintDto?> GetByIdAsync(string tenantId, string? sprintId, string? projectId = null, CancellationToken ct = default)
+    public async Task<SprintDto?> GetByIdAsync(
+        string tenantId,
+        string? sprintId,
+        string? projectId = null,
+        CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(sprintId))
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
             return null;
+        }
 
         var tId = tenantId.Trim();
         var sId = sprintId.Trim();
-        var prId = projectId?.Trim();
+        var pId = projectId?.Trim();
 
-        return await _dbContext.Sprints
+        var query = _dbContext.Sprints
             .AsNoTracking()
-            .Where(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId)
-            .ProjectTo<SprintDto>(_mapper.ConfigurationProvider)
+            .Where(sprint =>
+                sprint.TenantId == tId &&
+                sprint.Id == sId);
+
+        if (!string.IsNullOrWhiteSpace(pId))
+        {
+            query = query.Where(sprint =>
+                sprint.ProjectId == pId);
+        }
+
+        return await query
+            .ProjectTo<SprintDto>(
+                _mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<SprintWithWorkItemsDto?> GetSprintWithWorkItemsAsync(
+     string tenantId,
+     string projectId,
+     string sprintId,
+     CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+        {
+            return null;
+        }
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var sId = sprintId.Trim();
+
+        var sprint = await GetByIdAsync(
+            tId,
+            sId,
+            pId,
+            cancellationToken);
+
+        if (sprint is null)
+            return null;
+
+        var sprintWorkItems = await _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(workItem =>
+                workItem.Project.TenantId == tId &&
+                workItem.ProjectId == pId &&
+                workItem.SprintId == sId)
+            .OrderBy(workItem => workItem.CreatedAt)
+            .ProjectTo<WorkItemListItemDto>(
+                _mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        var epics = sprintWorkItems
+            .Where(workItem =>
+                workItem.Type == WorkItemType.Epic)
+            .ToList();
+
+        var userStories = sprintWorkItems
+            .Where(workItem =>
+                workItem.Type == WorkItemType.UserStory)
+            .Select(userStory => new SprintUserStoryGroupDto
+            {
+                UserStory = userStory,
+
+                WorkItems = sprintWorkItems
+                    .Where(workItem =>
+                        workItem.Type != WorkItemType.Epic &&
+                        workItem.Type != WorkItemType.UserStory &&
+                        workItem.Parent?.Id == userStory.Id)
+                    .ToList()
+            })
+            .ToList();
+
+        var orphanWorkItems = sprintWorkItems
+            .Where(workItem =>
+                workItem.Type != WorkItemType.Epic &&
+                workItem.Type != WorkItemType.UserStory &&
+                workItem.Parent is null)
+            .ToList();
+
+        return new SprintWithWorkItemsDto
+        {
+            Sprint = sprint,
+            Epics = epics,
+            UserStories = userStories,
+            OrphanWorkItems = orphanWorkItems
+        };
     }
 
     public async Task<string?> GetSprintDisplayNameAsync(
@@ -45,7 +146,9 @@ public sealed class SprintsReadModel : ISprintsReadModel
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(projectId) ||
             string.IsNullOrWhiteSpace(sprintId))
+        {
             return null;
+        }
 
         var tId = tenantId.Trim();
         var pId = projectId.Trim();
@@ -58,7 +161,7 @@ public sealed class SprintsReadModel : ISprintsReadModel
                 sprint.ProjectId == pId &&
                 sprint.TenantId == tId)
             .Select(sprint =>
-                sprint.Name == null || sprint.Name == string.Empty
+                string.IsNullOrEmpty(sprint.Name)
                     ? sprint.Code
                     : sprint.Code + " - " + sprint.Name)
             .FirstOrDefaultAsync(cancellationToken);
@@ -68,29 +171,48 @@ public sealed class SprintsReadModel : ISprintsReadModel
         SprintsSearchAndFilterParametersDto parameters,
         CancellationToken ct = default)
     {
-        parameters ??= new SprintsSearchAndFilterParametersDto();
-        var pageSize = parameters.PageSize <= 0 ? 10 : parameters.PageSize;
+        parameters ??=
+            new SprintsSearchAndFilterParametersDto();
 
-        var query = _dbContext.Sprints.AsNoTracking();
+        var requestedPageSize =
+            parameters.PageSize <= 0
+                ? DefaultPageSize
+                : parameters.PageSize;
 
-        query = ApplyFilters(query, parameters);
+        var pageSize = Math.Min(
+            requestedPageSize,
+            MaxPageSize);
+
+        var query = _dbContext.Sprints
+            .AsNoTracking()
+            .AsQueryable();
+
+        query = ApplyFilters(
+            query,
+            parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt > parameters.Cursor.Value);
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt > parameters.Cursor.Value);
+        }
 
         var items = await query
-            .OrderBy(x => x.CreatedAt)
-            .ProjectTo<SprintDto>(_mapper.ConfigurationProvider)
+            .OrderBy(sprint => sprint.CreatedAt)
+            .ProjectTo<SprintDto>(
+                _mapper.ConfigurationProvider)
             .Take(pageSize + 1)
             .ToListAsync(ct);
 
         DateTime? nextCursor = null;
-        var hasMore = items.Count > pageSize;
 
-        if (hasMore)
+        if (items.Count > pageSize)
         {
             items.RemoveAt(items.Count - 1);
-            nextCursor = items[^1].CreatedAt;
+
+            nextCursor = items.Count > 0
+                ? items[^1].CreatedAt
+                : null;
         }
 
         return new PagedList<SprintDto, DateTime?>
@@ -100,51 +222,118 @@ public sealed class SprintsReadModel : ISprintsReadModel
         };
     }
 
-    private static IQueryable<SprintEntity> ApplyFilters(IQueryable<SprintEntity> query, SprintsSearchAndFilterParametersDto p)
+    private static IQueryable<SprintEntity> ApplyFilters(
+        IQueryable<SprintEntity> query,
+        SprintsSearchAndFilterParametersDto parameters)
     {
-        if (!string.IsNullOrWhiteSpace(p.TenantId))
+        if (!string.IsNullOrWhiteSpace(parameters.TenantId))
         {
-            var tId = p.TenantId.Trim();
-            query = query.Where(x => x.TenantId == tId);
+            var tenantId = parameters.TenantId.Trim();
+
+            query = query.Where(sprint =>
+                sprint.TenantId == tenantId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.ProjectId))
+        if (!string.IsNullOrWhiteSpace(parameters.ProjectId))
         {
-            var prId = p.ProjectId.Trim();
-            query = query.Where(x => x.ProjectId == prId);
+            var projectId = parameters.ProjectId.Trim();
+
+            query = query.Where(sprint =>
+                sprint.ProjectId == projectId);
         }
 
-        if (!string.IsNullOrWhiteSpace(p.NameContains))
+        if (!string.IsNullOrWhiteSpace(parameters.NameContains))
         {
-            var term = p.NameContains.Trim();
-            query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && x.Name.Contains(term));
+            var term = parameters.NameContains.Trim();
+
+            query = query.Where(sprint =>
+                sprint.Name != null &&
+                sprint.Name.Contains(term));
         }
 
-        if (!string.IsNullOrWhiteSpace(p.Code))
+        if (!string.IsNullOrWhiteSpace(parameters.Code))
         {
-            query = query.Where(x => x.Code == p.Code);
+            var code = parameters.Code.Trim();
+
+            query = query.Where(sprint =>
+                sprint.Code == code);
         }
 
-        if (p.Status.HasValue)
-            query = query.Where(x => x.Status == p.Status.Value);
+        if (parameters.Status.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.Status == parameters.Status.Value);
+        }
 
-        if (p.StartAfter.HasValue)
-            query = query.Where(x => x.StartDate >= p.StartAfter.Value);
+        if (parameters.StartAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartDate.HasValue &&
+                sprint.StartDate.Value >= parameters.StartAfter.Value);
+        }
 
-        if (p.StartBefore.HasValue)
-            query = query.Where(x => x.StartDate <= p.StartBefore.Value);
+        if (parameters.StartBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartDate.HasValue &&
+                sprint.StartDate.Value <= parameters.StartBefore.Value);
+        }
 
-        if (p.EndAfter.HasValue)
-            query = query.Where(x => x.EndDate >= p.EndAfter.Value);
+        if (parameters.EndAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.EndDate.HasValue &&
+                sprint.EndDate.Value >= parameters.EndAfter.Value);
+        }
 
-        if (p.EndBefore.HasValue)
-            query = query.Where(x => x.EndDate <= p.EndBefore.Value);
+        if (parameters.EndBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.EndDate.HasValue &&
+                sprint.EndDate.Value <= parameters.EndBefore.Value);
+        }
 
-        if (p.CreatedAfter.HasValue)
-            query = query.Where(x => x.CreatedAt >= p.CreatedAfter.Value);
+        if (parameters.StartedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartedAt.HasValue &&
+                sprint.StartedAt.Value >= parameters.StartedAfter.Value);
+        }
 
-        if (p.CreatedBefore.HasValue)
-            query = query.Where(x => x.CreatedAt <= p.CreatedBefore.Value);
+        if (parameters.StartedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.StartedAt.HasValue &&
+                sprint.StartedAt.Value <= parameters.StartedBefore.Value);
+        }
+
+        if (parameters.CompletedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CompletedAt.HasValue &&
+                sprint.CompletedAt.Value >=
+                    parameters.CompletedAfter.Value);
+        }
+
+        if (parameters.CompletedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CompletedAt.HasValue &&
+                sprint.CompletedAt.Value <=
+                    parameters.CompletedBefore.Value);
+        }
+
+        if (parameters.CreatedAfter.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt >= parameters.CreatedAfter.Value);
+        }
+
+        if (parameters.CreatedBefore.HasValue)
+        {
+            query = query.Where(sprint =>
+                sprint.CreatedAt <= parameters.CreatedBefore.Value);
+        }
 
         return query;
     }

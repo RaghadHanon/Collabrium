@@ -114,8 +114,8 @@ public sealed class SprintsController : ApiBaseController
     ///     {
     ///       "name": "Sprint 1",
     ///       "goal": "Complete user authentication module",
-    ///       "startDate": "2026-02-02T00:00:00Z",
-    ///       "endDate": "2026-02-15T23:59:59Z"
+    ///       "plannedStartDate": "2026-02-02T00:00:00Z",
+    ///       "plannedEndDate": "2026-02-15T23:59:59Z"
     ///     }
     ///
     /// </remarks>
@@ -181,8 +181,8 @@ public sealed class SprintsController : ApiBaseController
     ///     {
     ///       "name": "Sprint 1",
     ///       "goal": "Complete user authentication module",
-    ///       "startDate": "2026-02-01T00:00:00Z",
-    ///       "endDate": "2026-02-14T23:59:59Z"
+    ///       "plannedStartDate": "2026-02-01T00:00:00Z",
+    ///       "plannedEndDate": "2026-02-14T23:59:59Z"
     ///     }
     ///     
     /// </remarks>

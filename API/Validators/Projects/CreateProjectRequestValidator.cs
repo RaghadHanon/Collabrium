@@ -28,6 +28,6 @@ public sealed class CreateProjectRequestValidator : AbstractValidator<CreateProj
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate!.Value)
             .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
-            .WithMessage("EndDate must be greater than or equal to StartDate.");
+            .WithMessage("PlannedEndDate must be greater than or equal to PlannedStartDate.");
     }
 }

@@ -826,7 +826,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime?>("PlannedEndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Key")
@@ -844,7 +844,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<DateTime?>("PlannedStartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
@@ -1131,21 +1131,21 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Goal")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("PlannedEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PlannedStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ProjectId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
@@ -1443,7 +1443,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("EffortPoints")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime?>("PlannedEndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsBlocked")
@@ -1462,7 +1462,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("SprintId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<DateTime?>("PlannedStartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Status")

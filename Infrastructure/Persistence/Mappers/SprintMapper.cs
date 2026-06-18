@@ -18,8 +18,8 @@ public static class SprintMapper
             goal: entity.Goal,
             tenantId: entity.TenantId,
             projectId: entity.ProjectId,
-            startDate: entity.StartDate,
-            endDate: entity.EndDate,
+            plannedStartDate: entity.PlannedStartDate,
+            plannedEndDate: entity.PlannedEndDate,
             startedAt: entity.StartedAt,
             completedAt: entity.CompletedAt,
             status: entity.Status);
@@ -42,8 +42,8 @@ public static class SprintMapper
             Name = domain.Name,
             Goal = domain.Goal,
 
-            StartDate = domain.StartDate,
-            EndDate = domain.EndDate,
+            PlannedStartDate = domain.PlannedStartDate,
+            PlannedEndDate = domain.PlannedEndDate,
 
             StartedAt = domain.StartedAt,
             CompletedAt = domain.CompletedAt,
@@ -66,8 +66,8 @@ public static class SprintMapper
         entity.Name = domain.Name;
         entity.Goal = domain.Goal;
 
-        entity.StartDate = domain.StartDate;
-        entity.EndDate = domain.EndDate;
+        entity.PlannedStartDate = domain.PlannedStartDate;
+        entity.PlannedEndDate = domain.PlannedEndDate;
 
         entity.StartedAt = domain.StartedAt;
         entity.CompletedAt = domain.CompletedAt;

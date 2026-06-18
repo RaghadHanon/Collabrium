@@ -15,8 +15,8 @@ public class SprintDto
     public string? Goal { get; set; }
 
     // Planned dates
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public DateTime? PlannedStartDate { get; set; }
+    public DateTime? PlannedEndDate { get; set; }
 
     // Actual dates
     public DateTime? StartedAt { get; set; }

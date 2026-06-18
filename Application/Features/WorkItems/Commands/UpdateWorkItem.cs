@@ -1,4 +1,6 @@
 ﻿using Application.Common;
+using Application.Events;
+using Application.Features.ProjectsHistories.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
 using Application.Interfaces;
@@ -18,7 +20,6 @@ public partial class UpdateWorkItem
     {
         public required string ProjectId { get; set; }
         public required string WorkItemId { get; set; }
-
         public required WorkItemType Type { get; set; }
 
         public string? Title { get; set; }
@@ -41,22 +42,48 @@ public partial class UpdateWorkItem
         ICurrentUserAccessor currentUserAccessor,
         IProjectsRepository projectsRepository,
         ISprintsRepository sprintsRepository,
-        IUnitOfWork unitOfWork)
-        : IRequestHandler<Command, Result<WorkItemDto>>
+        IUnitOfWork unitOfWork,
+        IMediator mediator
+    ) : IRequestHandler<Command, Result<WorkItemDto>>
     {
-        public async Task<Result<WorkItemDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<WorkItemDto>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
-            var tenantId = tenantContext.CurrentTenant?.Id;
+            var tenantId =
+                tenantContext.CurrentTenant?.Id
+                ?? tenantContext.TenantId;
+
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<WorkItemDto>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            {
+                return Result<WorkItemDto>.Failure(
+                    "Tenant not found.",
+                    HttpStatusCode.NotFound);
+            }
 
-            var project = await projectsRepository.GetByIdAsync(tenantId, request.ProjectId, cancellationToken);
+            var project = await projectsRepository.GetByIdAsync(
+                tenantId,
+                request.ProjectId,
+                cancellationToken);
+
             if (project is null)
-                return Result<WorkItemDto>.Failure("Project not found.", HttpStatusCode.NotFound);
+            {
+                return Result<WorkItemDto>.Failure(
+                    "Project not found.",
+                    HttpStatusCode.NotFound);
+            }
 
-            var currentUserId = currentUserAccessor.GetUserId();
-            if (string.IsNullOrWhiteSpace(currentUserId))
-                return Result<WorkItemDto>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+            var currentUser =
+                await currentUserAccessor.GetCurrentUserAsync();
+
+            if (currentUser is null)
+            {
+                return Result<WorkItemDto>.Failure(
+                    "Current user not found.",
+                    HttpStatusCode.Unauthorized);
+            }
+
+            var currentUserId = currentUser.Id;
 
             var workItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
@@ -66,87 +93,177 @@ public partial class UpdateWorkItem
                 cancellationToken);
 
             if (workItem is null)
-                return Result<WorkItemDto>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
+            {
+                return Result<WorkItemDto>.Failure(
+                    "Work item not found in this project.",
+                    HttpStatusCode.NotFound);
+            }
 
             if (request.Type != workItem.Type)
-                return Result<WorkItemDto>.Failure("Work item type mismatch.", HttpStatusCode.BadRequest);
+            {
+                return Result<WorkItemDto>.Failure(
+                    "Work item type mismatch.",
+                    HttpStatusCode.BadRequest);
+            }
 
-            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
-            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
+            var isCurrentAssignee = string.Equals(
+                workItem.AssignedToUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
+            var userRole = await currentUserAccessor.GetUserRole(
+                currentUserId,
+                cancellationToken);
+
+            var isManager =
+                Roles.ProjectsManagerRoles.Contains(userRole);
 
             if (!isManager && !isCurrentAssignee)
+            {
                 return Result<WorkItemDto>.Failure(
                     "You can only update items assigned to you. Managers can update any item.",
                     HttpStatusCode.Forbidden);
+            }
 
-            var sprintDecision = PatchHelpers.DecideStringPatch(request.SprintId);
+            var sprintDecision =
+                PatchHelpers.DecideStringPatch(request.SprintId);
 
-            if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
+            if (sprintDecision.Action ==
+                PatchHelpers.PatchStringAction.Set)
             {
                 var sprintIdToSet = sprintDecision.Value!;
 
-                var sprint = await sprintsRepository.GetByIdAsync(
-                    tenantId,
-                    sprintIdToSet,
-                    request.ProjectId,
-                    cancellationToken);
+                var sprintToSet =
+                    await sprintsRepository.GetByIdAsync(
+                        tenantId,
+                        sprintIdToSet,
+                        request.ProjectId,
+                        cancellationToken);
 
-                if (sprint is null)
-                    return Result<WorkItemDto>.Failure("Sprint not found in this project.", HttpStatusCode.BadRequest);
+                if (sprintToSet is null)
+                {
+                    return Result<WorkItemDto>.Failure(
+                        "Sprint not found in this project.",
+                        HttpStatusCode.BadRequest);
+                }
 
-                if (sprint.Status == SprintStatus.Cancelled || sprint.Status == SprintStatus.Completed)
-                    return Result<WorkItemDto>.Failure($"Can't assign workItems to a {sprint.Status} sprint.", HttpStatusCode.BadRequest);
+                if (sprintToSet.Status is
+                    SprintStatus.Cancelled or SprintStatus.Completed)
+                {
+                    return Result<WorkItemDto>.Failure(
+                        $"Can't assign work items to a {sprintToSet.Status} sprint.",
+                        HttpStatusCode.BadRequest);
+                }
             }
 
-            var titleDecision = PatchHelpers.DecideStringPatch(request.Title);
+            var titleDecision =
+                PatchHelpers.DecideStringPatch(request.Title);
 
             var oldWorkItemState = workItem.Clone();
+
+            IReadOnlyList<RecordedProjectHistoryChangeDto>
+                recordedChanges = [];
+
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                var patchedTitle = PatchHelpers.ApplyStringPatch(workItem.Title, request.Title);
-                var newTitle =
-                    titleDecision.Action == PatchHelpers.PatchStringAction.Clear
-                        ? string.Empty
-                        : (patchedTitle ?? workItem.Title);
+                var patchedTitle =
+                    PatchHelpers.ApplyStringPatch(
+                        workItem.Title,
+                        request.Title);
 
-                var newDescription = PatchHelpers.ApplyStringPatch(workItem.Description, request.Description);
-                var newAcceptance = PatchHelpers.ApplyStringPatch(workItem.AcceptanceCriteria, request.AcceptanceCriteria);
+                var newTitle =
+                    titleDecision.Action ==
+                    PatchHelpers.PatchStringAction.Clear
+                        ? string.Empty
+                        : patchedTitle ?? workItem.Title;
+
+                var newDescription =
+                    PatchHelpers.ApplyStringPatch(
+                        workItem.Description,
+                        request.Description);
+
+                var newAcceptanceCriteria =
+                    PatchHelpers.ApplyStringPatch(
+                        workItem.AcceptanceCriteria,
+                        request.AcceptanceCriteria);
 
                 workItem.UpdateDetails(
                     newTitle,
                     newDescription,
-                    newAcceptance,
-                    request.EffortPoints ?? workItem.EffortPoints);
+                    newAcceptanceCriteria,
+                    request.EffortPoints ??
+                    workItem.EffortPoints);
 
                 if (request.Priority.HasValue)
-                    workItem.SetPriority(request.Priority.Value);
+                {
+                    workItem.SetPriority(
+                        request.Priority.Value);
+                }
 
-                if (sprintDecision.Action == PatchHelpers.PatchStringAction.Clear)
+                if (sprintDecision.Action ==
+                    PatchHelpers.PatchStringAction.Clear)
+                {
                     workItem.MoveToSprint(null);
-                else if (sprintDecision.Action == PatchHelpers.PatchStringAction.Set)
-                    workItem.MoveToSprint(sprintDecision.Value);
+                }
+                else if (sprintDecision.Action ==
+                         PatchHelpers.PatchStringAction.Set)
+                {
+                    workItem.MoveToSprint(
+                        sprintDecision.Value);
+                }
 
                 if (request.IsBlocked.HasValue)
                 {
-                    if (request.IsBlocked.Value) workItem.Block();
-                    else workItem.Unblock();
+                    if (request.IsBlocked.Value)
+                    {
+                        workItem.Block();
+                    }
+                    else
+                    {
+                        workItem.Unblock();
+                    }
                 }
 
-                var sprint = await sprintsRepository.GetByIdAsync(tenantId, workItem.SprintId, request.ProjectId, ct);
+                Sprint? sprint = null;
 
-                ApplyTypeSpecificPatch(workItem, request, project, sprint);
+                if (!string.IsNullOrWhiteSpace(workItem.SprintId))
+                {
+                    sprint = await sprintsRepository.GetByIdAsync(
+                        tenantId,
+                        workItem.SprintId,
+                        request.ProjectId,
+                        ct);
+                }
 
-                await workItemsRepository.UpdateAsync(workItem, ct);
+                ApplyTypeSpecificPatch(
+                    workItem,
+                    request,
+                    project,
+                    sprint);
 
-                await historyRecorder.RecordUpdatingChangesAsync(
-                      projectId: workItem.ProjectId,
-                      relatedEntityId: workItem.Id,
-                      relatedEntityTitle: workItem.Title,
-                      relatedEntityKey: workItem.Code,
-                      oldObject: oldWorkItemState,
-                      newObject: workItem,
-                      cancellationToken: cancellationToken);
+                await workItemsRepository.UpdateAsync(
+                    workItem,
+                    ct);
+
+                if (recordedChanges.Count > 0 &&
+                    !string.IsNullOrWhiteSpace(workItem.AssignedToUserId) &&
+                    !string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal))
+                {
+                    await mediator.Publish(
+                    new WorkItemDetailsChangedEvent(
+                    TenantId: tenantId,
+                    ProjectId: workItem.ProjectId,
+                    WorkItemId: workItem.Id,
+                    WorkItemCode: workItem.Code,
+                    WorkItemTitle: workItem.Title,
+                    SprintId: workItem.SprintId,
+                    AssignedToUserId: workItem.AssignedToUserId!,
+                    ChangedByUserId: currentUserId,
+                    ChangedByFullName: currentUser.FullName,
+                    Changes: recordedChanges
+                    ),
+                    cancellationToken);
+                }
             }, cancellationToken);
 
             var dto = await workItemsReadModel.GetByIdAsync(
@@ -156,77 +273,141 @@ public partial class UpdateWorkItem
                 cancellationToken);
 
             return dto is null
-                ? Result<WorkItemDto>.Failure("Work item updated but could not be loaded.", HttpStatusCode.InternalServerError)
-                : Result<WorkItemDto>.Success(dto, HttpStatusCode.OK);
+                ? Result<WorkItemDto>.Failure(
+                    "Work item updated but could not be loaded.",
+                    HttpStatusCode.InternalServerError)
+                : Result<WorkItemDto>.Success(
+                    dto,
+                    HttpStatusCode.OK);
         }
 
-        private void ApplyTypeSpecificPatch(WorkItem workItem, Command request, Project project, Sprint? sprint)
+        private void ApplyTypeSpecificPatch(
+            WorkItem workItem,
+            Command request,
+            Project project,
+            Sprint? sprint)
         {
-            if (request.Details is null) return;
+            if (request.Details is null)
+                return;
 
             switch (workItem.Type)
             {
                 case WorkItemType.UserStory:
-                    ApplyUserStoryPatch((UserStory) workItem, request.Details);
+                    ApplyUserStoryPatch(
+                        (UserStory) workItem,
+                        request.Details);
                     break;
 
                 case WorkItemType.Bug:
-                    ApplyBugPatch((Bug) workItem, request.Details);
+                    ApplyBugPatch(
+                        (Bug) workItem,
+                        request.Details);
                     break;
 
                 case WorkItemType.TestCase:
-                    ApplyTestCasePatch((TestCase) workItem, request.Details, project, sprint);
-                    break;
-
-                default:
+                    ApplyTestCasePatch(
+                        (TestCase) workItem,
+                        request.Details,
+                        project,
+                        sprint);
                     break;
             }
         }
 
-        private static void ApplyUserStoryPatch(UserStory us, IWorkItemUpdateDetails details)
+        private static void ApplyUserStoryPatch(
+            UserStory userStory,
+            IWorkItemUpdateDetails details)
         {
-            if (details is not UpdateUserStoryDetails d) return;
-            if (d.StoryPoints.HasValue)
-                us.Estimate(d.StoryPoints.Value);
-        }
-
-        private static void ApplyBugPatch(Bug bug, IWorkItemUpdateDetails details)
-        {
-            if (details is not UpdateBugDetails d) return;
-
-            if (d.StepsToReproduce is null && d.ExpectedResult is null && d.ActualResult is null)
+            if (details is not UpdateUserStoryDetails updateDetails)
                 return;
 
-            bug.UpdateRepro(
-                d.StepsToReproduce ?? bug.StepsToReproduce,
-                d.ExpectedResult ?? bug.ExpectedResult,
-                d.ActualResult ?? bug.ActualResult);
+            if (updateDetails.StoryPoints.HasValue)
+            {
+                userStory.Estimate(
+                    updateDetails.StoryPoints.Value);
+            }
         }
 
-        private void ApplyTestCasePatch(TestCase tc, IWorkItemUpdateDetails details, Project project, Sprint? sprint)
+        private static void ApplyBugPatch(
+            Bug bug,
+            IWorkItemUpdateDetails details)
         {
-            if (details is not UpdateTestCaseDetails d) return;
+            if (details is not UpdateBugDetails updateDetails)
+                return;
 
-            if (d.Preconditions is not null ||
-                d.Steps is not null ||
-                d.TestEnvironment.HasValue ||
-                d.ExpectedResult is not null)
+            if (updateDetails.StepsToReproduce is null &&
+                updateDetails.ExpectedResult is null &&
+                updateDetails.ActualResult is null)
             {
-                tc.UpdateDefinition(
-                    preconditions: d.Preconditions ?? tc.Preconditions,
-                    steps: d.Steps ?? tc.Steps,
-                    env: d.TestEnvironment ?? tc.TestEnvironment,
-                    expectedResult: d.ExpectedResult ?? tc.ExpectedResult);
+                return;
             }
 
-            if (d.Result.HasValue || d.ActualResult is not null)
-            {
-                var executedBy = currentUserAccessor.GetUserId();
-                if (string.IsNullOrWhiteSpace(executedBy))
-                    throw new InvalidOperationException("User id not found.");
+            bug.UpdateRepro(
+                updateDetails.StepsToReproduce ??
+                bug.StepsToReproduce,
 
-                if (d.Result.HasValue && d.Result.Value != TestCaseResult.NotRun)
-                    tc.RecordOutcome(d.Result.Value, d.ActualResult, executedBy, project, sprint);
+                updateDetails.ExpectedResult ??
+                bug.ExpectedResult,
+
+                updateDetails.ActualResult ??
+                bug.ActualResult);
+        }
+
+        private void ApplyTestCasePatch(
+            TestCase testCase,
+            IWorkItemUpdateDetails details,
+            Project project,
+            Sprint? sprint)
+        {
+            if (details is not UpdateTestCaseDetails updateDetails)
+                return;
+
+            if (updateDetails.Preconditions is not null ||
+                updateDetails.Steps is not null ||
+                updateDetails.TestEnvironment.HasValue ||
+                updateDetails.ExpectedResult is not null)
+            {
+                testCase.UpdateDefinition(
+                    preconditions:
+                        updateDetails.Preconditions ??
+                        testCase.Preconditions,
+
+                    steps:
+                        updateDetails.Steps ??
+                        testCase.Steps,
+
+                    env:
+                        updateDetails.TestEnvironment ??
+                        testCase.TestEnvironment,
+
+                    expectedResult:
+                        updateDetails.ExpectedResult ??
+                        testCase.ExpectedResult);
+            }
+
+            if (updateDetails.Result.HasValue ||
+                updateDetails.ActualResult is not null)
+            {
+                var executedBy =
+                    currentUserAccessor.GetUserId();
+
+                if (string.IsNullOrWhiteSpace(executedBy))
+                {
+                    throw new InvalidOperationException(
+                        "User id not found.");
+                }
+
+                if (updateDetails.Result.HasValue &&
+                    updateDetails.Result.Value !=
+                    TestCaseResult.NotRun)
+                {
+                    testCase.RecordOutcome(
+                        updateDetails.Result.Value,
+                        updateDetails.ActualResult,
+                        executedBy,
+                        project,
+                        sprint);
+                }
             }
         }
     }

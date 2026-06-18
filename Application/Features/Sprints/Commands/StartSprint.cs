@@ -20,9 +20,6 @@ public class StartSprint
 
         public string? Name { get; set; }
         public string? Goal { get; set; }
-
-        public required DateTime StartDate { get; set; }
-        public required DateTime EndDate { get; set; }
     }
 
     public class Handler(
@@ -103,6 +100,13 @@ public class StartSprint
                     HttpStatusCode.BadRequest);
             }
 
+            if (!sprint.IsScheduled)
+            {
+                return Result<SprintDto>.Failure(
+                    "Cannot start an unscheduled sprint. Set the planned start date and planned end date first.",
+                    HttpStatusCode.BadRequest);
+            }
+
             var hasWorkItems =
                 await sprintsRepository.SprintHasWorkItemsAsync(
                     tenantId,
@@ -116,23 +120,30 @@ public class StartSprint
                     HttpStatusCode.BadRequest);
             }
 
-            var now = DateTime.UtcNow;
+            var plannedStartDate =
+                sprint.PlannedStartDate!.Value;
 
-            if (request.StartDate > now)
+            var plannedEndDate =
+                sprint.PlannedEndDate!.Value;
+
+            var now =
+                DateTime.UtcNow;
+
+            if (plannedStartDate > now)
             {
                 return Result<SprintDto>.Failure(
                     "The sprint cannot be started before its planned start date.",
                     HttpStatusCode.BadRequest);
             }
 
-            if (request.EndDate <= request.StartDate)
+            if (plannedEndDate <= plannedStartDate)
             {
                 return Result<SprintDto>.Failure(
-                    "Sprint end date must be greater than the start date.",
+                    "Sprint planned end date must be greater than the planned start date.",
                     HttpStatusCode.BadRequest);
             }
 
-            if (request.EndDate <= now)
+            if (plannedEndDate <= now)
             {
                 return Result<SprintDto>.Failure(
                     "The sprint cannot be started because its planned end date has already passed.",
@@ -140,18 +151,18 @@ public class StartSprint
             }
 
             if (project.StartDate.HasValue &&
-                request.StartDate < project.StartDate.Value)
+                plannedStartDate < project.StartDate.Value)
             {
                 return Result<SprintDto>.Failure(
-                    "Sprint start date cannot be before the project start date.",
+                    "Sprint planned start date cannot be before the project start date.",
                     HttpStatusCode.BadRequest);
             }
 
             if (project.EndDate.HasValue &&
-                request.EndDate > project.EndDate.Value)
+                plannedEndDate > project.EndDate.Value)
             {
                 return Result<SprintDto>.Failure(
-                    "Sprint end date cannot be after the project end date.",
+                    "Sprint planned end date cannot be after the project end date.",
                     HttpStatusCode.BadRequest);
             }
 
@@ -172,8 +183,6 @@ public class StartSprint
                 async transactionCancellationToken =>
                 {
                     sprint.Start(
-                        start: request.StartDate,
-                        end: request.EndDate,
                         name: updatedName,
                         goal: updatedGoal);
 
@@ -184,11 +193,14 @@ public class StartSprint
                     await historyRecorder.RecordUpdatingChangesAsync(
                         projectId: sprint.ProjectId,
                         relatedEntityId: sprint.Id,
-                        relatedEntityTitle: sprint.Name ?? sprint.Code,
+                        relatedEntityTitle:
+                            sprint.Name ??
+                            sprint.Code,
                         relatedEntityKey: sprint.Code,
                         oldObject: oldSprintState,
                         newObject: sprint,
-                        cancellationToken: transactionCancellationToken);
+                        cancellationToken:
+                            transactionCancellationToken);
                 },
                 cancellationToken);
 

@@ -59,7 +59,7 @@ public class UpdateProject
             var newEndFinal = request.EndDate ?? project.EndDate;
 
             if (newStartFinal.HasValue && newEndFinal.HasValue && newEndFinal.Value < newStartFinal.Value)
-                return Result<ProjectDto>.Failure("EndDate cannot be before StartDate.", HttpStatusCode.BadRequest);
+                return Result<ProjectDto>.Failure("PlannedEndDate cannot be before PlannedStartDate.", HttpStatusCode.BadRequest);
 
             var oldProjectState = project.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>

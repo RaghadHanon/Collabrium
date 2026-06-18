@@ -178,7 +178,7 @@ public sealed class Project : Entity
     private void SetSchedule(DateTime? startDate, DateTime? endDate)
     {
         if (startDate.HasValue && endDate.HasValue)
-            Guard.Against(endDate.Value < startDate.Value, "EndDate cannot be before StartDate.");
+            Guard.Against(endDate.Value < startDate.Value, "PlannedEndDate cannot be before PlannedStartDate.");
 
         StartDate = startDate;
         EndDate = endDate;

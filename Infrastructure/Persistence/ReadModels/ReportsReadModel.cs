@@ -696,10 +696,10 @@ public class ReportsReadModel : IReportsReadModel
                 workItem.SprintId != null &&
                 workItem.Sprint != null &&
                 workItem.Sprint.Status == SprintStatus.Active &&
-                workItem.Sprint.EndDate.HasValue &&
-                workItem.Sprint.EndDate.Value < generatedAt &&
-                workItem.Sprint.EndDate.Value >= from &&
-                workItem.Sprint.EndDate.Value <= to);
+                workItem.Sprint.PlannedEndDate.HasValue &&
+                workItem.Sprint.PlannedEndDate.Value < generatedAt &&
+                workItem.Sprint.PlannedEndDate.Value >= from &&
+                workItem.Sprint.PlannedEndDate.Value <= to);
 
         query = ApplyWorkItemScopeFilters(
             query,
@@ -1075,7 +1075,7 @@ public class ReportsReadModel : IReportsReadModel
                 EndDate = workItem.EndDate,
 
                 SprintEndDate = workItem.Sprint != null
-                    ? workItem.Sprint.EndDate
+                    ? workItem.Sprint.PlannedEndDate
                     : null,
 
                 SprintStatus = workItem.Sprint != null
@@ -1109,7 +1109,7 @@ public class ReportsReadModel : IReportsReadModel
                 EndDate = workItem.EndDate,
 
                 DueDate = workItem.Sprint != null
-                    ? workItem.Sprint.EndDate
+                    ? workItem.Sprint.PlannedEndDate
                     : null,
 
                 ProjectId = workItem.ProjectId,
@@ -1497,8 +1497,8 @@ public class ReportsReadModel : IReportsReadModel
 
             CreatedAt = snapshot.CreatedAt,
 
-            // Kept as EndDate to avoid breaking the existing DTO contract.
-            // The value is the planned Sprint EndDate.
+            // Kept as PlannedEndDate to avoid breaking the existing DTO contract.
+            // The value is the planned Sprint PlannedEndDate.
             EndDate = dueDate,
 
             ProjectId = snapshot.ProjectId,

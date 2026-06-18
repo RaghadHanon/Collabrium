@@ -351,29 +351,29 @@ public class SprintsRepository : ISprintsRepository
         if (parameters.StartAfter.HasValue)
         {
             query = query.Where(sprint =>
-                sprint.StartDate.HasValue &&
-                sprint.StartDate.Value >= parameters.StartAfter.Value);
+                sprint.PlannedStartDate.HasValue &&
+                sprint.PlannedStartDate.Value >= parameters.StartAfter.Value);
         }
 
         if (parameters.StartBefore.HasValue)
         {
             query = query.Where(sprint =>
-                sprint.StartDate.HasValue &&
-                sprint.StartDate.Value <= parameters.StartBefore.Value);
+                sprint.PlannedStartDate.HasValue &&
+                sprint.PlannedStartDate.Value <= parameters.StartBefore.Value);
         }
 
         if (parameters.EndAfter.HasValue)
         {
             query = query.Where(sprint =>
-                sprint.EndDate.HasValue &&
-                sprint.EndDate.Value >= parameters.EndAfter.Value);
+                sprint.PlannedEndDate.HasValue &&
+                sprint.PlannedEndDate.Value >= parameters.EndAfter.Value);
         }
 
         if (parameters.EndBefore.HasValue)
         {
             query = query.Where(sprint =>
-                sprint.EndDate.HasValue &&
-                sprint.EndDate.Value <= parameters.EndBefore.Value);
+                sprint.PlannedEndDate.HasValue &&
+                sprint.PlannedEndDate.Value <= parameters.EndBefore.Value);
         }
 
         if (parameters.StartedAfter.HasValue)

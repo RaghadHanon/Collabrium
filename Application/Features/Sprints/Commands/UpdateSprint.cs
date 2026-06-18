@@ -3,6 +3,7 @@ using Application.Features.Sprints.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;
+using Domain.Enums;
 using MediatR;
 using System.Net;
 
@@ -17,9 +18,8 @@ public class UpdateSprint
 
         public string? Name { get; set; }
         public string? Goal { get; set; }
-
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime? PlannedStartDate { get; set; }
+        public DateTime? PlannedEndDate { get; set; }
     }
 
     public class Handler(
@@ -73,8 +73,8 @@ public class UpdateSprint
             }
 
             if (sprint.Status is
-                Domain.Enums.SprintStatus.Completed or
-                Domain.Enums.SprintStatus.Cancelled)
+                SprintStatus.Completed or
+                SprintStatus.Cancelled)
             {
                 return Result<SprintDto>.Failure(
                     $"Cannot update a {sprint.Status} sprint.",
@@ -82,41 +82,43 @@ public class UpdateSprint
             }
 
             var scheduleChangeRequested =
-                request.StartDate.HasValue ||
-                request.EndDate.HasValue;
+                request.PlannedStartDate.HasValue ||
+                request.PlannedEndDate.HasValue;
+
+            var effectiveStartDate =
+                scheduleChangeRequested
+                    ? request.PlannedStartDate ??
+                      sprint.PlannedStartDate
+                    : null;
+
+            var effectiveEndDate =
+                scheduleChangeRequested
+                    ? request.PlannedEndDate ??
+                      sprint.PlannedEndDate
+                    : null;
+
+            if (scheduleChangeRequested &&
+                (!effectiveStartDate.HasValue ||
+                 !effectiveEndDate.HasValue))
+            {
+                return Result<SprintDto>.Failure(
+                    "Both start date and end date are required when scheduling the sprint for the first time.",
+                    HttpStatusCode.BadRequest);
+            }
 
             if (scheduleChangeRequested)
             {
-                var scheduleIsNotInitialized =
-                    sprint.StartDate == default ||
-                    sprint.EndDate == default;
-
-                if (scheduleIsNotInitialized &&
-                    (!request.StartDate.HasValue ||
-                     !request.EndDate.HasValue))
+                if (effectiveEndDate!.Value <
+                    effectiveStartDate!.Value)
                 {
                     return Result<SprintDto>.Failure(
-                        "Both start date and end date are required when scheduling the sprint for the first time.",
-                        HttpStatusCode.BadRequest);
-                }
-
-                var effectiveStartDate =
-                    request.StartDate ??
-                    sprint.StartDate;
-
-                var effectiveEndDate =
-                    request.EndDate ??
-                    sprint.EndDate;
-
-                if (effectiveEndDate <= effectiveStartDate)
-                {
-                    return Result<SprintDto>.Failure(
-                        "Sprint end date must be greater than the start date.",
+                        "Sprint end date must be greater than or equal to the start date.",
                         HttpStatusCode.BadRequest);
                 }
 
                 if (project.StartDate.HasValue &&
-                    effectiveStartDate < project.StartDate.Value)
+                    effectiveStartDate.Value <
+                    project.StartDate.Value)
                 {
                     return Result<SprintDto>.Failure(
                         "Sprint start date cannot be before the project start date.",
@@ -124,7 +126,8 @@ public class UpdateSprint
                 }
 
                 if (project.EndDate.HasValue &&
-                    effectiveEndDate > project.EndDate.Value)
+                    effectiveEndDate.Value >
+                    project.EndDate.Value)
                 {
                     return Result<SprintDto>.Failure(
                         "Sprint end date cannot be after the project end date.",
@@ -149,8 +152,8 @@ public class UpdateSprint
                 async transactionCancellationToken =>
                 {
                     sprint.Update(
-                        start: request.StartDate,
-                        end: request.EndDate,
+                        start: effectiveStartDate,
+                        end: effectiveEndDate,
                         name: updatedName,
                         goal: updatedGoal);
 
@@ -161,11 +164,14 @@ public class UpdateSprint
                     await historyRecorder.RecordUpdatingChangesAsync(
                         projectId: sprint.ProjectId,
                         relatedEntityId: sprint.Id,
-                        relatedEntityTitle: sprint.Name ?? sprint.Code,
+                        relatedEntityTitle:
+                            sprint.Name ??
+                            sprint.Code,
                         relatedEntityKey: sprint.Code,
                         oldObject: oldSprintState,
                         newObject: sprint,
-                        cancellationToken: transactionCancellationToken);
+                        cancellationToken:
+                            transactionCancellationToken);
                 },
                 cancellationToken);
 

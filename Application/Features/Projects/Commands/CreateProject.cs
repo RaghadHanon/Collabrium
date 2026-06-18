@@ -52,7 +52,7 @@ public class CreateProject
                 request.EndDate < request.StartDate)
             {
                 return Result<ProjectDto>.Failure(
-                    "EndDate cannot be before StartDate.",
+                    "PlannedEndDate cannot be before PlannedStartDate.",
                     HttpStatusCode.BadRequest);
             }
 

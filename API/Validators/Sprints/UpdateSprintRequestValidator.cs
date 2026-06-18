@@ -7,18 +7,18 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
 {
     public UpdateSprintRequestValidator()
     {
-        When(x => x.StartDate.HasValue, () =>
+        When(x => x.PlannedStartDate.HasValue, () =>
         {
-            RuleFor(x => x.StartDate!.Value)
+            RuleFor(x => x.PlannedStartDate!.Value)
                 .NotEmpty()
-                .WithMessage("StartDate cannot be empty.");
+                .WithMessage("PlannedStartDate cannot be empty.");
         });
 
-        When(x => x.StartDate.HasValue && x.EndDate.HasValue, () =>
+        When(x => x.PlannedStartDate.HasValue && x.PlannedEndDate.HasValue, () =>
         {
-            RuleFor(x => x.EndDate!.Value)
-                .GreaterThanOrEqualTo(x => x.StartDate!.Value)
-                .WithMessage("EndDate must be >= StartDate.");
+            RuleFor(x => x.PlannedEndDate!.Value)
+                .GreaterThanOrEqualTo(x => x.PlannedStartDate!.Value)
+                .WithMessage("PlannedEndDate must be >= PlannedStartDate.");
         });
 
 
@@ -39,9 +39,9 @@ public sealed class UpdateSprintRequestValidator : AbstractValidator<UpdateSprin
 
     private static bool HasAnyField(UpdateSprintRequest r)
     {
-        return r.StartDate.HasValue
+        return r.PlannedStartDate.HasValue
                 || r.Name != null
                 || r.Goal != null
-                || r.EndDate.HasValue;
+                || r.PlannedEndDate.HasValue;
     }
 }

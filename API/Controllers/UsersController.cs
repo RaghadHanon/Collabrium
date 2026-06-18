@@ -271,4 +271,9 @@ public class UsersController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+    [HttpGet("managers")]
+    public async Task<ActionResult<List<UserDto>>> GetManagers()
+    {
+        return HandleResult(await Mediator.Send(new GetManagers.Query()));
+    }
 }

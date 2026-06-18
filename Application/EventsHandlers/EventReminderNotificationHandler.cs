@@ -32,7 +32,7 @@ public sealed class EventReminderNotificationHandler(
             message: message,
             entityType: "Event",
             entityId: notification.EventId,
-            actionUrl: "/community-hub/events",
+            actionUrl: $"/community-hub/events/{notification.EventId}",
             cancellationToken: ct);
     }
 }

@@ -16,7 +16,7 @@ public sealed class CourseEntity : DbEntity
     public CourseLevel Level { get; set; }
     public CourseLanguage Language { get; set; }
 
-    public int? EstimatedDurationInHours { get; set; }
+    public decimal? EstimatedDurationInHours { get; set; }
 
     public StoredImage? ThumbnailImage { get; set; }
 

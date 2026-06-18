@@ -33,4 +33,7 @@ public interface IUsersReadModel
         string tenantId,
         string roleName,
         CancellationToken cancellationToken = default);
+    Task<List<UserDto>> GetManagersAsync(
+    string tenantId,
+    CancellationToken ct = default);
 }

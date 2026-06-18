@@ -13,7 +13,7 @@ public sealed class CreateCourseRequest
     public CourseLevel Level { get; set; }
     public CourseLanguage Language { get; set; }
 
-    public int? EstimatedDurationInHours { get; set; }
+    public decimal? EstimatedDurationInHours { get; set; }
     public List<string> LearningPoints { get; set; } = new();
 
 }

@@ -20,6 +20,12 @@ namespace Application.Interfaces.ReadModels
             string postId,
             string? currentUserId,
             CancellationToken ct = default);
+        Task<PagedList<PostLikeUserDto, DateTime?>> GetPostLikesAsync(
+            string tenantId,
+            string postId,
+            int pageSize,
+            DateTime? cursor,
+            CancellationToken ct = default);
 
 
     }

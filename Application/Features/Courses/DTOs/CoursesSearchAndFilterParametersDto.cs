@@ -16,8 +16,8 @@ public sealed class CoursesSearchAndFilterParametersDto : QueryParametersDto<Dat
     public IReadOnlyCollection<string>? TagIdsAny { get; set; }
 
     public IReadOnlyCollection<string>? TagIdsAll { get; set; }
-    public int? MinEstimatedDurationInHours { get; set; }
-    public int? MaxEstimatedDurationInHours { get; set; }
+    public decimal? MinEstimatedDurationInHours { get; set; }
+    public decimal? MaxEstimatedDurationInHours { get; set; }
 
     public bool? HasThumbnail { get; set; }
 

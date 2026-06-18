@@ -113,11 +113,11 @@ public sealed class Announcement : Entity
     }
 
     public void UpdateDetails(
-        string title,
-        string content,
-        AnnouncementPriority priority,
-        DateTime publishAt,
-        DateTime? expiresAt)
+    string title,
+    string content,
+    AnnouncementPriority priority,
+    DateTime publishAt,
+    DateTime? expiresAt)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
@@ -128,11 +128,15 @@ public sealed class Announcement : Entity
 
         if (publishAt > DateTime.UtcNow)
         {
-            NotificationSent = false;
-            NotificationSentAt = null;
+            ResetNotification();
         }
 
         Touch();
+    }
+    public void ResetNotification()
+    {
+        NotificationSent = false;
+        NotificationSentAt = null;
     }
 
     public void SetAudiences(IEnumerable<AnnouncementAudience> audiences)

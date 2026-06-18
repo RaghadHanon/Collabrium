@@ -524,4 +524,15 @@ public sealed class PostsController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+    [Authorize(Policy = Policies.Posts_Read)]
+    [HttpGet("{postId}/likes")]
+    public async Task<ActionResult<PagedList<PostLikeUserDto, DateTime?>>> GetPostLikes(
+    string postId,
+    [FromQuery] GetPostLikesRequest request)
+    {
+        var query = Mapper.Map<GetPostLikes.Query>(request);
+        query.PostId = postId;
+
+        return HandleResult(await Mediator.Send(query));
+    }
 }

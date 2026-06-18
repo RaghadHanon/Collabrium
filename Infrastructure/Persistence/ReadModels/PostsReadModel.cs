@@ -210,4 +210,63 @@ public sealed class PostsReadModel : IPostsReadModel
 
         return query;
     }
+    public async Task<PagedList<PostLikeUserDto, DateTime?>> GetPostLikesAsync(
+    string tenantId,
+    string postId,
+    int pageSize,
+    DateTime? cursor,
+    CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(postId))
+        {
+            return new PagedList<PostLikeUserDto, DateTime?>
+            {
+                Items = new(),
+                NextCursor = null
+            };
+        }
+
+        var tId = tenantId.Trim();
+        var pId = postId.Trim();
+
+        pageSize = pageSize <= 0 ? 10 : pageSize;
+
+        var query = _dbContext.PostLikes
+            .AsNoTracking()
+            .Where(x =>
+                x.PostId == pId &&
+                x.Post.TenantId == tId);
+
+        if (cursor.HasValue)
+            query = query.Where(x => x.CreatedAt < cursor.Value);
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new PostLikeUserDto
+            {
+                UserId = x.CreatedByUserId,
+                UserName = x.CreatedByUser.FullName,
+                UserProfileImageUrl = x.CreatedByUser.ProfileImage != null
+                    ? x.CreatedByUser.ProfileImage.Url
+                    : null,
+                LikedAt = x.CreatedAt
+            })
+            .Take(pageSize + 1)
+            .ToListAsync(ct);
+
+        DateTime? nextCursor = null;
+
+        if (items.Count > pageSize)
+        {
+            nextCursor = items[^1].LikedAt;
+            items.RemoveAt(items.Count - 1);
+        }
+
+        return new PagedList<PostLikeUserDto, DateTime?>
+        {
+            Items = items,
+            NextCursor = nextCursor
+        };
+    }
 }

@@ -20,7 +20,7 @@ public sealed class Course : Entity
     public CourseLevel Level { get; private set; }
     public CourseLanguage Language { get; private set; }
 
-    public int? EstimatedDurationInHours { get; private set; }
+    public decimal? EstimatedDurationInHours { get; private set; }
 
     public StoredImage? ThumbnailImage { get; private set; }
 
@@ -38,7 +38,7 @@ public sealed class Course : Entity
         CourseLevel level,
         CourseLanguage language,
         string? instructorName = null,
-        int? estimatedDurationInHours = null)
+        decimal? estimatedDurationInHours = null)
     {
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
@@ -61,7 +61,7 @@ public sealed class Course : Entity
         CourseLevel level,
         CourseLanguage language,
         string? instructorName = null,
-        int? estimatedDurationInHours = null) : base(id)
+        decimal? estimatedDurationInHours = null) : base(id)
     {
         TenantId = Guard.NotNullOrWhiteSpace(tenantId, nameof(tenantId));
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
@@ -86,7 +86,7 @@ public sealed class Course : Entity
         CourseLevel level,
         CourseLanguage language,
         string? instructorName,
-        int? estimatedDurationInHours,
+        decimal? estimatedDurationInHours,
         StoredImage? thumbnailImage,
         IEnumerable<string>? tagIds,
         IEnumerable<CourseLearningPoint>? learningPoints)
@@ -134,7 +134,7 @@ public sealed class Course : Entity
         CourseLevel level,
         CourseLanguage language,
         string? instructorName,
-        int? estimatedDurationInHours)
+        decimal? estimatedDurationInHours)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title));
         Description = Guard.NotNullOrWhiteSpace(description, nameof(description));

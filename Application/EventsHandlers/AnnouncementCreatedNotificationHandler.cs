@@ -80,7 +80,7 @@ public sealed class AnnouncementCreatedNotificationHandler(
             triggeredByUserId: announcement.CreatedByUser.Id,
             entityType: "Announcement",
             entityId: announcement.Id,
-            actionUrl: "/community-hub/announcements",
+            actionUrl: $"/community-hub/announcements/{notification.AnnouncementId}",
             cancellationToken: ct);
     }
 }

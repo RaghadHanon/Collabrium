@@ -7,15 +7,6 @@ public sealed class StartSprintRequestValidator : AbstractValidator<StartSprintR
 {
     public StartSprintRequestValidator()
     {
-        RuleFor(x => x.PlannedStartDate)
-            .NotEmpty()
-            .WithMessage("PlannedStartDate is required.");
-
-        RuleFor(x => x.PlannedEndDate)
-            .NotEmpty().WithMessage("PlannedEndDate is required.")
-            .GreaterThanOrEqualTo(x => x.PlannedStartDate)
-            .WithMessage("PlannedEndDate must be >= PlannedStartDate.");
-
         RuleFor(x => x.Name)
             .MaximumLength(250)
             .When(x => !string.IsNullOrEmpty(x.Name))

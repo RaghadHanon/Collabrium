@@ -180,9 +180,7 @@ public sealed class SprintsController : ApiBaseController
     ///
     ///     {
     ///       "name": "Sprint 1",
-    ///       "goal": "Complete user authentication module",
-    ///       "plannedStartDate": "2026-02-01T00:00:00Z",
-    ///       "plannedEndDate": "2026-02-14T23:59:59Z"
+    ///       "goal": "Complete user authentication module"
     ///     }
     ///     
     /// </remarks>

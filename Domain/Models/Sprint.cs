@@ -30,7 +30,10 @@ public class Sprint : Entity
     {
     }
 
-    public Sprint(string tenantId, string projectId, string code)
+    public Sprint(
+        string tenantId,
+        string projectId,
+        string code)
     {
         TenantId = Guard.NotNullOrWhiteSpace(
             tenantId,
@@ -102,6 +105,7 @@ public class Sprint : Entity
         sprint.CompletedAt = completedAt;
 
         sprint.Status = status;
+
         sprint.SetTimestamps(
             createdAt,
             updatedAt);
@@ -139,7 +143,9 @@ public class Sprint : Entity
         string? name,
         string? goal)
     {
-        Guard.Against(Status == SprintStatus.Completed, "Cannot update a completed sprint.");
+        Guard.Against(
+            Status == SprintStatus.Completed,
+            "Cannot update a completed sprint.");
 
         Schedule(start, end);
 
@@ -157,22 +163,8 @@ public class Sprint : Entity
             Status != SprintStatus.Planned,
             "Only a planned sprint can be started.");
 
-        Guard.Against(
-            !IsScheduled,
-            "Cannot start an unscheduled sprint.");
-
-        var now = DateTime.UtcNow;
-
-        Guard.Against(
-            PlannedStartDate!.Value > now,
-            "The sprint cannot be started before its planned start date.");
-
-        Guard.Against(
-            PlannedEndDate!.Value <= now,
-            "The sprint cannot be started because its planned end date has already passed.");
-
         Status = SprintStatus.Active;
-        StartedAt = now;
+        StartedAt = DateTime.UtcNow;
         CompletedAt = null;
 
         Name = name;
@@ -197,18 +189,18 @@ public class Sprint : Entity
             Guard.Against(
                 Status == SprintStatus.Active &&
                 StartedAt.HasValue,
-                "Cannot update plannedStartDate date for a sprint that has already started.");
+                "Cannot update the planned start date after the sprint has started.");
 
             Guard.Against(
                 start.Value <= DateTime.UtcNow,
-                "Start date must be in the future.");
+                "Planned start date must be in the future.");
 
             PlannedStartDate = start;
         }
 
         Guard.Against(
             end.Value < start.Value,
-            "Sprint plannedEndDate date must be greater than or equal to plannedStartDate date.");
+            "Planned end date must be greater than or equal to the planned start date.");
 
         if (PlannedEndDate != end)
             PlannedEndDate = end;
@@ -218,7 +210,7 @@ public class Sprint : Entity
     {
         Guard.Against(
             Status != SprintStatus.Active,
-            "Only active sprint can be completed.");
+            "Only an active sprint can be completed.");
 
         Status = SprintStatus.Completed;
         CompletedAt = DateTime.UtcNow;

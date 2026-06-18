@@ -100,69 +100,16 @@ public class StartSprint
                     HttpStatusCode.BadRequest);
             }
 
-            if (!sprint.IsScheduled)
-            {
-                return Result<SprintDto>.Failure(
-                    "Cannot start an unscheduled sprint. Set the planned start date and planned end date first.",
-                    HttpStatusCode.BadRequest);
-            }
-
             var hasWorkItems =
                 await sprintsRepository.SprintHasWorkItemsAsync(
                     tenantId,
-                    request.SprintId,
+                    sprint.Id,
                     cancellationToken);
 
             if (!hasWorkItems)
             {
                 return Result<SprintDto>.Failure(
                     "Cannot start a sprint without work items.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            var plannedStartDate =
-                sprint.PlannedStartDate!.Value;
-
-            var plannedEndDate =
-                sprint.PlannedEndDate!.Value;
-
-            var now =
-                DateTime.UtcNow;
-
-            if (plannedStartDate > now)
-            {
-                return Result<SprintDto>.Failure(
-                    "The sprint cannot be started before its planned start date.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            if (plannedEndDate <= plannedStartDate)
-            {
-                return Result<SprintDto>.Failure(
-                    "Sprint planned end date must be greater than the planned start date.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            if (plannedEndDate <= now)
-            {
-                return Result<SprintDto>.Failure(
-                    "The sprint cannot be started because its planned end date has already passed.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            if (project.StartDate.HasValue &&
-                plannedStartDate < project.StartDate.Value)
-            {
-                return Result<SprintDto>.Failure(
-                    "Sprint planned start date cannot be before the project start date.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            if (project.EndDate.HasValue &&
-                plannedEndDate > project.EndDate.Value)
-            {
-                return Result<SprintDto>.Failure(
-                    "Sprint planned end date cannot be after the project end date.",
                     HttpStatusCode.BadRequest);
             }
 

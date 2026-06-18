@@ -12,6 +12,10 @@ public interface IUsersReadModel
         CancellationToken cancellationToken = default);
     Task<UserDto?> GetUserByIdAsync(
         string userId,
+        CancellationToken cancellationToken = default); 
+    Task<string?> GetUserDisplayNameAsync(
+        string tenantId,
+        string userId,
         CancellationToken cancellationToken = default);
     Task<PagedList<UserDto, DateTime?>> GetUsersAsync(
         UsersSearchAndFilterParametersDto parameters,

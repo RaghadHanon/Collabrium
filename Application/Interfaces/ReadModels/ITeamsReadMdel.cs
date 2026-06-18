@@ -11,6 +11,10 @@ public interface ITeamsReadModel
     Task<PagedList<TeamDto, DateTime?>> GetTeamsAsync(
         TeamsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
+    Task<string?> GetTeamDisplayNameAsync(
+        string tenantId,
+        string teamId,
+        CancellationToken cancellationToken = default);
     Task<PagedList<TeamDto, DateTime?>> GetUserTeamsAsync(
         string userId,
         TeamsSearchAndFilterParametersDto parameters,

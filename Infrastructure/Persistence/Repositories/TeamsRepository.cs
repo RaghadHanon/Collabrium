@@ -136,6 +136,29 @@ public sealed class TeamsRepository : ITeamsRepository
         TeamMapper.UpdateEntity(teamDomain, teamEntity);
     }
 
+    public async Task<bool> IsUserLeadingAnyTeamAsync(
+        string tenantId,
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(userId))
+        {
+            return false;
+        }
+
+        var normalizedTenantId = tenantId.Trim();
+        var normalizedUserId = userId.Trim();
+
+        return await _dbContext.Teams
+            .AsNoTracking()
+            .AnyAsync(
+                team =>
+                    team.TenantId == normalizedTenantId &&
+                    team.TeamLeadId == normalizedUserId,
+                cancellationToken);
+    }
+
     public async Task<bool> IsNameUniqueAsync(string tenantId, string name, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId)) return false;

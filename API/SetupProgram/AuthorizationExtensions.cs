@@ -154,11 +154,7 @@ public static class AuthorizationExtensions
                 nameof(UserRole.TeamLead),
                 nameof(UserRole.TenantAdmin)
             ));
-            options.AddPolicy(Policies.WorkItems_Delete, p => p.RequireRole(
-                nameof(UserRole.ProductOwner),
-                nameof(UserRole.TeamLead),
-                nameof(UserRole.TenantAdmin)
-            ));
+            options.AddPolicy(Policies.WorkItems_Delete, p => p.RequireRole(TenantMembers));
             options.AddPolicy(Policies.WorkItems_ChangeStatus, p => p.RequireRole(TenantMembers));
             options.AddPolicy(Policies.WorkItems_ChangeAssignee, p => p.RequireRole(TenantMembers));
 

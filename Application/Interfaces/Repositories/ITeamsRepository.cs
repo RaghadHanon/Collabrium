@@ -4,8 +4,14 @@ namespace Application.Interfaces.Repositories;
 
 public interface ITeamsRepository
 {
-    Task AddAsync(Team team, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Team team, CancellationToken cancellationToken = default);
+    Task AddAsync(
+        Team team,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(
+        Team team,
+        CancellationToken cancellationToken = default);
+
     Task<bool> RemoveAsync(
         string tenantId,
         string teamId,
@@ -16,7 +22,9 @@ public interface ITeamsRepository
         string teamId,
         CancellationToken cancellationToken = default);
 
-    Task<bool> IsTeamExists(string tenantId, string teamId);
+    Task<bool> IsTeamExists(
+        string tenantId,
+        string teamId);
 
     Task AddMembersAsync(
         string tenantId,
@@ -33,5 +41,10 @@ public interface ITeamsRepository
     Task<bool> IsNameUniqueAsync(
         string tenantId,
         string name,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> IsUserLeadingAnyTeamAsync(
+        string tenantId,
+        string userId,
         CancellationToken cancellationToken = default);
 }

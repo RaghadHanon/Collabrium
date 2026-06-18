@@ -20,7 +20,6 @@ public class DeleteUserSkills
         IUsersRepository usersRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
-        IMediator mediator,
         ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<Unit>>
     {

@@ -69,7 +69,7 @@ public class UpdateSprint
 
                 await sprintsRepository.UpdateAsync(sprint, cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code, oldSprintState, sprint);
+                historyRecorder.RecordUpdatingChangesAsync<Sprint>(sprint.ProjectId, sprint.Id, sprint.Name ?? sprint.Code, sprint.Code, oldSprintState, sprint);
             }, cancellationToken);
 
             var dto = await sprintsReadModel.GetByIdAsync(

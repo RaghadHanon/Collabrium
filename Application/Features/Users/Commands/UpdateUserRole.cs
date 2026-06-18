@@ -19,6 +19,7 @@ public class UpdateUserRole
 
     public class Handler(
         IUsersRepository usersRepository,
+        ITeamsRepository teamsRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork,
         IMediator mediator,
@@ -29,58 +30,109 @@ public class UpdateUserRole
             Command request,
             CancellationToken cancellationToken)
         {
-            var currentUser = await currentUserAccessor.GetCurrentUserAsync();
-            if (currentUser == null)
+            var currentUser =
+                await currentUserAccessor.GetCurrentUserAsync();
+
+            if (currentUser is null)
+            {
                 return Result<Unit>.Failure(
                     "Current user is not found.",
                     HttpStatusCode.NotFound);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.UserId))
+            {
+                return Result<Unit>.Failure(
+                    "UserId is required.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewRole))
+            {
+                return Result<Unit>.Failure(
+                    "NewRole is required.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            var userId = request.UserId.Trim();
+            var newRole = request.NewRole.Trim();
 
             var user = await usersRepository.GetByIdAsync(
-                request.UserId,
+                userId,
                 cancellationToken);
 
             if (user is null)
+            {
                 return Result<Unit>.Failure(
                     "User not found.",
                     HttpStatusCode.NotFound);
+            }
 
-            var tenantId = tenantContext.CurrentTenant?.Id
-                           ?? tenantContext.TenantId
-                           ?? user.TenantId;
+            var tenantId =
+                tenantContext.CurrentTenant?.Id
+                ?? tenantContext.TenantId
+                ?? user.TenantId;
 
             if (string.IsNullOrWhiteSpace(tenantId))
+            {
                 return Result<Unit>.Failure(
                     "Tenant not found.",
                     HttpStatusCode.NotFound);
+            }
 
-            if (!string.Equals(user.TenantId, tenantId, StringComparison.Ordinal))
+            tenantId = tenantId.Trim();
+
+            if (!string.Equals(
+                    user.TenantId,
+                    tenantId,
+                    StringComparison.Ordinal))
             {
                 return Result<Unit>.Failure(
                     "User not found in this tenant.",
                     HttpStatusCode.Forbidden);
             }
 
-            if (string.IsNullOrWhiteSpace(request.NewRole))
-                return Result<Unit>.Failure(
-                    "NewRole is required.",
-                    HttpStatusCode.BadRequest);
-
             var oldRole = user.JobTitle;
 
-            await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            var isRoleChanging = !string.Equals(
+                oldRole?.Trim(),
+                newRole,
+                StringComparison.OrdinalIgnoreCase);
+
+            if (isRoleChanging)
             {
-                await usersRepository.ReplaceUserRoleAsync(
-                    request.UserId,
-                    request.NewRole,
-                    ct);
+                var isLeadingAnyTeam =
+                    await teamsRepository.IsUserLeadingAnyTeamAsync(
+                        tenantId,
+                        user.Id,
+                        cancellationToken);
 
-                user.ChangeJobTitle(request.NewRole);
+                if (isLeadingAnyTeam)
+                {
+                    return Result<Unit>.Failure(
+                        "The user's role cannot be changed while they are assigned as a team lead. Reassign the teams to another team lead first.",
+                        HttpStatusCode.Conflict);
+                }
+            }
 
-                await usersRepository.UpdateAsync(user, ct);
+            await unitOfWork.ExecuteInTransactionAsync(
+                async ct =>
+                {
+                    await usersRepository.ReplaceUserRoleAsync(
+                        user.Id,
+                        newRole,
+                        ct);
 
-            }, cancellationToken);
+                    user.ChangeJobTitle(newRole);
 
-            await mediator.Publish(new UserRoleChangedEvent(
+                    await usersRepository.UpdateAsync(
+                        user,
+                        ct);
+                },
+                cancellationToken);
+
+            await mediator.Publish(
+                new UserRoleChangedEvent(
                     tenantId,
                     new UserSnapshotDto
                     {
@@ -91,10 +143,12 @@ public class UpdateUserRole
                     },
                     oldRole,
                     currentUser.Id,
-                    currentUser.FullName
-                ), cancellationToken);
+                    currentUser.FullName),
+                cancellationToken);
 
-            return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
+            return Result<Unit>.Success(
+                Unit.Value,
+                HttpStatusCode.NoContent);
         }
     }
 }

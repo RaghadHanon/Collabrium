@@ -147,14 +147,14 @@ public sealed class UpdateWorkItemAssignee
 
                 await workItemsRepository.UpdateAsync(workItem, ct);
 
-                historyRecorder.RecordUpdatingChanges<WorkItem>(
-                    workItem.ProjectId,
-                    workItem.Id,
-                    workItem.Title,
-                    workItem.Code,
-                    oldWorkItemState,
-                    workItem);
-
+                await historyRecorder.RecordUpdatingChangesAsync(
+                     projectId: workItem.ProjectId,
+                     relatedEntityId: workItem.Id,
+                     relatedEntityTitle: workItem.Title,
+                     relatedEntityKey: workItem.Code,
+                     oldObject: oldWorkItemState,
+                     newObject: workItem,
+                     cancellationToken: ct);
             }, cancellationToken);
 
             if (shouldPublishAssignedEvent)

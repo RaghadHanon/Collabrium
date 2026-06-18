@@ -31,6 +31,12 @@ public sealed class DeleteWorkItem
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+            var currentUserId = currentUserAccessor.GetUserId();
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            { 
+                return Result<Unit>.Failure("Current user not found.", HttpStatusCode.Unauthorized); 
+            }
+
             if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
 
@@ -38,15 +44,22 @@ public sealed class DeleteWorkItem
             if (workItem == null)
                 return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
 
-            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
+            var userRole = await currentUserAccessor.GetUserRole(currentUserId, cancellationToken); 
+            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole); 
+            var isHighLevelWorkItem = workItem.Type is WorkItemType.Epic or WorkItemType.UserStory; 
 
-            if ((workItem.Type == WorkItemType.Epic || workItem.Type == WorkItemType.UserStory)
-                && !isAdmin)
-                return Result<Unit>.Failure("Only admins can change the status of Epics and User Stories.", HttpStatusCode.Forbidden);
+            if (isHighLevelWorkItem && !isAdmin) 
+            {
+                return Result<Unit>.Failure( "Only admins can delete Epics and User Stories.", HttpStatusCode.Forbidden);
+            }
+
+            var isCreator = string.Equals( workItem.CreatedByUserId, currentUserId, StringComparison.Ordinal); 
+            if (!isAdmin && !isCreator)
+            {
+                return Result<Unit>.Failure( "You can only delete work items that you created.", HttpStatusCode.Forbidden); 
+            }
 
             var removed = false;
-
             await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
             {
                 removed = await workItemsRepository.RemoveAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);

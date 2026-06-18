@@ -64,7 +64,14 @@ public class UpdateWorkItemComment
                     comment,
                     cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges<WorkItemComment>(request.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldCommentState, comment);
+                await historyRecorder.RecordUpdatingChangesAsync(
+                    projectId: request.ProjectId,
+                    relatedEntityId: workItem.Id,
+                    relatedEntityTitle: workItem.Title,
+                    relatedEntityKey: workItem.Code,
+                    oldObject: oldCommentState,
+                    newObject: comment,
+                    cancellationToken: cancellationToken);
             }, cancellationToken);
 
             var commentDto = await workItemsReadModel.GetWorkItemComment(request.WorkItemId, comment.Id, cancellationToken);

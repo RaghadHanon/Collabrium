@@ -5,33 +5,83 @@ using Domain.Enums;
 using Domain.Models;
 
 namespace Application.Services;
-public class ProjectHistoryRecorder(
+
+public sealed class ProjectHistoryRecorder(
     IProjectHistoryRepository projectHistoryRepository,
-    ICurrentUserAccessor currentUserAccessor
-    ) : IProjectHistoryRecorder
+    ICurrentUserAccessor currentUserAccessor,
+    ITenantContext tenantContext,
+    IProjectHistoryValueResolver valueResolver
+) : IProjectHistoryRecorder
 {
-    public void RecordUpdatingChanges<T>(
+    private static readonly HashSet<string> IgnoredProperties =
+        new(StringComparer.Ordinal)
+        {
+            nameof(Entity.Id),
+            nameof(Entity.CreatedAt),
+            nameof(Entity.UpdatedAt),
+            nameof(Project.TenantId),
+            nameof(Project.LastWorkItemNumber),
+            nameof(Project.LastSprintNumber)
+        };
+
+    public async Task RecordUpdatingChangesAsync<T>(
         string projectId,
         string relatedEntityId,
         string relatedEntityTitle,
         string relatedEntityKey,
         T oldObject,
-        T newObject)
+        T newObject,
+        CancellationToken cancellationToken = default)
     {
         var currentUserId = currentUserAccessor.GetUserId();
-        if (currentUserId == null)
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+            return;
+
+        var tenantId = tenantContext.CurrentTenant?.Id
+                       ?? tenantContext.TenantId;
+
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return;
+
+        if (oldObject is null || newObject is null)
             return;
 
         var scope = DetermineScope<T>();
         var properties = typeof(T).GetProperties();
 
-        foreach (var prop in properties)
+        foreach (var property in properties)
         {
-            var oldValue = prop.GetValue(oldObject)?.ToString();
-            var newValue = prop.GetValue(newObject)?.ToString();
-
-            if (oldValue == newValue || prop.Name == "UpdatedAt")
+            if (!property.CanRead)
                 continue;
+
+            if (IgnoredProperties.Contains(property.Name))
+                continue;
+
+            var oldRawValue = property.GetValue(oldObject)?.ToString();
+            var newRawValue = property.GetValue(newObject)?.ToString();
+
+            if (string.Equals(
+                    oldRawValue,
+                    newRawValue,
+                    StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var oldDisplayValue = await valueResolver.ResolveAsync(
+                tenantId: tenantId,
+                projectId: projectId,
+                propertyName: property.Name,
+                value: oldRawValue,
+                cancellationToken: cancellationToken);
+
+            var newDisplayValue = await valueResolver.ResolveAsync(
+                tenantId: tenantId,
+                projectId: projectId,
+                propertyName: property.Name,
+                value: newRawValue,
+                cancellationToken: cancellationToken);
 
             var history = new ProjectHistory(
                 projectId: projectId,
@@ -40,9 +90,9 @@ public class ProjectHistoryRecorder(
                 relatedEntityCode: relatedEntityKey,
                 scope: scope,
                 actionType: ActionType.Update,
-                propertyName: prop.Name,
-                oldValue: oldValue,
-                newValue: newValue,
+                propertyName: property.Name,
+                oldValue: oldDisplayValue,
+                newValue: newDisplayValue,
                 madeByUserId: currentUserId
             );
 
@@ -57,7 +107,8 @@ public class ProjectHistoryRecorder(
         string relatedEntityKey)
     {
         var currentUserId = currentUserAccessor.GetUserId();
-        if (currentUserId == null)
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
             return;
 
         var scope = DetermineScope<T>();
@@ -76,7 +127,6 @@ public class ProjectHistoryRecorder(
         );
 
         projectHistoryRepository.Add(history);
-
     }
 
     public void RecordDeletionChanges<T>(
@@ -86,7 +136,8 @@ public class ProjectHistoryRecorder(
         string relatedEntityKey)
     {
         var currentUserId = currentUserAccessor.GetUserId();
-        if (currentUserId == null)
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
             return;
 
         var scope = DetermineScope<T>();
@@ -111,14 +162,29 @@ public class ProjectHistoryRecorder(
     {
         return typeof(T).Name switch
         {
-            nameof(Project) => ProjectHistoryScope.Project,
-            nameof(Sprint) => ProjectHistoryScope.Sprint,
-            nameof(WorkItem) => ProjectHistoryScope.WorkItem,
-            nameof(WorkItemRelation) => ProjectHistoryScope.WorkItemRelation,
-            nameof(CodeLink) => ProjectHistoryScope.WorkItemCodeLink,
-            nameof(WorkItemComment) => ProjectHistoryScope.WorkItemComment,
-            nameof(Attachment) => ProjectHistoryScope.WorkItemAttachment,
-            _ => throw new ArgumentException($"Unsupported type: {typeof(T).Name}")
+            nameof(Project) =>
+                ProjectHistoryScope.Project,
+
+            nameof(Sprint) =>
+                ProjectHistoryScope.Sprint,
+
+            nameof(WorkItem) =>
+                ProjectHistoryScope.WorkItem,
+
+            nameof(WorkItemRelation) =>
+                ProjectHistoryScope.WorkItemRelation,
+
+            nameof(CodeLink) =>
+                ProjectHistoryScope.WorkItemCodeLink,
+
+            nameof(WorkItemComment) =>
+                ProjectHistoryScope.WorkItemComment,
+
+            nameof(Attachment) =>
+                ProjectHistoryScope.WorkItemAttachment,
+
+            _ => throw new ArgumentException(
+                $"Unsupported project history type: {typeof(T).Name}")
         };
     }
 }

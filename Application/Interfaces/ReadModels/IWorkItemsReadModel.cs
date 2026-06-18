@@ -12,7 +12,11 @@ namespace Application.Interfaces.ReadModels;
 public interface IWorkItemsReadModel
 {
     Task<WorkItemDto?> GetByIdAsync(string tenantId, string projectId, string workItemId, CancellationToken ct = default);
-
+    Task<string?> GetWorkItemDisplayNameAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default);
     Task<BoardDto> GetBoardItemsAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);

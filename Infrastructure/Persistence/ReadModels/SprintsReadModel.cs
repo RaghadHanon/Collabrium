@@ -5,6 +5,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace Infrastructure.Persistence.ReadModels;
 
@@ -33,6 +34,34 @@ public sealed class SprintsReadModel : ISprintsReadModel
             .Where(s => s.TenantId == tId && s.Id == sId && projectId != null && s.ProjectId == projectId)
             .ProjectTo<SprintDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<string?> GetSprintDisplayNameAsync(
+        string tenantId,
+        string projectId,
+        string sprintId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(sprintId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var sId = sprintId.Trim();
+
+        return await _dbContext.Sprints
+            .AsNoTracking()
+            .Where(sprint =>
+                sprint.Id == sId &&
+                sprint.ProjectId == pId &&
+                sprint.TenantId == tId)
+            .Select(sprint =>
+                sprint.Name == null || sprint.Name == string.Empty
+                    ? sprint.Code
+                    : sprint.Code + " - " + sprint.Name)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<PagedList<SprintDto, DateTime?>> GetSprintsAsync(

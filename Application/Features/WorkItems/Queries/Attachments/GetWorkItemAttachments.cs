@@ -20,8 +20,7 @@ public class GetWorkItemAttachments
         IWorkItemsRepository workItemsRepository,
         ITenantContext tenantContext,
         IWorkItemsReadModel workItemsReadModel,
-        IProjectsRepository projectsRepository,
-        IMapper mapper
+        IProjectsRepository projectsRepository
     ) : IRequestHandler<Query, Result<List<AttachmentDto>>>
     {
         public async Task<Result<List<AttachmentDto>>> Handle(Query request, CancellationToken cancellationToken)

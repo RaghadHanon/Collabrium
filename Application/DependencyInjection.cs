@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<IProjectHistoryRecorder, ProjectHistoryRecorder>();
 
         services.AddScoped<INotificationCreationService, NotificationCreationService>();
+        services.AddScoped<IProjectHistoryValueResolver, ProjectHistoryValueResolver>();
+        services.AddScoped<IProjectHistoryRecorder, ProjectHistoryRecorder>();
         services.Configure<WebAppSettings>(configuration.GetSection("WebAppSettings"));
 
         return services;

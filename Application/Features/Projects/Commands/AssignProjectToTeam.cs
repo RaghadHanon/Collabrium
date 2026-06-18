@@ -72,13 +72,14 @@ public class AssignProjectToTeam
 
                 await projectsRepository.UpdateAsync(project, ct);
 
-                historyRecorder.RecordUpdatingChanges<Project>(
-                    project.Id,
-                    project.Id,
-                    project.Name,
-                    project.Key,
-                    oldProjectState,
-                    project);
+                await historyRecorder.RecordUpdatingChangesAsync(
+                    projectId: project.Id,
+                    relatedEntityId: project.Id,
+                    relatedEntityTitle: project.Name,
+                    relatedEntityKey: project.Key,
+                    oldObject: oldProjectState,
+                    newObject: project,
+                    cancellationToken: ct);
 
             }, cancellationToken);
 

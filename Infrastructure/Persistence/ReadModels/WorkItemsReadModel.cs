@@ -13,6 +13,7 @@ using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -62,6 +63,32 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             dto.AllowedStatuses = allowedStatuses;
 
         return entity is null ? null : dto;
+    }
+
+    public async Task<string?> GetWorkItemDisplayNameAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(workItemId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var wId = workItemId.Trim();
+
+        return await _dbContext.WorkItems
+            .AsNoTracking()
+            .Where(workItem =>
+                workItem.Id == wId &&
+                workItem.ProjectId == pId &&
+                workItem.Project.TenantId == tId)
+            .Select(workItem =>
+                workItem.Code + " - " + workItem.Title)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private async Task<RelationParticipantWorkItemDto?> GetParentAsync(string tennatId, string projectId, string? parentId, CancellationToken cancellationToken)

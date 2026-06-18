@@ -6,6 +6,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace Infrastructure.Persistence.ReadModels;
 
@@ -47,6 +48,27 @@ public class UsersReadModel : IUsersReadModel
             .AsNoTracking()
             .Where(u => u.Id == id)
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetUserDisplayNameAsync(
+    string tenantId,
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(userId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var uId = userId.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(user =>
+                user.Id == uId &&
+                user.TenantId == tId)
+            .Select(user => user.FullName)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

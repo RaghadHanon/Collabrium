@@ -2,13 +2,14 @@
 
 public interface IProjectHistoryRecorder
 {
-    void RecordUpdatingChanges<T>(
+    Task RecordUpdatingChangesAsync<T>(
         string projectId,
         string relatedEntityId,
         string relatedEntityTitle,
         string relatedEntityKey,
         T oldObject,
-        T newObject);
+        T newObject,
+        CancellationToken cancellationToken = default);
 
     void RecordCreationChanges<T>(
         string projectId,

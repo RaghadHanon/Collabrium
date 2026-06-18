@@ -56,7 +56,7 @@ public class AddWorkItemsToSprint
                     var oldWorkItemState = workItem.Clone();
                     workItem.MoveToSprint(sprint.Id);
                     await workItemsRepository.UpdateAsync(workItem, cancellationToken);
-                    historyRecorder.RecordUpdatingChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);
+                    await historyRecorder.RecordUpdatingChangesAsync<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemState, workItem);
                 }
             }, cancellationToken);
 

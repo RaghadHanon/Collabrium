@@ -72,7 +72,14 @@ public class UpdateWorkItemCodeLink
                     codeLink,
                     cancellationToken);
 
-                historyRecorder.RecordUpdatingChanges(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code, oldWorkItemCodeLinkState, codeLink);
+                await historyRecorder.RecordUpdatingChangesAsync(
+                     projectId: workItem.ProjectId,
+                     relatedEntityId: workItem.Id,
+                     relatedEntityTitle: workItem.Title,
+                     relatedEntityKey: workItem.Code,
+                     oldObject: oldWorkItemCodeLinkState,
+                     newObject: codeLink,
+                     cancellationToken: cancellationToken);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);

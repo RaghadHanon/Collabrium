@@ -6,6 +6,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using SkiaSharp;
 
 namespace Infrastructure.Persistence.ReadModels;
 
@@ -32,6 +33,27 @@ public sealed class TeamsReadModel : ITeamsReadModel
             .AsNoTracking()
             .Where(t => t.TenantId == tenantId && t.Id == teamId)
             .ProjectTo<TeamDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetTeamDisplayNameAsync(
+        string tenantId,
+        string teamId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(teamId))
+            return null;
+
+        var tId = tenantId.Trim();
+        var id = teamId.Trim();
+
+        return await _dbContext.Teams
+            .AsNoTracking()
+            .Where(team =>
+                team.Id == id &&
+                team.TenantId == tId)
+            .Select(team => team.Name)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

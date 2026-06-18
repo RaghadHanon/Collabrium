@@ -11,5 +11,4 @@ public sealed class GenerateRoadmapFullDraftRequest
 
     public int TopicsCount { get; set; } = 5;
     public int SubTopicsPerTopic { get; set; } = 3;
-    public int ResourcesPerSubTopic { get; set; } = 2;
 }

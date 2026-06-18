@@ -52,6 +52,11 @@ public sealed class UpdateEvent
             if (ev is null)
                 return Result<EventDto>.Failure("Event not found.", HttpStatusCode.NotFound);
 
+            if (!string.Equals(ev.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                return Result<EventDto>.Failure(
+                    "You can update only your own event.",
+                    HttpStatusCode.Forbidden);
+
             var finalTitle = PatchHelpers.ApplyStringPatch(ev.Title, request.Title) ?? ev.Title;
             var finalDescription = PatchHelpers.ApplyStringPatch(ev.Description, request.Description);
 

@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Articles.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -21,6 +22,8 @@ namespace Application.Features.Articles.Commands
        IArticleLikesRepository articleLikesRepository,
        IArticlesReadModel articlesReadModel,
        ITenantContext tenantContext,
+       IUsersReadModel usersReadModel,
+       IMediator mediator,
        ICurrentUserAccessor currentUserAccessor,
        IUnitOfWork unitOfWork)
        : IRequestHandler<Command, Result<ArticleDto>>
@@ -48,6 +51,21 @@ namespace Application.Features.Articles.Commands
                     await articleLikesRepository.AddAsync(like, ct);
                 }, cancellationToken);
                 var dto = await articlesReadModel.GetByIdAsync(tenantId, article.Id, userId, cancellationToken);
+                var likedByUser = await usersReadModel.GetUserSnapshotByIdAsync(
+                    userId,
+                    cancellationToken);
+
+                if (likedByUser is not null && article.CreatedByUserId != userId)
+                {
+                    await mediator.Publish(new ArticleLikedEvent(
+                        TenantId: tenantId,
+                        ArticleId: article.Id,
+                        ArticleTitle: article.Title,
+                        ArticleOwnerUserId: article.CreatedByUserId,
+                        LikedByUserId: userId,
+                        LikedByFullName: likedByUser.FullName
+                    ), cancellationToken);
+                }
                 return dto is null
                     ? Result<ArticleDto>.Failure("Article liked but article could not be loaded.", HttpStatusCode.InternalServerError)
                     : Result<ArticleDto>.Success(dto, HttpStatusCode.OK);

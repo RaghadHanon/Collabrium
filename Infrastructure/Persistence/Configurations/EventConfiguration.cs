@@ -72,6 +72,12 @@ public sealed class EventConfiguration : IEntityTypeConfiguration<EventEntity>
             .WithOne(a => a.Event)
             .HasForeignKey(a => a.EventId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(e => e.ReminderSent)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(e => e.ReminderSentAt)
+            .IsRequired(false);
 
         builder.HasIndex(e => new { e.TenantId, e.StartAt });
 
@@ -79,6 +85,7 @@ public sealed class EventConfiguration : IEntityTypeConfiguration<EventEntity>
 
         builder.HasIndex(e => new { e.TenantId, e.IsCancelled });
 
+        builder.HasIndex(e => new { e.ReminderSent, e.StartAt, e.IsCancelled });
 
     }
 }

@@ -28,8 +28,8 @@ public sealed class PostsController : ApiBaseController
     /// <response code="404">If tenant not found.</response>
     [Authorize(Policy = Policies.Posts_Read)]
     [HttpGet]
-    public async Task<ActionResult<PagedList<PostDto, DateTime?>>> GetPosts(
-        [FromQuery] GetPostsRequest request)
+    public async Task<ActionResult<PagedList<PostDto, PostsCursorDto?>>> GetPosts(
+    [FromQuery] GetPostsRequest request)
     {
         var query = Mapper.Map<GetPosts.Query>(request);
 
@@ -523,5 +523,16 @@ public sealed class PostsController : ApiBaseController
         };
 
         return HandleResult(await Mediator.Send(command));
+    }
+    [Authorize(Policy = Policies.Posts_Read)]
+    [HttpGet("{postId}/likes")]
+    public async Task<ActionResult<PagedList<PostLikeUserDto, DateTime?>>> GetPostLikes(
+    string postId,
+    [FromQuery] GetPostLikesRequest request)
+    {
+        var query = Mapper.Map<GetPostLikes.Query>(request);
+        query.PostId = postId;
+
+        return HandleResult(await Mediator.Send(query));
     }
 }

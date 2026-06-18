@@ -1,4 +1,6 @@
-﻿namespace API.Contracts.Posts;
+﻿using Application.Features.Posts.DTOs;
+
+namespace API.Contracts.Posts;
 
 public sealed class GetPostsRequest
 {
@@ -21,5 +23,5 @@ public sealed class GetPostsRequest
     public DateTime? UpdatedBefore { get; set; }
 
     public int PageSize { get; set; } = 10;
-    public DateTime? Cursor { get; set; }
+    public PostsCursorDto? Cursor { get; set; }
 }

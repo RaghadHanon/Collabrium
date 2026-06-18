@@ -2,6 +2,8 @@
 using API.SetupProgram;
 using Application.Features.AI.DTOs.Roadmaps;
 using Application.Features.AI.Queries.Roadmaps;
+using Application.Features.Roadmaps.Commands;
+using Application.Features.Roadmaps.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,15 +14,24 @@ namespace API.Controllers;
 [Authorize(Policy = Policies.PasswordChanged)]
 public sealed class AIRoadmapsController : ApiBaseController
 {
-
     [Authorize(Policy = Policies.Roadmaps_Manage)]
     [HttpPost("full-draft")]
     public async Task<ActionResult<RoadmapFullDraftDto>> GenerateFullDraft(
-         [FromBody] GenerateRoadmapFullDraftRequest request)
+      [FromBody] GenerateRoadmapFullDraftRequest request)
     {
         var query = Mapper.Map<GenerateRoadmapFullDraft.Query>(request);
 
         return HandleResult(await Mediator.Send(query));
+    }
+
+    [Authorize(Policy = Policies.Roadmaps_Manage)]
+    [HttpPost("generate-and-create")]
+    public async Task<ActionResult<RoadmapDetailsDto>> CreateRoadmapWithAi(
+    [FromBody] CreateRoadmapWithAiRequest request)
+    {
+        var command = Mapper.Map<CreateRoadmapWithAi.Command>(request);
+
+        return HandleResult(await Mediator.Send(command));
     }
     [Authorize(Policy = Policies.Roadmaps_Manage)]
     [HttpPost("{roadmapId}/topics/suggestions")]

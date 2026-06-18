@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Posts.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -23,6 +24,9 @@ namespace Application.Features.Posts.Commands
             IPostCommentsRepository postCommentsRepository,
             IPostCommentsReadModel postCommentsReadModel,
             ITenantContext tenantContext,
+            IUsersReadModel usersReadModel,
+            IPostsReadModel postsReadModel,
+            IMediator mediator,
             ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<PostCommentDto>>
@@ -68,6 +72,31 @@ namespace Application.Features.Posts.Commands
                     request.PostId,
                     comment!.Id,
                     cancellationToken);
+                var postDto = await postsReadModel.GetByIdAsync(
+                    tenantId,
+                    request.PostId,
+                    currentUserId,
+                    cancellationToken);
+
+                var commenter = await usersReadModel.GetUserSnapshotByIdAsync(
+                    currentUserId,
+                    cancellationToken);
+
+                if (dto is not null &&
+                    postDto is not null &&
+                    commenter is not null &&
+                    postDto.CreatedByUser.Id != currentUserId)
+                {
+                    await mediator.Publish(new PostCommentAddedEvent(
+                        TenantId: tenantId,
+                        PostId: postDto.Id,
+                        PostTitle: postDto.Title,
+                        PostOwnerUserId: postDto.CreatedByUser.Id,
+                        CommentId: dto.Id,
+                        CommenterUserId: currentUserId,
+                        CommenterFullName: commenter.FullName
+                    ), cancellationToken);
+                }
 
                 return dto is null
                     ? Result<PostCommentDto>.Failure("Comment added but could not be loaded.", HttpStatusCode.InternalServerError)

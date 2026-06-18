@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
@@ -15,6 +16,7 @@ namespace Application.Features.Articles.Commands
         public sealed class Handler(
        IArticlesRepository articlesRepository,
        ITenantContext tenantContext,
+       ICurrentUserAccessor currentUserAccessor,
        IUnitOfWork unitOfWork)
        : IRequestHandler<Command, Result<string>>
         {
@@ -30,6 +32,12 @@ namespace Application.Features.Articles.Commands
                 {
                     return Result<string>.Failure("Article not found.", HttpStatusCode.NotFound);
                 }
+                var currentUserId = currentUserAccessor.GetUserId();
+                if (!string.Equals(article.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<string>.Failure(
+                        "You can manage only your own article.",
+                        HttpStatusCode.Forbidden);
+
                 var removed = false;
                 await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {

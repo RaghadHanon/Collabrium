@@ -16,6 +16,9 @@ public sealed class Announcement : Entity
     public DateTime PublishAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
 
+    public bool NotificationSent { get; private set; }
+    public DateTime? NotificationSentAt { get; private set; }
+
     public string CreatedByUserId { get; private set; } = null!;
 
     public IReadOnlyCollection<AnnouncementAudience> Audiences => _audiences.AsReadOnly();
@@ -40,6 +43,9 @@ public sealed class Announcement : Entity
         SetPublishAt(publishAt);
         SetExpiresAt(expiresAt);
 
+        NotificationSent = false;
+        NotificationSentAt = null;
+
         Touch();
     }
 
@@ -61,6 +67,9 @@ public sealed class Announcement : Entity
 
         SetPublishAt(publishAt);
         SetExpiresAt(expiresAt);
+
+        NotificationSent = false;
+        NotificationSentAt = null;
     }
 
     public static Announcement Rehydrate(
@@ -74,6 +83,8 @@ public sealed class Announcement : Entity
         DateTime publishAt,
         DateTime? expiresAt,
         string createdByUserId,
+        bool notificationSent,
+        DateTime? notificationSentAt,
         IEnumerable<AnnouncementAudience>? audiences)
     {
         var announcement = new Announcement(
@@ -87,6 +98,8 @@ public sealed class Announcement : Entity
             createdByUserId);
 
         announcement.SetTimestamps(createdAt, updatedAt);
+        announcement.NotificationSent = notificationSent;
+        announcement.NotificationSentAt = notificationSentAt;
 
         announcement._audiences.Clear();
 
@@ -100,11 +113,11 @@ public sealed class Announcement : Entity
     }
 
     public void UpdateDetails(
-        string title,
-        string content,
-        AnnouncementPriority priority,
-        DateTime publishAt,
-        DateTime? expiresAt)
+    string title,
+    string content,
+    AnnouncementPriority priority,
+    DateTime publishAt,
+    DateTime? expiresAt)
     {
         Title = Guard.NotNullOrWhiteSpace(title, nameof(title)).Trim();
         Content = Guard.NotNullOrWhiteSpace(content, nameof(content)).Trim();
@@ -113,7 +126,17 @@ public sealed class Announcement : Entity
         SetPublishAt(publishAt);
         SetExpiresAt(expiresAt);
 
+        if (publishAt > DateTime.UtcNow)
+        {
+            ResetNotification();
+        }
+
         Touch();
+    }
+    public void ResetNotification()
+    {
+        NotificationSent = false;
+        NotificationSentAt = null;
     }
 
     public void SetAudiences(IEnumerable<AnnouncementAudience> audiences)
@@ -139,6 +162,16 @@ public sealed class Announcement : Entity
     {
         return PublishAt <= now &&
                (ExpiresAt is null || ExpiresAt > now);
+    }
+
+    public void MarkNotificationSent(DateTime sentAt)
+    {
+        if (NotificationSent)
+            return;
+
+        NotificationSent = true;
+        NotificationSentAt = sentAt;
+        Touch();
     }
 
     private void SetPublishAt(DateTime publishAt)

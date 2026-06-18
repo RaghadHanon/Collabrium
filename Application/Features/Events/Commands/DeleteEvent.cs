@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
 
@@ -15,12 +16,14 @@ public sealed class DeleteEvent
     public sealed class Handler(
         IEventsRepository eventsRepository,
         ITenantContext tenantContext,
+        ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork)
         : IRequestHandler<Command, Result<Unit>>
     {
         public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
+            var currentUserId = currentUserAccessor.GetUserId();
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
@@ -31,6 +34,10 @@ public sealed class DeleteEvent
 
             if (ev is null)
                 return Result<Unit>.Failure("Event not found.", HttpStatusCode.NotFound);
+            if (!string.Equals(ev.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                return Result<Unit>.Failure(
+                    "You can delete only your own event.",
+                    HttpStatusCode.Forbidden);
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {

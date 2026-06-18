@@ -39,8 +39,8 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<CourseEntity>
         builder.Property(x => x.Language)
             .IsRequired();
 
-        builder.Property(x => x.EstimatedDurationInHours);
-
+        builder.Property(x => x.EstimatedDurationInHours)
+            .HasPrecision(5, 1);
         builder.OwnsOne(x => x.ThumbnailImage, image =>
         {
             image.Property(i => i.Url)

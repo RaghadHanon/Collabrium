@@ -17,7 +17,6 @@ public static class GenerateRoadmapFullDraft
 
         public int TopicsCount { get; set; } = 5;
         public int SubTopicsPerTopic { get; set; } = 3;
-        public int ResourcesPerSubTopic { get; set; } = 2;
     }
 
     public sealed class Handler(IRoadmapAiDraftService draftService)
@@ -33,12 +32,9 @@ public static class GenerateRoadmapFullDraft
                 request.Goal,
                 request.TopicsCount,
                 request.SubTopicsPerTopic,
-                request.ResourcesPerSubTopic,
                 cancellationToken);
 
-            return Result<RoadmapFullDraftDto>.Success(
-                draft,
-                HttpStatusCode.OK);
+            return Result<RoadmapFullDraftDto>.Success(draft, HttpStatusCode.OK);
         }
     }
 }

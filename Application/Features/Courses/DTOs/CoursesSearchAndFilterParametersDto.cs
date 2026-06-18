@@ -13,10 +13,11 @@ public sealed class CoursesSearchAndFilterParametersDto : QueryParametersDto<Dat
     public CourseLanguage? Language { get; set; }
     public string? TenantId { get; set; }
 
-    public List<string>? TagIds { get; set; }
+    public IReadOnlyCollection<string>? TagIdsAny { get; set; }
 
-    public int? MinEstimatedDurationInHours { get; set; }
-    public int? MaxEstimatedDurationInHours { get; set; }
+    public IReadOnlyCollection<string>? TagIdsAll { get; set; }
+    public decimal? MinEstimatedDurationInHours { get; set; }
+    public decimal? MaxEstimatedDurationInHours { get; set; }
 
     public bool? HasThumbnail { get; set; }
 

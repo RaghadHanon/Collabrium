@@ -17,7 +17,8 @@ public sealed class GetCoursesRequest
     public int? MaxEstimatedDurationInHours { get; set; }
 
     public bool? HasThumbnail { get; set; }
-
+    public IReadOnlyCollection<string>? TagIdsAny { get; set; }
+    public IReadOnlyCollection<string>? TagIdsAll { get; set; }
     public DateTime? Cursor { get; set; }
     public int PageSize { get; set; } = 10;
 }

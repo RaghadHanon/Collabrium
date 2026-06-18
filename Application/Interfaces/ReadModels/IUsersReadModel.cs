@@ -29,4 +29,15 @@ public interface IUsersReadModel
     Task<List<TagDto>> GetUserSkillsAsync(
     string userId,
     CancellationToken cancellationToken = default);
+    Task<List<string>> GetTenantUserIdsAsync(
+    string tenantId,
+    CancellationToken cancellationToken = default);
+
+    Task<List<string>> GetUserIdsByRoleAsync(
+        string tenantId,
+        string roleName,
+        CancellationToken cancellationToken = default);
+    Task<List<UserDto>> GetManagersAsync(
+    string tenantId,
+    CancellationToken ct = default);
 }

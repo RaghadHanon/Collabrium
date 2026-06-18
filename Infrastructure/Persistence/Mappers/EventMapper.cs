@@ -23,18 +23,20 @@ public static class EventMapper
             BannerImage = domain.BannerImage,
             CreatedByUserId = domain.CreatedByUserId,
             IsCancelled = domain.IsCancelled,
+            ReminderSent = domain.ReminderSent,
+            ReminderSentAt = domain.ReminderSentAt,
             CreatedAt = domain.CreatedAt,
-            UpdatedAt = domain.UpdatedAt,
-
-            Attendances = domain.Attendances
-                .Select(EventAttendanceMapper.ToEntity)
-                .ToList()
+            UpdatedAt = domain.UpdatedAt
         };
     }
 
     public static Event ToDomain(EventEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
+
+        var attendances = entity.Attendances?
+            .Select(EventAttendanceMapper.ToDomain)
+            .ToList();
 
         return Event.Rehydrate(
             id: entity.Id,
@@ -52,9 +54,10 @@ public static class EventMapper
             bannerImage: entity.BannerImage,
             createdByUserId: entity.CreatedByUserId,
             isCancelled: entity.IsCancelled,
-            attendances: entity.Attendances?
-                .Select(EventAttendanceMapper.ToDomain)
-                .ToList());
+            reminderSent: entity.ReminderSent,
+            reminderSentAt: entity.ReminderSentAt,
+            attendances: attendances
+        );
     }
 
     public static void UpdateEntity(Event domain, EventEntity entity)
@@ -62,7 +65,6 @@ public static class EventMapper
         ArgumentNullException.ThrowIfNull(domain);
         ArgumentNullException.ThrowIfNull(entity);
 
-        entity.TenantId = domain.TenantId;
         entity.Title = domain.Title;
         entity.Description = domain.Description;
         entity.StartAt = domain.StartAt;
@@ -74,6 +76,8 @@ public static class EventMapper
         entity.BannerImage = domain.BannerImage;
         entity.CreatedByUserId = domain.CreatedByUserId;
         entity.IsCancelled = domain.IsCancelled;
+        entity.ReminderSent = domain.ReminderSent;
+        entity.ReminderSentAt = domain.ReminderSentAt;
         entity.UpdatedAt = domain.UpdatedAt ?? DateTime.UtcNow;
     }
 }

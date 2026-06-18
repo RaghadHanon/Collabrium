@@ -27,7 +27,6 @@ public sealed class RoadmapAiDraftService(
         string goal,
         int topicsCount,
         int subTopicsPerTopic,
-        int resourcesPerSubTopic,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(goal))
@@ -35,31 +34,16 @@ public sealed class RoadmapAiDraftService(
 
         goal = goal.Trim();
 
-        var prompt = BuildPrompt(
-            path,
-            level,
-            goal,
-            topicsCount,
-            subTopicsPerTopic,
-            resourcesPerSubTopic);
+        var prompt = BuildPrompt(path, level, goal, topicsCount, subTopicsPerTopic);
 
         for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            var aiResponse = await aiAssistantService.AskAsync(
-                prompt,
-                cancellationToken);
+            var aiResponse = await aiAssistantService.AskAsync(prompt, cancellationToken);
 
-            if (TryParse(aiResponse, path, level, goal, out var draft))
+            if (TryParse(aiResponse, path, level, goal, topicsCount, subTopicsPerTopic, out var draft))
                 return draft!;
 
-            prompt = BuildRepairPrompt(
-                path,
-                level,
-                goal,
-                topicsCount,
-                subTopicsPerTopic,
-                resourcesPerSubTopic,
-                aiResponse);
+            prompt = BuildRepairPrompt(path, level, goal, topicsCount, subTopicsPerTopic, aiResponse);
         }
 
         return BuildFallback(path, level, goal);
@@ -70,11 +54,8 @@ public sealed class RoadmapAiDraftService(
         RoadmapLevel level,
         string goal,
         int topicsCount,
-        int subTopicsPerTopic,
-        int resourcesPerSubTopic)
+        int subTopicsPerTopic)
     {
-        var resourceTypes = string.Join(", ", Enum.GetNames<RoadmapResourceType>());
-
         return $$"""
         You are an AI learning roadmap assistant inside Collabrium.
 
@@ -89,29 +70,27 @@ public sealed class RoadmapAiDraftService(
         Required counts:
         - topics count: {{topicsCount}}
         - subtopics per topic: {{subTopicsPerTopic}}
-        - resources per subtopic: {{resourcesPerSubTopic}}
 
         Important:
         - Generate Topic nodes only.
         - Do not generate Reference nodes.
-        - Do not reference other roadmaps.
-        - Do not include refRoadmapId.
+        - Do not generate resources.
+        - Do not include URLs.
+        - Do not include resource objects.
+        - Do not include IDs.
+        - Do not include tenantId, userId, createdAt, updatedAt, or database fields.
 
         Rules:
         - Return valid JSON only.
         - Do not wrap JSON in markdown.
         - Do not add explanations.
-        - Do not include IDs.
-        - Do not include tenantId, userId, createdAt, updatedAt, or database fields.
-        - Do not invent URLs.
-        - For resources, use searchKeyword instead of url.
-        - Resource type must be exactly one of: {{resourceTypes}}.
+        - Every topic must have an order starting from 1.
+        - Every subtopic must have an order starting from 1 inside its topic.
+        - Order the roadmap from basics to advanced.
         - Keep titles clear and practical.
         - Keep descriptions concise.
-        - Order the roadmap from basics to advanced.
         - Make the content suitable for the selected path and level.
         - Suggested tags should be short technology or skill names.
-        - If resources count is 0, return empty resources arrays.
 
         Required JSON schema:
         {
@@ -120,19 +99,14 @@ public sealed class RoadmapAiDraftService(
           "suggestedTags": ["string"],
           "topics": [
             {
+              "order": 1,
               "title": "string",
               "description": "string",
               "subTopics": [
                 {
+                  "order": 1,
                   "title": "string",
-                  "description": "string",
-                  "resources": [
-                    {
-                      "title": "string",
-                      "type": "Documentation",
-                      "searchKeyword": "string"
-                    }
-                  ]
+                  "description": "string"
                 }
               ]
             }
@@ -147,11 +121,8 @@ public sealed class RoadmapAiDraftService(
         string goal,
         int topicsCount,
         int subTopicsPerTopic,
-        int resourcesPerSubTopic,
         string invalidResponse)
     {
-        var resourceTypes = string.Join(", ", Enum.GetNames<RoadmapResourceType>());
-
         return $$"""
         Your previous response was invalid.
 
@@ -166,7 +137,6 @@ public sealed class RoadmapAiDraftService(
         Required counts:
         - topics count: {{topicsCount}}
         - subtopics per topic: {{subTopicsPerTopic}}
-        - resources per subtopic: {{resourcesPerSubTopic}}
 
         Previous response:
         {{invalidResponse}}
@@ -177,10 +147,11 @@ public sealed class RoadmapAiDraftService(
         - No explanations.
         - No IDs.
         - No URLs.
+        - No resources.
         - Do not generate Reference nodes.
         - Generate Topic nodes only.
-        - Use searchKeyword for resources.
-        - Resource type must be one of: {{resourceTypes}}.
+        - Include order for each topic.
+        - Include order for each subtopic.
 
         Required JSON schema:
         {
@@ -189,19 +160,14 @@ public sealed class RoadmapAiDraftService(
           "suggestedTags": ["string"],
           "topics": [
             {
+              "order": 1,
               "title": "string",
               "description": "string",
               "subTopics": [
                 {
+                  "order": 1,
                   "title": "string",
-                  "description": "string",
-                  "resources": [
-                    {
-                      "title": "string",
-                      "type": "Documentation",
-                      "searchKeyword": "string"
-                    }
-                  ]
+                  "description": "string"
                 }
               ]
             }
@@ -215,6 +181,8 @@ public sealed class RoadmapAiDraftService(
         RoadmapPath path,
         RoadmapLevel level,
         string goal,
+        int topicsCount,
+        int subTopicsPerTopic,
         out RoadmapFullDraftDto? draft)
     {
         draft = null;
@@ -223,14 +191,12 @@ public sealed class RoadmapAiDraftService(
         {
             var json = ExtractJson(response);
 
-            draft = JsonSerializer.Deserialize<RoadmapFullDraftDto>(
-                json,
-                JsonOptions);
+            draft = JsonSerializer.Deserialize<RoadmapFullDraftDto>(json, JsonOptions);
 
             if (draft is null)
                 return false;
 
-            Normalize(draft, path, level, goal);
+            Normalize(draft, path, level, goal, topicsCount, subTopicsPerTopic);
 
             return !string.IsNullOrWhiteSpace(draft.Title)
                    && draft.Topics.Count > 0
@@ -240,6 +206,95 @@ public sealed class RoadmapAiDraftService(
         {
             return false;
         }
+    }
+
+    private static void Normalize(
+        RoadmapFullDraftDto draft,
+        RoadmapPath path,
+        RoadmapLevel level,
+        string goal,
+        int topicsCount,
+        int subTopicsPerTopic)
+    {
+        draft.Title = NormalizeText(draft.Title, $"{level} {path} Roadmap");
+        draft.Description = NormalizeText(draft.Description, goal);
+
+        draft.SuggestedTags ??= new();
+        draft.SuggestedTags = draft.SuggestedTags
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(10)
+            .ToList();
+
+        draft.Topics ??= new();
+
+        draft.Topics = draft.Topics
+            .Where(x => !string.IsNullOrWhiteSpace(x.Title))
+            .Take(topicsCount)
+            .ToList();
+
+        for (var i = 0; i < draft.Topics.Count; i++)
+        {
+            var topic = draft.Topics[i];
+
+            topic.Order = i + 1;
+            topic.Title = NormalizeText(topic.Title, $"Topic {i + 1}");
+            topic.Description = NormalizeText(topic.Description, $"Learn an important part of {path}.");
+
+            topic.SubTopics ??= new();
+
+            topic.SubTopics = topic.SubTopics
+                .Where(x => !string.IsNullOrWhiteSpace(x.Title))
+                .Take(subTopicsPerTopic)
+                .ToList();
+
+            for (var j = 0; j < topic.SubTopics.Count; j++)
+            {
+                var subTopic = topic.SubTopics[j];
+
+                subTopic.Order = j + 1;
+                subTopic.Title = NormalizeText(subTopic.Title, $"Subtopic {j + 1}");
+                subTopic.Description = NormalizeText(
+                    subTopic.Description,
+                    "Learn the main concepts and practical usage.");
+            }
+        }
+    }
+
+    private static RoadmapFullDraftDto BuildFallback(
+        RoadmapPath path,
+        RoadmapLevel level,
+        string goal)
+    {
+        return new RoadmapFullDraftDto
+        {
+            Title = $"{level} {path} Roadmap",
+            Description = goal,
+            SuggestedTags = new()
+            {
+                path.ToString(),
+                level.ToString()
+            },
+            Topics = new()
+            {
+                new()
+                {
+                    Order = 1,
+                    Title = "Fundamentals",
+                    Description = $"Learn the core fundamentals of {path}.",
+                    SubTopics = new()
+                    {
+                        new()
+                        {
+                            Order = 1,
+                            Title = "Core Concepts",
+                            Description = "Understand the basic concepts before moving forward."
+                        }
+                    }
+                }
+            }
+        };
     }
 
     private static string ExtractJson(string response)
@@ -269,112 +324,6 @@ public sealed class RoadmapAiDraftService(
             throw new InvalidOperationException("No JSON object found.");
 
         return jsonMatch.Value.Trim();
-    }
-
-    private static void Normalize(
-        RoadmapFullDraftDto draft,
-        RoadmapPath path,
-        RoadmapLevel level,
-        string goal)
-    {
-        draft.Title = NormalizeText(
-            draft.Title,
-            $"{level} {path} Roadmap");
-
-        draft.Description = NormalizeText(
-            draft.Description,
-            goal);
-
-        draft.SuggestedTags ??= new();
-
-        draft.SuggestedTags = draft.SuggestedTags
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x => x.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(10)
-            .ToList();
-
-        draft.Topics ??= new();
-
-        foreach (var topic in draft.Topics)
-        {
-            topic.Title = NormalizeText(topic.Title, "Suggested Topic");
-
-            topic.Description = NormalizeText(
-                topic.Description,
-                $"Learn an important part of {path}.");
-
-            topic.SubTopics ??= new();
-
-            foreach (var subTopic in topic.SubTopics)
-            {
-                subTopic.Title = NormalizeText(
-                    subTopic.Title,
-                    "Suggested Subtopic");
-
-                subTopic.Description = NormalizeText(
-                    subTopic.Description,
-                    "Learn the main concepts and practical usage.");
-
-                subTopic.Resources ??= new();
-
-                foreach (var resource in subTopic.Resources)
-                {
-                    resource.Title = NormalizeText(
-                        resource.Title,
-                        subTopic.Title);
-
-                    resource.SearchKeyword = NormalizeText(
-                        resource.SearchKeyword,
-                        $"{subTopic.Title} {path} learning resource");
-
-                    if (!Enum.IsDefined(typeof(RoadmapResourceType), resource.Type))
-                        resource.Type = RoadmapResourceType.Documentation;
-                }
-            }
-        }
-    }
-
-    private static RoadmapFullDraftDto BuildFallback(
-        RoadmapPath path,
-        RoadmapLevel level,
-        string goal)
-    {
-        return new RoadmapFullDraftDto
-        {
-            Title = $"{level} {path} Roadmap",
-            Description = goal,
-            SuggestedTags = new List<string>
-            {
-                path.ToString(),
-                level.ToString()
-            },
-            Topics = new List<RoadmapTopicDraftDto>
-            {
-                new()
-                {
-                    Title = "Fundamentals",
-                    Description = $"Learn the core fundamentals of {path}.",
-                    SubTopics = new List<RoadmapSubTopicDraftDto>
-                    {
-                        new()
-                        {
-                            Title = "Core Concepts",
-                            Description = "Understand the basic concepts before moving forward.",
-                            Resources = new List<RoadmapResourceDraftDto>
-                            {
-                                new()
-                                {
-                                    Title = "Official Documentation",
-                                    Type = RoadmapResourceType.Documentation,
-                                    SearchKeyword = $"{path} {level} official documentation"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
     }
 
     private static string NormalizeText(string? value, string fallback)

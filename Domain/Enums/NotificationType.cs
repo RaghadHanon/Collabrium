@@ -30,5 +30,11 @@ public enum NotificationType
     CourseAssigned = 50,
 
     UserRoleChanged = 60,
-    Welcome = 70
+    Welcome = 70,
+
+    ArticleLiked = 80,
+    ArticleCommentAdded = 81,
+    PostLiked = 90,
+    PostCommentAdded = 91,
+    EventReminder = 100
 }

@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Events;
 using Application.Features.Announcements.DTOs;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
@@ -31,6 +32,7 @@ public sealed class CreateAnnouncement
         IAnnouncementsReadModel announcementsReadModel,
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
+        IMediator mediator,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<AnnouncementDetailsDto>>
     {
@@ -79,8 +81,6 @@ public sealed class CreateAnnouncement
                     announcement.SetAudiences(audiences);
 
                     await announcementsRepository.AddAsync(announcement, ct);
-
-                    await unitOfWork.SaveChangesAsync(ct);
                 }, cancellationToken);
             }
             catch (Exception ex)
@@ -100,16 +100,35 @@ public sealed class CreateAnnouncement
                 announcement.Id,
                 cancellationToken);
 
-            return dto is null
-                ? Result<AnnouncementDetailsDto>.Failure(
+            if (dto is null)
+            {
+                return Result<AnnouncementDetailsDto>.Failure(
                     "Announcement created but could not be loaded.",
-                    HttpStatusCode.InternalServerError)
-                : Result<AnnouncementDetailsDto>.Success(dto, HttpStatusCode.Created);
+                    HttpStatusCode.InternalServerError);
+            }
+
+            var now = DateTime.UtcNow;
+
+            if (announcement.IsVisibleNow(now) && !announcement.NotificationSent)
+            {
+                await mediator.Publish(new AnnouncementCreatedEvent(
+                    TenantId: tenantId,
+                    AnnouncementId: announcement.Id
+                ), cancellationToken);
+
+                await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                {
+                    announcement.MarkNotificationSent(now);
+                    await announcementsRepository.UpdateAsync(announcement, ct);
+                }, cancellationToken);
+            }
+
+            return Result<AnnouncementDetailsDto>.Success(dto, HttpStatusCode.Created);
         }
 
         private static AnnouncementAudience CreateAudience(
-     string announcementId,
-     AnnouncementAudienceInputDto input)
+            string announcementId,
+            AnnouncementAudienceInputDto input)
         {
             static string? Clean(string? value)
                 => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -125,9 +144,9 @@ public sealed class CreateAnnouncement
                         : throw new DomainException("TeamId is required for team audience."),
 
                 AnnouncementAudienceType.Role =>
-                     input.RoleName.HasValue
-                         ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
-                         : throw new DomainException("RoleName is required for role audience."),
+                    input.RoleName.HasValue
+                        ? AnnouncementAudience.ForRole(announcementId, input.RoleName.Value.ToString())
+                        : throw new DomainException("RoleName is required for role audience."),
 
                 _ => throw new DomainException("Invalid announcement audience type.")
             };

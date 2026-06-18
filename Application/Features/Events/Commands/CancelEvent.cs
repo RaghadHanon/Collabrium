@@ -38,6 +38,10 @@ public sealed class CancelEvent
 
             if (ev is null)
                 return Result<EventDto>.Failure("Event not found.", HttpStatusCode.NotFound);
+            if (!string.Equals(ev.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                return Result<EventDto>.Failure(
+                    "You can cancel only your own event.",
+                    HttpStatusCode.Forbidden);
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {

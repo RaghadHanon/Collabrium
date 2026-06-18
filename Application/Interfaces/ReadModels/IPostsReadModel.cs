@@ -5,7 +5,7 @@ namespace Application.Interfaces.ReadModels
 {
     public interface IPostsReadModel
     {
-        Task<PagedList<PostDto, DateTime?>> GetPostsAsync(
+        Task<PagedList<PostDto, PostsCursorDto?>> GetPostsAsync(
             PostsSearchAndFilterParametersDto parameters,
             CancellationToken ct = default);
 
@@ -19,6 +19,12 @@ namespace Application.Interfaces.ReadModels
             string tenantId,
             string postId,
             string? currentUserId,
+            CancellationToken ct = default);
+        Task<PagedList<PostLikeUserDto, DateTime?>> GetPostLikesAsync(
+            string tenantId,
+            string postId,
+            int pageSize,
+            DateTime? cursor,
             CancellationToken ct = default);
 
 

@@ -24,7 +24,7 @@ public sealed class UpdateCourse
         public CourseLanguage? Language { get; set; }
         public List<string>? LearningPoints { get; set; }
 
-        public int? EstimatedDurationInHours { get; set; }
+        public decimal? EstimatedDurationInHours { get; set; }
 
     }
     public class Handler(

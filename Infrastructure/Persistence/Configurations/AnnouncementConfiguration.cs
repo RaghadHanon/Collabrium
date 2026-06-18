@@ -32,6 +32,13 @@ public sealed class AnnouncementConfiguration : IEntityTypeConfiguration<Announc
         builder.Property(a => a.ExpiresAt)
             .IsRequired(false);
 
+        builder.Property(a => a.NotificationSent)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(a => a.NotificationSentAt)
+            .IsRequired(false);
+
         builder.Property(a => a.CreatedByUserId)
             .IsRequired()
             .HasMaxLength(450);
@@ -56,5 +63,7 @@ public sealed class AnnouncementConfiguration : IEntityTypeConfiguration<Announc
         builder.HasIndex(a => new { a.TenantId, a.ExpiresAt });
 
         builder.HasIndex(a => new { a.TenantId, a.Priority });
+
+        builder.HasIndex(a => new { a.NotificationSent, a.PublishAt, a.ExpiresAt });
     }
 }

@@ -18,7 +18,5 @@ public sealed class GenerateRoadmapFullDraftRequestValidator
         RuleFor(x => x.SubTopicsPerTopic)
             .InclusiveBetween(1, 6);
 
-        RuleFor(x => x.ResourcesPerSubTopic)
-            .InclusiveBetween(0, 3);
     }
 }

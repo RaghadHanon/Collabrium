@@ -27,7 +27,7 @@ public class CourseAssignedEmailHandler
     {
         var template = templateFactory.GetTemplate("CourseAssignment");
 
-        var url = $"{settings.BaseUrl}/dashboard/courses/{notification.CourseId}";
+        var url = $"{settings.BaseUrl}/learning-hub/courses/{notification.CourseId}";
 
         var data = new Dictionary<string, string>
         {

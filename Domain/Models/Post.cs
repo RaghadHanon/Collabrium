@@ -43,7 +43,6 @@ public sealed class Post : Entity
         Type = type;
         IsPinned = false;
 
-        Touch();
     }
 
     public Post(

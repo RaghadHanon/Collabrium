@@ -26,6 +26,9 @@ public sealed class EventEntity : DbEntity
 
     public bool IsCancelled { get; set; }
 
+    public bool ReminderSent { get; set; }
+    public DateTime? ReminderSentAt { get; set; }
+
     public ICollection<EventAttendanceEntity> Attendances { get; set; }
         = new List<EventAttendanceEntity>();
 }

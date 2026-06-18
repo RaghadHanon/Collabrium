@@ -4,6 +4,7 @@ using Application.Features.Users.DTOs;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Domain.Enums;
 using Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
@@ -282,5 +283,72 @@ public class UsersReadModel : IUsersReadModel
 
         query = query.Where(u => !blockedJobTitles.Contains(u.JobTitle));
         return query;
+    }
+    public async Task<List<string>> GetTenantUserIdsAsync(
+    string tenantId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return new();
+
+        var tId = tenantId.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.TenantId == tId)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<string>> GetUserIdsByRoleAsync(
+        string tenantId,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(roleName))
+            return new();
+
+        var tId = tenantId.Trim();
+        var role = roleName.Trim();
+
+        return await _dbContext.Users
+            .AsNoTracking()
+            .Where(u => u.TenantId == tId && u.JobTitle == role)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
+    public async Task<List<UserDto>> GetManagersAsync(
+    string tenantId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return new();
+
+        var tId = tenantId.Trim();
+
+        var managerRoles = new[]
+        {
+        nameof(UserRole.TenantAdmin),
+        nameof(UserRole.CEO),
+        nameof(UserRole.ProductOwner),
+        nameof(UserRole.TeamLead),
+        nameof(UserRole.BusinessAnalyst)
+    };
+
+        return await (
+            from user in _dbContext.Users.AsNoTracking()
+            join userRole in _dbContext.UserRoles.AsNoTracking()
+                on user.Id equals userRole.UserId
+            join role in _dbContext.Roles.AsNoTracking()
+                on userRole.RoleId equals role.Id
+            where user.TenantId == tId
+                  && role.Name != null
+                  && managerRoles.Contains(role.Name)
+            select user
+        )
+        .Distinct()
+        .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+        .ToListAsync(cancellationToken);
     }
 }

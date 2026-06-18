@@ -21,5 +21,6 @@ public sealed class PostsApiMappingProfile : Profile
         CreateMap<PostTagsRequest, AddPostTags.Command>();
         CreateMap<PostTagsRequest, RemovePostTags.Command>();
         CreateMap<PostTagsRequest, SetPostTags.Command>();
+        CreateMap<GetPostLikesRequest, GetPostLikes.Query>();
     }
 }

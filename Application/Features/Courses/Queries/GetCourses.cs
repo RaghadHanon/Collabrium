@@ -21,8 +21,8 @@ public sealed class GetCourses
         public Domain.Enums.CourseLevel? Level { get; set; }
         public Domain.Enums.CourseLanguage? Language { get; set; }
 
-        public int? MinEstimatedDurationInHours { get; set; }
-        public int? MaxEstimatedDurationInHours { get; set; }
+        public decimal? MinEstimatedDurationInHours { get; set; }
+        public decimal? MaxEstimatedDurationInHours { get; set; }
 
         public bool? HasThumbnail { get; set; }
 
@@ -31,7 +31,8 @@ public sealed class GetCourses
 
         public DateTime? UpdatedAfter { get; set; }
         public DateTime? UpdatedBefore { get; set; }
-
+        public IReadOnlyCollection<string>? TagIdsAny { get; set; }
+        public IReadOnlyCollection<string>? TagIdsAll { get; set; }
         public DateTime? Cursor { get; set; }
         public int PageSize { get; set; } = 10;
     }

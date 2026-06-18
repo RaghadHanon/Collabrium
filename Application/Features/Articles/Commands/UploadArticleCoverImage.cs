@@ -21,13 +21,14 @@ namespace Application.Features.Articles.Commands
             IAttachmentStorageFactory storageFactory,
             IArticlesRepository articlesRepository,
             ITenantContext tenantContext,
+            ICurrentUserAccessor currentUserAccessor,
             IUnitOfWork unitOfWork)
             : IRequestHandler<Command, Result<Unit>>
         {
             public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var tenantId = tenantContext.CurrentTenant?.Id;
-
+                var currentUserId = currentUserAccessor.GetUserId();
                 if (string.IsNullOrWhiteSpace(tenantId))
                     return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
@@ -41,6 +42,10 @@ namespace Application.Features.Articles.Commands
 
                 if (article is null)
                     return Result<Unit>.Failure("Article not found.", HttpStatusCode.NotFound);
+                if (!string.Equals(article.CreatedByUserId, currentUserId, StringComparison.Ordinal))
+                    return Result<Unit>.Failure(
+                        "You can manage only your own article.",
+                        HttpStatusCode.Forbidden);
 
                 var storage = storageFactory.Get(AttachmentType.Image);
 

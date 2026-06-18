@@ -16,7 +16,7 @@ public class CourseDto
     public CourseLevel Level { get; set; }
     public CourseLanguage Language { get; set; }
 
-    public int? EstimatedDurationInHours { get; set; }
+    public decimal? EstimatedDurationInHours { get; set; }
 
     public string? ThumbnailImageUrl { get; set; }
     public string? ThumbnailImagePublicId { get; set; }

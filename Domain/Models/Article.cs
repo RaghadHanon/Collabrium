@@ -44,7 +44,6 @@ public sealed class Article : Entity
 
         IsPublished = isPublished;
 
-        Touch();
     }
 
     public Article(

@@ -172,17 +172,30 @@ public sealed class CoursesRepository : ICoursesRepository
         {
             query = parameters.HasThumbnail.Value ? query.Where(c => c.ThumbnailImage != null) : query.Where(c => c.ThumbnailImage == null);
         }
-
-        if (parameters.TagIds is { Count: > 0 })
+        if (parameters.TagIdsAny is { Count: > 0 })
         {
-            var ids = NormalizeIds(parameters.TagIds);
+            var tagIds = parameters.TagIdsAny
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct()
+                .ToList();
 
-            if (ids.Count > 0)
-            {
-                query = query.Where(c =>
-                    c.Tags.Any(t => ids.Contains(t.Id)));
-            }
+            query = query.Where(c =>
+                c.Tags.Any(t => tagIds.Contains(t.Id)));
         }
+        if (parameters.TagIdsAll is { Count: > 0 })
+        {
+            var tagIds = parameters.TagIdsAll
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct()
+                .ToList();
+
+            query = query.Where(c =>
+                tagIds.All(tagId =>
+                    c.Tags.Any(t => t.Id == tagId)));
+        }
+
 
         var entities = await query
             .OrderByDescending(c => c.CreatedAt)

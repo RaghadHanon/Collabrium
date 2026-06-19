@@ -40,6 +40,9 @@ public sealed class AddMembersToTeam
             if (team is null)
                 return Result<string>.Failure("Team is not found.", HttpStatusCode.BadRequest);
 
+            if(!team.IsActive)
+                return Result<string>.Failure("Can't add members to inactive team.", HttpStatusCode.BadRequest);
+
             if (request.MembersIds is null || request.MembersIds.Length == 0)
                 return Result<string>.Failure("MembersIds is required.", HttpStatusCode.BadRequest);
 

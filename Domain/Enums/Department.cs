@@ -9,6 +9,5 @@ public enum Department
     ProductManagement = 4,
     Design = 5,
     ResearchAndDevelopment = 6,
-    DevOps = 7,
     Administration = 8,
 }

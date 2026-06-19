@@ -111,7 +111,7 @@ public class UpdateUserRole
                 {
                     return Result<Unit>.Failure(
                         "The user's role cannot be changed while they are assigned as a team lead. Reassign the teams to another team lead first.",
-                        HttpStatusCode.Conflict);
+                        HttpStatusCode.BadRequest);
                 }
             }
 

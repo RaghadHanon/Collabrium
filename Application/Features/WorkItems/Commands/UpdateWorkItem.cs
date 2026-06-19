@@ -111,6 +111,11 @@ public partial class UpdateWorkItem
                 currentUserId,
                 StringComparison.Ordinal);
 
+            var isCreator = string.Equals(
+                workItem.CreatedByUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
             var userRole = await currentUserAccessor.GetUserRole(
                 currentUserId,
                 cancellationToken);
@@ -118,7 +123,7 @@ public partial class UpdateWorkItem
             var isManager =
                 Roles.ProjectsManagerRoles.Contains(userRole);
 
-            if (!isManager && !isCurrentAssignee)
+            if (!isManager && !isCurrentAssignee && !isCreator)
             {
                 return Result<WorkItemDto>.Failure(
                     "You can only update items assigned to you. Managers can update any item.",

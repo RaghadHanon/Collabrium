@@ -8,39 +8,60 @@ namespace API.SetupProgram;
 /// </summary>
 public static class SwaggerExtensions
 {
-    public static IServiceCollection AddSwaggerWithJwtSupport(this IServiceCollection services)
+    public static IServiceCollection AddSwaggerWithJwtSupport(
+        this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
+
         services.AddSwaggerGen(options =>
         {
-            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
-            options.IncludeXmlComments(xmlPath);
-
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            options.SwaggerDoc("v1", new OpenApiInfo
             {
-                In = ParameterLocation.Header,
-                Description = "Please enter a valid JWT token",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                BearerFormat = "JWT",
-                Scheme = "Bearer"
+                Title = "Collabrium API",
+                Version = "v1",
+                Description = "Collabrium Integrated Enterprise Management Platform API"
             });
 
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            var xmlFilename =
+                $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+            var xmlPath = Path.Combine(
+                AppContext.BaseDirectory,
+                xmlFilename);
+
+            if (File.Exists(xmlPath))
             {
+                options.IncludeXmlComments(xmlPath);
+            }
+
+            options.AddSecurityDefinition(
+                "Bearer",
+                new OpenApiSecurityScheme
                 {
-                    new OpenApiSecurityScheme
+                    In = ParameterLocation.Header,
+                    Description =
+                        "Enter the JWT token. Example: Bearer eyJhbGci...",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
+                });
+
+            options.AddSecurityRequirement(
+                new OpenApiSecurityRequirement
+                {
                     {
-                        Reference = new OpenApiReference
+                        new OpenApiSecurityScheme
                         {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
         });
 
         return services;

@@ -10,28 +10,57 @@ namespace API.SetupProgram;
 /// </summary>
 public static class ApplicationBuilderExtensions
 {
-    public static IApplicationBuilder UseApiMiddleware(this WebApplication app)
+    public static IApplicationBuilder UseApiMiddleware(
+        this WebApplication app)
     {
         app.UseExceptionHandler();
 
-        if (app.Environment.IsDevelopment())
+        var swaggerEnabled =
+            app.Environment.IsDevelopment() ||
+            app.Configuration.GetValue<bool>(
+                "SwaggerSettings:Enabled");
+
+        if (swaggerEnabled)
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint(
+                    "/swagger/v1/swagger.json",
+                    "Collabrium API v1");
+
+                options.DocumentTitle =
+                    "Collabrium API Documentation";
+
+                options.RoutePrefix = "swagger";
+            });
         }
 
         app.UseHttpsRedirection();
+
         app.UseRouting();
+
         app.UseCors();
 
         app.UseAuthentication();
+
         app.UseMiddleware<TenantMiddleware>();
+
         app.UseAuthorization();
 
         app.MapHub<PresenceHub>("/hubs/presence");
         app.MapHub<CommentHub>("/hubs/comments");
         app.MapHub<NotificationHub>("/hubs/notifications");
+
         app.MapControllers();
+
+        if (swaggerEnabled)
+        {
+            app.MapGet("/", () =>
+                    Results.Redirect("/swagger"))
+                .ExcludeFromDescription();
+        }
 
         return app;
     }
@@ -80,7 +109,9 @@ public static class ApplicationBuilderExtensions
                     "Starting database seeding...");
 
                 await RoleSeeder.SeedRoles(services);
-                await GlobalTenantSeeder.SeedGlobalTenantAsync(services);
+
+                await GlobalTenantSeeder
+                    .SeedGlobalTenantAsync(services);
 
                 logger.LogInformation(
                     "Database seeding completed.");

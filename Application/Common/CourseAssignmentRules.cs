@@ -9,7 +9,8 @@ public static class CourseAssignmentRules
         UserRole.ProductOwner,
         UserRole.TeamLead,
         UserRole.TenantAdmin,
-        UserRole.BusinessAnalyst
+        UserRole.BusinessAnalyst,
+        UserRole.CEO,
     };
 
     public static bool IsBlockedTargetRole(UserRole? role)

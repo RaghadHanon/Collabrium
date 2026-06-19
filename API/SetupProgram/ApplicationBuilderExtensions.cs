@@ -36,31 +36,63 @@ public static class ApplicationBuilderExtensions
         return app;
     }
 
-    public static async Task ApplyMigrationsAndSeedDataAsync(this WebApplication app)
+    public static async Task ApplyMigrationsAndSeedDataAsync(
+        this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
+
         var services = scope.ServiceProvider;
         var logger = services.GetRequiredService<ILogger<Program>>();
 
+        var applyMigrations = app.Configuration.GetValue<bool>(
+            "DatabaseSettings:ApplyMigrationsOnStartup");
+
+        var seedData = app.Configuration.GetValue<bool>(
+            "DatabaseSettings:SeedDataOnStartup");
+
+        if (!applyMigrations && !seedData)
+        {
+            logger.LogInformation(
+                "Automatic database migrations and seeding are disabled.");
+
+            return;
+        }
+
         try
         {
-            logger.LogInformation("Starting database migration...");
+            var dbContext =
+                services.GetRequiredService<AppDbContext>();
 
-            var dbContext = services.GetRequiredService<AppDbContext>();
-            await dbContext.Database.MigrateAsync();
+            if (applyMigrations)
+            {
+                logger.LogInformation(
+                    "Starting database migration...");
 
-            logger.LogInformation("Database migrated successfully.");
-            logger.LogInformation("Seeding...");
+                await dbContext.Database.MigrateAsync();
 
-            await RoleSeeder.SeedRoles(services);
-            await GlobalTenantSeeder.SeedGlobalTenantAsync(services);
+                logger.LogInformation(
+                    "Database migrated successfully.");
+            }
 
-            logger.LogInformation("Database seeding completed.");
+            if (seedData)
+            {
+                logger.LogInformation(
+                    "Starting database seeding...");
+
+                await RoleSeeder.SeedRoles(services);
+                await GlobalTenantSeeder.SeedGlobalTenantAsync(services);
+
+                logger.LogInformation(
+                    "Database seeding completed.");
+            }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred during database migration/seeding.");
-            throw; // stop app if DB migration/seeding fails
+            logger.LogError(
+                ex,
+                "An error occurred during database migration/seeding.");
+
+            throw;
         }
     }
 }

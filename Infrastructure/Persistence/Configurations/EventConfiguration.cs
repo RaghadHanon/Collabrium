@@ -86,6 +86,5 @@ public sealed class EventConfiguration : IEntityTypeConfiguration<EventEntity>
         builder.HasIndex(e => new { e.TenantId, e.IsCancelled });
 
         builder.HasIndex(e => new { e.ReminderSent, e.StartAt, e.IsCancelled });
-
     }
 }

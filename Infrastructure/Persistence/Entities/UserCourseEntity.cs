@@ -20,5 +20,4 @@ public sealed class UserCourseEntity : DbEntity
     public ApplicationUserEntity User { get; set; } = null!;
     public CourseEntity Course { get; set; } = null!;
     public ApplicationUserEntity? AssignedByUser { get; set; }
-
 }

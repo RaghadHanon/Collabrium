@@ -38,8 +38,6 @@ namespace Infrastructure.Persistence.Configurations
             builder.HasIndex(a => new { a.TenantId, a.CreatedAt });
             builder.HasIndex(a => new { a.TenantId, a.IsPublished });
             builder.HasIndex(a => new { a.TenantId, a.Title });
-
-
         }
     }
 }

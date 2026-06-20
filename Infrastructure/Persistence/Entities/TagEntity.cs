@@ -6,5 +6,4 @@ public class TagEntity : DbEntity
     public TenantEntity Tenant { get; set; } = null!;
 
     public string Name { get; set; } = null!;
-
 }

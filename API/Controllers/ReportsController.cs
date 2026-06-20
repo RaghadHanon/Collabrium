@@ -164,7 +164,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("projects/{projectId}/sprints/{sprintId}/sprint-progress-report/pdf")]
     public async Task<IActionResult> GetSprintProgressReportPdf(string projectId, string sprintId)
@@ -190,7 +190,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/cycle-time-report")]
     public async Task<ActionResult<CycleTimeReport>> GetCycleTimeReport(string projectId, [FromQuery] GetCycleTimeReportRequest request)
@@ -213,7 +213,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/cycle-time-report/pdf")]
     public async Task<IActionResult> GetCycleTimeReportPdf(string projectId, [FromQuery] GetCycleTimeReportRequest request)
@@ -236,7 +236,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/velocity-report")]
     public async Task<ActionResult<VelocityReportDto>> GetVelocityReport(string projectId)
@@ -261,7 +261,8 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="200">Returns the PDF report.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If entities not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
+    [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/velocity-report/pdf")]
     public async Task<IActionResult> GetVelocityReportPdf(string projectId)
     {
@@ -290,7 +291,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("bug-severity-distribution-report")]
     public async Task<ActionResult<BugSeverityDistributionReportDto>> GetBugSeverityDistributionReport(
         [FromQuery] GetBugSeverityDistributionReportRequest request)
@@ -316,7 +317,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("bug-severity-distribution-report/pdf")]
     public async Task<IActionResult> GetBugSeverityDistributionReportPdf(
         [FromQuery] GetBugSeverityDistributionReportRequest request)
@@ -343,7 +344,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project or team does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("developer-productivity-report")]
     public async Task<ActionResult<DeveloperProductivityReportDto>> GetDeveloperProductivityReport(
         [FromQuery] GetDeveloperProductivityReportRequest request)
@@ -369,7 +370,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project or team does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("developer-productivity-report/pdf")]
     public async Task<IActionResult> GetDeveloperProductivityReportPdf(
         [FromQuery] GetDeveloperProductivityReportRequest request)
@@ -396,7 +397,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("teams-productivity-report")]
     public async Task<ActionResult<TeamsProductivityReportDto>> GetTeamsProductivityReport(
         [FromQuery] GetTeamsProductivityReportRequest request)
@@ -422,7 +423,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("teams-productivity-report/pdf")]
     public async Task<IActionResult> GetTeamsProductivityReportPdf(
         [FromQuery] GetTeamsProductivityReportRequest request)
@@ -449,7 +450,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("blocked-work-items-report")]
     public async Task<ActionResult<BlockedWorkItemsReportDto>> GetBlockedWorkItemsReport(
         [FromQuery] GetBlockedWorkItemsReportRequest request)
@@ -475,7 +476,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("blocked-work-items-report/pdf")]
     public async Task<IActionResult> GetBlockedWorkItemsReportPdf(
         [FromQuery] GetBlockedWorkItemsReportRequest request)
@@ -502,7 +503,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("overdue-work-items-report")]
     public async Task<ActionResult<OverdueWorkItemsReportDto>> GetOverdueWorkItemsReport(
         [FromQuery] GetOverdueWorkItemsReportRequest request)
@@ -528,7 +529,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project, team, or user does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("overdue-work-items-report/pdf")]
     public async Task<IActionResult> GetOverdueWorkItemsReportPdf(
         [FromQuery] GetOverdueWorkItemsReportRequest request)
@@ -555,7 +556,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("project-health-report")]
     public async Task<ActionResult<ProjectHealthReportDto>> GetProjectHealthReport(
         [FromQuery] GetProjectHealthReportRequest request)
@@ -581,7 +582,7 @@ public sealed class ReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If the project does not exist.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Tenant_Read)]
     [HttpGet("project-health-report/pdf")]
     public async Task<IActionResult> GetProjectHealthReportPdf(
         [FromQuery] GetProjectHealthReportRequest request)

@@ -9,5 +9,4 @@ public abstract class RoadmapNodeEntity : DbEntity
     public string? Description { get; set; }
 
     public int Order { get; set; }
-
 }

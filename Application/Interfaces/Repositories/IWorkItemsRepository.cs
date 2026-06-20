@@ -36,6 +36,12 @@ public interface IWorkItemsRepository
         string relationId,
         CancellationToken ct = default);
 
+    Task<bool> HasRelationsAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default);
+
     // comments
     Task AddCommentOnWorkItemAsync(
         string tenantId,

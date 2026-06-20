@@ -355,6 +355,34 @@ public class WorkItemsRepository : IWorkItemsRepository
         }
     }
 
+    public async Task<bool> HasRelationsAsync(
+        string tenantId,
+        string projectId,
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(workItemId))
+        {
+            return false;
+        }
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var wId = workItemId.Trim();
+
+        return await _dbContext.WorkItemRelations
+            .AsNoTracking()
+            .AnyAsync(
+                relation =>
+                    (relation.SourceWorkItemId == wId ||
+                     relation.TargetWorkItemId == wId) &&
+                    relation.SourceWorkItem.ProjectId == pId &&
+                    relation.SourceWorkItem.Project.TenantId == tId,
+                cancellationToken);
+    }
+
     // comments
     public async Task AddCommentOnWorkItemAsync(
         string tenantId,

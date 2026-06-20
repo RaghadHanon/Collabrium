@@ -24,8 +24,6 @@ public sealed class CourseRatingConfiguration : IEntityTypeConfiguration<CourseR
         builder.Property(x => x.Rating)
             .IsRequired();
 
-
-
         builder.HasOne(x => x.Tenant)
             .WithMany()
             .HasForeignKey(x => x.TenantId)

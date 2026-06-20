@@ -23,52 +23,122 @@ public sealed class DeleteWorkItem
         ITenantContext tenantContext,
         ICurrentUserAccessor currentUserAccessor,
         IProjectsRepository projectsRepository,
-        IUnitOfWork unitOfWork) : IRequestHandler<Command, Result<Unit>>
+        IUnitOfWork unitOfWork)
+        : IRequestHandler<Command, Result<Unit>>
     {
-        public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<Unit>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
+
             if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            {
+                return Result<Unit>.Failure(
+                    "Tenant not found.",
+                    HttpStatusCode.NotFound);
+            }
 
             var currentUserId = currentUserAccessor.GetUserId();
+
             if (string.IsNullOrWhiteSpace(currentUserId))
-            { 
-                return Result<Unit>.Failure("Current user not found.", HttpStatusCode.Unauthorized); 
-            }
-
-            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
-                return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
-
-            var workItem = await workItemsRepository.GetByIdAsync(tenantId, request.ProjectId, request.WorkItemId, false, cancellationToken);
-            if (workItem == null)
-                return Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
-
-            var userRole = await currentUserAccessor.GetUserRole(currentUserId, cancellationToken); 
-            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole); 
-            var isHighLevelWorkItem = workItem.Type is WorkItemType.Epic or WorkItemType.UserStory; 
-
-            if (isHighLevelWorkItem && !isAdmin) 
             {
-                return Result<Unit>.Failure( "Only admins can delete Epics and User Stories.", HttpStatusCode.Forbidden);
+                return Result<Unit>.Failure(
+                    "Current user not found.",
+                    HttpStatusCode.Unauthorized);
             }
 
-            var isCreator = string.Equals( workItem.CreatedByUserId, currentUserId, StringComparison.Ordinal); 
+            var projectExists = await projectsRepository.IsProjectExists(
+                tenantId,
+                request.ProjectId,
+                cancellationToken);
+
+            if (!projectExists)
+            {
+                return Result<Unit>.Failure(
+                    "Project not found.",
+                    HttpStatusCode.NotFound);
+            }
+
+            var workItem = await workItemsRepository.GetByIdAsync(
+                tenantId,
+                request.ProjectId,
+                request.WorkItemId,
+                includeChildren: false,
+                cancellationToken);
+
+            if (workItem is null)
+            {
+                return Result<Unit>.Failure(
+                    "Work item not found in this project.",
+                    HttpStatusCode.NotFound);
+            }
+
+            var userRole = await currentUserAccessor.GetUserRole(
+                currentUserId,
+                cancellationToken);
+
+            var isAdmin = Roles.ProjectsManagerRoles.Contains(userRole);
+
+            var isHighLevelWorkItem =
+                workItem.Type is WorkItemType.Epic or WorkItemType.UserStory;
+
+            if (isHighLevelWorkItem && !isAdmin)
+            {
+                return Result<Unit>.Failure(
+                    "Only admins can delete Epics and User Stories.",
+                    HttpStatusCode.Forbidden);
+            }
+
+            var isCreator = string.Equals(
+                workItem.CreatedByUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
             if (!isAdmin && !isCreator)
             {
-                return Result<Unit>.Failure( "You can only delete work items that you created.", HttpStatusCode.Forbidden); 
+                return Result<Unit>.Failure(
+                    "You can only delete work items that you created.",
+                    HttpStatusCode.Forbidden);
+            }
+
+            var hasRelations = await workItemsRepository.HasRelationsAsync(
+                tenantId,
+                request.ProjectId,
+                request.WorkItemId,
+                cancellationToken);
+
+            if (hasRelations)
+            {
+                return Result<Unit>.Failure(
+                    "This work item cannot be deleted because it is linked to other work items. Delete its relations first.",
+                    HttpStatusCode.BadRequest);
             }
 
             var removed = false;
-            await unitOfWork.ExecuteInTransactionAsync(async cancellationToken =>
-            {
-                removed = await workItemsRepository.RemoveAsync(tenantId, request.ProjectId, request.WorkItemId, cancellationToken);
 
-                historyRecorder.RecordDeletionChanges<WorkItem>(workItem.ProjectId, workItem.Id, workItem.Title, workItem.Code);
-            }, cancellationToken);
+            await unitOfWork.ExecuteInTransactionAsync(
+                async transactionCancellationToken =>
+                {
+                    removed = await workItemsRepository.RemoveAsync(
+                        tenantId,
+                        request.ProjectId,
+                        request.WorkItemId,
+                        transactionCancellationToken);
+
+                    if (removed)
+                    {
+                        historyRecorder.RecordDeletionChanges<WorkItem>(
+                            workItem.ProjectId,
+                            workItem.Id,
+                            workItem.Title,
+                            workItem.Code);
+                    }
+                },
+                cancellationToken);
 
             return removed
-                ? Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent)
+                ? Result<Unit>.Success( Unit.Value, HttpStatusCode.NoContent)
                 : Result<Unit>.Failure("Work item not found in this project.", HttpStatusCode.NotFound);
         }
     }

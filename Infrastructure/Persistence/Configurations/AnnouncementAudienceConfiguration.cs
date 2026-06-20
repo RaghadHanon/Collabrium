@@ -44,7 +44,5 @@ public sealed class AnnouncementAudienceConfiguration : IEntityTypeConfiguration
         builder.HasIndex(a => a.RoleName);
 
         builder.HasIndex(a => a.UserId);
-
-
     }
 }

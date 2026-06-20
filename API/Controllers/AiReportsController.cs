@@ -82,7 +82,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/cycle-time-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetCycleTimeReportInsight(
@@ -109,7 +109,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="403">If the user does not have access to the project.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [Authorize(Policy = Policies.Project_Access)]
     [HttpGet("{projectId}/velocity-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetVelocityReportInsight(string projectId)
@@ -137,7 +137,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("bug-severity-distribution-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetBugSeverityDistributionReportInsight(
         [FromQuery] GetBugSeverityDistributionReportRequest request)
@@ -161,7 +161,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("developer-productivity-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetDeveloperProductivityReportInsight(
         [FromQuery] GetDeveloperProductivityReportRequest request)
@@ -185,7 +185,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("teams-productivity-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetTeamsProductivityReportInsight(
         [FromQuery] GetTeamsProductivityReportRequest request)
@@ -209,7 +209,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("blocked-work-items-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetBlockedWorkItemsReportInsight(
         [FromQuery] GetBlockedWorkItemsReportRequest request)
@@ -233,7 +233,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("overdue-work-items-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetOverdueWorkItemsReportInsight(
         [FromQuery] GetOverdueWorkItemsReportRequest request)
@@ -257,7 +257,7 @@ public sealed class AIReportsController : ApiBaseController
     /// <response code="400">If the request is invalid.</response>
     /// <response code="401">If the user is not authenticated.</response>
     /// <response code="404">If report data was not found.</response>
-    [Authorize(Policy = Policies.Projects_Manage)]
+    [Authorize(Policy = Policies.Projects_Read)]
     [HttpGet("project-health-report/insight")]
     public async Task<ActionResult<ReportAiInsightDto>> GetProjectHealthReportInsight(
         [FromQuery] GetProjectHealthReportRequest request)

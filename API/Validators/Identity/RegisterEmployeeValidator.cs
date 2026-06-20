@@ -17,7 +17,7 @@ public class RegisterEmployeeValidator : RegisterAppUserValidator<RegisterEmploy
         RuleFor(x => x.UserRole)
             .IsInEnum()
             .WithMessage("User Role is required.")
-            .Must(value => value is not (UserRole.TenantAdmin or UserRole.SuperAdmin))
+            .Must(value => value is not (UserRole.SuperAdmin))
             .WithMessage("This role is not allowed for registration.");
 
         RuleFor(x => x.Department)

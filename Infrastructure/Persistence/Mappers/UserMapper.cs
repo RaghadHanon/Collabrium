@@ -16,6 +16,7 @@ public static class UserMapper
             fullName: entity.FullName,
             jobTitle: entity.JobTitle,
             dateOfBirth: entity.DateOfBirth,
+            isActive: entity.IsActive,
             email: entity.Email ?? string.Empty,
             userName: entity.UserName ?? string.Empty,
             tenantId: entity.TenantId,
@@ -45,6 +46,7 @@ public static class UserMapper
                 DateOfBirth = domain.DateOfBirth,
                 LastLoginAt = domain.LastLoginAt,
                 MustChangePassword = domain.MustChangePassword,
+                IsActive = domain.IsActive,
 
                 Email = domain.Email,
                 UserName = domain.UserName,
@@ -66,6 +68,7 @@ public static class UserMapper
         entity.Department = domain.Department;
 
         entity.DateOfBirth = domain.DateOfBirth;
+        entity.IsActive = domain.IsActive;
 
         entity.LastLoginAt = domain.LastLoginAt;
         entity.MustChangePassword = domain.MustChangePassword;

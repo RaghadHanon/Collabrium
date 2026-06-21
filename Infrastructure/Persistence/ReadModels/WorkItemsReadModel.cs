@@ -4,6 +4,7 @@ using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
+using Application.Features.WorkItems.Rules;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -13,7 +14,6 @@ using Domain.Models;
 using Infrastructure.Persistence.Entities;
 using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
-using SkiaSharp;
 using System.Text.RegularExpressions;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -623,12 +623,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<RelationParticipantWorkItemDto>?> GetRelationCandidates(
-    string tenantId,
-    string projectId,
-    string sourceWorkItemId,
-    WorkItemRelationType relationType,
-    CancellationToken cancellationToken = default)
+    public async Task<List<RelationParticipantWorkItemDto>> GetRelationCandidates(
+        string tenantId,
+        string projectId,
+        string sourceWorkItemId,
+        WorkItemRelationType relationType,
+        CancellationToken cancellationToken = default)
     {
         tenantId = tenantId.Trim();
         projectId = projectId.Trim();
@@ -636,34 +636,62 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
         var sourceWorkItem = await _dbContext.WorkItems
             .AsNoTracking()
-            .Where(w =>
-                w.Project.TenantId == tenantId &&
-                w.ProjectId == projectId &&
-                w.Id == sourceWorkItemId)
-            .Select(w => new { w.Id, w.SprintId, w.Type, w.ParentId })
+            .Where(workItem =>
+                workItem.Project.TenantId == tenantId &&
+                workItem.ProjectId == projectId &&
+                workItem.Id == sourceWorkItemId)
+            .Select(workItem => new
+            {
+                workItem.Id,
+                workItem.SprintId,
+                workItem.Type
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (sourceWorkItem == null)
-            return null;
+        if (sourceWorkItem is null)
+        {
+            return [];
+        }
+
+        var allowedTypes = GetAllowedTargetTypes(
+            sourceWorkItem.Type,
+            relationType);
+
+        if (allowedTypes.Count == 0)
+        {
+            return [];
+        }
 
         var query = _dbContext.WorkItems
             .AsNoTracking()
-            .Where(w =>
-                w.Project.TenantId == tenantId &&
-                w.ProjectId == projectId &&
-                w.Id != sourceWorkItem.Id &&
-                (w.SprintId == null || w.SprintId == sourceWorkItem.SprintId));
+            .Where(workItem =>
+                workItem.Project.TenantId == tenantId &&
+                workItem.ProjectId == projectId &&
+                workItem.Id != sourceWorkItem.Id &&
+                allowedTypes.Contains(workItem.Type));
 
-        var allowedTypes = GetAllowedTargetTypes(sourceWorkItem.Type, relationType);
+        var requiresSameSprint = allowedTypes.Any(
+            targetType =>
+                WorkItemSprintHierarchyRules.RequiresSameSprint(
+                    sourceWorkItem.Type,
+                    targetType,
+                    relationType));
 
-        if (allowedTypes.Any())
-            query = query.Where(w => allowedTypes.Contains(w.Type));
+        if (requiresSameSprint)
+        {
+            query = query.Where(workItem =>
+                workItem.SprintId == sourceWorkItem.SprintId);
+        }
 
         if (relationType == WorkItemRelationType.Child)
-            query = query.Where(w => w.ParentId == null);
+        {
+            query = query.Where(workItem =>
+                workItem.ParentId == null);
+        }
 
         return await query
-            .ProjectTo<RelationParticipantWorkItemDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<RelationParticipantWorkItemDto>(
+                _mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }
 

@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.Rules;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -28,18 +29,38 @@ public class AddWorkItemRelation
         ICurrentUserAccessor currentUserAccessor
     ) : IRequestHandler<Command, Result<Unit>>
     {
-        public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<Result<Unit>> Handle(
+            Command request,
+            CancellationToken cancellationToken)
         {
             var tenantId = tenantContext.CurrentTenant?.Id;
-            if (string.IsNullOrWhiteSpace(tenantId))
-                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            if (!await projectsRepository.IsProjectExists(tenantId, request.ProjectId, cancellationToken))
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+            }
+
+            var projectExists = await projectsRepository.IsProjectExists(
+                tenantId,
+                request.ProjectId,
+                cancellationToken);
+
+            if (!projectExists)
+            {
                 return Result<Unit>.Failure("Project not found.", HttpStatusCode.NotFound);
+            }
 
             var currentUserId = currentUserAccessor.GetUserId();
+
             if (string.IsNullOrWhiteSpace(currentUserId))
+            {
                 return Result<Unit>.Failure("Current user not found.", HttpStatusCode.Unauthorized);
+            }
+
+            if (string.Equals(request.SourceWorkItemId, request.TargetWorkItemId, StringComparison.Ordinal))
+            {
+                return Result<Unit>.Failure("A work item cannot be related to itself.", HttpStatusCode.BadRequest);
+            }
 
             var sourceWorkItem = await workItemsRepository.GetByIdAsync(
                 tenantId,
@@ -49,53 +70,102 @@ public class AddWorkItemRelation
                 cancellationToken);
 
             if (sourceWorkItem is null)
-                return Result<Unit>.Failure("Source Work item not found in this project.", HttpStatusCode.NotFound);
+            {
+                return Result<Unit>.Failure("Source work item not found in this project.", HttpStatusCode.NotFound);
+            }
 
             var targetWorkItem = await workItemsRepository.GetByIdAsync(
-               tenantId,
-               request.ProjectId,
-               request.TargetWorkItemId,
-               includeChildren: true,
-               cancellationToken);
+                tenantId,
+                request.ProjectId,
+                request.TargetWorkItemId,
+                includeChildren: true,
+                cancellationToken);
 
             if (targetWorkItem is null)
-                return Result<Unit>.Failure("Target Work item not found in this project.", HttpStatusCode.NotFound);
+            {
+                return Result<Unit>.Failure("Target work item not found in this project.", HttpStatusCode.NotFound);
+            }
 
-            if (sourceWorkItem.SprintId != targetWorkItem.SprintId)
-                return Result<Unit>.Failure("Work items must be in the same sprint to create a relation.", HttpStatusCode.BadRequest);
+            var userRole = await currentUserAccessor.GetUserRole(
+                currentUserId,
+                cancellationToken);
 
-            var isCurrentAssignee = string.Equals(sourceWorkItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
-            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
             var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
 
+            var isCurrentAssignee = string.Equals(
+                sourceWorkItem.AssignedToUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
             if (!isManager && !isCurrentAssignee)
-                return Result<Unit>.Failure(
-                    "You can only update items assigned to you. Managers can update any item.",
-                    HttpStatusCode.Forbidden);
+            {
+                return Result<Unit>.Failure("You can only update items assigned to you. Managers can update any item.", HttpStatusCode.Forbidden);
+            }
+
+            var requiresSameSprint = WorkItemSprintHierarchyRules.RequiresSameSprint(
+                    sourceWorkItem.Type,
+                    targetWorkItem.Type,
+                    request.RelationType);
+
+            var areInSameSprint =
+                WorkItemSprintHierarchyRules.AreInSameSprint(
+                    sourceWorkItem.SprintId,
+                    targetWorkItem.SprintId);
+
+            if (requiresSameSprint &&
+                !areInSameSprint)
+            {
+                return Result<Unit>.Failure("A user story and its child work items must be in the same sprint.", HttpStatusCode.BadRequest);
+            }
 
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 await workItemsRepository.PersistRelationAsync(
                     tenantId,
                     request.ProjectId,
-                    request.SourceWorkItemId,
-                    request.TargetWorkItemId,
+                    sourceWorkItem.Id,
+                    targetWorkItem.Id,
                     request.RelationType,
                     ct);
 
-                if (request.RelationType == WorkItemRelationType.Parent)
-                    sourceWorkItem.SetParent(targetWorkItem.Id);
+                ApplyParentChildRelation(
+                    sourceWorkItem,
+                    targetWorkItem,
+                    request.RelationType);
 
-                if (request.RelationType == WorkItemRelationType.Child)
-                    targetWorkItem.SetParent(sourceWorkItem.Id);
+                await workItemsRepository.UpdateAsync(
+                    sourceWorkItem,
+                    ct);
 
-                await workItemsRepository.UpdateAsync(sourceWorkItem, ct);
-                await workItemsRepository.UpdateAsync(targetWorkItem, ct);
+                await workItemsRepository.UpdateAsync(
+                    targetWorkItem,
+                    ct);
 
-                historyRecorder.RecordCreationChanges<WorkItemRelation>(sourceWorkItem.ProjectId, sourceWorkItem.Id, sourceWorkItem.Title, sourceWorkItem.Code);
+                historyRecorder.RecordCreationChanges<WorkItemRelation>(
+                    sourceWorkItem.ProjectId,
+                    sourceWorkItem.Id,
+                    sourceWorkItem.Title,
+                    sourceWorkItem.Code);
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
+        }
+
+        private static void ApplyParentChildRelation(
+            WorkItem sourceWorkItem,
+            WorkItem targetWorkItem,
+            WorkItemRelationType relationType)
+        {
+            switch (relationType)
+            {
+                case WorkItemRelationType.Parent:
+                    sourceWorkItem.SetParent(targetWorkItem.Id);
+                    break;
+
+                case WorkItemRelationType.Child:
+                    targetWorkItem.SetParent(sourceWorkItem.Id);
+                    break;
+            }
         }
     }
 }

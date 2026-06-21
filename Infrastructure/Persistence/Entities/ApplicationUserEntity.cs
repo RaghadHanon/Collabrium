@@ -19,6 +19,7 @@ public class ApplicationUserEntity : IdentityUser
     public bool MustChangePassword { get; set; } = false;
 
     public DateOnly DateOfBirth { get; set; }
+    public bool IsActive { get; set; } = true;
 
     [NotMapped]
     public int Age

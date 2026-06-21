@@ -1,6 +1,7 @@
 ﻿using Application.Common;
 using Application.Events;
 using Application.Features.Identity.DTOs;
+using Application.Interfaces.ReadModels;
 using Application.Interfaces.Services;
 using MediatR;
 using System.Net;
@@ -17,6 +18,7 @@ public class LoginUser
 
     public class Handler(
         IIdentityService identityService,
+        IUsersReadModel usersReadModel,
         IMediator mediator
     ) : IRequestHandler<Command, Result<LoginResponseDto>>
     {
@@ -35,6 +37,13 @@ public class LoginUser
                 request.Email,
                 request.Password,
                 cancellationToken);
+
+            var user = await usersReadModel.GetUserByIdAsync(id, cancellationToken);
+            if (user == null)
+                return Result<LoginResponseDto>.Failure("User not found.", HttpStatusCode.NotFound);
+
+            if (!user.IsActive)
+                return Result<LoginResponseDto>.Failure("Your account has been deactivated. Please contact your administrator.", HttpStatusCode.Forbidden);
 
             if (mustChangePassword && !string.IsNullOrWhiteSpace(tenantId))
             {

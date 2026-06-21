@@ -201,7 +201,9 @@ public static class AuthorizationExtensions
                 nameof(UserRole.ProductOwner),
                 nameof(UserRole.TeamLead),
                 nameof(UserRole.BusinessAnalyst),
-                nameof(UserRole.TenantAdmin)
+                nameof(UserRole.TenantAdmin),
+                nameof(UserRole.HR),
+                nameof(UserRole.CEO)
             ));
 
             //Events
@@ -211,7 +213,9 @@ public static class AuthorizationExtensions
                 nameof(UserRole.ProductOwner),
                 nameof(UserRole.TeamLead),
                 nameof(UserRole.BusinessAnalyst),
-                nameof(UserRole.TenantAdmin)
+                nameof(UserRole.TenantAdmin),
+                nameof(UserRole.HR),
+                nameof(UserRole.CEO)
             ));
         });
 

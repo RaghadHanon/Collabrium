@@ -271,9 +271,26 @@ public class UsersController : ApiBaseController
 
         return HandleResult(await Mediator.Send(command));
     }
+
     [HttpGet("managers")]
     public async Task<ActionResult<List<UserDto>>> GetManagers()
     {
         return HandleResult(await Mediator.Send(new GetManagers.Query()));
+    }
+
+
+    [HttpPatch("{userId}/toggle-activation")]
+    [Authorize(Policy = Policies.Local_Tenant_Manage)]
+    public async Task<IActionResult> ToggleUserActivation(
+        string userId,
+        ToggleUserActivationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = Mapper.Map<ToggleUserActivation.Command>(request);
+        command.UserId = userId;
+
+        var result = await Mediator.Send(command, cancellationToken);
+
+        return HandleResult(result);
     }
 }

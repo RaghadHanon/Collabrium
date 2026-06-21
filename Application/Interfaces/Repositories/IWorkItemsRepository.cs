@@ -42,6 +42,12 @@ public interface IWorkItemsRepository
         string workItemId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<WorkItem>> GetChildrenByParentIdAsync(
+        string tenantId,
+        string projectId,
+        string parentId,
+        CancellationToken cancellationToken = default);
+
     // comments
     Task AddCommentOnWorkItemAsync(
         string tenantId,

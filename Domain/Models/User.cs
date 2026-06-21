@@ -17,6 +17,7 @@ public sealed class User : Entity
     public DateTime? LastLoginAt { get; private set; }
     public bool MustChangePassword { get; private set; }
     public DateOnly DateOfBirth { get; private set; }
+    public bool IsActive { get; private set; } = true;
 
     public ContactDetails ContactInfo { get; private set; } = ContactDetails.Empty;
     public StoredImage? ProfileImage { get; private set; }
@@ -54,6 +55,7 @@ public sealed class User : Entity
         string fullName,
         string jobTitle,
         DateOnly dateOfBirth,
+        bool isActive,
         string email,
         string userName,
         string? tenantId,
@@ -70,6 +72,7 @@ public sealed class User : Entity
         u.MustChangePassword = mustChangePassword;
         u.ContactInfo = contactInfo ?? ContactDetails.Empty;
         u.ProfileImage = profileImage;
+        u.IsActive = isActive;
 
         return u;
     }
@@ -90,6 +93,12 @@ public sealed class User : Entity
     {
         LastLoginAt = DateTime.UtcNow;
         //MustChangePassword = false;
+        Touch();
+    }
+
+    public void ToggleActivation()
+    {
+        IsActive = !IsActive;
         Touch();
     }
 

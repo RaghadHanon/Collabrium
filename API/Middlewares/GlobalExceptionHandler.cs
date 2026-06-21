@@ -102,6 +102,7 @@ public class GlobalExceptionHandler(
             UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Unauthorized", exception.Message),
             MissingTenantIdException => (StatusCodes.Status400BadRequest, "Missing Tenant ID", exception.Message),
             UnauthenticatedException => (StatusCodes.Status401Unauthorized, "Unauthenticated", exception.Message),
+            UserNotActiveException => (StatusCodes.Status401Unauthorized, "User Account Deactivated", exception.Message),
             TenantNotFoundException => (StatusCodes.Status404NotFound, "Tenant Not Found", exception.Message),
             TenantNotActiveException => (StatusCodes.Status403Forbidden, "Tenant Not Active", exception.Message),
             DomainException => (StatusCodes.Status400BadRequest, "Bad Request", exception.Message),

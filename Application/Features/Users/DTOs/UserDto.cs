@@ -12,6 +12,7 @@ public class UserDto
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public DateOnly DateOfBirth { get; set; }
+    public bool IsActive { get; set; }
     public string? ProfileImageUrl { get; set; }
     public required ContactDetailsDto ContactDetails { get; set; }
 }

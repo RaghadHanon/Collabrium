@@ -11,6 +11,7 @@ public sealed class UsersApiMappingProfile : Profile
     {
         CreateMap<UpdateUserProfileRequest, UpdateUserProfile.Command>();
         CreateMap<UpdateUserRoleRequest, UpdateUserRole.Command>();
+        CreateMap<ToggleUserActivationRequest, ToggleUserActivation.Command>();
         CreateMap<UploadImageRequest, UploadUserProfileImage.Command>();
         CreateMap<AddUserSkillsRequest, AddUserSkills.Command>(); 
         CreateMap<DeleteUserSkillsRequest, DeleteUserSkills.Command>();

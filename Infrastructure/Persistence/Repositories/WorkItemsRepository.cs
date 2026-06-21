@@ -383,6 +383,44 @@ public class WorkItemsRepository : IWorkItemsRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WorkItem>> GetChildrenByParentIdAsync(
+    string tenantId,
+    string projectId,
+    string parentId,
+    CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId) ||
+            string.IsNullOrWhiteSpace(parentId))
+        {
+            return [];
+        }
+
+        var normalizedTenantId = tenantId.Trim();
+        var normalizedProjectId = projectId.Trim();
+        var normalizedParentId = parentId.Trim();
+
+        var entities = await _dbContext.WorkItems
+            .AsNoTracking()
+            .Include(workItem => workItem.Project)
+            .Include(workItem => workItem.Comments)
+            .Include(workItem => workItem.Relations)
+            .Include(workItem => workItem.CodeLinks)
+            .Include(workItem => workItem.Attachments)
+            .Where(workItem =>
+                workItem.Project.TenantId == normalizedTenantId &&
+                workItem.ProjectId == normalizedProjectId &&
+                workItem.ParentId == normalizedParentId)
+            .ToListAsync(cancellationToken);
+
+        return entities
+            .Select(entity =>
+                WorkItemMapper.ToDomain(
+                    entity,
+                    includeChildren: true))
+            .ToList();
+    }
+
     // comments
     public async Task AddCommentOnWorkItemAsync(
         string tenantId,

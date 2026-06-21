@@ -38,7 +38,7 @@ public interface IWorkItemsReadModel
         CancellationToken cancellationToken = default);
 
     //relations
-    Task<List<WorkItemRelationDto>?> GetRelationsByTypeAsync(
+    Task<List<WorkItemRelationDto>> GetRelationsByTypeAsync(
          string tenantId,
          string projectId,
          string workItemId,

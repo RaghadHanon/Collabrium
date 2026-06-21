@@ -19,6 +19,10 @@ public interface IWorkItemsRepository
     Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default);
+    Task<int> UnassignAllProjectWorkItemsAsync(
+        string tenantId,
+        string projectId,
+        CancellationToken cancellationToken = default);
 
     // relations
     Task PersistRelationAsync(

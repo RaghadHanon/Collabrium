@@ -117,6 +117,33 @@ public class WorkItemsRepository : IWorkItemsRepository
         return;
     }
 
+    public async Task<int> UnassignAllProjectWorkItemsAsync(
+        string tenantId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) ||
+            string.IsNullOrWhiteSpace(projectId))
+        {
+            return 0;
+        }
+
+        var tId = tenantId.Trim();
+        var pId = projectId.Trim();
+        var updatedAt = DateTime.UtcNow;
+
+        return await _dbContext.WorkItems
+            .Where(workItem =>
+                workItem.ProjectId == pId &&
+                workItem.Project.TenantId == tId &&
+                workItem.AssignedToUserId != null &&
+                workItem.Status != WorkItemStatus.Done)
+            .ExecuteUpdateAsync(
+                setters => 
+                setters.SetProperty( workItem => workItem.AssignedToUserId, (string?) null)
+                    .SetProperty(workItem => workItem.UpdatedAt, updatedAt),cancellationToken);
+    }
+
     public async Task<List<WorkItem>> GetWorkItemsListFromIds(string tenantId, string projectId, string sprintId,
         string[] workItemIds, CancellationToken cancellationToken)
     {
@@ -130,6 +157,8 @@ public class WorkItemsRepository : IWorkItemsRepository
 
         return workItems;
     }
+
+
 
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,

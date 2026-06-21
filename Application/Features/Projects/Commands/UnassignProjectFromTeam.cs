@@ -20,6 +20,7 @@ public class UnassignProjectFromTeam
         IProjectsRepository projectsRepository,
         IProjectsReadModel projectsReadModel,
         IProjectHistoryRecorder historyRecorder,
+        IWorkItemsRepository workItemsRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork
     ) : IRequestHandler<Command, Result<ProjectDto>>
@@ -37,10 +38,13 @@ public class UnassignProjectFromTeam
             var oldProjectState = project.Clone();
             await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
+                await workItemsRepository.UnassignAllProjectWorkItemsAsync(
+                        tenantId,
+                        project.Id,
+                        ct);
                 project.UnassignFromTeam();
                 await projectsRepository.UpdateAsync(project, ct);
-
-                historyRecorder.RecordUpdatingChangesAsync<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
+                await historyRecorder.RecordUpdatingChangesAsync<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);

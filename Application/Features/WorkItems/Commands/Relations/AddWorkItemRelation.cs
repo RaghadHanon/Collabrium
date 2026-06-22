@@ -1,4 +1,5 @@
 ﻿using Application.Common;
+using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.Rules;
 using Application.Interfaces;
 using Application.Interfaces.Repositories;
@@ -86,20 +87,15 @@ public class AddWorkItemRelation
                 return Result<Unit>.Failure("Target work item not found in this project.", HttpStatusCode.NotFound);
             }
 
-            var userRole = await currentUserAccessor.GetUserRole(
-                currentUserId,
-                cancellationToken);
+            var authorizationResult =
+                await ValidateUpdatePermissionAsync(
+                    sourceWorkItem,
+                    currentUserId,
+                    cancellationToken);
 
-            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
-
-            var isCurrentAssignee = string.Equals(
-                sourceWorkItem.AssignedToUserId,
-                currentUserId,
-                StringComparison.Ordinal);
-
-            if (!isManager && !isCurrentAssignee)
+            if (authorizationResult is not null)
             {
-                return Result<Unit>.Failure("You can only update items assigned to you. Managers can update any item.", HttpStatusCode.Forbidden);
+                return authorizationResult;
             }
 
             var requiresSameSprint = WorkItemSprintHierarchyRules.RequiresSameSprint(
@@ -149,6 +145,43 @@ public class AddWorkItemRelation
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
+        }
+
+        private async Task<Result<Unit>?>
+            ValidateUpdatePermissionAsync(
+                WorkItem workItem,
+                string currentUserId,
+                CancellationToken cancellationToken)
+        {
+            var isCurrentAssignee = string.Equals(
+                workItem.AssignedToUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
+            var isCreator = string.Equals(
+                workItem.CreatedByUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
+            var userRole =
+                await currentUserAccessor.GetUserRole(
+                    currentUserId,
+                    cancellationToken);
+
+            var isManager =
+                Roles.ProjectsManagerRoles.Contains(
+                    userRole);
+
+            if (isManager ||
+                isCurrentAssignee ||
+                isCreator)
+            {
+                return null;
+            }
+
+            return Result<Unit>.Failure(
+                "You can only update items assigned to you. Managers can update any item.",
+                HttpStatusCode.Forbidden);
         }
 
         private static void ApplyParentChildRelation(

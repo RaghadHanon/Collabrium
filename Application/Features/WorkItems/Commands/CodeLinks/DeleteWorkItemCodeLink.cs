@@ -47,14 +47,16 @@ public class DeleteWorkItemCodeLink
             if (codeLink == null)
                 return Result<Unit>.Failure("Code link not found.", HttpStatusCode.NotFound);
 
-            var isCurrentAssignee = string.Equals(workItem.AssignedToUserId, currentUserId, StringComparison.Ordinal);
-            var userRole = await currentUserAccessor.GetUserRole(currentUserAccessor.GetUserId()!, cancellationToken);
-            var isManager = Roles.ProjectsManagerRoles.Contains(userRole);
+            var authorizationResult =
+                await ValidateUpdatePermissionAsync(
+                    workItem,
+                    currentUserId,
+                    cancellationToken);
 
-            if (!isManager && !isCurrentAssignee)
-                return Result<Unit>.Failure(
-                    "You can only update items assigned to you. Managers can update any item.",
-                    HttpStatusCode.Forbidden);
+            if (authorizationResult is not null)
+            {
+                return authorizationResult;
+            }
 
             if (currentUserId != codeLink.CreatedByUserId)
                 return Result<Unit>.Failure("You don't own this code link to delete it.", HttpStatusCode.Forbidden);
@@ -70,6 +72,40 @@ public class DeleteWorkItemCodeLink
             }, cancellationToken);
 
             return Result<Unit>.Success(Unit.Value, HttpStatusCode.NoContent);
+        }
+
+        private async Task<Result<Unit>?>
+            ValidateUpdatePermissionAsync(
+                WorkItem workItem,
+                string currentUserId,
+                CancellationToken cancellationToken)
+        {
+            var isCurrentAssignee = string.Equals(
+                workItem.AssignedToUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
+            var isCreator = string.Equals(
+                workItem.CreatedByUserId,
+                currentUserId,
+                StringComparison.Ordinal);
+
+            var userRole =
+                await currentUserAccessor.GetUserRole(
+                    currentUserId,
+                    cancellationToken);
+
+            var isManager =
+                Roles.ProjectsManagerRoles.Contains(
+                    userRole);
+
+            return isManager ||
+                isCurrentAssignee ||
+                isCreator
+                ? null
+                : Result<Unit>.Failure(
+                "You can only update items assigned to you. Managers can update any item.",
+                HttpStatusCode.Forbidden);
         }
     }
 }

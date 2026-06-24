@@ -44,6 +44,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using QuestPDF.Infrastructure;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -73,7 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         AddReportsServices(services);
 
-        AddAiServices(services);
+        AddAiServices(services, configuration);
         AddSignalRServices(services);
         services.AddHostedService<EventReminderBackgroundService>();
         services.AddHostedService<AnnouncementNotificationBackgroundService>();
@@ -87,19 +88,53 @@ public static class DependencyInjection
         services.AddScoped<INotificationRealtimeService, SignalRNotificationRealtimeService>();
     }
 
-    private static void AddAiServices(IServiceCollection services)
+    private static void AddAiServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IReportAiInsightService, ReportAiInsightService>();
         services.AddScoped<IWorkItemFieldsSuggestionService, WorkItemFieldsSuggestionService>();
         services.AddScoped<IRoadmapAiDraftService, RoadmapAiDraftService>();
         services.AddScoped<IRoadmapAiSuggestionService, RoadmapAiSuggestionService>();
         services.AddScoped<IUserSkillGapAiService, UserSkillGapAiService>();
-        services.AddHttpClient<IAiAssistantService, OllamaAiAssistantService>(client =>
-        {
-            client.BaseAddress = new Uri("http://localhost:11434");
-            client.Timeout = TimeSpan.FromMinutes(10);
 
-        });
+        services.AddHttpClient<IAiAssistantService, OllamaAiAssistantService>(
+            client =>
+            {
+                var baseUrl =
+                    configuration["OllamaSettings:BaseUrl"];
+
+                if (string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    throw new InvalidOperationException(
+                        "OllamaSettings:BaseUrl is not configured.");
+                }
+
+                client.BaseAddress = new Uri(
+                    $"{baseUrl.TrimEnd('/')}/");
+
+                client.Timeout = TimeSpan.FromMinutes(10);
+
+                var username =
+                    configuration["OllamaSettings:Username"];
+
+                var password =
+                    configuration["OllamaSettings:Password"];
+
+                if (!string.IsNullOrWhiteSpace(username) &&
+                    !string.IsNullOrWhiteSpace(password))
+                {
+                    var rawCredentials =
+                        $"{username}:{password}";
+
+                    var encodedCredentials =
+                        Convert.ToBase64String(
+                            Encoding.UTF8.GetBytes(rawCredentials));
+
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue(
+                            "Basic",
+                            encodedCredentials);
+                }
+            });
     }
 
     private static void AddReportsServices(IServiceCollection services)

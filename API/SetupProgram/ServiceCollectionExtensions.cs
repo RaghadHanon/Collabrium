@@ -51,13 +51,18 @@ public static class ServiceCollectionExtensions
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.WithOrigins("http://localhost:5173",
-                                   "http://localhost:5174",
-                                   "http://localhost:5175",
-                                   "http://localhost:5176", "http://localhost:5177")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                policy
+                    .WithOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:5174",
+                        "http://localhost:5175",
+                        "http://localhost:5176",
+                        "http://localhost:5177",
+                        "https://wonderful-flower-040696410.7.azurestaticapps.net"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 

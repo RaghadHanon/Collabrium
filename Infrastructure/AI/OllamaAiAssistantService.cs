@@ -6,7 +6,7 @@ namespace Infrastructure.AI;
 
 public sealed class OllamaAiAssistantService(HttpClient httpClient) : IAiAssistantService
 {
-    private const string DefaultModel = "gemma3";
+    private const string DefaultModel = "gemma3:latest";
 
     public async Task<string> AskAsync(
         string prompt,

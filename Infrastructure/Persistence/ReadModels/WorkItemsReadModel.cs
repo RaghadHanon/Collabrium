@@ -472,7 +472,6 @@ public class WorkItemsReadModel : IWorkItemsReadModel
                         Title = r.Title,
                         Type = r.Type,
                         Status = r.Status,
-
                     })
                     .FirstOrDefault()
             })

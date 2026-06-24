@@ -96,18 +96,15 @@ public sealed class SprintsReadModel : ISprintsReadModel
                 workItem.ProjectId == pId &&
                 workItem.SprintId == sId)
             .OrderBy(workItem => workItem.CreatedAt)
-            .ProjectTo<WorkItemListItemDto>(
-                _mapper.ConfigurationProvider)
+            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         var epics = sprintWorkItems
-            .Where(workItem =>
-                workItem.Type == WorkItemType.Epic)
+            .Where(workItem => workItem.Type == WorkItemType.Epic)
             .ToList();
 
         var userStories = sprintWorkItems
-            .Where(workItem =>
-                workItem.Type == WorkItemType.UserStory)
+            .Where(workItem => workItem.Type == WorkItemType.UserStory)
             .Select(userStory => new SprintUserStoryGroupDto
             {
                 UserStory = userStory,

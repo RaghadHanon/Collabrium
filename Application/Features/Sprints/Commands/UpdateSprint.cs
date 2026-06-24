@@ -81,43 +81,20 @@ public class UpdateSprint
                     HttpStatusCode.BadRequest);
             }
 
-            var scheduleChangeRequested =
-                request.PlannedStartDate.HasValue ||
-                request.PlannedEndDate.HasValue;
-
             var effectiveStartDate =
-                scheduleChangeRequested
-                    ? request.PlannedStartDate ??
-                      sprint.PlannedStartDate
-                    : null;
+                request.PlannedStartDate.HasValue
+                    ? request.PlannedStartDate
+                    : sprint.PlannedStartDate;
 
             var effectiveEndDate =
-                scheduleChangeRequested
-                    ? request.PlannedEndDate ??
-                      sprint.PlannedEndDate
-                    : null;
+                request.PlannedEndDate.HasValue
+                    ? request.PlannedEndDate
+                    : sprint.PlannedEndDate;
 
-            if (scheduleChangeRequested &&
-                (!effectiveStartDate.HasValue ||
-                 !effectiveEndDate.HasValue))
+            if (request.PlannedStartDate.HasValue || request.PlannedEndDate.HasValue)
             {
-                return Result<SprintDto>.Failure(
-                    "Both start date and end date are required when scheduling the sprint for the first time.",
-                    HttpStatusCode.BadRequest);
-            }
-
-            if (scheduleChangeRequested)
-            {
-                if (effectiveEndDate!.Value <
-                    effectiveStartDate!.Value)
-                {
-                    return Result<SprintDto>.Failure(
-                        "Sprint end date must be greater than or equal to the start date.",
-                        HttpStatusCode.BadRequest);
-                }
-
                 if (project.StartDate.HasValue &&
-                    effectiveStartDate.Value <
+                    effectiveStartDate!.Value <
                     project.StartDate.Value)
                 {
                     return Result<SprintDto>.Failure(
@@ -126,7 +103,7 @@ public class UpdateSprint
                 }
 
                 if (project.EndDate.HasValue &&
-                    effectiveEndDate.Value >
+                    effectiveEndDate!.Value >
                     project.EndDate.Value)
                 {
                     return Result<SprintDto>.Failure(

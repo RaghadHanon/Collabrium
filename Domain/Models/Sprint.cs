@@ -147,7 +147,7 @@ public class Sprint : Entity
             Status == SprintStatus.Completed,
             "Cannot update a completed sprint.");
 
-        Schedule(start, end);
+        Schedule(start.Value, end.Value);
 
         Name = name;
         Goal = goal;
@@ -174,16 +174,9 @@ public class Sprint : Entity
     }
 
     private void Schedule(
-        DateTime? start,
-        DateTime? end)
+        DateTime start,
+        DateTime end)
     {
-        Guard.Against(
-            start.HasValue != end.HasValue,
-            "Sprint planned start date and planned end date must be provided together.");
-
-        if (!start.HasValue || !end.HasValue)
-            return;
-
         if (PlannedStartDate != start)
         {
             Guard.Against(
@@ -192,14 +185,14 @@ public class Sprint : Entity
                 "Cannot update the planned start date after the sprint has started.");
 
             Guard.Against(
-                start.Value <= DateTime.UtcNow,
+                start <= DateTime.UtcNow,
                 "Planned start date must be in the future.");
 
             PlannedStartDate = start;
         }
 
         Guard.Against(
-            end.Value < start.Value,
+            end < start,
             "Planned end date must be greater than or equal to the planned start date.");
 
         if (PlannedEndDate != end)

@@ -47,11 +47,20 @@
   - [Multi-Tenant Request Lifecycle](#multi-tenant-request-lifecycle)
 - [Core Domain and Business Rules](#core-domain-and-business-rules)
   - [Tenant and Organization Model](#tenant-and-organization-model)
+  - [User and Account Rules](#user-and-account-rules)
+  - [Team Membership Rules](#team-membership-rules)
   - [Project Model](#project-model)
   - [Sprint Lifecycle](#sprint-lifecycle)
   - [Work-Item Hierarchy](#work-item-hierarchy)
   - [Type-Specific Workflows](#type-specific-workflows)
   - [Relations, Traceability, and Collaboration](#relations-traceability-and-collaboration)
+  - [Course and Learning Progress Rules](#course-and-learning-progress-rules)
+  - [Roadmap Structure and Publishing Rules](#roadmap-structure-and-publishing-rules)
+  - [Article Rules](#article-rules)
+  - [Community Post Rules](#community-post-rules)
+  - [Event Scheduling and Attendance Rules](#event-scheduling-and-attendance-rules)
+  - [Announcement Targeting and Scheduling Rules](#announcement-targeting-and-scheduling-rules)
+  - [Notification State Rules](#notification-state-rules)
 - [Functional Modules](#functional-modules)
 - [Authentication, Authorization, and Security](#authentication-authorization-and-security)
 - [Real-Time Communication](#real-time-communication)
@@ -449,18 +458,61 @@ The repository implements **logical, application-enforced tenant isolation**. Te
 
 ## Core Domain and Business Rules
 
+Collabrium does not place all business decisions inside controllers. Rules are enforced at the layer that owns the relevant responsibility:
+
+- **Domain models** protect entity invariants, valid state transitions, and behavior that must remain true regardless of transport or storage.
+- **Application handlers and services** coordinate rules that require several aggregates, the current tenant, the current user, authorization context, or repository lookups.
+- **Database configurations** reinforce referential integrity, uniqueness, required relationships, and tenant-aware persistence constraints.
+
+This section summarizes the principal rules implemented across those layers.
+
 ### Tenant and Organization Model
 
 A tenant represents one organization using Collabrium. Tenant-owned data includes users, teams, projects, work items, learning content, community content, reports, and notifications.
 
 Representative rules and behaviors include:
 
-- Super Admins can register and manage tenants at platform level.
-- Tenant status is checked before tenant-scoped requests continue.
-- users must belong to the tenant identified by their authentication context;
-- tenant administrators can manage organization information, branding, users, roles, and teams according to policy;
-- affected users can receive notifications for important account, role, and team changes;
-- users, teams, projects, and related records carry the organizational context required for isolation.
+- a tenant requires a non-empty name and domain and is active when first created;
+- a tenant administrator can be assigned to the organization;
+- tenant profiles support organization details, contact information, social links, and a stored profile image;
+- tenants can be activated or deactivated through explicit domain behavior;
+- tenant status is checked before normal tenant-scoped requests continue;
+- authenticated users must belong to the tenant resolved from their security context;
+- Super Admin operations use the platform-level global tenant context rather than a regular organization context;
+- users, teams, projects, content, notifications, and related persistence records retain the tenant identifier required for logical data isolation;
+- affected users can receive notifications when important tenant, account, role, or team operations occur.
+
+### User and Account Rules
+
+The domain user represents the platform profile associated with the ASP.NET Core Identity account.
+
+Implemented rules include:
+
+- a user stores tenant association, identity details, job title, department, date of birth, account state, contact details, profile image, and last-login information;
+- a newly created domain user starts with `MustChangePassword = true`;
+- the account can be flagged again when another mandatory password change is required;
+- successful login activity records `LastLoginAt` in UTC;
+- account activation is changed through explicit domain behavior rather than direct public property assignment;
+- creation rejects a date of birth in the future;
+- identity-profile updates require the user to be at least 18 years old;
+- contact details and social links are constructed through value objects, and profile images are represented as stored-image values;
+- roles, password hashes, confirmation tokens, lockout-related identity state, JWT issuance, and refresh tokens are handled by ASP.NET Core Identity and the authentication infrastructure rather than being embedded in the domain profile model.
+
+### Team Membership Rules
+
+A team is tenant-owned and has one lead, a department, an optional capacity, an active state, and a set of member IDs.
+
+Important rules include:
+
+- the team lead is automatically included in the member set when the team is created or rehydrated;
+- changing the team lead also ensures that the new lead is a team member;
+- the current team lead cannot be removed from the team;
+- members cannot be added to an inactive team;
+- the same user cannot be added more than once;
+- when capacity is defined, it must be at least `1`;
+- a new member cannot be added after the configured capacity has been reached;
+- removing a user who is not a member is rejected;
+- team activation and deactivation are explicit operations and can trigger notifications for affected members.
 
 ### Project Model
 
@@ -472,13 +524,16 @@ Project status values are:
 NotStarted · InProgress · Completed · OnHold · Cancelled
 ```
 
-Selected domain rules include:
+Selected domain and application rules include:
 
-- a project key is validated as an uppercase identifier between 2 and 10 letters;
-- project information includes status and planned date information;
+- a project requires a name, creator, and tenant;
+- a project key must contain only uppercase letters and must be between 2 and 10 characters;
+- planned end date cannot be earlier than planned start date when both are supplied;
+- projects maintain independent counters used to generate sequential work-item codes and sprint names;
 - a team can be assigned or unassigned through authorized operations;
-- project history records important changes for traceability;
-- a project cannot be marked `Completed` while it still contains incomplete work items;
+- changing a project to `Completed` is rejected while any supplied project work-item snapshot is not `Done`;
+- when a project becomes `Completed` and has no end date, the domain records the current UTC time as its end date;
+- project history records important project and work-item changes for traceability;
 - project access is evaluated separately from general authentication and tenant membership.
 
 ### Sprint Lifecycle
@@ -493,18 +548,21 @@ A sprint stores both planning and execution information:
 
 - `PlannedStartDate` and `PlannedEndDate` describe the schedule;
 - `StartedAt` and `CompletedAt` record actual execution timestamps;
-- `IsScheduled` reflects whether both planned dates exist.
+- `IsScheduled` is true only when both planned dates exist.
 
 Important lifecycle rules include:
 
+- a newly created sprint starts in `Planned` status;
 - only a `Planned` sprint can be started;
-- starting a sprint records `StartedAt` and changes its status to `Active`;
+- starting a sprint records `StartedAt`, clears any previous completion timestamp, and changes the status to `Active`;
 - only an `Active` sprint can be completed;
-- completion records `CompletedAt`;
-- a completed sprint cannot be cancelled;
-- planned end date cannot be earlier than planned start date;
-- the planned start date cannot be changed after an active sprint has already started;
-- work-item status changes require an active sprint.
+- completion records `CompletedAt` and changes the status to `Completed`;
+- a completed sprint cannot be updated or cancelled;
+- when the planned start date is changed, the new value must be in the future;
+- planned end date must be greater than or equal to planned start date;
+- the planned start date cannot be changed after an active sprint has started;
+- work items cannot be assigned to a cancelled or completed sprint through the update use case;
+- work-item status changes require the work item to belong to an active sprint.
 
 ### Work-Item Hierarchy
 
@@ -518,18 +576,29 @@ Epic
     └── Test Case
 ```
 
-The code enum names the Task work-item `TaskItem`, while the user-facing concept is a Task.
+The code enum names the Task work item `TaskItem`, while the user-facing concept is a Task.
 
 Common work-item information includes:
 
 - generated code and title;
 - description and acceptance criteria;
-- priority and effort points;
+- priority and non-negative effort points;
 - assignee and creator;
 - project, sprint, and optional parent;
 - blocked state;
-- start and completion dates;
+- start and completion timestamps;
 - comments, attachments, code links, and relations.
+
+Hierarchy rules include:
+
+- a work item cannot be its own parent or relation target;
+- a work item can have only one parent through the initial parent-setting operation;
+- valid parent relationships are `User Story → Epic`, `Task → User Story`, `Bug → User Story`, and `Test Case → User Story` when expressed from child to parent;
+- valid child relationships are the inverse direction: `Epic → User Story` and `User Story → Task/Bug/Test Case`;
+- the implemented same-sprint invariant applies to a User Story and its Task, Bug, or Test Case children;
+- moving a User Story to another sprint also moves its recognized Task, Bug, and Test Case children in the update workflow;
+- a child Task, Bug, or Test Case with a User Story parent cannot be moved to a different sprint from that parent;
+- the Epic–User Story relationship is structurally validated, but it is not included in the current same-sprint rule.
 
 User Stories use the supported planning values:
 
@@ -539,32 +608,33 @@ User Stories use the supported planning values:
 
 ### Type-Specific Workflows
 
-The enum contains the shared status vocabulary:
+The shared status enum contains:
 
 ```text
 ToDo · ReadyForDev · InProgress · InReview · InTesting · ReadyForRelease · Done
 ```
 
-However, the system **does not apply one universal linear workflow to every work-item type**. Each type exposes and validates its own workflow.
+The system **does not apply one universal linear workflow to every work-item type**. Metadata exposes a canonical state set for each type, while each concrete domain model validates the transitions it permits from the current state.
 
-| Work-item type | Workflow states used by that type | Important completion behavior |
+| Work-item type | Canonical states exposed by metadata | Important completion or quality behavior |
 |---|---|---|
-| Epic | `ToDo`, `InProgress`, `Done` | An Epic cannot be completed until its linked User Stories are complete |
-| User Story | all shared status values | Release and completion are guarded by linked Tasks, open Bugs, and Test Case completion/results |
+| Epic | `ToDo`, `InProgress`, `Done` | An Epic cannot become `Done` until all linked User Stories are `Done` |
+| User Story | all shared status values | `InTesting` requires linked Tasks to be done; release and completion additionally require no open Bugs and all linked Test Cases to be completed with a `Passed` result |
 | Task | `ToDo`, `ReadyForDev`, `InProgress`, `InReview`, `Done` | Supports controlled forward movement and selected backward transitions for rework |
-| Bug | `ToDo`, `ReadyForDev`, `InProgress`, `InTesting`, `Done` | Uses a defect-focused workflow with controlled retesting and reopening paths |
-| Test Case | `ToDo`, `InTesting`, `Done` | Can be moved from `Done` back to `InTesting` to run the test again |
+| Bug | `ToDo`, `ReadyForDev`, `InProgress`, `InTesting`, `Done` | Uses defect-oriented development, retesting, and reopening behavior |
+| Test Case | `ToDo`, `InTesting`, `Done` | Can return from `Done` to `InTesting` for another run; an outcome can be recorded only while it is `InTesting` and must be `Passed`, `Failed`, or `Blocked`, not `NotRun` |
 
 Shared guards also prevent invalid operations. Examples include:
 
 - status cannot be changed while the project is `NotStarted`, `Completed`, or `Cancelled`;
-- status changes require an active sprint;
-- a blocked item cannot move into `InProgress`;
-- completed items reject several editing, assignment, and movement operations;
-- start and end timestamps are updated according to status changes;
-- a User Story cannot reach release or completion while required child work remains invalid or incomplete.
+- a blocked work item cannot move into `InProgress`;
+- start time is recorded when execution begins, including when a Test Case enters `InTesting` for the first time;
+- returning an item to `ToDo` clears its start time;
+- moving to `Done` records the end time, while reopening an eligible item clears it;
+- completed work items reject details editing, assignment changes, sprint movement, blocking, and adding or removing code links and attachments;
+- a User Story cannot pass its testing, release, or completion gates while the required child-work conditions are not satisfied.
 
-The metadata endpoints expose workflows and allowed values to the client so the frontend does not need to hard-code all domain options independently.
+The metadata endpoints expose workflows and allowed values so the frontend does not need to independently duplicate the canonical domain options.
 
 ### Relations, Traceability, and Collaboration
 
@@ -574,24 +644,169 @@ Supported work-item relation types are:
 Parent · Child · RelatesTo · FoundByTestCase
 ```
 
-The backend validates hierarchy and relation rules, including same-sprint requirements for hierarchical parent/child relationships between:
+The backend validates relation rules across the domain and application layers:
 
-- Epic and User Story;
-- User Story and Task;
-- User Story and Bug;
-- User Story and Test Case.
+- source and target must exist in the same requested project context;
+- a work item cannot relate to itself;
+- the same target and relation type cannot be added twice;
+- immediate contradictory Parent/Child relationships are rejected;
+- Parent and Child relations must match the supported type hierarchy;
+- `FoundByTestCase` is valid only in the implemented direction `Bug → Test Case`;
+- `RelatesTo` is non-hierarchical and does not apply the parent/child type restriction;
+- same-sprint validation is required for hierarchical relations between a User Story and a Task, Bug, or Test Case, but not for non-hierarchical relation types.
 
-Non-hierarchical relations such as `RelatesTo` and `FoundByTestCase` serve traceability use cases without being treated as the same parent/child structure.
+Additional collaboration and traceability rules include:
 
-Additional collaboration capabilities include:
+- comments are attached to a specific work item and can be broadcast through the comment hub;
+- code-link URLs cannot be duplicated on the same work item;
+- completed work items reject adding or removing code links and attachments;
+- assignments, priority changes, blocked-state changes, sprint movement, relations, comments, and details changes are coordinated through authorized use cases;
+- project and work-item history records significant changes;
+- important assignment and collaboration actions can publish application events that create notifications and real-time updates.
 
-- comments with real-time updates;
-- uploaded attachments;
-- code links and link types;
-- assignment and unassignment;
-- priority, effort, and blocked-state changes;
-- project and work-item history;
-- notification creation when important work-item activity occurs.
+### Course and Learning Progress Rules
+
+Courses and user-course records separate reusable learning content from each employee's personal progress and assignment state.
+
+Course-content rules include:
+
+- a course requires a tenant, title, description, URL, provider, level, and language;
+- course tags are trimmed, empty values are ignored, and duplicate IDs are not stored through the domain methods;
+- learning points are represented as value objects, empty entries are ignored, and duplicate text is not stored;
+- the thumbnail is managed as an optional stored-image value;
+- course ratings must be between `1` and `5`;
+- the database enforces one rating per tenant, user, and course combination.
+
+User learning progress follows:
+
+```text
+NotStarted → InProgress → Completed
+```
+
+Important progress and assignment rules include:
+
+- `IsSaved` and `IsAssigned` are independent from the progress status;
+- assignment records the assigning user and `AssignedAt` timestamp;
+- unassignment clears assignment metadata without automatically discarding existing progress or saved state;
+- starting a course changes the status to `InProgress` and records `StartedAt` only the first time;
+- a completed course cannot be started again until progress is reset;
+- completing a course records `CompletedAt` and creates `StartedAt` first when necessary;
+- resetting progress returns the record to `NotStarted` and clears start and completion timestamps;
+- after unassignment, the user-course record is deleted only when it is not saved, is still `NotStarted`, and has no start or completion timestamp; otherwise the record is retained and only the assignment state is removed.
+
+Course-assignment use cases also apply organizational rules:
+
+- a manager cannot directly assign a course to themselves;
+- direct and team assignment exclude target roles `ProductOwner`, `TeamLead`, `TenantAdmin`, `BusinessAnalyst`, and `CEO`;
+- team assignment requires a team with members, skips the assigning user, and skips members whose roles are blocked by the assignment rule.
+
+### Roadmap Structure and Publishing Rules
+
+A roadmap is tenant-owned learning content organized by path, level, tags, ordered nodes, subtopics, and resources.
+
+Implemented rules include:
+
+- a roadmap requires a title and tenant and may be visible or hidden;
+- publishing records `PublishedAt`, which cannot be earlier than the roadmap creation time;
+- a duplicate tag cannot be added to the same roadmap;
+- removing a tag that is not attached is rejected;
+- roadmap nodes can be Topic nodes or Reference nodes;
+- node, subtopic, and resource order values must be at least `1`;
+- a Reference node cannot reference the same roadmap that contains it;
+- subtopics require a parent Topic node identifier;
+- resources require a subtopic, title, URL, resource type, and valid order;
+- roadmap structure changes are performed through explicit create, update, delete, and reorder use cases rather than exposing persistence collections directly.
+
+### Article Rules
+
+Learning articles provide tenant-scoped long-form knowledge content.
+
+Important rules include:
+
+- an article requires a tenant, title, content, and creator;
+- description and cover image are optional;
+- articles support explicit publish and unpublish behavior;
+- article tags are stored as a set, so duplicate tag IDs are not retained;
+- cover images are managed as stored-image values and can be replaced or removed;
+- article comments require an article ID, creator ID, and non-empty content;
+- likes and comments are stored as separate records so interaction data remains traceable to the article and user.
+
+### Community Post Rules
+
+Post types are:
+
+```text
+General · Question · Discussion · Resource · Tip
+```
+
+Post behavior includes:
+
+- a post requires a tenant, creator, title, content, and type;
+- a post can contain at most five tags;
+- a post can contain at most five images, and duplicate images are detected by storage public ID;
+- a post can contain at most five links;
+- links are allowed only when the post type is `Resource`;
+- changing a post from `Resource` to another type clears its existing links;
+- duplicate links are not stored;
+- pinning records `IsPinned`, the user who pinned the post, and the UTC pin time;
+- unpinning clears the pin owner and timestamp;
+- tags, links, and images are changed through controlled collection methods instead of direct mutable collection exposure.
+
+### Event Scheduling and Attendance Rules
+
+An event is tenant-owned and contains its schedule, delivery mode, capacity, attendance records, cancellation state, reminder state, and optional banner.
+
+Scheduling and place rules include:
+
+- event end time must be after event start time;
+- an online event requires a meeting URL;
+- an in-person event requires a location;
+- maximum attendance, when supplied, must be greater than `0`;
+- a cancelled event cannot be updated;
+- cancellation is idempotent;
+- event state is derived as `Upcoming`, `Ongoing`, `Finished`, or `Cancelled` from the schedule and cancellation flag;
+- available seats are calculated from maximum capacity and the current attendance count and never return a negative number;
+- reminder delivery records `ReminderSent` and `ReminderSentAt` and ignores repeated marking after delivery.
+
+Attendance use cases enforce that:
+
+- a user cannot attend a cancelled event;
+- a user cannot attend an event that has already finished;
+- a user cannot register for the same event twice;
+- registration is rejected when the event has reached its maximum capacity;
+- the database reinforces duplicate prevention with a unique index on `EventId` and `UserId`;
+- cancelling attendance requires an existing attendance record.
+
+### Announcement Targeting and Scheduling Rules
+
+Announcements combine content, priority, publication timing, audience targeting, and delivery state.
+
+Implemented rules include:
+
+- an announcement requires a tenant, title, content, creator, priority, and publication time;
+- `ExpiresAt`, when supplied, must be later than `PublishAt`;
+- an announcement is visible only after publication time and before expiration, when an expiration exists;
+- an announcement must have at least one audience;
+- supported audience types are `Everyone`, `Team`, and `Role`;
+- an `Everyone` audience cannot contain a team, role, or user target;
+- a `Team` audience requires only a team ID;
+- a `Role` audience requires only a role name;
+- audience records are attached to the announcement being updated before the new audience set is accepted;
+- successful notification processing records `NotificationSent` and `NotificationSentAt` and does not mark the same announcement twice;
+- when an announcement is updated with a future publication time, its notification state is reset so the background worker can process the revised schedule.
+
+### Notification State Rules
+
+A notification is a persistent, tenant-owned message addressed to one user.
+
+The notification model enforces:
+
+- required tenant ID, recipient user ID, type, title, and message;
+- optional triggering user, related entity type, related entity ID, and action URL;
+- a new notification starts unread with no read timestamp;
+- marking a notification as read records `ReadAt` in UTC and is idempotent when already read;
+- marking it unread clears `ReadAt` and is idempotent when already unread;
+- persistent notification storage is the durable record, while SignalR is used for immediate delivery and unread-count updates.
 
 ---
 

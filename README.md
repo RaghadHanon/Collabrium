@@ -2074,7 +2074,13 @@ The project was developed iteratively using an Agile approach with two-week spri
 
 ## License
 
-This repository currently does not include an open-source license file. The source is presented for academic, evaluation, and portfolio purposes. Unless the project authors add a license, normal copyright restrictions apply and no open-source permission should be inferred.
+Copyright © 2026 **Abeer Mahmoud, Hanan Issa, Nada Asad, and Raghad Hanon**. All rights reserved.
+
+Collabrium and its source code are the exclusive intellectual property of the project team. This repository is made available for viewing, academic evaluation, and portfolio demonstration only. It is **not open source**.
+
+No part of this project may be copied, modified, reproduced, distributed, sublicensed, published, sold, used commercially, or incorporated into another project without prior written permission from the project owners. Access to the repository does not grant any license or ownership rights.
+
+For permission requests, please contact the project team.
 
 ---
 

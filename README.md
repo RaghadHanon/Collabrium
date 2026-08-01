@@ -26,7 +26,7 @@
     &nbsp;•&nbsp;
     <a href="https://github.com/NadaAsadk/Collabrium-Frontend-Showcase"><strong>Frontend Showcase</strong></a>
     &nbsp;•&nbsp;
-    <a href="https://github.com/NadaAsadk/Collabrium"><strong>Project Repository</strong></a>
+    <a href="https://github.com/NadaAsadk/Collabrium"><strong>Frontend Repository</strong></a>
   </p>
 </div>
 

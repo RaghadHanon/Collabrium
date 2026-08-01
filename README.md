@@ -419,7 +419,7 @@ Each regular user operates inside one tenant. Platform-level Super Admin operati
 ```mermaid
 flowchart TD
     Request[Authenticated request]
-    Skip{SignalR route or IgnoreTenantContext endpoint?}
+    Skip{IgnoreTenantContext endpoint?}
     UserCheck{Authenticated user exists and is active?}
     Super{SuperAdmin?}
     Global[Resolve global platform tenant]

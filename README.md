@@ -23,6 +23,8 @@
 
   <p>
     <a href="https://wonderful-flower-040696410.7.azurestaticapps.net/"><strong>Live Application</strong></a>
+    &nbsp;•&nbsp;  
+    <a href="https://documenter.getpostman.com/view/27912762/2sBYHNX3rF/"><strong>API Documentation</strong></a>
     &nbsp;•&nbsp;
     <a href="https://github.com/NadaAsadk/Collabrium-Frontend-Showcase"><strong>Frontend Showcase</strong></a>
     &nbsp;•&nbsp;

@@ -16,6 +16,7 @@ public class GetUserProjects
     {
         public required string UserId { get; set; }
         public string? TeamId { get; set; }
+        public string? TenantId { get; set; }
         public string? NameContains { get; set; }
         public bool AssignedToTeam { get; set; }
         public string? Key { get; set; }
@@ -51,6 +52,7 @@ public class GetUserProjects
             if (user is null)
                 return Result<PagedList<ProjectDto, DateTime?>>.Failure("User not found.", HttpStatusCode.NotFound);
 
+            request.TenantId = tenantId;
             var parameters = mapper.Map<ProjectsSearchAndFilterParametersDto>(request);
 
             var list = await projectsReadModel.GetUserProjectsAsync(request.UserId, parameters, cancellationToken);

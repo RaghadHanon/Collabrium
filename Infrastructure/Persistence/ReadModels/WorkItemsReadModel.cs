@@ -181,8 +181,6 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         CancellationToken cancellationToken = default)
     {
         var query = _dbContext.WorkItems
-            .Include(i => i.Project)
-            .Include(i => i.Sprint)
             .AsNoTracking();
 
         var typeFilterApplied = parameters.Type;
@@ -217,18 +215,14 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = _dbContext.WorkItems
-                    .Where(r => r.Id == w.ParentId)
-                    .Select(r => new RelationParticipantWorkItemDto
-                    {
-                        Id = r.Id,
-                        Code = r.Code,
-                        Title = r.Title,
-                        Type = r.Type,
-                        Status = r.Status,
-
-                    })
-                    .FirstOrDefault()
+                Parent = w.Parent == null ? null : new RelationParticipantWorkItemDto
+                {
+                    Id = w.Parent!.Id,
+                    Code = w.Parent!.Code,
+                    Title = w.Parent!.Title,
+                    Type = w.Parent!.Type,
+                    Status = w.Parent!.Status,
+                }
             })
             .ToListAsync(cancellationToken);
 
@@ -315,12 +309,12 @@ public class WorkItemsReadModel : IWorkItemsReadModel
         var query = _dbContext.WorkItems
             .Include(i => i.Project)
             .AsNoTracking()
-            .Where(w => w.ProjectId == pId && w.SprintId == null && w.Status == WorkItemStatus.ToDo);
+            .Where(w => w.Project.TenantId == tId && w.ProjectId == pId && w.SprintId == null && w.Status == WorkItemStatus.ToDo);
 
         query = ApplyFilters(query, parameters);
 
         if (parameters.Cursor.HasValue)
-            query = query.Where(x => x.CreatedAt < parameters.Cursor.Value);
+            query = query.Where(x => x.CreatedAt > parameters.Cursor.Value);
 
         var items = await query
             .OrderBy(u => u.CreatedAt)
@@ -396,17 +390,14 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = _dbContext.WorkItems
-                    .Where(r => r.Id == w.ParentId)
-                    .Select(r => new RelationParticipantWorkItemDto
-                    {
-                        Id = r.Id,
-                        Code = r.Code,
-                        Title = r.Title,
-                        Type = r.Type,
-                        Status = r.Status,
-                    })
-                    .FirstOrDefault()
+                Parent = w.Parent == null ? null : new RelationParticipantWorkItemDto
+                {
+                    Id = w.Parent!.Id,
+                    Code = w.Parent!.Code,
+                    Title = w.Parent!.Title,
+                    Type = w.Parent!.Type,
+                    Status = w.Parent!.Status,
+                }
             })
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
@@ -462,17 +453,14 @@ public class WorkItemsReadModel : IWorkItemsReadModel
 
                 AllowedStatuses = GetAllowedStatusTransitions(w).ToList(),
 
-                Parent = _dbContext.WorkItems
-                    .Where(r => r.Id == w.ParentId)
-                    .Select(r => new RelationParticipantWorkItemDto
-                    {
-                        Id = r.Id,
-                        Code = r.Code,
-                        Title = r.Title,
-                        Type = r.Type,
-                        Status = r.Status,
-                    })
-                    .FirstOrDefault()
+                Parent = w.Parent == null ? null : new RelationParticipantWorkItemDto
+                {
+                    Id = w.Parent!.Id,
+                    Code = w.Parent!.Code,
+                    Title = w.Parent!.Title,
+                    Type = w.Parent!.Type,
+                    Status = w.Parent!.Status,
+                }
             })
             .Take(pageSize + 1)
             .ToListAsync(cancellationToken);

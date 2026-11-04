@@ -15,6 +15,7 @@ public class GetProjects
     public class Query : IRequest<Result<PagedList<ProjectDto, DateTime?>>>
     {
         public string? TeamId { get; set; }
+        public string? TenantId { get; set; }
         public string? NameContains { get; set; }
         public bool AssignedToTeam { get; set; }
         public string? Key { get; set; }
@@ -45,6 +46,7 @@ public class GetProjects
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<PagedList<ProjectDto, DateTime?>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
+            request.TenantId = tenantId;
             var parameters = mapper.Map<ProjectsSearchAndFilterParametersDto>(request);
 
             var list = await projectsReadModel.GetProjectsAsync(parameters, cancellationToken);

@@ -92,13 +92,12 @@ public sealed class ProjectsRepository : IProjectsRepository
             ? false
             : await _dbContext.Projects
          .AsNoTracking()
-         .AnyAsync(p =>
-             (p.TenantId == tId &&
-             p.Id == pId &&
-             p.Team != null &&
-             p.Team.Members.Any(m => m.UserId == userId))
-             || (p.CreatedByUserId == userId),
-             cancellationToken);
+                  .AnyAsync(p =>
+                    p.TenantId == tId &&
+                    p.Id == pId &&
+                    (p.CreatedByUserId == userId ||
+                    (p.Team != null && p.Team.Members.Any(m => m.UserId == userId))),
+              cancellationToken);
     }
 
     public async Task<bool> IsProjectExists(string tenantId, string projectId, CancellationToken cancellationToken = default)

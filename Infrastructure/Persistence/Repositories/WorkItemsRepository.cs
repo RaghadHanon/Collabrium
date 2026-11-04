@@ -158,8 +158,6 @@ public class WorkItemsRepository : IWorkItemsRepository
         return workItems;
     }
 
-
-
     public async Task<PagedList<WorkItem, DateTime?>> GetPagedAsync(
         WorkItemsSearchAndFilterParametersDto parameters,
         CancellationToken cancellationToken = default)

@@ -137,6 +137,12 @@ public sealed class ProjectsReadModel : IProjectsReadModel
         IQueryable<ProjectEntity> query,
         ProjectsSearchAndFilterParametersDto p)
     {
+        if (!string.IsNullOrWhiteSpace(p.TenantId))
+        {
+            var tenantId = p.TenantId.Trim();
+            query = query.Where(x => x.TenantId == tenantId);
+        }
+
         if (!string.IsNullOrWhiteSpace(p.TeamId))
         {
             var teamId = p.TeamId.Trim();

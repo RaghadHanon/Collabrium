@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class SetUp : Migration
+    public partial class Setup : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -210,6 +210,7 @@ namespace Infrastructure.Migrations
                     LastLoginAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     MustChangePassword = table.Column<bool>(type: "bit", nullable: false),
                     DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     ContactDetails_Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     ContactDetails_PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     ContactDetails_Socials_LinkedIn = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),

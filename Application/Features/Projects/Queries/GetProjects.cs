@@ -1,5 +1,7 @@
 ﻿using Application.Common;
 using Application.Features.Projects.DTOs;
+using Application.Features.WorkItems.DTOs;
+using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using Domain.Enums;
@@ -33,11 +35,16 @@ public class GetProjects
 
     public class Handler(
         IProjectsReadModel projectsReadModel,
+        ITenantContext tenantContext,
         IMapper mapper
         ) : IRequestHandler<Query, Result<PagedList<ProjectDto, DateTime?>>>
     {
         public async Task<Result<PagedList<ProjectDto, DateTime?>>> Handle(Query request, CancellationToken cancellationToken)
         {
+            var tenantId = tenantContext.CurrentTenant?.Id;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return Result<PagedList<ProjectDto, DateTime?>>.Failure("Tenant not found.", HttpStatusCode.NotFound);
+
             var parameters = mapper.Map<ProjectsSearchAndFilterParametersDto>(request);
 
             var list = await projectsReadModel.GetProjectsAsync(parameters, cancellationToken);

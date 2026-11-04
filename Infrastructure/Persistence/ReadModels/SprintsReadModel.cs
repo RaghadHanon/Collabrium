@@ -1,11 +1,13 @@
 ﻿using Application.Common;
 using Application.Features.Sprints.DTOs;
 using Application.Features.WorkItems.DTOs;
+using Application.Features.WorkItems.DTOs.Relations;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Enums;
 using Infrastructure.Persistence.Entities;
+using Infrastructure.Persistence.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.ReadModels;
@@ -64,10 +66,10 @@ public sealed class SprintsReadModel : ISprintsReadModel
     }
 
     public async Task<SprintWithWorkItemsDto?> GetSprintWithWorkItemsAsync(
-     string tenantId,
-     string projectId,
-     string sprintId,
-     CancellationToken cancellationToken = default)
+    string tenantId,
+    string projectId,
+    string sprintId,
+    CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId) ||
             string.IsNullOrWhiteSpace(projectId) ||
@@ -96,7 +98,35 @@ public sealed class SprintsReadModel : ISprintsReadModel
                 workItem.ProjectId == pId &&
                 workItem.SprintId == sId)
             .OrderBy(workItem => workItem.CreatedAt)
-            .ProjectTo<WorkItemListItemDto>(_mapper.ConfigurationProvider)
+            .Select(workItem => new WorkItemListItemDto
+            {
+                Id = workItem.Id,
+                Title = workItem.Title,
+                Code = workItem.Code,
+                Type = workItem.Type,
+                Status = workItem.Status,
+                Priority = workItem.Priority,
+                SprintId = workItem.SprintId,
+                ProjectId = workItem.ProjectId,
+                IsBlocked = workItem.IsBlocked,
+                AssignedToUserId = workItem.AssignedToUserId,
+                CreatedByUserId = workItem.CreatedByUserId,
+                CreatedAt = workItem.CreatedAt,
+
+                AllowedStatuses = GetAllowedStatusTransitions(workItem).ToList(),
+
+                Parent = _dbContext.WorkItems
+                    .Where(parent => parent.Id == workItem.ParentId)
+                    .Select(parent => new RelationParticipantWorkItemDto
+                    {
+                        Id = parent.Id,
+                        Code = parent.Code,
+                        Title = parent.Title,
+                        Type = parent.Type,
+                        Status = parent.Status
+                    })
+                    .FirstOrDefault()
+            })
             .ToListAsync(cancellationToken);
 
         var epics = sprintWorkItems
@@ -132,6 +162,17 @@ public sealed class SprintsReadModel : ISprintsReadModel
             UserStories = userStories,
             OrphanWorkItems = orphanWorkItems
         };
+    }
+
+    private static List<WorkItemStatus> GetAllowedStatusTransitions(WorkItemEntity? entity)
+    {
+        if (entity is null)
+            return new List<WorkItemStatus>();
+
+        var domainItem = WorkItemMapper.ToDomain(entity!);
+        return domainItem != null
+            ? domainItem.GetAllowedStatusTransitions()
+            : new List<WorkItemStatus>();
     }
 
     public async Task<string?> GetSprintDisplayNameAsync(

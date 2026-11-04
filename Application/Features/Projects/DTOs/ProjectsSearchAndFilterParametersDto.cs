@@ -6,6 +6,7 @@ namespace Application.Features.Projects.DTOs;
 public class ProjectsSearchAndFilterParametersDto : QueryParametersDto<DateTime?>
 {
 
+    public string? TenantId { get; set; }
     public string? TeamId { get; set; }
     public string? NameContains { get; set; }
     public string? Key { get; set; }

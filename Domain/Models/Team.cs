@@ -71,12 +71,10 @@ public sealed class Team : Entity
         return t;
     }
 
-    public void UpdateDetails(string name, string? description, int? capacity, Department? department)
+    public void UpdateDetails(string name, string? description, Department? department)
     {
         Name = Guard.NotNullOrWhiteSpace(name, nameof(name));
         Description = description?.Trim();
-        Guard.Against(capacity is < 1, "Capacity must be >= 1 if provided.");
-        Capacity = capacity;
         if (department.HasValue)
             Department = department.Value;
         Touch();
@@ -99,6 +97,15 @@ public sealed class Team : Entity
             Guard.Against(_memberIds.Count >= Capacity.Value, "Team capacity reached.");
 
         Guard.Against(!_memberIds.Add(userId), "User is already a team member.");
+        Touch();
+    }
+
+    public void ChangeCapacity(int? newCapacity)
+    {
+        Guard.Against(newCapacity is < 1, "Capacity must be >= 1 if provided.");
+        if (newCapacity is not null)
+            Guard.Against(_memberIds.Count > newCapacity.Value, "New capacity cannot be less than current member count.");
+        Capacity = newCapacity;
         Touch();
     }
 

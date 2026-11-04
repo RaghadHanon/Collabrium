@@ -33,7 +33,7 @@ public class UpdateTeam
             if (string.IsNullOrWhiteSpace(tenantId))
                 return Result<Unit>.Failure("Tenant not found.", HttpStatusCode.NotFound);
 
-            var team = await teamsRepository.GetByIdAsync(tenantId, request.Id, cancellationToken);
+            var team = await teamsRepository.GetByIdWithMembersAsync(tenantId, request.Id, cancellationToken);
             if (team is null)
                 return Result<Unit>.Failure("Team not found in this tenant.", HttpStatusCode.NotFound);
 
@@ -77,10 +77,10 @@ public class UpdateTeam
                     team.ChangeLead(leadDecision.Value);
                 }
 
+                team.ChangeCapacity(request.Capacity ?? team.Capacity);
                 team.UpdateDetails(
                     PatchHelpers.ApplyStringPatch(team.Name, request.Name) ?? team.Name,
                     PatchHelpers.ApplyStringPatch(team.Description, request.Description),
-                    request.Capacity ?? team.Capacity,
                     request.Department ?? team.Department
                 );
 

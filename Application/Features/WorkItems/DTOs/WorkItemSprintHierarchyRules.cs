@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace Application.Features.WorkItems.Rules;
+namespace Application.Features.WorkItems.DTOs;
 
 public static class WorkItemSprintHierarchyRules
 {

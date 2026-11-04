@@ -4,7 +4,6 @@ using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.Attachment;
 using Application.Features.WorkItems.DTOs.Comments;
 using Application.Features.WorkItems.DTOs.Relations;
-using Application.Features.WorkItems.Rules;
 using Application.Interfaces.ReadModels;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;

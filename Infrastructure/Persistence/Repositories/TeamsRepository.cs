@@ -65,6 +65,19 @@ public sealed class TeamsRepository : ITeamsRepository
         return entity is null ? null : TeamMapper.ToDomain(entity);
     }
 
+    public async Task<Team?> GetByIdWithMembersAsync(string tenantId, string teamId, CancellationToken cancellationToken = default)
+    {
+        if (!TryNormalize(tenantId, teamId, out var tId, out var tmId))
+            return null;
+
+        var entity = await _dbContext.Teams
+            .AsNoTracking()
+            .Include(t => t.Members)
+            .FirstOrDefaultAsync(t => t.TenantId == tId && t.Id == tmId, cancellationToken);
+
+        return entity is null ? null : TeamMapper.ToDomain(entity);
+    }
+
     public async Task AddMembersAsync(
         string tenantId,
         string teamId,

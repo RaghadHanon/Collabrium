@@ -3,7 +3,6 @@ using Application.Events;
 using Application.Features.ProjectsHistories.DTOs;
 using Application.Features.WorkItems.DTOs;
 using Application.Features.WorkItems.DTOs.TypeSpecificDetails;
-using Application.Features.WorkItems.Rules;
 using Application.Interfaces;
 using Application.Interfaces.ReadModels;
 using Application.Interfaces.Repositories;

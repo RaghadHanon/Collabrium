@@ -22,6 +22,10 @@ public interface ITeamsRepository
         string teamId,
         CancellationToken cancellationToken = default);
 
+    Task<Team?> GetByIdWithMembersAsync(
+        string tenantId,
+        string teamId,
+        CancellationToken cancellationToken = default);
     Task<bool> IsTeamExists(
         string tenantId,
         string teamId);

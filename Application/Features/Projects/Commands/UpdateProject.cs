@@ -78,7 +78,7 @@ public class UpdateProject
 
                 await projectsRepository.UpdateAsync(project, cancellationToken);
 
-                historyRecorder.RecordUpdatingChangesAsync<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
+                await historyRecorder.RecordUpdatingChangesAsync<Project>(project.Id, project.Id, project.Name, project.Key, oldProjectState, project);
             }, cancellationToken);
 
             var dto = await projectsReadModel.GetByIdAsync(tenantId, project.Id, cancellationToken);
